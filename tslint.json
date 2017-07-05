@@ -1,0 +1,6 @@
+{
+  "rules": {
+    "ban-types": ["Number", "Object", "String"],
+    "semicolon": [true, "always"]
+  }
+}
