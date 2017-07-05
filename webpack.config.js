@@ -1,4 +1,5 @@
 const {resolve} = require('path');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const tslintLoader = {loader: 'tslint-loader', options: {
   fix: true,
@@ -23,4 +24,7 @@ module.exports = {
     path: resolve('build'),
     publicPath: '/',
   },
+  plugins: [
+    new ForkTsCheckerWebpackPlugin()
+  ]
 };
