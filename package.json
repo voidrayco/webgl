@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
+  "engines": {
+    "node": "8.1.2"
+  },
   "scripts": {
     "dev": "node scripts/dev",
-    "start": "node scripts/dev"
+    "start": "node scripts/dev",
+    "build": "tslint src && webpack"
   },
   "dependencies": {
     "fork-ts-checker-webpack-plugin": "0.2.4",

@@ -1,0 +1,7 @@
+box: node:8.0.0-alpine
+build:
+  steps:
+    - npm-install
+    - script:
+        name: Test the build
+        code: npm run build
