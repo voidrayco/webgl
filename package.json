@@ -12,8 +12,11 @@
     "build": "tslint src && webpack"
   },
   "dependencies": {
+    "@types/node": "^8.0.7",
     "fork-ts-checker-webpack-plugin": "0.2.4",
     "random": "github:tarwich/node-random#1.0.0",
+    "tslint": "5.5.0",
+    "tslint-loader": "3.5.3",
     "webpack": "3.0.0"
   },
   "devDependencies": {
