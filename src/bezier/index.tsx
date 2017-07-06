@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Bounds } from 'webgl-surface/primitives/bounds';
 import { QuadGenerator } from './generators/quad-generator';
 import { BezierGL } from './gl/bezier-gl';
 import { IQuadShapeData } from './shape-data-types/quad-shape-data';
@@ -34,7 +35,12 @@ export class Bezier extends React.Component<IBezierProps, any> {
     this.quadGenerator.generate(quadData);
 
     return (
-      <BezierGL quads={this.quadGenerator.getBaseBuffer()}/>
+      <BezierGL
+        quads={this.quadGenerator.getBaseBuffer()}
+        height={500}
+        initialViewport={new Bounds<never>(0, 500, 0, 500)}
+        width={500}
+      />
     );
   }
 }

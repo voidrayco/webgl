@@ -8,6 +8,6 @@ export class QuadShape<T> extends Bounds<T> {
   a: number = 1.0;
 
   constructor(bounds: Bounds<any>, color?: RGBColor) {
-    super(0, 0, 0, 0);
+    super(bounds.x, bounds.right, bounds.y, bounds.bottom);
   }
 }

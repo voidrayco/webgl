@@ -1336,6 +1336,16 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   render() {
     const { width, height } = this.props;
 
+    const position: 'relative' | 'initial' | 'inherit' | 'unset' | 'static' | 'absolute' | 'fixed' | 'sticky' = 'absolute';
+
+    const style = {
+      height,
+      left: 0,
+      position,
+      top: 0,
+      width,
+    };
+
     return (
       <div
         onMouseDown={this.handleMouseDown}
@@ -1350,7 +1360,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         }}
         style={{ position: 'relative', width: width, height: height }}>
         <div ref={this.applyRef} />
-        <div>
+        <div style={style}>
           <canvas width={width} height={height} ref={this.applyTextRef} />
         </div>
       </div>

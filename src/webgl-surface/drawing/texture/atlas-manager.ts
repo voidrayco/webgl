@@ -1,9 +1,9 @@
-const debug = require('debug')('CommunicationsView:Atlas')
-import {AtlasTexture} from './atlas-texture'
-import {Bounds} from '../../primitives/bounds'
-import {ImageDimensions, PackNode} from '../../util/pack-node'
-import {IPoint} from '../../primitives/point'
-import {Texture} from 'three'
+const debug = require('debug')('CommunicationsView:Atlas');
+import {Texture} from 'three';
+import {Bounds} from '../../primitives/bounds';
+import {IPoint} from '../../primitives/point';
+import {ImageDimensions, PackNode} from '../../util/pack-node';
+import {AtlasTexture} from './atlas-texture';
 
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
@@ -11,15 +11,15 @@ import {Texture} from 'three'
  */
 export class AtlasManager {
   /** Gives a reference of all of the images loaded for the atlas */
-  atlasImages: {[key: string]: AtlasTexture[]} = {}
+  atlasImages: {[key: string]: AtlasTexture[]} = {};
   /** Stores the current mapping of the atlas */
-  atlasMap: {[key: string]: PackNode} = {}
+  atlasMap: {[key: string]: PackNode} = {};
   /** Stores all of the textures that are our atlases */
-  atlasTexture: {[key: string]: Texture} = {}
+  atlasTexture: {[key: string]: Texture} = {};
   /** Stores Atlas textures dimensions. Every new atlas created will use this as it's width */
-  textureWidth: number
+  textureWidth: number;
   /** Stores Atlas textures dimensions. Every new atlas created will use this as it's height */
-  textureHeight: number
+  textureHeight: number;
 
   /**
    * Generates a new manager for atlas'. This will create and destroy atlas' and
@@ -30,8 +30,8 @@ export class AtlasManager {
    * @param {number} height The height of all atlas' generated
    */
   constructor(width: number, height: number) {
-    this.textureWidth = width
-    this.textureHeight = height
+    this.textureWidth = width;
+    this.textureHeight = height;
   }
 
   /**
@@ -49,38 +49,38 @@ export class AtlasManager {
    */
   async createAtlas(atlasName: string, images: AtlasTexture[]) {
     // Create a new mapping to track the packing within the texture
-    const atlasMap: PackNode = new PackNode(0, 0, this.textureWidth, this.textureHeight)
+    const atlasMap: PackNode = new PackNode(0, 0, this.textureWidth, this.textureHeight);
     // Create the mapping element for the new atlas so we can track insertions / deletions
-    this.atlasMap[atlasName] = atlasMap
+    this.atlasMap[atlasName] = atlasMap;
 
     // Generate a canvas to render our images into so we can convert it over to
-    // a three-js texture
-    const canvas = document.createElement('canvas').getContext('2d')
+    // A three-js texture
+    const canvas = document.createElement('canvas').getContext('2d');
 
     // Size the canvas to the atlas size
-    canvas.canvas.width = this.textureWidth
-    canvas.canvas.height = this.textureHeight
+    canvas.canvas.width = this.textureWidth;
+    canvas.canvas.height = this.textureHeight;
 
     // Now we load, pack in, and draw each requested image
     for (const image of images) {
-      await this.draw(image, atlasName, canvas)
+      await this.draw(image, atlasName, canvas);
     }
 
     // After loading we can transform the canvas to a glorious three texture to
-    // be utilized
-    const texture = new Texture(canvas.canvas)
+    // Be utilized
+    const texture = new Texture(canvas.canvas);
 
-    texture.premultiplyAlpha = true
-    texture.generateMipmaps = true
+    texture.premultiplyAlpha = true;
+    texture.generateMipmaps = true;
 
     // Store the texture as the atlas.
-    this.atlasTexture[atlasName] = texture
+    this.atlasTexture[atlasName] = texture;
     // Store the images as images within the atlas
-    this.atlasImages[atlasName] = [].concat(images)
+    this.atlasImages[atlasName] = [].concat(images);
 
-    debug('Atlas Created-> texture: %o mapping: %o images: %o', texture, atlasMap, images)
+    debug('Atlas Created-> texture: %o mapping: %o images: %o', texture, atlasMap, images);
 
-    return texture
+    return texture;
   }
 
   /**
@@ -90,27 +90,27 @@ export class AtlasManager {
    */
   destroyAtlas(atlasName: string) {
     if (this.atlasTexture[atlasName]) {
-      this.atlasTexture[atlasName].dispose()
-      this.atlasTexture[atlasName] = null
+      this.atlasTexture[atlasName].dispose();
+      this.atlasTexture[atlasName] = null;
     }
 
     if (this.atlasMap[atlasName]) {
-      this.atlasMap[atlasName].destroy()
-      this.atlasMap[atlasName] = null
+      this.atlasMap[atlasName].destroy();
+      this.atlasMap[atlasName] = null;
     }
 
     if (this.atlasImages[atlasName]) {
-      const none: IPoint = {x: 0, y: 0}
+      const none: IPoint = {x: 0, y: 0};
       this.atlasImages[atlasName].forEach(image => {
-        image.atlasReferenceID = null
-        image.pixelWidth = 0
-        image.pixelHeight = 0
-        image.atlasBL = none
-        image.atlasBR = none
-        image.atlasTL = none
-        image.atlasTR = none
-      })
-      this.atlasImages[atlasName] = null
+        image.atlasReferenceID = null;
+        image.pixelWidth = 0;
+        image.pixelHeight = 0;
+        image.atlasBL = none;
+        image.atlasBR = none;
+        image.atlasTL = none;
+        image.atlasTR = none;
+      });
+      this.atlasImages[atlasName] = null;
     }
   }
 
@@ -127,82 +127,79 @@ export class AtlasManager {
   async draw(image: AtlasTexture, atlasName: string, canvas: CanvasRenderingContext2D): Promise<boolean> {
     // Validate the index
     if (!this.atlasMap[atlasName]) {
-      debug('Can not load image, invalid Atlas Name: %o for atlasMaps: %o', atlasName, this.atlasMap)
-      return false
+      debug('Can not load image, invalid Atlas Name: %o for atlasMaps: %o', atlasName, this.atlasMap);
+      return false;
     }
     // First we must load the image
     // Make a buffer to hold our new image
     // Load the image into memory, default to keeping the alpha channel
-    const loadedImage: HTMLImageElement = await this.loadImage(image)
+    const loadedImage: HTMLImageElement = await this.loadImage(image);
     // Make sure at this point the image knows it is not affiliated with an atlas
-    // if something goes wrong with loading or insertting this image, then a null
-    // atlas value will indicate the image can not be used appropriately
-    image.atlasReferenceID = null
+    // If something goes wrong with loading or insertting this image, then a null
+    // Atlas value will indicate the image can not be used appropriately
+    image.atlasReferenceID = null;
 
     // Only a non-null image means the image loaded correctly
     if (loadedImage) {
-      debug('Image loaded: %o', image.imagePath)
+      debug('Image loaded: %o', image.imagePath);
       // Now we create a Rectangle to store the image dimensions
-      const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, 0, image.pixelHeight)
+      const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, 0, image.pixelHeight);
       // Create ImageDimension to insert into our atlas mapper
       const dimensions: ImageDimensions = {
         first: image,
         second: rect,
-      }
+      };
 
       // Auto add a buffer in
-      dimensions.second.width += 1
-      dimensions.second.height += 1
+      dimensions.second.width += 1;
+      dimensions.second.height += 1;
 
       // Get the atlas map node
-      const node: PackNode = this.atlasMap[atlasName]
+      const node: PackNode = this.atlasMap[atlasName];
       // Store the node resulting from the insert operation
-      const insertedNode: PackNode = node.insert(dimensions)
+      const insertedNode: PackNode = node.insert(dimensions);
 
       // If the result was NULL we did not successfully insert the image into any map
       if (insertedNode) {
-        debug('Atlas location determined: %o', insertedNode)
+        debug('Atlas location determined: %o', insertedNode);
         // Apply the image to the node
-        insertedNode.nodeImage = image
+        insertedNode.nodeImage = image;
 
         // Set our image's atlas properties
-        const ux = insertedNode.nodeDimensions.x / this.textureWidth
-        const uy = insertedNode.nodeDimensions.y / this.textureHeight
-        const uw = insertedNode.nodeDimensions.width / this.textureWidth
-        const uh = insertedNode.nodeDimensions.height / this.textureHeight
+        const ux = insertedNode.nodeDimensions.x / this.textureWidth;
+        const uy = insertedNode.nodeDimensions.y / this.textureHeight;
+        const uw = insertedNode.nodeDimensions.width / this.textureWidth;
+        const uh = insertedNode.nodeDimensions.height / this.textureHeight;
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,
           ux + uw,
           1.0 - (uy + uh),
           1.0 - uy,
-        )
+        );
 
-        image.atlasReferenceID = atlasName
-        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y}
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y}
-        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y + atlasDimensions.height}
-        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y + atlasDimensions.height}
+        image.atlasReferenceID = atlasName;
+        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y};
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y};
+        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y + atlasDimensions.height};
+        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y + atlasDimensions.height};
 
         // Now draw the image to the indicated canvas
-        canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y)
+        canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);
 
         // We have finished inserting
-        return true
+        return true;
       }
 
       else {
         // Log an error
-        console.error('Could not fit image into atlas', image.imagePath)
+        throw new Error(`Could not fit image into atlas ${image.imagePath}`);
       }
     }
 
     else {
       // Log an error
-      console.error('Could not load image', image.imagePath)
+      throw new Error(`Could not load image ${image.imagePath}`);
     }
-
-    // Could not insert into any atlas
-    return false
   }
 
   /**
@@ -211,7 +208,7 @@ export class AtlasManager {
    * @param atlasName The identifier of the atlas
    */
   getAtlasTexture(atlasName: string) {
-    return this.atlasTexture[atlasName]
+    return this.atlasTexture[atlasName];
   }
 
   /**
@@ -224,20 +221,20 @@ export class AtlasManager {
    */
   loadImage(texture: AtlasTexture): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
-      const image: HTMLImageElement = new Image()
+      const image: HTMLImageElement = new Image();
 
       image.onload = function() {
-        texture.pixelWidth = image.width
-        texture.pixelHeight = image.height
-        texture.aspectRatio = image.width / image.height
-        resolve(image)
-      }
+        texture.pixelWidth = image.width;
+        texture.pixelHeight = image.height;
+        texture.aspectRatio = image.width / image.height;
+        resolve(image);
+      };
 
       image.onerror = function() {
-        resolve(null)
-      }
+        resolve(null);
+      };
 
-      image.src = texture.imagePath
-    })
+      image.src = texture.imagePath;
+    });
   }
 }

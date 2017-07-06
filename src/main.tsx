@@ -34,11 +34,11 @@ export class Main extends React.Component<any, IMainState> {
     let quadData: IQuadShapeData[] = [];
 
     if (this.state.currentTab === 0) {
-      quadData = [...new Array(20)].map(({}, i: number) =>
+      quadData = [...new Array(20)].map((_, i: number) =>
         ({
           id: i,
-          position: {x: Math.random() * 1000 + 10, y: Math.random() * 1000 + 10},
-          size: {width: Math.random() * 100 + 10, height: Math.random() * 100 + 10},
+          position: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          size: {width: Math.random() * 20 + 10, height: Math.random() * 20 + 10},
         }));
     }
 

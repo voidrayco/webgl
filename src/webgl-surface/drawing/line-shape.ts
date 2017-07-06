@@ -1,12 +1,9 @@
 import {Line} from '../primitives/line';
 import {IPoint} from '../primitives/point';
-import {drawable} from './drawable';
-import {Types} from './drawable';
 
 /**
  * Defines a line that can be drawn
  */
-@drawable(Types.Line)
 export class LineShape<T> extends Line<T> {
   // Color 1
   r: number = 1;

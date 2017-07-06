@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, InterleavedBufferAttribute, Mesh, NormalBlending, Points, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { QuadShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { AttributeSize, BufferUtil, IAttributeInfo } from 'webgl-surface/util/buffer-util';
@@ -6,25 +6,6 @@ import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
 import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
 const debug = require('debug')('ConversationView:GPU');
-
-// The BufferAttribute class from ThreeJS allows runtime attributes to be added,
-// And actually requires this as part of its operation. However, it doesn't use
-// Any of the facilities in TypeScript to allow this to be clarified. Therefore,
-// I'm using Declaration Merging to add the properties for type checking.
-// Hopefully in the future, they will learn the dark art of Generics.
-// Https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation
-declare module 'three' {
-  // tslint:disable-next-line interface-name
-  interface BufferAttribute {
-    customColor: InterleavedBufferAttribute & BufferAttribute
-    customInnerColor: InterleavedBufferAttribute & BufferAttribute
-    p1: InterleavedBufferAttribute & BufferAttribute
-    p2: InterleavedBufferAttribute & BufferAttribute
-    position: InterleavedBufferAttribute & BufferAttribute
-    size: InterleavedBufferAttribute & BufferAttribute
-    texCoord: InterleavedBufferAttribute & BufferAttribute
-  }
-}
 
 /** Attempt to determine if BufferAttribute is really a BufferAttribute */
 function isBufferAttributes(value: any): value is BufferAttribute {
@@ -89,7 +70,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       this.initCamera();
       this.quadSet = quads;
 
-      const numVerticesPerQuad = 4;
+      const numVerticesPerQuad = 6;
       const colorAttributeSize = 4;
 
       BufferUtil.updateBuffer(
@@ -99,14 +80,14 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
 
           // Copy first vertex twice for intro degenerate tri
           positions[ppos] = quad.right;
-          positions[++ppos] = quad.y;
+          positions[++ppos] = quad.bottom;
           positions[++ppos] = BASE_QUAD_DEPTH;
           // Skip over degenerate tris color
           cpos += colorAttributeSize;
 
           // TR
           positions[++ppos] = quad.right;
-          positions[++ppos] = quad.y;
+          positions[++ppos] = quad.bottom;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[cpos] = quad.r;
           colors[++cpos] = quad.g;
@@ -114,7 +95,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           colors[++cpos] = quad.a;
           // BR
           positions[++ppos] = quad.right;
-          positions[++ppos] = quad.bottom;
+          positions[++ppos] = quad.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[++cpos] = quad.r;
           colors[++cpos] = quad.g;
@@ -122,7 +103,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           colors[++cpos] = quad.a;
           // TL
           positions[++ppos] = quad.x;
-          positions[++ppos] = quad.y;
+          positions[++ppos] = quad.bottom;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[++cpos] = quad.r;
           colors[++cpos] = quad.g;
@@ -130,7 +111,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           colors[++cpos] = quad.a;
           // BL
           positions[++ppos] = quad.x;
-          positions[++ppos] = quad.bottom;
+          positions[++ppos] = quad.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[++cpos] = quad.r;
           colors[++cpos] = quad.g;
@@ -139,14 +120,14 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = quad.x;
-          positions[++ppos] = quad.bottom;
+          positions[++ppos] = quad.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
           // Skip over degenerate tris for color
           cpos += colorAttributeSize;
         },
       );
 
-      this.quadGeometry.setDrawRange(0, quads.length);
+      this.quadGeometry.setDrawRange(0, quads.length * 6);
 
       needsTreeUpdate = true;
       debug('Quad Buffers Created');
@@ -210,8 +191,10 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
         },
       ];
 
-      const quadVertexBufferSize = 10000;
-      this.quadGeometry = BufferUtil.makeBuffer(quadVertexBufferSize, this.quadAttributes);
+      const verticesPerQuad = 6;
+      const numQuads = 10000;
+
+      this.quadGeometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.quadAttributes);
       this.quadSystem = new Mesh(this.quadGeometry, quadMaterial);
       this.quadSystem.frustumCulled = false;
       this.quadSystem.drawMode = TriangleStripDrawMode;
