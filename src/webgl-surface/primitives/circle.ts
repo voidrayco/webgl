@@ -1,51 +1,51 @@
-import {Bounds} from './bounds'
-import {IPoint} from './point'
+import {Bounds} from './bounds';
+import {IPoint} from './point';
 
-let UID = 0
+let UID = 0;
 
 export class Circle<T> extends Bounds<T> {
   /** a UID of the circle */
-  _id = ++UID
+  _id = ++UID;
   /** Radius of the circle */
-  _radius = 0
+  _radius = 0;
   /** X coord of the center of the circle */
-  _centerX = 0
+  _centerX = 0;
   /** Y coord of the center of the circle */
-  _centerY = 0
+  _centerY = 0;
 
   get values() {
     return {
       x: this._centerX,
       y: this._centerY,
-      radius: this._radius
-    }
+      radius: this._radius,
+    };
   }
 
   set radius(val) {
-    this._radius = val
-    this.updateBounds()
+    this._radius = val;
+    this.updateBounds();
   }
 
   get radius() {
-    return this._radius
+    return this._radius;
   }
 
   set centerX(val) {
-    this._centerX = val
-    this.updateBounds()
+    this._centerX = val;
+    this.updateBounds();
   }
 
   get centerX() {
-    return this._centerX
+    return this._centerX;
   }
 
   set centerY(val) {
-    this._centerY = val
-    this.updateBounds()
+    this._centerY = val;
+    this.updateBounds();
   }
 
   get centerY() {
-    return this._centerY
+    return this._centerY;
   }
 
   /**
@@ -57,12 +57,12 @@ export class Circle<T> extends Bounds<T> {
    * @param d A data object to associate with the circle
    */
   constructor(x : number, y : number, r : number, d?: any) {
-    super(0, 0, 0, 0)
-    this._centerX = x
-    this._centerY = y
-    this._radius = r
-    this.d = d
-    this.updateBounds()
+    super(0, 0, 0, 0);
+    this._centerX = x;
+    this._centerY = y;
+    this._radius = r;
+    this.d = d;
+    this.updateBounds();
   }
 
   /**
@@ -71,31 +71,31 @@ export class Circle<T> extends Bounds<T> {
    * @param b The bounds to test against
    */
   boundsInside(b: Bounds<any>) {
-    let r2 = this._radius * this._radius
-    let dx = b.x - this._centerX
-    let dy = b.y - this._centerY
-    let dy2 = dy * dy
-    let dx2 = dx * dx
+    const r2 = this._radius * this._radius;
+    let dx = b.x - this._centerX;
+    let dy = b.y - this._centerY;
+    let dy2 = dy * dy;
+    let dx2 = dx * dx;
 
     if ((dx2 + dy2) > r2) {
-      return false
+      return false;
     }
-    dx = b.right - this._centerX
-    dx2 = dx * dx
+    dx = b.right - this._centerX;
+    dx2 = dx * dx;
 
     if ((dx2 + dy2) > r2) {
-      return false
+      return false;
     }
-    dy = b.bottom - this._centerY
-    dy2 = dy * dy
+    dy = b.bottom - this._centerY;
+    dy2 = dy * dy;
 
     if ((dx2 + dy2) > r2) {
-      return false
+      return false;
     }
-    dx = b.x - this._centerX
-    dx2 = dx * dx
+    dx = b.x - this._centerX;
+    dx2 = dx * dx;
 
-    return (dx2 + dy2) < r2
+    return (dx2 + dy2) < r2;
   }
 
   /**
@@ -109,14 +109,14 @@ export class Circle<T> extends Bounds<T> {
    * @return {number} The distance from mid circle to the point
    */
   distanceTo(p: IPoint, notSquared?: boolean) {
-    let dx = this._centerX - p.x
-    let dy = this._centerY - p.y
+    const dx = this._centerX - p.x;
+    const dy = this._centerY - p.y;
 
     if (notSquared) {
-      return dx * dx + dy * dy
+      return dx * dx + dy * dy;
     }
 
-    return Math.sqrt(dx * dx + dy * dy)
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
   /**
@@ -128,19 +128,19 @@ export class Circle<T> extends Bounds<T> {
    * @return {Circle} The nearest circle
    */
   static getClosest(circles: Circle<any>[], p: IPoint) {
-    let closestCircle
-    let closestDistance = Number.MAX_VALUE
-    let distance = 0
+    let closestCircle;
+    let closestDistance = Number.MAX_VALUE;
+    let distance = 0;
 
     circles.forEach((circle) => {
-      distance = circle.distanceTo(p, true)
+      distance = circle.distanceTo(p, true);
       if (distance < closestDistance) {
-        closestCircle = circle
-        closestDistance = distance
+        closestCircle = circle;
+        closestDistance = distance;
       }
-    })
+    });
 
-    return closestCircle
+    return closestCircle;
   }
 
   /**
@@ -151,9 +151,9 @@ export class Circle<T> extends Bounds<T> {
    * @return {boolean} True if colliding
    */
   hitCircle(c: Circle<any>): boolean {
-    let totalDistance = c._radius + this._radius
-    totalDistance *= totalDistance
-    return this.distanceTo({x: c._centerX, y: c._centerY}, true) < totalDistance
+    let totalDistance = c._radius + this._radius;
+    totalDistance *= totalDistance;
+    return this.distanceTo({x: c._centerX, y: c._centerY}, true) < totalDistance;
   }
 
   /**
@@ -165,11 +165,11 @@ export class Circle<T> extends Bounds<T> {
    * @return True if the point is inside
    */
   hitPoint(p: IPoint): boolean {
-    let r2 = this._radius * this._radius
-    let dx = p.x - this._centerX
-    let dy = p.y - this._centerY
+    const r2 = this._radius * this._radius;
+    const dx = p.x - this._centerX;
+    const dy = p.y - this._centerY;
 
-    return (dx * dx + dy * dy) < r2
+    return (dx * dx + dy * dy) < r2;
   }
 
   /**
@@ -181,10 +181,10 @@ export class Circle<T> extends Bounds<T> {
    * @param r
    */
   position(x : number, y : number, r : number) {
-    this._centerX = x
-    this._centerY = y
-    this._radius = r
-    this.updateBounds()
+    this._centerX = x;
+    this._centerY = y;
+    this._radius = r;
+    this.updateBounds();
   }
 
   /**
@@ -196,11 +196,11 @@ export class Circle<T> extends Bounds<T> {
    * @return True if the point is inside
    */
   pointInside(p: IPoint): boolean {
-    let r2 = this._radius * this._radius
-    let dx = p.x - this._centerX
-    let dy = p.y - this._centerY
+    const r2 = this._radius * this._radius;
+    const dx = p.x - this._centerX;
+    const dy = p.y - this._centerY;
 
-    return (dx * dx + dy * dy) < r2
+    return (dx * dx + dy * dy) < r2;
   }
 
   /**
@@ -208,17 +208,17 @@ export class Circle<T> extends Bounds<T> {
    * accordingly, which is what this method recalculates.
    */
   updateBounds() {
-    let radius = this._radius
-    this.x = this._centerX - radius
-    this.y = this._centerY - radius
-    this.height = radius * 2
-    this.width = radius * 2
+    const radius = this._radius;
+    this.x = this._centerX - radius;
+    this.y = this._centerY - radius;
+    this.height = radius * 2;
+    this.width = radius * 2;
   }
 
   /**
    * Pretty print the metrics of this circle
    */
   toString() {
-    return `[Circle {x: ${this._centerX}, y: ${this._centerY}, r: ${this._radius}}]`
+    return `[Circle {x: ${this._centerX}, y: ${this._centerY}, r: ${this._radius}}]`;
   }
 }

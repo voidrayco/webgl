@@ -1,11 +1,11 @@
-import {Bounds} from '../primitives/bounds'
-import {IPoint} from '../primitives/point'
+import {Bounds} from '../primitives/bounds';
+import {IPoint} from '../primitives/point';
 
 // A configuration that controls how readily a quadtree will split to another level
 // Adjusting this number can improve or degrade your performance significantly and
-// must be tested for specific use cases
-const maxPopulation: number = 5
-const maxDepth: number = 10
+// Must be tested for specific use cases
+const maxPopulation: number = 5;
+const maxDepth: number = 10;
 
 /**
  * This filters a quad tree query by type
@@ -14,15 +14,15 @@ const maxDepth: number = 10
  * @template T
  */
 export function filterQuery<T extends Bounds<any>>(type: Function[], queryValues: Bounds<any>[]): T[] {
-  const filtered: T[] = []
+  const filtered: T[] = [];
 
-  queryValues.forEach(function(obj: Bounds<any>) {
+  queryValues.forEach((obj: Bounds<any>) => {
     if (type.find(t => obj instanceof t)) {
-      filtered.push(obj as T)
+      filtered.push(obj as T);
     }
-  })
+  });
 
-  return filtered
+  return filtered;
 }
 
 /**
@@ -48,10 +48,10 @@ interface IVisitFunction<T extends Bounds<any>> {
  * @class Quadrants
  */
 class Quadrants<T extends Bounds<any>> {
-  TL: Node<T> = null
-  TR: Node<T> = null
-  BL: Node<T> = null
-  BR: Node<T> = null
+  TL: Node<T> = null;
+  TR: Node<T> = null;
+  BL: Node<T> = null;
+  BR: Node<T> = null;
 
   /**
    * Ensures all memory is released for all nodes and all references are removed
@@ -60,14 +60,14 @@ class Quadrants<T extends Bounds<any>> {
    * @memberOf Quadrants
    */
   destroy() {
-    this.TL.destroy()
-    this.TR.destroy()
-    this.BL.destroy()
-    this.BR.destroy()
-    this.TL = null
-    this.TR = null
-    this.BL = null
-    this.BR = null
+    this.TL.destroy();
+    this.TR.destroy();
+    this.BL.destroy();
+    this.BR.destroy();
+    this.TL = null;
+    this.TR = null;
+    this.BL = null;
+    this.BR = null;
   }
 
   /**
@@ -79,11 +79,11 @@ class Quadrants<T extends Bounds<any>> {
    * @memberOf Quadrants
    */
   constructor(bounds: Bounds<any>, depth: number) {
-    let mid = bounds.mid
-    this.TL = new Node<T>(bounds.x, mid.x, bounds.y, mid.y, depth)
-    this.TR = new Node<T>(mid.x, bounds.right, bounds.y, mid.y, depth)
-    this.BL = new Node<T>(bounds.x, mid.x, mid.y, bounds.bottom, depth)
-    this.BR = new Node<T>(mid.x, bounds.right, mid.y, bounds.bottom, depth)
+    const mid = bounds.mid;
+    this.TL = new Node<T>(bounds.x, mid.x, bounds.y, mid.y, depth);
+    this.TR = new Node<T>(mid.x, bounds.right, bounds.y, mid.y, depth);
+    this.BL = new Node<T>(bounds.x, mid.x, mid.y, bounds.bottom, depth);
+    this.BR = new Node<T>(mid.x, bounds.right, mid.y, bounds.bottom, depth);
   }
 }
 
@@ -96,11 +96,11 @@ class Quadrants<T extends Bounds<any>> {
  * @class Node
  */
 export class Node<T extends Bounds<any>> {
-  bounds:        Bounds<any>  = null
-  children:      Array<T>     = []
-  childrenProps: Array<any>   = []
-  depth:         number       = 0
-  nodes:         Quadrants<T> = null
+  bounds:        Bounds<any>  = null;
+  children:      T[]     = [];
+  childrenProps: any[]   = [];
+  depth:         number       = 0;
+  nodes:         Quadrants<T> = null;
 
   /**
    * Destroys this node and ensures all child nodes are destroyed as well.
@@ -108,12 +108,12 @@ export class Node<T extends Bounds<any>> {
    * @memberOf Node
    */
   destroy() {
-    this.children = null
-    this.bounds   = null
+    this.children = null;
+    this.bounds   = null;
 
     if (this.nodes) {
-      this.nodes.destroy()
-      this.nodes = null
+      this.nodes.destroy();
+      this.nodes = null;
     }
   }
 
@@ -131,16 +131,16 @@ export class Node<T extends Bounds<any>> {
   constructor(left: number, right: number, top: number, bottom: number, depth?: number) {
     // If params insertted
     if (arguments.length >= 4) {
-      this.bounds = new Bounds(left, right, top, bottom)
+      this.bounds = new Bounds(left, right, top, bottom);
     }
 
     // Otherwise, make tiny start area
     else {
-      this.bounds = new Bounds(0, 1, 0, 1)
+      this.bounds = new Bounds(0, 1, 0, 1);
     }
 
     // Ensure the depth is set
-    this.depth = depth || 0
+    this.depth = depth || 0;
   }
 
   /**
@@ -158,16 +158,16 @@ export class Node<T extends Bounds<any>> {
    */
   add(child: T, props: any): boolean {
     // This is the entry function for adding children, so we must first expand our top node
-    // to cover the area that the child is located.
+    // To cover the area that the child is located.
     // If we're in bounds, then let's just add the child
     if (child.isInside(this.bounds)) {
-      return this.doAdd(child)
+      return this.doAdd(child);
     }
 
     // Otherwise, we need to expand first
     else {
-      this.cover(child)
-      return this.add(child, props)
+      this.cover(child);
+      return this.add(child, props);
     }
   }
 
@@ -181,29 +181,29 @@ export class Node<T extends Bounds<any>> {
    *
    * @memberOf Node
    */
-  addAll(children: Array<T>, childrenProps?: Array<any>) {
+  addAll(children: T[], childrenProps?: any[]) {
     // Ensure the properties are at least defined
-    childrenProps = childrenProps || []
+    childrenProps = childrenProps || [];
 
     // Make sure we cover the entire area of all the children.
     // We can speed this up a lot if we first calculate the total bounds the new children covers
-    let minX = Number.MAX_VALUE
-    let minY = Number.MAX_VALUE
-    let maxX = -Number.MAX_VALUE
-    let maxY = -Number.MAX_VALUE
+    let minX = Number.MAX_VALUE;
+    let minY = Number.MAX_VALUE;
+    let maxX = -Number.MAX_VALUE;
+    let maxY = -Number.MAX_VALUE;
 
     // Get the dimensions of the new bounds
     children.forEach(child => {
-      if (child.x < minX)      { minX = child.x }
-      if (child.right > maxX)  { maxX = child.right }
-      if (child.y < minY)      { minY = child.y }
-      if (child.bottom > maxY) { maxY = child.bottom }
-    })
+      if (child.x < minX)      { minX = child.x; }
+      if (child.right > maxX)  { maxX = child.right; }
+      if (child.y < minY)      { minY = child.y; }
+      if (child.bottom > maxY) { maxY = child.bottom; }
+    });
 
     // Make sure our bounds includes the specified bounds
-    this.cover(new Bounds(minX, maxX, minY, maxY))
+    this.cover(new Bounds(minX, maxX, minY, maxY));
     // Add all of the children into the tree
-    children.forEach((child, index) => this.doAdd(child))
+    children.forEach((child, index) => this.doAdd(child));
   }
 
   /**
@@ -217,27 +217,27 @@ export class Node<T extends Bounds<any>> {
   cover(bounds: Bounds<any>) {
     // If we are already covering the area: abort
     if (bounds.isInside(this.bounds)) {
-      return
+      return;
     }
 
     // Make our bounds cover the new area
-    this.bounds.encapsulate(bounds)
-    this.bounds.x -= 1
-    this.bounds.y -= 1
-    this.bounds.width += 2
-    this.bounds.height += 2
+    this.bounds.encapsulate(bounds);
+    this.bounds.x -= 1;
+    this.bounds.y -= 1;
+    this.bounds.width += 2;
+    this.bounds.height += 2;
     // Get all of the children underneath this node
-    let allChildren = this.gatherChildren([])
+    const allChildren = this.gatherChildren([]);
 
     // Destroy the split nodes
     if (this.nodes) {
-      // completely...destroy...
-      this.nodes.destroy()
-      this.nodes = null
+      // Completely...destroy...
+      this.nodes.destroy();
+      this.nodes = null;
     }
 
     // Reinsert all children with the new dimensions in place
-    allChildren.forEach((child, index) => this.doAdd(child))
+    allChildren.forEach((child, index) => this.doAdd(child));
   }
 
   /**
@@ -255,42 +255,42 @@ export class Node<T extends Bounds<any>> {
     // If nodes are present, then we have already exceeded the population of this node
     if (this.nodes) {
       if (child.isInside(this.nodes.TL.bounds)) {
-        return this.nodes.TL.doAdd(child)
+        return this.nodes.TL.doAdd(child);
       }
 
       if (child.isInside(this.nodes.TR.bounds)) {
-        return this.nodes.TR.doAdd(child)
+        return this.nodes.TR.doAdd(child);
       }
 
       if (child.isInside(this.nodes.BL.bounds)) {
-        return this.nodes.BL.doAdd(child)
+        return this.nodes.BL.doAdd(child);
       }
 
       if (child.isInside(this.nodes.BR.bounds)) {
-        return this.nodes.BR.doAdd(child)
+        return this.nodes.BR.doAdd(child);
       }
 
       // Otherwise, this is a child overlapping this border
-      this.children.push(child)
+      this.children.push(child);
 
-      return true
+      return true;
     }
 
     // Otherwise, we have not had a split due to population limits being exceeded
     else if (child.isInside(this.bounds)) {
-      this.children.push(child)
+      this.children.push(child);
 
       // If we exceeded our population for this quadrant, it is time to split up
       if (this.children.length > maxPopulation && this.depth < maxDepth) {
-        this.split()
+        this.split();
       }
 
-      return true
+      return true;
     }
 
     // Otherwise, this quad tree needs to be resized to include the child
     // But we will consider adds outside of the bounds an error
-    throw new Error('Child does not fit in node.')
+    throw new Error('Child does not fit in node.');
   }
 
   /**
@@ -300,17 +300,17 @@ export class Node<T extends Bounds<any>> {
    *
    * @return The list specified as the list parameter
    */
-  gatherChildren(list: Array<T>): Array<T> {
-    list = list.concat(this.children)
+  gatherChildren(list: T[]): T[] {
+    list = list.concat(this.children);
 
     if (this.nodes) {
-      this.nodes.TL.gatherChildren(list)
-      this.nodes.TR.gatherChildren(list)
-      this.nodes.BL.gatherChildren(list)
-      this.nodes.BR.gatherChildren(list)
+      this.nodes.TL.gatherChildren(list);
+      this.nodes.TR.gatherChildren(list);
+      this.nodes.BL.gatherChildren(list);
+      this.nodes.BR.gatherChildren(list);
     }
 
-    return list
+    return list;
   }
 
   /**
@@ -323,19 +323,19 @@ export class Node<T extends Bounds<any>> {
    *
    * @memberOf Node
    */
-  gatherProps(list: Array<any>): Array<any> {
+  gatherProps(list: any[]): any[] {
     this.children.forEach((c, index) => {
-      list.push(this.childrenProps[index])
-    })
+      list.push(this.childrenProps[index]);
+    });
 
     if (this.nodes) {
-      this.nodes.TL.gatherProps(list)
-      this.nodes.TR.gatherProps(list)
-      this.nodes.BL.gatherProps(list)
-      this.nodes.BR.gatherProps(list)
+      this.nodes.TL.gatherProps(list);
+      this.nodes.TR.gatherProps(list);
+      this.nodes.BL.gatherProps(list);
+      this.nodes.BR.gatherProps(list);
     }
 
-    return list
+    return list;
   }
 
   /**
@@ -347,24 +347,24 @@ export class Node<T extends Bounds<any>> {
    *
    * @return An array of children that intersects with the query
    */
-  query(bounds: Bounds<any> | IPoint, visit?: IVisitFunction<T>): Array<T> {
+  query(bounds: Bounds<any> | IPoint, visit?: IVisitFunction<T>): T[] {
     // Query a rectangle
     if (bounds instanceof Bounds) {
       if (bounds.hitBounds(this.bounds)) {
-        return this.queryBounds(bounds, [], visit)
+        return this.queryBounds(bounds, [], visit);
       }
 
       // Return an empty array when nothing is collided with
-      return []
+      return [];
     }
 
     // Query a point
     if (this.bounds.containsPoint(bounds)) {
-      return this.queryPoint(bounds, [], visit)
+      return this.queryPoint(bounds, [], visit);
     }
 
     // Return an empty array when nothing is collided with
-    return []
+    return [];
   }
 
   /**
@@ -377,37 +377,37 @@ export class Node<T extends Bounds<any>> {
    *
    * @return     Returns the exact same list that was input as the list param
    */
-  queryBounds(b: Bounds<any>, list: Array<T>, visit?: IVisitFunction<T>) : Array<T> {
+  queryBounds(b: Bounds<any>, list: T[], visit?: IVisitFunction<T>) : T[] {
     this.children.forEach((c, index) => {
       if (c.hitBounds(b)) {
-        list.push(c)
+        list.push(c);
       }
-    })
+    });
 
     if (visit) {
-      visit(this)
+      visit(this);
     }
 
     if (this.nodes) {
       if (b.hitBounds(this.nodes.TL.bounds)) {
-        this.nodes.TL.queryBounds(b, list, visit)
+        this.nodes.TL.queryBounds(b, list, visit);
       }
 
       if (b.hitBounds(this.nodes.TR.bounds)) {
-        this.nodes.TR.queryBounds(b, list, visit)
+        this.nodes.TR.queryBounds(b, list, visit);
       }
 
       if (b.hitBounds(this.nodes.BL.bounds)) {
-        this.nodes.BL.queryBounds(b, list, visit)
+        this.nodes.BL.queryBounds(b, list, visit);
       }
 
       if (b.hitBounds(this.nodes.BR.bounds)) {
-        this.nodes.BR.queryBounds(b, list, visit)
+        this.nodes.BR.queryBounds(b, list, visit);
       }
 
     }
 
-    return list
+    return list;
   }
 
   /**
@@ -420,37 +420,37 @@ export class Node<T extends Bounds<any>> {
    *
    * @return      Returns the exact same list that was input as the list param
    */
-  queryPoint(p: any, list: Array<T>, visit?: IVisitFunction<T>): Array<T> {
+  queryPoint(p: any, list: T[], visit?: IVisitFunction<T>): T[] {
     this.children.forEach((c, index) => {
       if (c.containsPoint(p)) {
-        list.push(c)
+        list.push(c);
       }
-    })
+    });
 
     if (visit) {
-      visit(this)
+      visit(this);
     }
 
     if (this.nodes) {
       if (this.nodes.TL.bounds.containsPoint(p)) {
-        this.nodes.TL.queryPoint(p, list, visit)
+        this.nodes.TL.queryPoint(p, list, visit);
       }
 
       if (this.nodes.TR.bounds.containsPoint(p)) {
-        this.nodes.TR.queryPoint(p, list, visit)
+        this.nodes.TR.queryPoint(p, list, visit);
       }
 
       if (this.nodes.BL.bounds.containsPoint(p)) {
-        this.nodes.BL.queryPoint(p, list, visit)
+        this.nodes.BL.queryPoint(p, list, visit);
       }
 
       if (this.nodes.BR.bounds.containsPoint(p)) {
-        this.nodes.BR.queryPoint(p, list, visit)
+        this.nodes.BR.queryPoint(p, list, visit);
       }
 
     }
 
-    return list
+    return list;
   }
 
   /**
@@ -458,15 +458,15 @@ export class Node<T extends Bounds<any>> {
    */
   split() {
     // Gather all items to be handed down
-    let allChildren = this.gatherChildren([])
+    const allChildren = this.gatherChildren([]);
     // Gather all props for the children to be handed down as well
-    this.nodes = new Quadrants<T>(this.bounds, this.depth + 1)
+    this.nodes = new Quadrants<T>(this.bounds, this.depth + 1);
 
-    this.children = []
-    this.childrenProps = []
+    this.children = [];
+    this.childrenProps = [];
 
     while (allChildren.length > 0) {
-      this.doAdd(allChildren.pop())
+      this.doAdd(allChildren.pop());
     }
   }
 
@@ -476,13 +476,13 @@ export class Node<T extends Bounds<any>> {
    * @param cb A callback that has the parameter (node) which is a quadrant in the tree
    */
   visit(cb: IVisitFunction<T>) : void {
-    let finished = Boolean(cb(this))
+    const finished = Boolean(cb(this));
 
     if (this.nodes && !finished) {
-      this.nodes.TL.visit(cb)
-      this.nodes.TR.visit(cb)
-      this.nodes.BL.visit(cb)
-      this.nodes.BR.visit(cb)
+      this.nodes.TL.visit(cb);
+      this.nodes.TR.visit(cb);
+      this.nodes.BL.visit(cb);
+      this.nodes.BR.visit(cb);
     }
   }
 }

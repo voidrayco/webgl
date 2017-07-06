@@ -10,7 +10,7 @@ export function boolMapToArray<T>(map: Map<T, boolean>): T[] {
   return Array
     .from(map)
     .filter((item: [T, boolean]) => item[1])
-    .map((item: [T, boolean]) => item[0])
+    .map((item: [T, boolean]) => item[0]);
 }
 
 /**
@@ -18,18 +18,18 @@ export function boolMapToArray<T>(map: Map<T, boolean>): T[] {
  */
 export class CustomSelection {
   /** This caches the list generation of a selection */
-  cachedSelection: Map<string, any[]> = new Map<string, any[]>()
+  cachedSelection: Map<string, any[]> = new Map<string, any[]>();
   /** Map of the custom categories to the selection state */
-  selections: Map<string, Map<any, boolean>> = new Map<string, Map<any, boolean>>()
+  selections: Map<string, Map<any, boolean>> = new Map<string, Map<any, boolean>>();
   /** Keeps flags indicating if a selection for a given category has changed or not */
-  _didSelectionChange: Map<string, boolean> = new Map<string, boolean>()
+  _didSelectionChange: Map<string, boolean> = new Map<string, boolean>();
 
   /**
    * Clears out all custom selections for every category
    */
   clearAllSelections() {
     for (const key of this.selections.keys()) {
-      this.clearSelection(key)
+      this.clearSelection(key);
     }
   }
 
@@ -41,9 +41,9 @@ export class CustomSelection {
   clearSelection(category: string) {
     // We must have selected items to clear the selection
     if (this.getSelection(category).length) {
-      this.selections.set(category, null)
-      this.cachedSelection.set(category, null)
-      this._didSelectionChange.set(category, true)
+      this.selections.set(category, null);
+      this.cachedSelection.set(category, null);
+      this._didSelectionChange.set(category, true);
     }
   }
 
@@ -54,16 +54,16 @@ export class CustomSelection {
    * @param item The item to remove from being selected
    */
   deselect<T>(category: string, item: T) {
-    let selectionMap: Map<T, boolean> = this.selections.get(category)
+    const selectionMap: Map<T, boolean> = this.selections.get(category);
 
     // See if the item is selected already, if it is, clear the selection and bust caches
     if (selectionMap.get(item)) {
       // Clear the cache for the selection list
-      this.cachedSelection.set(category, null)
+      this.cachedSelection.set(category, null);
       // Set the selection
-      selectionMap.set(item, false)
+      selectionMap.set(item, false);
       // Flag the category of selections as changed
-      this._didSelectionChange.set(category, true)
+      this._didSelectionChange.set(category, true);
     }
   }
 
@@ -73,7 +73,7 @@ export class CustomSelection {
    * @param {string} category The selection category to check
    */
   didSelectionCategoryChange(category: string): boolean {
-    return this._didSelectionChange.get(category)
+    return this._didSelectionChange.get(category);
   }
 
   /**
@@ -82,7 +82,7 @@ export class CustomSelection {
    * @return {boolean} True if any selection has changed
    */
   didSelectionChange(): boolean {
-    return boolMapToArray<string>(this._didSelectionChange).length > 0
+    return boolMapToArray<string>(this._didSelectionChange).length > 0;
   }
 
   /**
@@ -91,7 +91,7 @@ export class CustomSelection {
    */
   finalizeUpdate() {
     for (const key of this._didSelectionChange.keys()) {
-      this._didSelectionChange.set(key, false)
+      this._didSelectionChange.set(key, false);
     }
   }
 
@@ -104,18 +104,18 @@ export class CustomSelection {
    */
   getSelection<T>(category: string): T[] {
     if (!this.cachedSelection.get(category)) {
-      const theSelection = this.selections.get(category)
+      const theSelection = this.selections.get(category);
 
       if (theSelection) {
-        this.cachedSelection.set(category, boolMapToArray<T>(theSelection))
+        this.cachedSelection.set(category, boolMapToArray<T>(theSelection));
       }
 
       else {
-        this.cachedSelection.set(category, [])
+        this.cachedSelection.set(category, []);
       }
     }
 
-    return this.cachedSelection.get(category)
+    return this.cachedSelection.get(category);
   }
 
   /**
@@ -125,20 +125,20 @@ export class CustomSelection {
    * @param item The item to flag as selected
    */
   select<T>(category: string, item: T) {
-    let selectionMap: Map<T, boolean> = this.selections.get(category)
+    let selectionMap: Map<T, boolean> = this.selections.get(category);
 
     if (!selectionMap) {
-      selectionMap = new Map<T, boolean>()
-      this.selections.set(category, selectionMap)
+      selectionMap = new Map<T, boolean>();
+      this.selections.set(category, selectionMap);
     }
 
     if (!selectionMap.get(item)) {
       // Clear the cache for the selection list
-      this.cachedSelection.set(category, null)
+      this.cachedSelection.set(category, null);
       // Set the selection
-      selectionMap.set(item, true)
+      selectionMap.set(item, true);
       // Flag the category of selections as changed
-      this._didSelectionChange.set(category, true)
+      this._didSelectionChange.set(category, true);
     }
   }
 
@@ -149,29 +149,29 @@ export class CustomSelection {
    * @param item The item to flag as selected
    */
   toggleSelect<T>(category: string, item: T) {
-    let selectionMap: Map<T, boolean> = this.selections.get(category)
+    let selectionMap: Map<T, boolean> = this.selections.get(category);
 
     if (!selectionMap) {
-      selectionMap = new Map<T, boolean>()
-      this.selections.set(category, selectionMap)
+      selectionMap = new Map<T, boolean>();
+      this.selections.set(category, selectionMap);
     }
 
     // Clear the cache for the selection list
-    this.cachedSelection.set(category, null)
+    this.cachedSelection.set(category, null);
 
     // Toggle the selection off if already selected
     if (selectionMap.get(item)) {
-      this.deselect<T>(category, item)
+      this.deselect<T>(category, item);
     }
 
     // We perform the select method instead of direct manipulation to make the select
-    // method be the one true source of selecting an item, thus making relative selections
-    // easy to generate
+    // Method be the one true source of selecting an item, thus making relative selections
+    // Easy to generate
     else {
-      this.select<T>(category, item)
+      this.select<T>(category, item);
     }
 
     // Flag the category of selections as changed
-    this._didSelectionChange.set(category, true)
+    this._didSelectionChange.set(category, true);
   }
 }

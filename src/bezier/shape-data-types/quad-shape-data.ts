@@ -1,5 +1,5 @@
-import { IPoint } from 'webgl-surface/primitives/point'
-import { ISize } from 'webgl-surface/primitives/size'
+import { IPoint } from 'webgl-surface/primitives/point';
+import { ISize } from 'webgl-surface/primitives/size';
 
 /**
  * This defines any data we want associated with quads within this rendering

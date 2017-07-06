@@ -1,7 +1,7 @@
-import { bezier2, bezier3 } from '../util/interpolation'
-import { Bounds } from './bounds'
-import { IPoint, Point } from './point'
-import { Line } from './line'
+import { bezier2, bezier3 } from '../util/interpolation';
+import { Bounds } from './bounds';
+import { Line } from './line';
+import { IPoint, Point } from './point';
 
 /**
  * This enum covers the type of curved lines that can be made. Making a specific curve
@@ -37,25 +37,25 @@ export enum CurveType {
  */
 function bezierDistance(line: CurvedLine<any>, testPoint: IPoint): number {
   // Get all of the points associated with the curve
-  const lineStrip: IPoint[] = line.getLineStrip()
+  const lineStrip: IPoint[] = line.getLineStrip();
   // Find the closest points to the mouse
-  const closestIndex = Point.getClosestIndex(testPoint, lineStrip)
+  const closestIndex = Point.getClosestIndex(testPoint, lineStrip);
   // Calculate the lines that eminate from this point and do a distance calculation from that line
   // Find the closest distance and use it
-  let closestDistance = Number.MAX_VALUE
-  let straightLine: Line<never>
+  let closestDistance = Number.MAX_VALUE;
+  let straightLine: Line<never>;
 
   if (closestIndex > 0) {
-    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex - 1])
-    closestDistance = straightLine.distanceTo(testPoint)
+    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex - 1]);
+    closestDistance = straightLine.distanceTo(testPoint);
   }
 
   if (closestIndex < lineStrip.length - 1) {
-    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex + 1])
-    closestDistance = Math.min(closestDistance, straightLine.distanceTo(testPoint))
+    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex + 1]);
+    closestDistance = Math.min(closestDistance, straightLine.distanceTo(testPoint));
   }
 
-  return closestDistance
+  return closestDistance;
 }
 
 /**
@@ -70,25 +70,25 @@ function bezierDistance(line: CurvedLine<any>, testPoint: IPoint): number {
  */
 function circularDistance(line: CurvedLine<any>, testPoint: IPoint): number {
   // Get all of the points associated with the curve
-  const lineStrip: IPoint[] = line.getLineStrip()
+  const lineStrip: IPoint[] = line.getLineStrip();
   // Find the closest points to the mouse
-  const closestIndex = Point.getClosestIndex(testPoint, lineStrip)
+  const closestIndex = Point.getClosestIndex(testPoint, lineStrip);
   // Calculate the lines that eminate from this point and do a distance calculation from that line
   // Find the closest distance and use it
-  let closestDistance = Number.MAX_VALUE
-  let straightLine: Line<never>
+  let closestDistance = Number.MAX_VALUE;
+  let straightLine: Line<never>;
 
   if (closestIndex > 0) {
-    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex - 1])
-    closestDistance = straightLine.distanceTo(testPoint)
+    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex - 1]);
+    closestDistance = straightLine.distanceTo(testPoint);
   }
 
   if (closestIndex < lineStrip.length - 1) {
-    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex + 1])
-    closestDistance = Math.min(closestDistance, straightLine.distanceTo(testPoint))
+    straightLine = new Line<never>(lineStrip[closestIndex], lineStrip[closestIndex + 1]);
+    closestDistance = Math.min(closestDistance, straightLine.distanceTo(testPoint));
   }
 
-  return closestDistance
+  return closestDistance;
 }
 
 /**
@@ -100,7 +100,7 @@ function circularDistance(line: CurvedLine<any>, testPoint: IPoint): number {
  * @returns {number} The nearest distance from the curve to the test point
  */
 function straightDistance(line: CurvedLine<any>, testPoint: IPoint): number {
-  return new Line(line.p1, line.p2).distanceTo(testPoint)
+  return new Line(line.p1, line.p2).distanceTo(testPoint);
 }
 
 // -------[ Segment Generating Methods ]----------------------------
@@ -114,24 +114,24 @@ function straightDistance(line: CurvedLine<any>, testPoint: IPoint): number {
  */
 function makeBezier2Segments(line: CurvedLine<any>): IPoint[] {
   if (line.cachesSegments && line.cachedSegments) {
-    return line.cachedSegments
+    return line.cachedSegments;
   }
 
-  const segments: IPoint[] = []
-  const dt = 1 / line.resolution
-  const p1 = line.p1
-  const p2 = line.p2
-  const c1 = line.controlPoints[0]
+  const segments: IPoint[] = [];
+  const dt = 1 / line.resolution;
+  const p1 = line.p1;
+  const p2 = line.p2;
+  const c1 = line.controlPoints[0];
 
   for (let i = 0, end = line.resolution; i < end; ++i) {
-    segments.push(bezier2(dt * i, p1, p2, c1))
+    segments.push(bezier2(dt * i, p1, p2, c1));
   }
 
   if (line.cachesSegments) {
-    line.cachedSegments = segments
+    line.cachedSegments = segments;
   }
 
-  return segments
+  return segments;
 }
 
 /**
@@ -143,25 +143,25 @@ function makeBezier2Segments(line: CurvedLine<any>): IPoint[] {
  */
 function makeBezier3Segments(line: CurvedLine<any>): IPoint[] {
   if (line.cachesSegments && line.cachedSegments) {
-    return line.cachedSegments
+    return line.cachedSegments;
   }
 
-  const segments: IPoint[] = []
-  const dt = 1 / line.resolution
-  const p1 = line.p1
-  const p2 = line.p2
-  const c1 = line.controlPoints[0]
-  const c2 = line.controlPoints[1]
+  const segments: IPoint[] = [];
+  const dt = 1 / line.resolution;
+  const p1 = line.p1;
+  const p2 = line.p2;
+  const c1 = line.controlPoints[0];
+  const c2 = line.controlPoints[1];
 
   for (let i = 0, end = line.resolution; i < end; ++i) {
-    segments.push(bezier3(dt * i, p1, p2, c1, c2))
+    segments.push(bezier3(dt * i, p1, p2, c1, c2));
   }
 
   if (line.cachesSegments) {
-    line.cachedSegments = segments
+    line.cachedSegments = segments;
   }
 
-  return segments
+  return segments;
 }
 
 /**
@@ -174,52 +174,52 @@ function makeBezier3Segments(line: CurvedLine<any>): IPoint[] {
  */
 function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
   if (line.cachesSegments && line.cachedSegments) {
-    return line.cachedSegments
+    return line.cachedSegments;
   }
 
   // Generate a line so we can have a perpendicular calculation
-  const straightLine: Line<never> = new Line<never>(line.p1, line.p2)
-  const radius: number = straightLine.distanceTo(line.controlPoints[0])
+  const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
+  const radius: number = straightLine.distanceTo(line.controlPoints[0]);
   // We get the midpoint of the line as we want to align the center of the circle with this point
-  const midPoint: IPoint = Point.getMidpoint(line.p1, line.p2)
+  const midPoint: IPoint = Point.getMidpoint(line.p1, line.p2);
   // Get the perpendicular direction to the line so we can calculate the center of our circle
-  // from the mid point
-  const perpendicular: IPoint = straightLine.perpendicular
+  // From the mid point
+  const perpendicular: IPoint = straightLine.perpendicular;
 
   // Calculate the location of the center of the circle
   const circleCenter: IPoint = {
     x: perpendicular.x * radius + midPoint.x,
     y: perpendicular.y * radius + midPoint.y,
-  }
+  };
 
   // Get the direction vector from the circle center to the first end point
-  const direction1 = Point.getDirection(circleCenter, line.p1)
+  const direction1 = Point.getDirection(circleCenter, line.p1);
   // Get the angle of the that vector
-  const theta1 = Math.atan2(direction1.y, direction1.x)
+  const theta1 = Math.atan2(direction1.y, direction1.x);
   // Get the direction vector from the circle center to the second end point
-  const direction2 = Point.getDirection(circleCenter, line.p1)
+  const direction2 = Point.getDirection(circleCenter, line.p1);
   // Get the angle of the that vector
-  const theta2 = Math.atan2(direction2.y, direction2.x)
+  const theta2 = Math.atan2(direction2.y, direction2.x);
   // Calculate how much to increment theta in our parametric circular equation
-  const dTheta = (theta2 - theta1) / line.resolution
+  const dTheta = (theta2 - theta1) / line.resolution;
 
   // Compute the segments based on the information we have gathered by applying it to a circular
-  // parametric equation
-  const segments: IPoint[] = []
+  // Parametric equation
+  const segments: IPoint[] = [];
 
   for (let i = 0, end = line.resolution; i < end; ++i) {
     segments.push({
       x: Math.cos(theta1 + (dTheta * i)) * radius + circleCenter.x,
       y: Math.sin(theta1 + (dTheta * i)) * radius + circleCenter.y,
-    })
+    });
   }
 
   // Cache the segments if specified by the curved line
   if (line.cachesSegments) {
-    line.cachedSegments = segments
+    line.cachedSegments = segments;
   }
 
-  return []
+  return [];
 }
 
 /**
@@ -230,7 +230,7 @@ function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
  * @returns {IPoint[]}
  */
 function makeStraightSegments(line: CurvedLine<any>) {
-  return [line.p1, line.p2]
+  return [line.p1, line.p2];
 }
 
 /** A quick lookup for a proper segment creating method for a curved line  */
@@ -247,14 +247,14 @@ const pickSegmentMethod = {
   [CurveType.Straight]: [
     makeStraightSegments,
   ],
-}
+};
 
 /** A quick lookup for a proper distance calculating method for a curved line  */
 const pickDistanceMethod = {
   [CurveType.Bezier]: bezierDistance,
   [CurveType.Circular]: circularDistance,
   [CurveType.Straight]: straightDistance,
-}
+};
 
 /**
  * Defines an object which illustrates a curved line. Curved lines can be formed in many
@@ -267,26 +267,26 @@ const pickDistanceMethod = {
  */
 export class CurvedLine<T> extends Bounds<T> {
   /** Stores the segments that have been calculated. Only gets populated if cachesSegments is true */
-  cachedSegments: IPoint[]
+  cachedSegments: IPoint[];
   /** Flag to indicate if this line caches its segments. Uses more ram but performs better if true */
-  cachesSegments: boolean
+  cachesSegments: boolean;
   /**
    * The control points used for calculating the curvature of the line. Circular curves only use a single point
    * to indicate the middle of the circle that the line arcs from.
    */
-  controlPoints: IPoint[]
+  controlPoints: IPoint[];
   /** This is the automatically set method that will be used in calculating the distance to a point from this line */
-  distanceMethod: (line: CurvedLine<any>, point: IPoint) => number
+  distanceMethod: (line: CurvedLine<any>, point: IPoint) => number;
   /** This is an end point of the line */
-  p1: IPoint
+  p1: IPoint;
   /** This is an end point of the line */
-  p2: IPoint
+  p2: IPoint;
   /** This is how many segments can be used to generate the line. More segments = less performant but prettier */
-  resolution: number
+  resolution: number;
   /** This is the automatically set method used to calculate the segments needed to piece together the curve */
-  segmentMethod: (line: CurvedLine<any>) => IPoint[]
+  segmentMethod: (line: CurvedLine<any>) => IPoint[];
   /** This indicates how the curve is formed from the control points. See the enum values for more details. */
-  type: CurveType
+  type: CurveType;
 
   /**
    * Generates a primitive that describes a curved line, which is defined by the lines end points, type, and control points
@@ -301,15 +301,15 @@ export class CurvedLine<T> extends Bounds<T> {
    * @memberof CurvedLine
    */
   constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[], resolution: number = 20, cacheSegments: boolean = false) {
-    super(0, 0, 0, 0)
+    super(0, 0, 0, 0);
 
     // Apply the relevant properties to the curve
-    this.cachesSegments = cacheSegments
-    this.type = type
+    this.cachesSegments = cacheSegments;
+    this.type = type;
     // Set the metrics for this curved line
-    this.setPoints(p1, p2, controlPoints)
+    this.setPoints(p1, p2, controlPoints);
     // Set the method that will be used for calculating distance from a point
-    this.distanceMethod = pickDistanceMethod[type]
+    this.distanceMethod = pickDistanceMethod[type];
   }
 
   /**
@@ -320,7 +320,7 @@ export class CurvedLine<T> extends Bounds<T> {
    * @returns {number} The calculated nearest distance from this curve to the point
    */
   distanceTo(point: IPoint): number {
-    return this.distanceMethod(this, point)
+    return this.distanceMethod(this, point);
   }
 
   /**
@@ -332,19 +332,19 @@ export class CurvedLine<T> extends Bounds<T> {
    * @return {Line} The nearest line to the point
    */
   static getClosest<T>(lines: CurvedLine<T>[], point: IPoint) {
-    let closestLine
-    let closestDistance = Number.MAX_VALUE
-    let distance = 0
+    let closestLine;
+    let closestDistance = Number.MAX_VALUE;
+    let distance = 0;
 
     lines.forEach((line) => {
-      distance = line.distanceTo(point)
+      distance = line.distanceTo(point);
       if (distance < closestDistance) {
-        closestLine = line
-        closestDistance = distance
+        closestLine = line;
+        closestDistance = distance;
       }
-    })
+    });
 
-    return closestLine
+    return closestLine;
   }
 
   /**
@@ -356,7 +356,7 @@ export class CurvedLine<T> extends Bounds<T> {
    * @return {IPoint[]} All of the points in the line strip
    */
   getLineStrip(): IPoint[] {
-    return this.segmentMethod(this)
+    return this.segmentMethod(this);
   }
 
   /**
@@ -368,34 +368,34 @@ export class CurvedLine<T> extends Bounds<T> {
    */
   setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]) {
     // Apply the points
-    this.p1 = p1
-    this.p2 = p2
+    this.p1 = p1;
+    this.p2 = p2;
 
     // Get the available segment methods for the given type
-    const segmentMethods = pickSegmentMethod[this.type]
+    const segmentMethods = pickSegmentMethod[this.type];
 
     // If we adjust the control points we need to re-evaluate the type of segment creation method we use
     if (controlPoints) {
-      this.controlPoints = controlPoints
+      this.controlPoints = controlPoints;
       // Get the number of control points we want to base the curve off of
-      let numControlPoints = controlPoints.length
+      let numControlPoints = controlPoints.length;
 
       // If we have more control points than the methods available, then we use the greatest method available to best
-      // handle as many control points as possible
+      // Handle as many control points as possible
       if (numControlPoints > segmentMethods.length) {
-        numControlPoints = segmentMethods.length - 1
+        numControlPoints = segmentMethods.length - 1;
       }
 
       // Set the method that will be used for generating segments
-      this.segmentMethod = segmentMethods[numControlPoints]
+      this.segmentMethod = segmentMethods[numControlPoints];
 
       // Make sure the input wasn't bad
       if (!this.segmentMethod) {
-        throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point.')
+        throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point.');
       }
     }
 
     // Invalidate caches if they exist
-    this.cachedSegments = null
+    this.cachedSegments = null;
   }
 }

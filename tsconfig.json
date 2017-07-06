@@ -10,11 +10,8 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "strictNullChecks": true,
-    "paths": {
-      "webgl-surface": ["./webgl-surface"]
-    }
+    "strictNullChecks": false,
+    "target": "es2017"
   },
   "exclude": [
     "node_modules"

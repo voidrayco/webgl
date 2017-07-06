@@ -1,3 +1,3 @@
 export class Camera {
-  viewport: any
+  viewport: any;
 }

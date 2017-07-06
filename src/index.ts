@@ -1,2 +1,2 @@
 import './index.html';
-import './main'
+import './main';

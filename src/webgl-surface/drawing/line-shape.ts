@@ -1,7 +1,7 @@
-import {drawable} from './drawable'
-import {IPoint} from '../primitives/point'
-import {Line} from '../primitives/line'
-import {Types} from './drawable'
+import {Line} from '../primitives/line';
+import {IPoint} from '../primitives/point';
+import {drawable} from './drawable';
+import {Types} from './drawable';
 
 /**
  * Defines a line that can be drawn
@@ -9,32 +9,32 @@ import {Types} from './drawable'
 @drawable(Types.Line)
 export class LineShape<T> extends Line<T> {
   // Color 1
-  r: number = 1
-  g: number = 0
-  b: number = 0
-  a: number = 0
+  r: number = 1;
+  g: number = 0;
+  b: number = 0;
+  a: number = 0;
   // Color 2 ?
-  r2: number = 1
-  g2: number = 0
-  b2: number = 0
-  a2: number = 0
+  r2: number = 1;
+  g2: number = 0;
+  b2: number = 0;
+  a2: number = 0;
   // Other properties
-  cull: boolean = true
-  selectedIndex: number
-  thickness: number = 1
+  cull: boolean = true;
+  selectedIndex: number;
+  thickness: number = 1;
 
   /**
    * Generate a new line that can be drawn
    */
   constructor(p1: IPoint, p2: IPoint, d: T, r: number, g: number, b: number, a: number, r2: number, g2: number, b2: number, a2: number, thickness?: number) {
-    super(p1, p2)
+    super(p1, p2);
 
     Object.assign(this, {
-      d, r, g, b, a, r2, g2, b2, a2
-    })
+      d, r, g, b, a, r2, g2, b2, a2,
+    });
 
     if (thickness !== undefined) {
-      this.thickness = thickness
+      this.thickness = thickness;
     }
   }
 
@@ -50,7 +50,7 @@ export class LineShape<T> extends Line<T> {
     return Object.assign(
       new LineShape(this.p1, this.p2, this.d, this.r, this.g, this.b, this.a, this.r2, this.g2, this.b2, this.a2),
       this,
-      newProperties
-    ) as LineShape<T>
+      newProperties,
+    ) as LineShape<T>;
   }
 }

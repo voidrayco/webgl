@@ -1,5 +1,5 @@
-import {ISize} from '../primitives/size'
-import {IPoint} from '../primitives/point'
+import {IPoint} from '../primitives/point';
+import {ISize} from '../primitives/size';
 
 /**
  * Defines projection methods used to switch between screen and world spaces
@@ -14,7 +14,7 @@ export interface IProjection {
    *
    * @return {ISize} The newly created object or the object in the third param
    */
-  screenSizeToWorld: (w: number, h: number, obj?: ISize) => ISize
+  screenSizeToWorld(w: number, h: number, obj?: ISize): ISize
 
   /**
    * Get a position on the screen projected to a coordinate in the world
@@ -25,7 +25,7 @@ export interface IProjection {
    *
    * @return {IPoint} The newly created object or the object in the third param
    */
-  screenToWorld: (x: number, y: number, obj?: IPoint) => IPoint
+  screenToWorld(x: number, y: number, obj?: IPoint): IPoint
 
   /**
    * Get a size in the world projected to the size on the screen
@@ -36,7 +36,7 @@ export interface IProjection {
    *
    * @return {ISize} The newly created object or the object in the third param
    */
-  worldSizeToScreen: (w: number, h: number, obj?: ISize) => ISize
+  worldSizeToScreen(w: number, h: number, obj?: ISize): ISize
 
   /**
    * Get a position in the world projected to a coordinate on the screen
@@ -47,5 +47,5 @@ export interface IProjection {
    *
    * @return {IPoint} The newly created object or the object in the third param
    */
-  worldToScreen: (x: number, y: number, obj?: IPoint) => IPoint
+  worldToScreen(x: number, y: number, obj?: IPoint): IPoint
 }

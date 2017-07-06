@@ -29,6 +29,6 @@ export class WorldViewport {
    * @return {boolean} True if equal
    */
   static isEqual(a: IWorldViewport, b: IWorldViewport) {
-    return a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left
+    return a.top === b.top && a.right === b.right && a.bottom === b.bottom && a.left === b.left;
   }
 }

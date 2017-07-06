@@ -1,5 +1,5 @@
-import {AtlasTexture} from './texture/atlas-texture'
-import {Bounds} from '../primitives/bounds'
+import { Bounds } from '../primitives/bounds';
+import { AtlasTexture } from './texture/atlas-texture';
 
 /**
  * Defines an image that can be rendered by the gpu. This is an axis oriented
@@ -7,15 +7,15 @@ import {Bounds} from '../primitives/bounds'
  */
 export class ImageShape<T> extends Bounds<T> {
   /** This is the image to be rendered */
-  texture: AtlasTexture
+  texture: AtlasTexture;
   /** This is the level of opacity the image will be rendered with */
-  opacity: number = 1.0
+  opacity: number = 1.0;
 
   /**
    * Returns the largest edge of the image
    */
   get size(): number {
-    return Math.max(this.width, this.height)
+    return Math.max(this.width, this.height);
   }
 
   /**
@@ -24,13 +24,13 @@ export class ImageShape<T> extends Bounds<T> {
    */
   set size(val: number) {
     if (this.texture.aspectRatio > 1) {
-      this.width = val
-      this.height = val / this.texture.aspectRatio
+      this.width = val;
+      this.height = val / this.texture.aspectRatio;
     }
 
     else {
-      this.width = val * this.texture.aspectRatio
-      this.height = val
+      this.width = val * this.texture.aspectRatio;
+      this.height = val;
     }
   }
 
@@ -42,9 +42,9 @@ export class ImageShape<T> extends Bounds<T> {
    *                      retaining aspect ratio.
    */
   constructor(image: AtlasTexture, size: number) {
-    super(0, 0, size, size)
-    this.texture = image
-    this.size = size
+    super(0, 0, size, size);
+    this.texture = image;
+    this.size = size;
   }
 
   /**
@@ -54,7 +54,7 @@ export class ImageShape<T> extends Bounds<T> {
    * @param {number} y The y coordinate in world space
    */
   centerOn(x: number, y: number) {
-    this.x = x - (this.width / 2.0)
-    this.y = y - (this.height / 2.0)
+    this.x = x - (this.width / 2.0);
+    this.y = y - (this.height / 2.0);
   }
 }

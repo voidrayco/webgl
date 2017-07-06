@@ -1,9 +1,7 @@
-import { IPoint } from 'webgl-surface/primitives/point'
-import { Bounds } from 'webgl-surface/primitives/bounds'
-import { IQuadShapeData } from '../shape-data-types/quad-shape-data'
-import { ISize } from 'webgl-surface/primitives/size'
-import { QuadShape } from 'webgl-surface/drawing/quad-shape'
-import { rgb } from 'd3-color'
+import { rgb } from 'd3-color';
+import { QuadShape } from 'webgl-surface/drawing/quad-shape';
+import { Bounds } from 'webgl-surface/primitives/bounds';
+import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
 
 /**
  * Generator for making our quad shape buffers. This class will guarantee changes
@@ -11,20 +9,20 @@ import { rgb } from 'd3-color'
  */
 export class QuadGenerator {
   // BUFFERS and CACHES
-  baseBuffer: QuadShape<IQuadShapeData>[] = []
+  baseBuffer: QuadShape<IQuadShapeData>[] = [];
 
   // CACHE BUSTING
-  bustBaseCache: boolean = true
+  bustBaseCache: boolean = true;
 
   // STATE
-  lastData: IQuadShapeData[]
+  lastData: IQuadShapeData[];
 
   /**
    * This flags a cache or buffer for needing reconstruction
    */
   bustCaches(data: IQuadShapeData[]) {
     if (data !== this.lastData) {
-      this.bustBaseCache = true
+      this.bustBaseCache = true;
     }
   }
 
@@ -35,10 +33,10 @@ export class QuadGenerator {
    *                                that is generated
    */
   generate(data: IQuadShapeData[]) {
-    this.bustCaches(data)
+    this.bustCaches(data);
 
     if (this.bustBaseCache) {
-      this.generateBaseBuffer(data)
+      this.generateBaseBuffer(data);
     }
   }
 
@@ -46,14 +44,12 @@ export class QuadGenerator {
    * This generates the buffers needed for rendering
    */
   generateBaseBuffer(data: IQuadShapeData[]) {
-    this.baseBuffer = data.map(d => {
-      return new QuadShape<IQuadShapeData>(
+    this.baseBuffer = data.map(d =>
+      new QuadShape<IQuadShapeData>(
         new Bounds<IQuadShapeData>(d.position.x, d.position.x + d.size.width, d.position.y, d.position.y + d.size.height),
-        rgb(Math.random(), Math.random(), Math.random(), 1.0)
-      )
-    })
-
-    console.log(this.baseBuffer)
+        rgb(Math.random(), Math.random(), Math.random(), 1.0),
+      ),
+    );
   }
 
   /**
@@ -61,6 +57,6 @@ export class QuadGenerator {
    * whenever anything in the buffer has changed or needed changes.
    */
   getBaseBuffer() {
-    return this.baseBuffer
+    return this.baseBuffer;
   }
 }

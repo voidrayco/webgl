@@ -1,11 +1,7 @@
 {
   "rules": {
     "ban-types": ["Number", "Object", "String"],
-    "member-ordering": [true, {
-      "alphabetize": true,
-      "order": "fields-first"
-    }],
-    "no-magic-numbers": [true],
+    "no-magic-numbers": [false],
     "no-namespace": [true, "allow-declarations"],
     "prefer-for-of": true,
     "no-console": [true],
@@ -52,7 +48,7 @@
     "quotemark": [true, "single", "jsx-double"],
     "semicolon": [true, "always", "ignore-interfaces"],
     "space-before-function-paren": [true, "never"],
-    "variable-name": [true, "check-format"],
+    "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"],
     "whitespace": [true]
   }
 }

@@ -24,10 +24,10 @@ export interface IPoint {
  * @return {number} The distance * distance between the two points
  */
 function squareDistance(p1: IPoint, p2: IPoint): number {
-  const dx = p1.x - p2.x
-  const dy = p1.y - p2.y
+  const dx = p1.x - p2.x;
+  const dy = p1.y - p2.y;
 
-  return dx * dx + dy * dy
+  return dx * dx + dy * dy;
 }
 
 /**
@@ -49,15 +49,15 @@ export class Point {
    */
   static add(p1: IPoint, p2: IPoint, out?: IPoint): IPoint {
     if (out) {
-      out.x = p1.x + p2.x
-      out.y = p1.y + p2.y
-      return out
+      out.x = p1.x + p2.x;
+      out.y = p1.y + p2.y;
+      return out;
     }
 
     return {
       x: p1.x + p2.x,
       y: p1.y + p2.y,
-    }
+    };
   }
 
   /**
@@ -72,22 +72,22 @@ export class Point {
    * @return {IPoint} The closest point to the test point
    */
   static getClosest(testPoint: IPoint, points: IPoint[]): IPoint {
-    let closestDistance = Number.MAX_VALUE
-    let closestPoint: IPoint = null
-    let distance: number
+    let closestDistance = Number.MAX_VALUE;
+    let closestPoint: IPoint = null;
+    let distance: number;
 
     const findClosest = function(point: IPoint) {
-      distance = squareDistance(point, testPoint)
+      distance = squareDistance(point, testPoint);
 
       if (distance < closestDistance) {
-        closestDistance = distance
-        closestPoint = point
+        closestDistance = distance;
+        closestPoint = point;
       }
-    }
+    };
 
-    points.forEach(findClosest)
+    points.forEach(findClosest);
 
-    return closestPoint
+    return closestPoint;
   }
 
   /**
@@ -104,22 +104,22 @@ export class Point {
    * @return {number} The index of the closest point to the test point
    */
   static getClosestIndex(testPoint: IPoint, points: IPoint[]): number {
-    let closestDistance = Number.MAX_VALUE
-    let closestPoint: number = 0
-    let distance: number
+    let closestDistance = Number.MAX_VALUE;
+    let closestPoint: number = 0;
+    let distance: number;
 
     const findClosest = function(point: IPoint, i: number) {
-      distance = squareDistance(point, testPoint)
+      distance = squareDistance(point, testPoint);
 
       if (distance < closestDistance) {
-        closestDistance = distance
-        closestPoint = i
+        closestDistance = distance;
+        closestPoint = i;
       }
-    }
+    };
 
-    points.forEach(findClosest)
+    points.forEach(findClosest);
 
-    return closestPoint
+    return closestPoint;
   }
 
   /**
@@ -133,19 +133,19 @@ export class Point {
    * @returns {number}
    */
   static getDirection(p1: IPoint, p2: IPoint, normalize: boolean = false): IPoint {
-    let dx = p2.x - p1.x
-    let dy = p2.y - p1.y
+    let dx = p2.x - p1.x;
+    let dy = p2.y - p1.y;
 
     if (normalize) {
-      const magnitude = Math.sqrt(dx * dx + dy * dy)
-      dx /= magnitude
-      dy /= magnitude
+      const magnitude = Math.sqrt(dx * dx + dy * dy);
+      dx /= magnitude;
+      dy /= magnitude;
     }
 
     return {
       x: dx,
       y: dy,
-    }
+    };
   }
 
   /**
@@ -160,10 +160,10 @@ export class Point {
    */
   static getDistance(p1: IPoint, p2: IPoint, squared: boolean = false): number {
     if (squared) {
-      return squareDistance(p1, p2)
+      return squareDistance(p1, p2);
     }
 
-    return Math.sqrt(squareDistance(p1, p2))
+    return Math.sqrt(squareDistance(p1, p2));
   }
 
   /**
@@ -176,12 +176,12 @@ export class Point {
    * @returns {IPoint} The point between the two provided points
    */
   static getMidpoint(p1: IPoint, p2: IPoint) {
-    const direction = Point.getDirection(p1, p2)
+    const direction = Point.getDirection(p1, p2);
 
     return {
       x: direction.x / 2 + p1.x,
       y: direction.y / 2 + p1.y,
-    }
+    };
   }
 
   /**
@@ -196,15 +196,15 @@ export class Point {
    */
   static scale(p1: IPoint, s: number, out?: IPoint): IPoint {
     if (out) {
-      out.x = p1.x * s
-      out.y = p1.y * s
-      return out
+      out.x = p1.x * s;
+      out.y = p1.y * s;
+      return out;
     }
 
     return {
       x: p1.x * s,
       y: p1.y * s,
-    }
+    };
   }
 
   /**
@@ -217,6 +217,6 @@ export class Point {
     return {
       x: 0,
       y: 0,
-    }
+    };
   }
 }

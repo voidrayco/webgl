@@ -1,5 +1,5 @@
-import { BufferGeometry, BufferAttribute } from 'three'
-const debug = require('debug')('WebGLSurface:BufferUtil')
+import { BufferAttribute, BufferGeometry } from 'three';
+const debug = require('debug')('WebGLSurface:BufferUtil');
 
 export enum AttributeSize {
   ONE,
@@ -18,36 +18,36 @@ export interface IAttributeInfo {
  * These are for fast look ups of the default values provided
  * Doing this fashion avoids array look ups in the defaults values
  */
-let defaultsHolder0: number = 0
-let defaultsHolder1: number = 0
-let defaultsHolder2: number = 0
-let defaultsHolder3: number = 0
+let defaultsHolder0: number = 0;
+let defaultsHolder1: number = 0;
+let defaultsHolder2: number = 0;
+let defaultsHolder3: number = 0;
 
 /**
  * These are for fast look ups of attribute buffers that are going
  * through the update process. We do everything to mitigate array look ups
  * when and where we can
  */
-let attrRegister0: number[] = []
-let attrRegister1: number[] = []
-let attrRegister2: number[] = []
-let attrRegister3: number[] = []
-let attrRegister4: number[] = []
-let attrRegister5: number[] = []
+let attrRegister0: number[] = [];
+let attrRegister1: number[] = [];
+let attrRegister2: number[] = [];
+let attrRegister3: number[] = [];
+let attrRegister4: number[] = [];
+let attrRegister5: number[] = [];
 
-let attrIndex0: number = 0
-let attrIndex1: number = 0
-let attrIndex2: number = 0
-let attrIndex3: number = 0
-let attrIndex4: number = 0
-let attrIndex5: number = 0
+let attrIndex0: number = 0;
+let attrIndex1: number = 0;
+let attrIndex2: number = 0;
+let attrIndex3: number = 0;
+let attrIndex4: number = 0;
+let attrIndex5: number = 0;
 
-let attrIndexIncr0: number = 0
-let attrIndexIncr1: number = 0
-let attrIndexIncr2: number = 0
-let attrIndexIncr3: number = 0
-let attrIndexIncr4: number = 0
-let attrIndexIncr5: number = 0
+let attrIndexIncr0: number = 0;
+let attrIndexIncr1: number = 0;
+let attrIndexIncr2: number = 0;
+let attrIndexIncr3: number = 0;
+let attrIndexIncr4: number = 0;
+let attrIndexIncr5: number = 0;
 
 /**
  * This takes our list of attribute buffers and applies them to the registers for rapid lookups
@@ -56,19 +56,19 @@ let attrIndexIncr5: number = 0
  * @param {number[]} incrementValues How much each batch increments it's lookup index
  */
 function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: number[]) {
-  attrRegister0 = attributeBuffers[0]
-  attrRegister1 = attributeBuffers[1]
-  attrRegister2 = attributeBuffers[2]
-  attrRegister3 = attributeBuffers[3]
-  attrRegister4 = attributeBuffers[4]
-  attrRegister5 = attributeBuffers[5]
+  attrRegister0 = attributeBuffers[0];
+  attrRegister1 = attributeBuffers[1];
+  attrRegister2 = attributeBuffers[2];
+  attrRegister3 = attributeBuffers[3];
+  attrRegister4 = attributeBuffers[4];
+  attrRegister5 = attributeBuffers[5];
 
-  attrIndexIncr0 = incrementValues[0]
-  attrIndexIncr1 = incrementValues[1]
-  attrIndexIncr2 = incrementValues[2]
-  attrIndexIncr3 = incrementValues[3]
-  attrIndexIncr4 = incrementValues[4]
-  attrIndexIncr5 = incrementValues[5]
+  attrIndexIncr0 = incrementValues[0];
+  attrIndexIncr1 = incrementValues[1];
+  attrIndexIncr2 = incrementValues[2];
+  attrIndexIncr3 = incrementValues[3];
+  attrIndexIncr4 = incrementValues[4];
+  attrIndexIncr5 = incrementValues[5];
 }
 
 /**
@@ -80,58 +80,58 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
  */
 function updateBuffer1(numBatches: number, updateAccessor: Function) {
   for (let i = 0; i < numBatches; ++i) {
-    attrIndex0 = i * attrIndexIncr0
-    updateAccessor(i, attrRegister0, attrIndex0)
+    attrIndex0 = i * attrIndexIncr0;
+    updateAccessor(i, attrRegister0, attrIndex0);
   }
 }
 
 function updateBuffer2(numBatches: number, updateAccessor: Function) {
   for (let i = 0; i < numBatches; ++i) {
-    attrIndex0 = i * attrIndexIncr0
-    attrIndex1 = i * attrIndexIncr1
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1)
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1);
   }
 }
 
 function updateBuffer3(numBatches: number, updateAccessor: Function) {
   for (let i = 0; i < numBatches; ++i) {
-    attrIndex0 = i * attrIndexIncr0
-    attrIndex1 = i * attrIndexIncr1
-    attrIndex2 = i * attrIndexIncr2
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2)
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2);
   }
 }
 
 function updateBuffer4(numBatches: number, updateAccessor: Function) {
   for (let i = 0; i < numBatches; ++i) {
-    attrIndex0 = i * attrIndexIncr0
-    attrIndex1 = i * attrIndexIncr1
-    attrIndex2 = i * attrIndexIncr2
-    attrIndex3 = i * attrIndexIncr3
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3)
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3);
   }
 }
 
 function updateBuffer5(numBatches: number, updateAccessor: Function) {
   for (let i = 0; i < numBatches; ++i) {
-    attrIndex0 = i * attrIndexIncr0
-    attrIndex1 = i * attrIndexIncr1
-    attrIndex2 = i * attrIndexIncr2
-    attrIndex3 = i * attrIndexIncr3
-    attrIndex4 = i * attrIndexIncr4
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4)
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4);
   }
 }
 
 function updateBuffer6(numBatches: number, updateAccessor: Function) {
   for (let i = 0; i < numBatches; ++i) {
-    attrIndex0 = i * attrIndexIncr0
-    attrIndex1 = i * attrIndexIncr1
-    attrIndex2 = i * attrIndexIncr2
-    attrIndex3 = i * attrIndexIncr3
-    attrIndex4 = i * attrIndexIncr4
-    attrIndex5 = i * attrIndexIncr5
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4, attrRegister5, attrIndex5)
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4, attrRegister5, attrIndex5);
   }
 }
 
@@ -142,10 +142,10 @@ function updateBuffer6(numBatches: number, updateAccessor: Function) {
  * @param {number[]} defaults The array with the default values in them for our buffer attribute
  */
 function applyDefaultsHolders(defaults: number[]) {
-  defaultsHolder0 = defaults[0] || 0
-  defaultsHolder1 = defaults[1] || 0
-  defaultsHolder2 = defaults[2] || 0
-  defaultsHolder3 = defaults[3] || 0
+  defaultsHolder0 = defaults[0] || 0;
+  defaultsHolder1 = defaults[1] || 0;
+  defaultsHolder2 = defaults[2] || 0;
+  defaultsHolder3 = defaults[3] || 0;
 }
 
 /**
@@ -157,25 +157,25 @@ function applyDefaultsHolders(defaults: number[]) {
  * @param {number} start The index the data should be populated into
  */
 function fillSize1(buffer: Float32Array, start: number) {
-  buffer[start] = defaultsHolder0
+  buffer[start] = defaultsHolder0;
 }
 
 function fillSize2(buffer: Float32Array, start: number) {
-  buffer[start] = defaultsHolder0
-  buffer[++start] = defaultsHolder1
+  buffer[start] = defaultsHolder0;
+  buffer[++start] = defaultsHolder1;
 }
 
 function fillSize3(buffer: Float32Array, start: number) {
-  buffer[start] = defaultsHolder0
-  buffer[++start] = defaultsHolder1
-  buffer[++start] = defaultsHolder2
+  buffer[start] = defaultsHolder0;
+  buffer[++start] = defaultsHolder1;
+  buffer[++start] = defaultsHolder2;
 }
 
 function fillSize4(buffer: Float32Array, start: number) {
-  buffer[start] = defaultsHolder0
-  buffer[++start] = defaultsHolder1
-  buffer[++start] = defaultsHolder2
-  buffer[++start] = defaultsHolder3
+  buffer[start] = defaultsHolder0;
+  buffer[++start] = defaultsHolder1;
+  buffer[++start] = defaultsHolder2;
+  buffer[++start] = defaultsHolder3;
 }
 
 /**
@@ -186,7 +186,7 @@ const fillMethodLookUp = {
   [AttributeSize.TWO]: fillSize2,
   [AttributeSize.THREE]: fillSize3,
   [AttributeSize.FOUR]: fillSize4,
-}
+};
 
 const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: Function) => void} = {
   1: updateBuffer1,
@@ -195,7 +195,7 @@ const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: F
   4: updateBuffer4,
   5: updateBuffer5,
   6: updateBuffer6,
-}
+};
 
 /**
  * This provides methods for handling common buffer tasks such as construction
@@ -214,30 +214,30 @@ export class BufferUtil {
    * @returns {BufferGeometry} The newly made buffer
    */
   static makeBuffer(numVertices: number, attributes: IAttributeInfo[]): BufferGeometry {
-    const iMax = attributes.length
-    const geometry = new BufferGeometry()
+    const iMax = attributes.length;
+    const geometry = new BufferGeometry();
 
     for (let i = 0; i < iMax; ++i) {
-      const attribute = attributes[i]
-      const attributeSize = attribute.size + 1
-      const buffer = new Float32Array(attributeSize * numVertices)
-      const fillMethod = fillMethodLookUp[attribute.size]
-      const name = attribute.name
+      const attribute = attributes[i];
+      const attributeSize = attribute.size + 1;
+      const buffer = new Float32Array(attributeSize * numVertices);
+      const fillMethod = fillMethodLookUp[attribute.size];
+      const name = attribute.name;
 
       // We set up our default value registers before executing the fill method
-      applyDefaultsHolders(attribute.defaults)
+      applyDefaultsHolders(attribute.defaults);
 
       // Fill our buffer with the indicated default values
       for (let k = 0; k < numVertices; ++k) {
-        fillMethod(buffer, k * attributeSize)
+        fillMethod(buffer, k * attributeSize);
       }
 
       // Apply the buffer to our geometry buffer
-      geometry.addAttribute(name, new BufferAttribute(buffer, attributeSize))
-      debug('Made Buffer Attribute:', name, attributeSize)
+      geometry.addAttribute(name, new BufferAttribute(buffer, attributeSize));
+      debug('Made Buffer Attribute:', name, attributeSize);
     }
 
-    return geometry
+    return geometry;
   }
 
   /**
@@ -274,12 +274,12 @@ export class BufferUtil {
    * @param {Function} updateAccessor The accessor for performing the data update to the buffer
    */
   static updateBuffer(buffer: BufferGeometry, attributes: IAttributeInfo[], vertexBatch: number, numBatches: number, updateAccessor: Function) {
-    const bufferAttributes: any[] = attributes.map((attr: IAttributeInfo) => (buffer.attributes as any)[attr.name])
-    const attributeBuffers: number[][] = bufferAttributes.map((attr: any) => attr.array as number[])
-    const incrementValues: number[] = attributes.map((attr: IAttributeInfo) => (attr.size + 1) * vertexBatch)
-    applyAttributeRegisters(attributeBuffers, incrementValues)
-    const updateMethod = updateBufferLookUp[attributes.length]
-    updateMethod(numBatches, updateAccessor)
-    bufferAttributes.forEach(attr => attr.needsUpdate = true)
+    const bufferAttributes: any[] = attributes.map((attr: IAttributeInfo) => (buffer.attributes as any)[attr.name]);
+    const attributeBuffers: number[][] = bufferAttributes.map((attr: any) => attr.array as number[]);
+    const incrementValues: number[] = attributes.map((attr: IAttributeInfo) => (attr.size + 1) * vertexBatch);
+    applyAttributeRegisters(attributeBuffers, incrementValues);
+    const updateMethod = updateBufferLookUp[attributes.length];
+    updateMethod(numBatches, updateAccessor);
+    bufferAttributes.forEach(attr => attr.needsUpdate = true);
   }
 }

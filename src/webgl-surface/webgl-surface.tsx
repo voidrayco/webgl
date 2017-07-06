@@ -1,16 +1,17 @@
-import * as React from 'react'
-import { Bounds } from './primitives/bounds'
-import { BufferGeometry, Color, Mesh, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three'
-import { eventElementPosition } from './util/mouse'
-import { IPoint } from './primitives/point'
-import { IProjection } from './util/projection'
-import { IScreenContext } from './util/screen-context'
-import { ISize } from './primitives/size'
-import { Label } from './drawing/label'
-import { QuadTree } from './util/quad-tree'
-import { rgb } from 'd3-color'
-const debug = require('debug')('webgl-surface:GPU')
-const debugCam = require('debug')('webgl-surface:Camera')
+import { rgb } from 'd3-color';
+import { merge } from 'ramda';
+import * as React from 'react';
+import { BufferGeometry, Color, Mesh, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
+import { Label } from './drawing/label';
+import { Bounds } from './primitives/bounds';
+import { IPoint } from './primitives/point';
+import { ISize } from './primitives/size';
+import { eventElementPosition } from './util/mouse';
+import { IProjection } from './util/projection';
+import { QuadTree } from './util/quad-tree';
+import { IScreenContext } from './util/screen-context';
+const debug = require('debug')('webgl-surface:GPU');
+const debugCam = require('debug')('webgl-surface:Camera');
 
 /**
  * This enum names the base methods that are passed into the applyPropsMethods
@@ -80,13 +81,15 @@ export interface IAnimatedMethodResponse {
 }
 
 // Types for making method assignment and organizatione easier
-export type AnimatedMethod = () => IAnimatedMethodResponse
-export type AnimatedMethodLookup = {[key: number]: AnimatedMethod}
-export type ApplyPropsMethod<T> = (props: T) => IApplyPropsMethodResponse
-export type ApplyPropsMethodLookup<T> = {[key: number]: ApplyPropsMethod<T>}
+export type AnimatedMethod = () => IAnimatedMethodResponse;
+export type AnimatedMethodLookup = {[key: number]: AnimatedMethod};
+export type ApplyPropsMethod<T> = (props: T) => IApplyPropsMethodResponse;
+export type ApplyPropsMethodLookup<T> = {[key: number]: ApplyPropsMethod<T>};
 
 /** This is the smallest increment the zoom can make. Anything less and nothing will happen */
-const MIN_ZOOM_INCREMENT = .001
+const MIN_ZOOM_INCREMENT = 0.001;
+const BYTE_MAX = 0xFF;
+const BACKGROUND_COLOR = new Color().setRGB(38 / BYTE_MAX, 50 / BYTE_MAX, 78 / BYTE_MAX);
 
 // Local component properties interface
 export interface IWebGLSurfaceProperties {
@@ -99,15 +102,15 @@ export interface IWebGLSurfaceProperties {
   /** All of the labels to be rendered by the system */
   labels?: Label<never>[]
   /** Provides feedback when the surface is double clicked */
-  onDoubleClick?: (e: React.MouseEvent<Element>) => void
+  onDoubleClick?(e: React.MouseEvent<Element>): void
   /** Provides feedback when the mouse has moved */
-  onMouse?: (screen: IPoint, world: IPoint, isPanning: boolean) => void
+  onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void
   /**
    * This is a handler that handles zoom changes the gpu-chart may request.
    * This includes moments such as initializing the camera to focus on a
    * provided viewport.
    */
-  onZoomRequest?: (zoom: number) => void
+  onZoomRequest?(zoom: number): void
   /** Prevents the Camera from re-initializing when a new items list is input */
   preventCameraInit?: boolean
   /** The forced size of the render surface */
@@ -119,17 +122,23 @@ export interface IWebGLSurfaceProperties {
 // --[ CONSTANTS ]-------------------------------------------
 
 // Make a container vector for performing operations within
-const vector = new Vector3()
+const vector = new Vector3();
 
 // --[ SHADERS ]-------------------------------------------
 
 /**
  * Equivalent of Math.sign, but faster, and works in all browsers
+ *
+ * @param {number} value The number to determine the sign
+ *
+ * @return {number} Returns zero if a sign can not be determined, -1 for a negative, 1 for a positive
  */
-function sign(value: number) {
-  if (!value) { return 0 }
-  if (value > 0) { return 1 }
-  if (value < 0) { return -1 }
+function sign(value: number): number {
+  if (!value) { return 0; }
+  if (value > 0) { return 1; }
+  if (value < 0) { return -1; }
+
+  return 0;
 }
 
 /**
@@ -141,21 +150,23 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * simpler to manage, as well as gives a clear and optimized way of overriding existing methods
    * or reordering their execution
    */
-  animatedMethodList: AnimatedMethod[] = []
+  animatedMethodList: AnimatedMethod[] = [];
   /**
    * If this is set to true during an animated method's lifecycle, then all subsequent animated methods
    * will not be executed for the current frame. Upon reaching the end of the frame, the break will reset
    * and the animated methods will attempt executing again
    */
-  animatedMethodBreak: boolean = false
+  animatedMethodBreak: boolean = false;
   /** Used to aid in mouse interactions */
-  distance = 0
-  /** The camera that 'looks' at our world and gives us the ability to convert
-   *  screen coordinates to world coordinates, and vice versa */
-  camera: OrthographicCamera = null
+  distance = 0;
+  /**
+   * The camera that 'looks' at our world and gives us the ability to convert
+   * screen coordinates to world coordinates, and vice versa
+   */
+  camera: OrthographicCamera | null = null;
   /** A camera that is used for projecting sizes to and from the screen to the world */
-  circleMaterial: ShaderMaterial
-  ctx: IScreenContext
+  circleMaterial: ShaderMaterial;
+  ctx: IScreenContext;
   /**
    * While this number is positive it will be decremented every frame.
    * While positive, mouse interactions will not occur. This utilizes frame ticks
@@ -164,64 +175,66 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * allow the camera to be positioned in a correct location before screen to world projections
    * start taking place.
    */
-  disableMouseInteraction: number = 0
-  lineGeometry: BufferGeometry
-  lineSystem: Mesh
-  forceDraw: boolean
-  projection: IProjection
-  renderEl: HTMLElement
-  renderer: WebGLRenderer
-  scene: Scene
-  sizeCamera: OrthographicCamera = null
-  textContext: CanvasRenderingContext2D
+  disableMouseInteraction: number = 0;
+  lineGeometry: BufferGeometry;
+  lineSystem: Mesh;
+  forceDraw: boolean;
+  projection: IProjection;
+  renderEl: HTMLElement;
+  renderer: WebGLRenderer;
+  scene: Scene;
+  sizeCamera: OrthographicCamera | null = null;
+  textContext: CanvasRenderingContext2D;
   /** Keep track of the current zoom so it can be set in requestAnimationFrame */
-  currentZoom = 1
+  currentZoom = 1;
   /** Horizontal destination the camera will pan to */
-  destinationX = 0
+  destinationX = 0;
   /** Vertical position the camera will pan to */
-  destinationY = 0
+  destinationY = 0;
   /** The destination zoom level the camera used during panning */
-  destinationZoom = 1
+  destinationZoom = 1;
   /** Is the camera currently in a panning state */
-  isPanning = false
+  isPanning = false;
   /** Last known screen position of the mouse */
-  lastMousePosition = { x: 0, y: 0 }
+  lastMousePosition = { x: 0, y: 0 };
   /** List of methods to execute when applying props */
-  propsMethodList: ApplyPropsMethod<T>[] = []
+  propsMethodList: ApplyPropsMethod<T>[] = [];
   /** Inertial values for drag panning */
-  inertia: IPoint = null
-  inertiaBuild = 1.5
-  inertiaDecay = .9
-  inertiaMax = 100
-  /** All data is put into this quad tree so we can query spatial regions for
-   *  items */
-  quadTree: QuadTree<Bounds<any>> = null
+  inertia: IPoint | null = null;
+  inertiaBuild = 1.5;
+  inertiaDecay = .9;
+  inertiaMax = 100;
+  /**
+   * All data is put into this quad tree so we can query spatial regions for
+   * items
+   */
+  quadTree: QuadTree<Bounds<any>> | null = null;
   /**
    * True if the shift key is currently being held
    *
    * Panning is affected by whether or not the shift key is being held down, but
    * I don't know how yet.
    */
-  shiftIsDown = false
-  stop = false
+  shiftIsDown = false;
+  stop = false;
   /** The current rendered position and zoom */
-  currentX = 0
-  currentY = 0
-  targetZoom = 1
+  currentX = 0;
+  currentY = 0;
+  targetZoom = 1;
   /** The (world) position the focus will zoom in and out of */
-  previousZoomToFit = 0
-  zoomTargetX = 0
-  zoomTargetY = 0
+  previousZoomToFit = 0;
+  zoomTargetX = 0;
+  zoomTargetY = 0;
 
   /** When this is set, the draw loop continues to run. Used by the draw loop to complete animations */
-  animating: boolean = false
-  labels: Label<any>[] = []
+  animating: boolean = false;
+  labels: Label<any>[] = [];
 
   /** Inidcates if the camera needs it's position initialized */
-  camNeedsInit: boolean = false
+  camNeedsInit: boolean = false;
 
   /** Holds the items currently hovered over */
-  currentHoverItems: Bounds<any>[] = []
+  currentHoverItems: Bounds<any>[] = [];
 
   /**
    * This is the update loop that operates at the requestAnimationFrame speed.
@@ -230,49 +243,53 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   animate = () => {
     if (this.stop) {
-      return
+      return;
     }
 
-    requestAnimationFrame(() => this.animate())
+    requestAnimationFrame(() => this.animate());
 
-    let response: IAnimatedMethodResponse
-    let doDraw: boolean = false
+    let response: IAnimatedMethodResponse;
+    let doDraw: boolean | undefined = false;
 
-    const didBreak = this.animatedMethodList.some(method => {
-      response = method()
+    const didBreak = this.animatedMethodList.some((method: AnimatedMethod): boolean => {
+      response = method();
 
       // Update our draw status based on response
-      doDraw = doDraw || response.doDraw
+      if (!doDraw) {
+        doDraw = response.doDraw;
+      }
 
       // Stop the system if needed
       if (response.stop) {
-        this.stop = true
+        this.stop = true;
       }
 
       // Stop performing
       if (response.break) {
-        return true
+        return true;
       }
-    })
+
+      return false;
+    });
 
     // We prevent any animation loop execution if we did break
     if (didBreak) {
-      return
+      return;
     }
 
     // Make sure all camera related uniforms are up to date
-    this.updateCameraUniforms()
+    this.updateCameraUniforms();
 
     // Handle the deactivation period of mouse interactions by decrementing it
-    // if it's positive
+    // If it's positive
     if (this.disableMouseInteraction > 0) {
-      this.disableMouseInteraction--
+      this.disableMouseInteraction--;
     }
 
     if (doDraw || this.forceDraw) {
-      this.forceDraw = false
-      this.emitViewport()
-      this.draw()
+      this.forceDraw = false;
+      this.emitViewport();
+      this.draw();
     }
   }
 
@@ -287,7 +304,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: AnimatedMethod[]): AnimatedMethod[] {
     // Default functionality is to use the simple preordered list
-    return orderedBaseAnimatedMethods
+    return orderedBaseAnimatedMethods;
   }
 
   /**
@@ -305,20 +322,20 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       // Context changes and early checks
       [BaseAnimatedMethods.CONTEXT]: (): IAnimatedMethodResponse => {
         const response = {
-          doDraw: false,
           break: false,
-        }
+          doDraw: false,
+        };
 
         if (this.resizeContext()) {
-          response.doDraw = true
+          response.doDraw = true;
         }
 
         // Quadtree MUST be present to do proper computations
         if (!this.quadTree) {
-          response.break = true
+          response.break = true;
         }
 
-        return response
+        return response;
       },
 
       // Apply inertia
@@ -326,95 +343,96 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         if (!this.isPanning) {
           if (this.inertia) {
             // Disabled inertia for now
-            // this.destinationX -= this.inertia.x
-            // this.destinationY -= this.inertia.y
+            // This.destinationX -= this.inertia.x
+            // This.destinationY -= this.inertia.y
 
-            this.inertia.x *= this.inertiaDecay
-            this.inertia.y *= this.inertiaDecay
+            this.inertia.x *= this.inertiaDecay;
+            this.inertia.y *= this.inertiaDecay;
 
             if (this.inertia.x * this.inertia.x + this.inertia.y * this.inertia.y < 1) {
-              this.inertia = null
+              this.inertia = null;
             }
           }
         }
 
         // A non response
         return {
-          doDraw: false
-        }
+          doDraw: false,
+        };
       },
 
       // Apply position
       [BaseAnimatedMethods.POSITION]: (): IAnimatedMethodResponse => {
         // If values are transitioned rather than immediately applied, this is
-        // the value you would want the minimum change to be before cutting off
-        // the transition
-        // const minAdjust = 1 / this.props.zoom
+        // The value you would want the minimum change to be before cutting off
+        // The transition
+        // Const minAdjust = 1 / this.props.zoom
 
         // If there is change in X apply the new position to the old
         // This is where animated values were originally placed and can be placed
-        // again if a transition is desired
-        let response = {
-          doDraw: (this.currentX !== this.destinationX) || (this.currentY !== this.destinationY)
-        }
+        // Again if a transition is desired
+        const response = {
+          doDraw: (this.currentX !== this.destinationX) || (this.currentY !== this.destinationY),
+        };
 
-        this.currentX = this.destinationX
-        this.currentY = this.destinationY
+        this.currentX = this.destinationX;
+        this.currentY = this.destinationY;
 
-        this.positionCamera(this.currentX, this.currentY)
+        this.positionCamera(this.currentX, this.currentY);
 
-        return response
+        return response;
       },
 
       // Apply zooming
       [BaseAnimatedMethods.ZOOM]: (): IAnimatedMethodResponse => {
-        let response: IAnimatedMethodResponse = {
-          doDraw: false
-        }
+        const response: IAnimatedMethodResponse = {
+          doDraw: false,
+        };
 
         // Apply Zoom
-        const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.initialViewport.width)
-        const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.initialViewport.height)
-        const zoomToFit = Math.min(zoomToFitH, zoomToFitV)
+        const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.initialViewport.width);
+        const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.initialViewport.height);
+        const zoomToFit = Math.min(zoomToFitH, zoomToFitV);
 
-        const destZoom = this.destinationZoom * zoomToFit
-        const dZoom = Math.abs(destZoom - this.targetZoom)
-        const minDZoom = MIN_ZOOM_INCREMENT
+        const destZoom = this.destinationZoom * zoomToFit;
+        const dZoom = Math.abs(destZoom - this.targetZoom);
+        const minDZoom = MIN_ZOOM_INCREMENT;
+        const zoomRate = 3;
 
         if (dZoom > minDZoom) {
-          this.targetZoom = this.targetZoom + ((destZoom - this.targetZoom) / 3)
-          response.doDraw = true
+          this.targetZoom = this.targetZoom + ((destZoom - this.targetZoom) / zoomRate);
+          response.doDraw = true;
         }
 
         else if (dZoom !== 0) {
-          this.targetZoom = destZoom
-          response.doDraw = true
+          this.targetZoom = destZoom;
+          response.doDraw = true;
         }
 
         // Get the zoom target metrics before zooming
-        const zoomTargetX = this.zoomTargetX
-        const zoomTargetY = this.zoomTargetY
-        const screenZoomTarget = this.worldToScreen(zoomTargetX, zoomTargetY)
+        const zoomTargetX = this.zoomTargetX;
+        const zoomTargetY = this.zoomTargetY;
+        const screenZoomTarget = this.worldToScreen(zoomTargetX, zoomTargetY);
 
         // Update the camera zoom level
-        this.zoomCamera(this.targetZoom)
+        this.zoomCamera(this.targetZoom);
 
         // After we have zoomed we see how much our target location moved on screen
-        const newScreenZoomTarget = this.worldToScreen(zoomTargetX, zoomTargetY)
+        const newScreenZoomTarget = this.worldToScreen(zoomTargetX, zoomTargetY);
         // Now we move our screen by the moved delta to keep it exactly where it was before hand
-        const zoomDX = -(newScreenZoomTarget.x - screenZoomTarget.x) / this.targetZoom
-        const zoomDY = (newScreenZoomTarget.y - screenZoomTarget.y) / this.targetZoom
+        const zoomDX = -(newScreenZoomTarget.x - screenZoomTarget.x) / this.targetZoom;
+        const zoomDY = (newScreenZoomTarget.y - screenZoomTarget.y) / this.targetZoom;
 
-        this.currentX -= zoomDX
-        this.currentY -= zoomDY
-        this.destinationX -= zoomDX
-        this.destinationY -= zoomDY
+        this.currentX -= zoomDX;
+        this.currentY -= zoomDY;
+        this.destinationX -= zoomDX;
+        this.destinationY -= zoomDY;
 
-        this.positionCamera(this.currentX, this.currentY)
+        this.positionCamera(this.currentX, this.currentY);
 
-        return response
-      }
-    }
+        return response;
+      },
+    };
   }
 
   /**
@@ -434,21 +452,23 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {T} props The new properties for this component
    */
   applyProps = (props: T) => {
-    debug('Applying props')
-    let response: IApplyPropsMethodResponse
+    debug('Applying props');
+    let response: IApplyPropsMethodResponse;
 
     this.propsMethodList.some(method => {
-      response = method(props)
+      response = method(props);
 
       // Stop performing
       if (response.break) {
-        return true
+        return true;
       }
-    })
 
-    debugCam('current cam', this.currentX, this.currentY, this.destinationX, this.destinationY)
-    debugCam('Zoom Target: [%o, %o]', this.zoomTargetX, this.zoomTargetY)
-    debugCam('Last Mouse: [%o, %o]', this.lastMousePosition.x, this.lastMousePosition.y)
+      return false;
+    });
+
+    debugCam('current cam', this.currentX, this.currentY, this.destinationX, this.destinationY);
+    debugCam('Zoom Target: [%o, %o]', this.zoomTargetX, this.zoomTargetY);
+    debugCam('Last Mouse: [%o, %o]', this.lastMousePosition.x, this.lastMousePosition.y);
   }
 
   /**
@@ -463,7 +483,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   applyPropsMethods(basePropsMethods: ApplyPropsMethodLookup<T>, orderedBasePropsMethods: ApplyPropsMethod<T>[]): ApplyPropsMethod<T>[] {
     // Default functionality is to use the simple preordered list
-    return orderedBasePropsMethods
+    return orderedBasePropsMethods;
   }
 
   /**
@@ -478,100 +498,104 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         const {
           height,
           width,
-        } = props
+        } = props;
 
-        this.init(this.renderEl, width, height)
+        this.init(this.renderEl, width, height);
 
         if (!this.renderEl || width === 0 || height === 0) {
           return {
-            break: true
-          }
+            break: true,
+          };
         }
 
         // Get the target for zooming
         if (this.camera) {
-          const world = this.screenToWorld(this.lastMousePosition.x, this.lastMousePosition.y)
-          this.zoomTargetX = world.x
-          this.zoomTargetY = world.y
+          const world = this.screenToWorld(this.lastMousePosition.x, this.lastMousePosition.y);
+          this.zoomTargetX = world.x;
+          this.zoomTargetY = world.y;
         }
 
-        debug('props', props)
-        return {}
+        debug('props', props);
+        return {};
       },
 
       [BaseApplyPropsMethods.BUFFERCHANGES]: (props: T): IApplyPropsMethodResponse => {
         // Call the hook to allow sub componentry to have a place to update it's buffers
-        this.applyBufferChanges(props)
-        return {}
+        this.applyBufferChanges(props);
+        return {};
       },
 
       [BaseApplyPropsMethods.CAMERA]: (props: T): IApplyPropsMethodResponse => {
-        this.destinationZoom = props.zoom
+        this.destinationZoom = props.zoom;
 
         // Prevent camera initialization needs
         if (props.preventCameraInit) {
-          debug('New Items, but camera requested to stay still')
-          this.camNeedsInit = false
+          debug('New Items, but camera requested to stay still');
+          this.camNeedsInit = false;
         }
 
         // On initialization this should start with some base camera metrics
         if (this.camNeedsInit && props.initialViewport && this.quadTree) {
-          debugCam('Initialize Camera Position: %o World Space Bounds: %o', props.initialViewport, this.quadTree.bounds)
-          this.camNeedsInit = false
+          debugCam('Initialize Camera Position: %o World Space Bounds: %o', props.initialViewport, this.quadTree.bounds);
+          this.camNeedsInit = false;
 
           // Position the camera over the mid of the specified viewport
-          const mid = props.initialViewport.mid
-          this.currentX = this.destinationX = mid.x
-          this.currentY = this.destinationY = mid.y
+          const mid = props.initialViewport.mid;
+          this.currentX = this.destinationX = mid.x;
+          this.currentY = this.destinationY = mid.y;
 
           // Calculate the zoom level when the input zoom is at 1
-          const zoomToFitH = this.ctx.width / this.quadTree.bounds.width
-          const zoomToFitV = this.ctx.height / this.quadTree.bounds.height
-          const zoomAtOne = Math.min(zoomToFitH, zoomToFitV)
+          const zoomToFitH = this.ctx.width / this.quadTree.bounds.width;
+          const zoomToFitV = this.ctx.height / this.quadTree.bounds.height;
+          const zoomAtOne = Math.min(zoomToFitH, zoomToFitV);
 
           // Calculate the zoom needed for the viewport
-          const zoomToFitViewH = this.ctx.width / props.initialViewport.width
-          const zoomToFitViewV = this.ctx.height / props.initialViewport.height
-          const zoomToFit = Math.min(zoomToFitViewH, zoomToFitViewV)
+          const zoomToFitViewH = this.ctx.width / props.initialViewport.width;
+          const zoomToFitViewV = this.ctx.height / props.initialViewport.height;
+          const zoomToFit = Math.min(zoomToFitViewH, zoomToFitViewV);
+
+          // This adjusts the destination zxoom by a tiny amount so the view will redraw
+          const microAdjustment = 0.001;
 
           // Make our destination zoom a zoom that will fit the dimensions of the viewport
-          // relative to the zoom at one level
-          this.destinationZoom = zoomToFit / zoomAtOne
-          this.targetZoom = (this.destinationZoom * zoomAtOne) * 0.001
+          // Relative to the zoom at one level
+          this.destinationZoom = zoomToFit / zoomAtOne;
+          this.targetZoom = (this.destinationZoom * zoomAtOne) * microAdjustment;
 
           // Make sure any zooming that happens occurs over the middle of the initial viewport
-          this.zoomTargetX = mid.x
-          this.zoomTargetY = mid.y
+          this.zoomTargetX = mid.x;
+          this.zoomTargetY = mid.y;
 
           // Make sure mouse position doesn't mess with the zooming focus either
-          this.lastMousePosition.x = this.ctx.widthHalf
-          this.lastMousePosition.y = this.ctx.heightHalf
+          this.lastMousePosition.x = this.ctx.widthHalf;
+          this.lastMousePosition.y = this.ctx.heightHalf;
 
           // Apply the values immediately to the camera
-          this.positionCamera(this.currentX, this.currentY)
-          this.zoomCamera(this.targetZoom)
-          this.updateCameraUniforms()
+          this.positionCamera(this.currentX, this.currentY);
+          this.zoomCamera(this.targetZoom);
+          this.updateCameraUniforms();
 
           // We request the calculated zoom level so adjustments on the input can be made
           if (props.onZoomRequest) {
-            props.onZoomRequest(this.destinationZoom)
-            debugCam('Requesting zoom level', this.destinationZoom)
+            props.onZoomRequest(this.destinationZoom);
+            debugCam('Requesting zoom level', this.destinationZoom);
           }
 
           // Let's disable mouse interactions for a little bit until the camera has settled into place
-          this.disableMouseInteraction = 10
+          const framesToDisable = 10;
+          this.disableMouseInteraction = framesToDisable;
 
-          debugCam('init cam', this.currentX, this.currentY)
+          debugCam('init cam', this.currentX, this.currentY);
         }
 
         // Ensure we have our quad tree available even if it is empty
         if (!this.quadTree) {
-          this.quadTree = new QuadTree<Bounds<any>>(0, 1, 0, 1)
+          this.quadTree = new QuadTree<Bounds<any>>(0, 1, 0, 1);
         }
 
-        return {}
-      }
-    }
+        return {};
+      },
+    };
   }
 
   /**
@@ -580,7 +604,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {T} props This is the next set of props that are going to be applied to this component
    */
   applyBufferChanges(props: T) {
-
+    // NOTE: This will be implemented by base classes
   }
 
   /**
@@ -588,7 +612,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * Start the update loop and register any interesting listeners
    */
   componentDidMount() {
-    this.animate()
+    this.animate();
   }
 
   /**
@@ -599,28 +623,28 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   componentWillMount() {
     /** Create our context bound projection methods for handing to processes that may need them */
     this.projection = {
-      screenToWorld: this.screenToWorld.bind(this),
-      worldToScreen: this.worldToScreen.bind(this),
       screenSizeToWorld: this.screenSizeToWorld.bind(this),
-      worldSizeToScreen: this.worldSizeToScreen.bind(this)
-    }
+      screenToWorld: this.screenToWorld.bind(this),
+      worldSizeToScreen: this.worldSizeToScreen.bind(this),
+      worldToScreen: this.worldToScreen.bind(this),
+    };
 
     /** Generate our applying props methods to execute within our applyProps process */
-    const basePropsMethods = this.applyPropsMethodsBase()
+    const basePropsMethods = this.applyPropsMethodsBase();
     this.propsMethodList = this.applyPropsMethods(basePropsMethods, [
       basePropsMethods[BaseApplyPropsMethods.INITIALIZE],
       basePropsMethods[BaseApplyPropsMethods.BUFFERCHANGES],
       basePropsMethods[BaseApplyPropsMethods.CAMERA],
-    ])
+    ]);
 
     /** Generate our animated methods to execute within our animation loop */
-    const baseAnimatedMethods = this.animatedMethodsBase()
+    const baseAnimatedMethods = this.animatedMethodsBase();
     this.animatedMethodList = this.animatedMethods(baseAnimatedMethods, [
       baseAnimatedMethods[BaseAnimatedMethods.CONTEXT],
       baseAnimatedMethods[BaseAnimatedMethods.INERTIA],
       baseAnimatedMethods[BaseAnimatedMethods.POSITION],
       baseAnimatedMethods[BaseAnimatedMethods.ZOOM],
-    ])
+    ]);
   }
 
   /**
@@ -630,7 +654,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {T} props The new properties to be applied to this component
    */
   componentWillReceiveProps(props: T) {
-    this.applyProps(props)
+    this.applyProps(props);
   }
 
   /**
@@ -638,20 +662,20 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * Release listeners and stop update loop
    */
   componentWillUnmount() {
-    this.stop = true
+    this.stop = true;
 
     if (this.quadTree) {
-      this.quadTree.destroy()
+      this.quadTree.destroy();
     }
 
-    this.quadTree = null
-    this.camera = null
-    this.sizeCamera = null
-    this.ctx = null
-    this.renderEl = null
-    this.renderer = null
-    this.scene = null
-    this.textContext = null
+    this.quadTree = null;
+    this.camera = null;
+    this.sizeCamera = null;
+    this.ctx = null;
+    this.renderEl = null;
+    this.renderer = null;
+    this.scene = null;
+    this.textContext = null;
   }
 
   /**
@@ -664,49 +688,49 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   init = (el: HTMLElement, w: number, h: number) => {
     if (!el || this.scene) {
-      return
+      return;
     }
 
-    this.renderEl = el
+    this.renderEl = el;
 
     if (w === 0 || h === 0) {
-      return
+      return;
     }
 
-    debug('Initializing GPU objects el: %o width: %o height: %o', el, w, h)
+    debug('Initializing GPU objects el: %o width: %o height: %o', el, w, h);
 
     // Set up a ctx for our render space
     this.ctx = {
-      width: w,
       height: h,
-      widthHalf: w / 2,
-      heightHalf: h / 2
-    }
+      heightHalf: h / 2.0,
+      width: w,
+      widthHalf: w / 2.0,
+    };
 
     // Set up the camera now that the ctx is set up
-    this.initCamera()
+    this.initCamera();
 
     // Fire our hook for starting up our specific buffer implementation
-    this.initBuffers()
+    this.initBuffers();
 
     // FINALIZE SET UP
 
     // Generate the renderer along with it's properties
     this.renderer = new WebGLRenderer({
       antialias: true,
-    })
+    });
 
-    debug('Window Pixel Ratio: %o', window.devicePixelRatio)
-    this.renderer.setPixelRatio(window.devicePixelRatio)
-    this.renderer.setSize(w, h)
-    this.renderer.setClearColor(new Color().setRGB(38 / 255, 50 / 255, 78 / 255))
+    debug('Window Pixel Ratio: %o', window.devicePixelRatio);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(w, h);
+    this.renderer.setClearColor(BACKGROUND_COLOR);
 
     // Set up DOM interaction with the renderer
-    const container = el
-    container.appendChild(this.renderer.domElement)
+    const container = el;
+    container.appendChild(this.renderer.domElement);
 
     // Indicates this went through an intialization process
-    this.camNeedsInit = true
+    this.camNeedsInit = true;
   }
 
   /**
@@ -714,30 +738,30 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * and materials etc.
    */
   initBuffers() {
-
+    // NOTE: This is to be implemented by subclasses
   }
 
   /**
    * Initializes the camera and any contexts associated with it
    */
   initCamera = () => {
-    debug('Initializing Camera')
+    debug('Initializing Camera');
     // INITIALIZE THE CAMERA
-    const w = this.ctx.width
-    const h = this.ctx.height
-    const viewSize = h
-    const aspectRatio = w / h
+    const h = this.ctx.height;
+    const viewSize = h;
+    const w = this.ctx.width;
+    const aspectRatio = w / h;
 
     const viewport = {
-      viewSize: viewSize,
       aspectRatio: aspectRatio,
+      bottom: -viewSize / 2,
+      far: 10000000,
       left: (-aspectRatio * viewSize) / 2,
+      near: -100,
       right: (aspectRatio * viewSize) / 2,
       top: viewSize / 2,
-      bottom: -viewSize / 2,
-      near: -100,
-      far: 10000000
-    }
+      viewSize: viewSize,
+    };
 
     this.camera = new OrthographicCamera(
       viewport.left,
@@ -745,8 +769,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       viewport.top,
       viewport.bottom,
       viewport.near,
-      viewport.far
-    )
+      viewport.far,
+    );
 
     this.sizeCamera = new OrthographicCamera(
       viewport.left,
@@ -754,11 +778,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       viewport.top,
       viewport.bottom,
       viewport.near,
-      viewport.far
-    )
+      viewport.far,
+    );
 
-    this.camera.position.z = 300
-    this.sizeCamera.position.set(0, 0, 300)
+    this.camera.position.z = 300;
+    this.sizeCamera.position.set(0, 0, 300);
   }
 
   /**
@@ -768,7 +792,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   initTextCanvas = (n: HTMLCanvasElement) => {
     if (n) {
-      this.textContext = n.getContext('2d')
+      this.textContext = n.getContext('2d');
     }
   }
 
@@ -778,42 +802,42 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * and other deformations.
    */
   resizeContext = () => {
-    const w: number = this.props.width
-    const h: number = this.props.height
+    const w: number = this.props.width;
+    const h: number = this.props.height;
 
     // See if a renderer even exists yet
     if (!this.renderer) {
-      return false
+      return false;
     }
 
-    const renderSize = this.renderer.getSize()
+    const renderSize = this.renderer.getSize();
 
     // Check if the resize is needed
     if (renderSize.width === w && renderSize.height === h) {
-      return false
+      return false;
     }
 
-    debug('RENDERER RESIZE')
+    debug('RENDERER RESIZE');
 
     this.ctx = {
-      width: w,
       height: h,
+      heightHalf: h / 2,
+      width: w,
       widthHalf: w / 2,
-      heightHalf: h / 2
-    }
+    };
 
-    const zoom = this.camera.zoom
-    const position = this.camera.position.clone()
-    this.initCamera()
-    this.camera.zoom = zoom
-    this.camera.position.set(position.x, position.y, position.z)
-    this.camera.updateProjectionMatrix()
+    const zoom = this.camera.zoom;
+    const position = this.camera.position.clone();
+    this.initCamera();
+    this.camera.zoom = zoom;
+    this.camera.position.set(position.x, position.y, position.z);
+    this.camera.updateProjectionMatrix();
 
-    this.renderer.setPixelRatio(window.devicePixelRatio)
-    this.renderer.setSize(w, h)
-    this.renderer.setClearColor(new Color().setRGB(38 / 255, 50 / 255, 78 / 255))
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setSize(w, h);
+    this.renderer.setClearColor(new Color().setRGB(38 / 255, 50 / 255, 78 / 255));
 
-    return true
+    return true;
   }
 
   /**
@@ -821,20 +845,20 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * to the subclass that needs detailed information regarding the viewport.
    */
   emitViewport = () => {
-    const tl = this.screenToWorld(0, 0)
-    const br = this.screenToWorld(this.ctx.width, this.ctx.height)
-    this.camera.updateMatrixWorld(true)
+    const tl = this.screenToWorld(0, 0);
+    const br = this.screenToWorld(this.ctx.width, this.ctx.height);
+    this.camera.updateMatrixWorld(true);
 
     const visible = this.quadTree.query(
       new Bounds(
         tl.x,
         br.x,
         br.y,
-        tl.y
-      )
-    )
+        tl.y,
+      ),
+    );
 
-    this.onViewport(visible, this.projection, this.ctx)
+    this.onViewport(visible, this.projection, this.ctx);
   }
 
   /**
@@ -843,35 +867,35 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   draw = () => {
     // Draw the 3D scene
-    this.renderer.render(this.scene, this.camera)
+    this.renderer.render(this.scene, this.camera);
 
     // Render the labels
-    const context = this.textContext
-    const screen: IPoint = { x: 0, y: 0 }
-    const worldToScreen = this.projection.worldToScreen
-    let color
-    let fontSize
+    const context = this.textContext;
+    const screen: IPoint = { x: 0, y: 0 };
+    const worldToScreen = this.projection.worldToScreen;
+    let color;
+    let fontSize;
 
-    context.clearRect(0, 0, this.ctx.width, this.ctx.height)
+    context.clearRect(0, 0, this.ctx.width, this.ctx.height);
 
-    const labels = this.props.labels || []
+    const labels = this.props.labels || [];
     labels.forEach((label: Label<any>) => {
-      fontSize = label.fontSize
+      fontSize = label.fontSize;
 
       color = rgb(
         label.color.r,
         label.color.g,
         label.color.b,
-        label.color.opacity
-      )
+        label.color.opacity,
+      );
 
-      worldToScreen(label.x, label.y, screen)
-      context.font = label.makeCSSFont(fontSize)
-      context.textAlign = label.textAlign
-      context.textBaseline = label.textBaseline
-      context.fillStyle = color.toString()
-      context.fillText(label.text, screen.x, screen.y)
-    })
+      worldToScreen(label.x, label.y, screen);
+      context.font = label.makeCSSFont(fontSize);
+      context.textAlign = label.textAlign;
+      context.textBaseline = label.textBaseline;
+      context.fillStyle = color.toString();
+      context.fillText(label.text, screen.x, screen.y);
+    });
   }
 
   /**
@@ -883,21 +907,21 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {boolean} isPanning The panning state of the mouse
    */
   onMouse(mouse: IPoint, world: IPoint, isPanning: boolean) {
-
+    // NOTE: For subclasses
   }
 
   /**
    * Hook for subclasses to respond to mouse down events
    */
   onMouseDown() {
-
+    // NOTE: For subclasses
   }
 
   /**
    * Hook for subclasses to respond to mouse out events
    */
   onMouseOut() {
-
+    // NOTE: For subclasses
   }
 
   /**
@@ -910,7 +934,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {IProjection} projection The projection methods to go between the screen and world space
    */
   onMouseUp(e: React.MouseEvent<HTMLDivElement>, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
-
+    // NOTE: For subclasses
   }
 
   /**
@@ -922,7 +946,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {IProjection} projection The projection methods to go between the screen and world space
    */
   onMouseHover(hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
-
+    // NOTE: For subclasses
   }
 
   /**
@@ -934,7 +958,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {IProjection} projection The projection methods to go between the screen and world space
    */
   onMouseLeave(left: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
-
+    // NOTE: For subclasses
   }
 
   /**
@@ -945,7 +969,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {IScreenContext} ctx
    */
   onViewport(visible: Bounds<any>[], projection: IProjection, ctx: IScreenContext) {
-
+    // NOTE: For subclasses
   }
 
   /**
@@ -957,13 +981,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
-      return
+      return;
     }
 
-    this.isPanning = true
-    this.distance = 0
+    this.isPanning = true;
+    this.distance = 0;
 
-    this.onMouseDown()
+    this.onMouseDown();
   }
 
   /**
@@ -975,13 +999,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   handleMouseOut = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
-      return
+      return;
     }
 
-    this.isPanning = false
-    this.distance = 0
+    this.isPanning = false;
+    this.distance = 0;
 
-    this.onMouseOut()
+    this.onMouseOut();
   }
 
   /**
@@ -993,36 +1017,36 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
-      return
+      return;
     }
 
-    this.isPanning = false
+    this.isPanning = false;
 
-    const mouse = eventElementPosition(e)
-    const world = this.screenToWorld(mouse.x, mouse.y)
+    const mouse = eventElementPosition(e);
+    const world = this.screenToWorld(mouse.x, mouse.y);
 
     // Handle mouse interaction
     if (this.distance < 5) {
-      const hitInside: Bounds<any>[] = []
+      const hitInside: Bounds<any>[] = [];
 
       // Circle Interaction
-      const hitItems = this.quadTree.query(world)
+      const hitItems = this.quadTree.query(world);
 
       for (const item of hitItems) {
         // Fine tuning for interaction
         if (item.pointInside(world)) {
-          hitInside.push(item)
+          hitInside.push(item);
         }
       }
 
       // Tell the listener that the user clicked on some items
       if (hitInside.length) {
-        this.onMouseUp(e, hitInside, mouse, world, this.projection)
+        this.onMouseUp(e, hitInside, mouse, world, this.projection);
       }
 
       // Tell the listener that the user clicked on nothing
       else {
-        this.onMouseUp(e, null, mouse, world, this.projection)
+        this.onMouseUp(e, null, mouse, world, this.projection);
       }
     }
   }
@@ -1036,98 +1060,98 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
-      return
+      return;
     }
 
     const {
       onMouse,
-    } = this.props
+    } = this.props;
 
-    const zoom: number = this.props.zoom
+    const zoom: number = this.props.zoom;
 
-    const mouse = eventElementPosition(e)
-    const world = this.screenToWorld(mouse.x, mouse.y)
-    this.distance++
+    const mouse = eventElementPosition(e);
+    const world = this.screenToWorld(mouse.x, mouse.y);
+    this.distance++;
 
     // Handle panning
     if (this.isPanning) {
-      let xDistance = (mouse.x - this.lastMousePosition.x) / this.targetZoom
-      let yDistance = -(mouse.y - this.lastMousePosition.y) / this.targetZoom
+      let xDistance = (mouse.x - this.lastMousePosition.x) / this.targetZoom;
+      let yDistance = -(mouse.y - this.lastMousePosition.y) / this.targetZoom;
 
       // Execute the hook to allow subclasses
-      const pan: Vector3 = this.willPan(xDistance, yDistance)
-      xDistance = pan.x
-      yDistance = pan.y
+      const pan: Vector3 = this.willPan(xDistance, yDistance);
+      xDistance = pan.x;
+      yDistance = pan.y;
 
-      this.destinationX -= xDistance
-      this.destinationY -= yDistance
+      this.destinationX -= xDistance;
+      this.destinationY -= yDistance;
 
-      this.inertia = this.inertia || { x: 0, y: 0 }
+      this.inertia = this.inertia || { x: 0, y: 0 };
 
       if (sign(xDistance) !== sign(this.inertia.x)) {
-        this.inertia.x = 0
+        this.inertia.x = 0;
       }
 
       if (sign(yDistance) !== sign(this.inertia.y)) {
-        this.inertia.y = 0
+        this.inertia.y = 0;
       }
 
-      this.inertia.x = xDistance * this.inertiaBuild
-      this.inertia.y = yDistance * this.inertiaBuild
+      this.inertia.x = xDistance * this.inertiaBuild;
+      this.inertia.y = yDistance * this.inertiaBuild;
 
-      const maxInertia = this.inertiaMax / zoom
-      const mag = Math.sqrt(this.inertia.x * this.inertia.x + this.inertia.y * this.inertia.y)
+      const maxInertia = this.inertiaMax / zoom;
+      const mag = Math.sqrt(this.inertia.x * this.inertia.x + this.inertia.y * this.inertia.y);
 
       // Make sure the magnitude of the inertia is less than our max allowed
       if (mag > maxInertia) {
         // Since it's greater, let's confine the inertia's magnitude to the max magnitude
-        // by normalizing the intertia vector and multilying it by the max
-        this.inertia.x = (this.inertia.x / mag) * maxInertia
-        this.inertia.y = (this.inertia.y / mag) * maxInertia
+        // By normalizing the intertia vector and multilying it by the max
+        this.inertia.x = (this.inertia.x / mag) * maxInertia;
+        this.inertia.y = (this.inertia.y / mag) * maxInertia;
       }
     }
 
     if (this.quadTree && !this.isPanning) {
       // Empty the last hovered items to populate a new list
-      const currentHoverItems: Bounds<any>[] = []
+      const currentHoverItems: Bounds<any>[] = [];
 
       // Handle mouse interaction with items
       // Interaction with circles
-      const hitItems = this.quadTree.query(world)
-      const hitInside: Bounds<any>[] = []
+      const hitItems = this.quadTree.query(world);
+      const hitInside: Bounds<any>[] = [];
 
       for (const item of hitItems) {
         // Fine tuning for interaction
         if (item.pointInside(world)) {
-          hitInside.push(item)
-          currentHoverItems.push(item)
+          hitInside.push(item);
+          currentHoverItems.push(item);
         }
       }
 
       // Inform of all items hit or hovered
-      this.onMouseHover(hitInside, mouse, world, this.projection)
+      this.onMouseHover(hitInside, mouse, world, this.projection);
 
       // Diff the currently hovered items with the old ones to see what is
-      // no longer hit
-      const left: Bounds<any>[] = []
+      // No longer hit
+      const left: Bounds<any>[] = [];
 
       for (const item of this.currentHoverItems) {
         if (currentHoverItems.indexOf(item) < 0) {
-          left.push(item)
+          left.push(item);
         }
       }
 
       // Inform of all items no longer hovered
-      this.onMouseLeave(left, mouse, world, this.projection)
+      this.onMouseLeave(left, mouse, world, this.projection);
 
-      this.currentHoverItems = currentHoverItems
+      this.currentHoverItems = currentHoverItems;
     }
 
     if (onMouse) {
-      this.onMouse(mouse, world, this.isPanning)
+      this.onMouse(mouse, world, this.isPanning);
     }
 
-    this.lastMousePosition = mouse
+    this.lastMousePosition = mouse;
   }
 
   /**
@@ -1138,7 +1162,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   positionCamera(x: number, y: number) {
     if (this.camera) {
-      this.camera.position.set(Math.floor(x), Math.floor(y), this.camera.position.z)
+      this.camera.position.set(Math.floor(x), Math.floor(y), this.camera.position.z);
     }
   }
 
@@ -1158,19 +1182,19 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     vector.set(
       (x / this.ctx.width) * 2 - 1,
       - (y / this.ctx.height) * 2 + 1,
-      0.0
-    )
+      0.0,
+    );
 
-    // unproject the normalized space to the world. It will project
-    // the vector to a REALLY far away z coordinate, but it does not matter
-    // since we are utilizing an orthographic camera (no perspective distortion)
-    vector.unproject(this.camera)
+    // Unproject the normalized space to the world. It will project
+    // The vector to a REALLY far away z coordinate, but it does not matter
+    // Since we are utilizing an orthographic camera (no perspective distortion)
+    vector.unproject(this.camera);
 
-    obj = obj || { x: 0, y: 0 }
-    obj.x = vector.x
-    obj.y = vector.y
+    obj = obj || { x: 0, y: 0 };
+    obj.x = vector.x;
+    obj.y = vector.y;
 
-    return obj
+    return obj;
   }
 
   /**
@@ -1185,11 +1209,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    *                  Insertted as a param that has the properties injected into
    */
   screenSizeToWorld(w: number, h: number, obj?: ISize): ISize {
-    obj = obj || new Bounds(0, 0, 0, 0)
-    obj.width = w / (this.sizeCamera ? this.sizeCamera.zoom : 1)
-    obj.height = h / (this.sizeCamera ? this.sizeCamera.zoom : 1)
+    obj = obj || new Bounds(0, 0, 0, 0);
+    obj.width = w / (this.sizeCamera ? this.sizeCamera.zoom : 1);
+    obj.height = h / (this.sizeCamera ? this.sizeCamera.zoom : 1);
 
-    return obj
+    return obj;
   }
 
   /**
@@ -1205,16 +1229,16 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   worldToScreen(x: number, y: number, obj?: IPoint): IPoint {
     // This projects to NORMALIZED screen space (-1, 1) range for x and y
-    vector.set(x, y, 0)
-    vector.project(this.camera)
+    vector.set(x, y, 0);
+    vector.project(this.camera);
 
     // Use the window dimensions to denormalize the vector
-    obj = Object.assign(obj || {}, {
+    obj = merge(obj || {}, {
       x: (vector.x * this.ctx.widthHalf) + this.ctx.widthHalf,
       y: - (vector.y * this.ctx.heightHalf) + this.ctx.heightHalf,
-    })
+    });
 
-    return obj
+    return obj;
   }
 
   /**
@@ -1229,11 +1253,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    *                  Insertted as a param that has the properties injected into
    */
   worldSizeToScreen(w: number, h: number, obj?: ISize): ISize {
-    obj = obj || new Bounds(0, 0, 0, 0)
-    obj.width = w * this.sizeCamera.zoom
-    obj.height = h * this.sizeCamera.zoom
+    obj = obj || new Bounds(0, 0, 0, 0);
+    obj.width = w * this.sizeCamera.zoom;
+    obj.height = h * this.sizeCamera.zoom;
 
-    return obj
+    return obj;
   }
 
   /**
@@ -1242,10 +1266,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {number} zoom The zoom level. Must be > 0
    */
   zoomCamera(zoom: number) {
-    this.camera.zoom = zoom
-    this.sizeCamera.zoom = zoom
-    this.camera.updateProjectionMatrix()
-    this.sizeCamera.updateProjectionMatrix()
+    this.camera.zoom = zoom;
+    this.sizeCamera.zoom = zoom;
+    this.camera.updateProjectionMatrix();
+    this.sizeCamera.updateProjectionMatrix();
   }
 
   /**
@@ -1253,7 +1277,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * any way
    */
   updateCameraUniforms() {
-
+    // NOTE: For subclasses
   }
 
   /**
@@ -1263,8 +1287,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {HTMLElement} n This is the canvas element from the dom
    */
   applyRef = (n: HTMLElement) => {
-    this.init(n, this.props.width, this.props.height)
-    this.applyProps(this.props)
+    this.init(n, this.props.width, this.props.height);
+    this.applyProps(this.props);
   }
 
   /**
@@ -1274,7 +1298,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {HTMLElement} n This is the canvas element from the dom for text
    */
   applyTextRef = (n: HTMLCanvasElement) => {
-    this.initTextCanvas(n)
+    this.initTextCanvas(n);
   }
 
   /**
@@ -1285,7 +1309,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @param {T} nextProps The next properties injected
    */
   shouldComponentUpdate(nextProps: T) {
-    return this.props.width !== nextProps.width || this.props.height !== nextProps.height
+    return this.props.width !== nextProps.width || this.props.height !== nextProps.height;
   }
 
   /**
@@ -1297,28 +1321,20 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * @return {Vector3} The vector indicating the direction to pan
    */
   willPan(distanceX: number, distanceY: number): Vector3 {
-    return new Vector3(distanceX, distanceY, 0.0)
+    return new Vector3(distanceX, distanceY, 0.0);
   }
 
   // -----[ Render ]---------------------------------------------
   //
   // In a React app, it's nice to put the render function at the bottom of the
-  // file
+  // File
 
   /**
    * This should only attempt rendering when the canvas DOM element needs to be resized.
    * You will note shouldComponentUpdate helps facilitate this.
    */
   render() {
-    const { width, height } = this.props
-
-    const canvasStyle = {
-      width,
-      height,
-      position: 'absolute',
-      top: 0,
-      left: 0
-    }
+    const { width, height } = this.props;
 
     return (
       <div
@@ -1329,16 +1345,15 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         onMouseMove={this.handleMouseMove}
         onDoubleClick={e => {
           if (this.props.onDoubleClick) {
-            this.props.onDoubleClick(e)
+            this.props.onDoubleClick(e);
           }
         }}
-        styleName="webgl-surface"
         style={{ position: 'relative', width: width, height: height }}>
-        <div style={canvasStyle} ref={this.applyRef} />
-        <div style={canvasStyle}>
+        <div ref={this.applyRef} />
+        <div>
           <canvas width={width} height={height} ref={this.applyTextRef} />
         </div>
       </div>
-    )
+    );
   }
 }

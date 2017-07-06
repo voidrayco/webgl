@@ -1,7 +1,7 @@
-import {IPoint} from '../primitives/point'
-import {Line} from '../primitives/line'
-import {LineShape} from './line-shape'
-import {rgb, RGBColor} from 'd3-color'
+import { rgb, RGBColor } from 'd3-color';
+import { Line } from '../primitives/line';
+import { IPoint } from '../primitives/point';
+import { LineShape } from './line-shape';
 
 /**
  * This defines an edge that can be drawn.
@@ -14,21 +14,21 @@ import {rgb, RGBColor} from 'd3-color'
  */
 export class EdgeShape<T> extends LineShape<T> {
   /** Top left of the quad to generate this edge */
-  tl: IPoint = {x: 0, y: 0}
+  tl: IPoint = {x: 0, y: 0};
   /** Bottom left of the quad to generate this edge */
-  bl: IPoint = {x: 0, y: 0}
+  bl: IPoint = {x: 0, y: 0};
   /** Top right of the quad to generate this edge */
-  tr: IPoint = {x: 0, y: 0}
+  tr: IPoint = {x: 0, y: 0};
   /** Bottom Right of the quad to generate this edge */
-  br: IPoint = {x: 0, y: 0}
+  br: IPoint = {x: 0, y: 0};
 
   /** Represents the line from the tl to the tr */
-  topEdge: Line<T>
+  topEdge: Line<T>;
   /** Represents the line from the bl to the br */
-  bottomEdge: Line<T>
+  bottomEdge: Line<T>;
 
   /** The width of the edge at the termination point */
-  endWidth: number = 1
+  endWidth: number = 1;
 
   /**
    * Constructor with basic parameters to declare an edge
@@ -51,11 +51,11 @@ export class EdgeShape<T> extends LineShape<T> {
       p1, p2, d,
       p1Col.r, p1Col.g, p1Col.b, p1Col.opacity,
       p2Col.r, p2Col.g, p2Col.b, p2Col.opacity,
-      p1Width
-    )
+      p1Width,
+    );
 
-    this.endWidth = p2Width
-    this.setPoints(p1, p2)
+    this.endWidth = p2Width;
+    this.setPoints(p1, p2);
   }
 
   /**
@@ -73,11 +73,11 @@ export class EdgeShape<T> extends LineShape<T> {
         rgb(this.r, this.g, this.b, this.a),
         rgb(this.r2, this.g2, this.b2, this.a2),
         this.thickness,
-        this.endWidth
+        this.endWidth,
       ),
       this,
-      newProperties
-    ) as EdgeShape<T>
+      newProperties,
+    ) as EdgeShape<T>;
   }
 
   /**
@@ -93,25 +93,25 @@ export class EdgeShape<T> extends LineShape<T> {
    * @return {boolean} True if the point is inside the edge
    */
   pointInside(point: IPoint): boolean {
-    const testx = point.x
-    const testy = point.y
+    const testx = point.x;
+    const testy = point.y;
 
     // This is an algortihm to handle any number of points for a polygon. In this
-    // case our polygon is simply the points that make this fat edge. Note:
-    // the points MUST be in CW order
-    const points: Array<IPoint> = [this.tl, this.tr, this.br, this.bl]
-    const numberVertices: number = points.length
-    let isClockwise: boolean = false
+    // Case our polygon is simply the points that make this fat edge. Note:
+    // The points MUST be in CW order
+    const points: IPoint[] = [this.tl, this.tr, this.br, this.bl];
+    const numberVertices: number = points.length;
+    let isClockwise: boolean = false;
 
     for (let i = 0, j = numberVertices - 1; i < numberVertices; j = i++) {
       if (((points[i].y > testy) !== (points[j].y > testy)) &&
          (testx < (points[j].x - points[i].x) * (testy - points[i].y) /
          (points[j].y - points[i].y) + points[i].x))        {
-        isClockwise = !isClockwise
+        isClockwise = !isClockwise;
       }
     }
 
-    return isClockwise
+    return isClockwise;
   }
 
   /**
@@ -123,38 +123,38 @@ export class EdgeShape<T> extends LineShape<T> {
    * @param {IPoint} p2 The end point
    */
   setPoints(p1: IPoint, p2: IPoint) {
-    super.setPoints(p1, p2)
+    super.setPoints(p1, p2);
 
     if (this.tl) {
       // Get the distance from the points we will go based on specified widths
-      const p1Dx = this.thickness / 2
-      const p2Dx = this.endWidth / 2
+      const p1Dx = this.thickness / 2;
+      const p2Dx = this.endWidth / 2;
 
       // Calculate the deltas to get from point to quad edge
-      const p1DeltaX = this.perpendicular.x * p1Dx
-      const p1DeltaY = this.perpendicular.y * p1Dx
-      const p2DeltaX = this.perpendicular.x * p2Dx
-      const p2DeltaY = this.perpendicular.y * p2Dx
+      const p1DeltaX = this.perpendicular.x * p1Dx;
+      const p1DeltaY = this.perpendicular.y * p1Dx;
+      const p2DeltaX = this.perpendicular.x * p2Dx;
+      const p2DeltaY = this.perpendicular.y * p2Dx;
 
       // Apply the metrics to our quad points
-      // start side of the edge
-      this.tl.x = this.p1.x + p1DeltaX
-      this.tl.y = this.p1.y + p1DeltaY
-      this.bl.x = this.p1.x - p1DeltaX
-      this.bl.y = this.p1.y - p1DeltaY
+      // Start side of the edge
+      this.tl.x = this.p1.x + p1DeltaX;
+      this.tl.y = this.p1.y + p1DeltaY;
+      this.bl.x = this.p1.x - p1DeltaX;
+      this.bl.y = this.p1.y - p1DeltaY;
 
       // End side of the edge
-      this.tr.x = this.p2.x + p2DeltaX
-      this.tr.y = this.p2.y + p2DeltaY
-      this.br.x = this.p2.x - p2DeltaX
-      this.br.y = this.p2.y - p2DeltaY
+      this.tr.x = this.p2.x + p2DeltaX;
+      this.tr.y = this.p2.y + p2DeltaY;
+      this.br.x = this.p2.x - p2DeltaX;
+      this.br.y = this.p2.y - p2DeltaY;
 
       // Create lines for the edges for computations and faster hit detections
-      this.topEdge = new Line<T>(this.tl, this.tr)
-      this.bottomEdge = new Line<T>(this.bl, this.br)
+      this.topEdge = new Line<T>(this.tl, this.tr);
+      this.bottomEdge = new Line<T>(this.bl, this.br);
 
       // Make sure our bounds reflects the entirety of the fat edge
-      this.encapsulatePoints([this.tl, this.tr, this.bl, this.br])
+      this.encapsulatePoints([this.tl, this.tr, this.bl, this.br]);
     }
   }
 }

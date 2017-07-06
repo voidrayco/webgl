@@ -5,10 +5,10 @@
  * @class Sprite
  */
 export class Sprite {
-  canvas:  HTMLCanvasElement
-  context: CanvasRenderingContext2D
-  scaleX:  number = 1
-  scaleY:  number = 1
+  canvas:  HTMLCanvasElement;
+  context: CanvasRenderingContext2D;
+  scaleX:  number = 1;
+  scaleY:  number = 1;
 
   /**
    * Retrieves the content scaling of this object
@@ -20,8 +20,8 @@ export class Sprite {
   getContentScale(): {x: number, y: number} {
     return {
       x: this.scaleX,
-      y: this.scaleY
-    }
+      y: this.scaleY,
+    };
   }
 
   /**
@@ -33,9 +33,9 @@ export class Sprite {
    */
   getContentSize() {
     return {
+      height: this.canvas.height,
       width:  this.canvas.width,
-      height: this.canvas.height
-    }
+    };
   }
 
   /**
@@ -46,7 +46,7 @@ export class Sprite {
    * @memberOf Sprite
    */
   getWidth() {
-    return this.canvas.width / this.scaleX
+    return this.canvas.width / this.scaleX;
   }
 
   /**
@@ -57,7 +57,7 @@ export class Sprite {
    * @memberOf Sprite
    */
   getHeight() {
-    return this.canvas.height / this.scaleY
+    return this.canvas.height / this.scaleY;
   }
 
   //
@@ -75,17 +75,17 @@ export class Sprite {
    * @memberOf Sprite
    */
   constructor(w: number, h: number, contentScaleX: number, contentScaleY: number) {
-    let canvas: HTMLCanvasElement = document.createElement('canvas')
+    const canvas: HTMLCanvasElement = document.createElement('canvas');
 
     if (canvas) {
-      this.scaleX   = contentScaleX || this.scaleX
-      this.scaleY   = contentScaleY || this.scaleY
+      this.scaleX   = contentScaleX || this.scaleX;
+      this.scaleY   = contentScaleY || this.scaleY;
 
-      canvas.width  = w * this.scaleX
-      canvas.height = h * this.scaleY
+      canvas.width  = w * this.scaleX;
+      canvas.height = h * this.scaleY;
 
-      this.context  = canvas.getContext('2d')
-      this.canvas   = canvas
+      this.context  = canvas.getContext('2d');
+      this.canvas   = canvas;
     }
   }
 }
