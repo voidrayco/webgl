@@ -52,8 +52,6 @@ export class QuadGenerator {
         rgb(Math.random(), Math.random(), Math.random(), 1.0)
       )
     })
-
-    console.log(this.baseBuffer)
   }
 
   /**
