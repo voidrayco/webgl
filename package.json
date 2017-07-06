@@ -12,7 +12,7 @@
     "build": "tslint src && webpack"
   },
   "dependencies": {
-    "@types/node": "^8.0.7",
+    "@types/node": "8.0.7",
     "fork-ts-checker-webpack-plugin": "0.2.4",
     "random": "github:tarwich/node-random#1.0.0",
     "tslint": "5.5.0",
@@ -20,11 +20,15 @@
     "webpack": "3.0.0"
   },
   "devDependencies": {
-    "@types/node": "^8.0.8",
-    "tslint": "5.5.0",
+    "@types/node": "8.0.8",
+    "css-loader": "^0.28.4",
     "eslint-config-tarwich": "github:tarwich/eslint-config-tarwich#1.5.1",
     "file-loader": "0.11.2",
+    "less": "2.7.2",
+    "less-loader": "4.0.4",
+    "style-loader": "0.18.2",
     "ts-loader": "2.2.2",
+    "tslint": "5.5.0",
     "typescript": "2.4.1",
     "webpack-dev-server": "2.5.0"
   }

@@ -13,6 +13,7 @@ module.exports = {
     rules: [
       {test: /\.tsx?/, use: tslintLoader, enforce: 'pre'},
       {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: true}}},
+      {test: /\.less$/, use: ['style-loader', 'css-loader', 'less-loader']},
       {test: /index.html$/, use: {loader: 'file-loader', options: {name: 'index.html'}}},
     ],
   },
