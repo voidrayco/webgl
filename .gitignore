@@ -1,5 +1,7 @@
 # -----[ Application ]---------------------------------------------
 node_modules
+# The actual build files
+build
 
 # -----[ Metadata ]---------------------------------------------
 # macOS
