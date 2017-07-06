@@ -1,11 +1,22 @@
 {
   "compilerOptions": {
     "allowUnreachableCode": false,
+    "baseUrl": "./src",
     "experimentalDecorators": true,
+    "importHelpers": true,
+    "jsx": "react",
+    "module": "commonjs",
+    "moduleResolution": "node",
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "strictNullChecks": true
-  }
+    "strictNullChecks": true,
+    "paths": {
+      "webgl-surface": ["./webgl-surface"]
+    }
+  },
+  "exclude": [
+    "node_modules"
+  ]
 }
