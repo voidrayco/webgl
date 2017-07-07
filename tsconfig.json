@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "allowUnreachableCode": false,
-    "baseUrl": "./src",
     "experimentalDecorators": true,
     "importHelpers": true,
     "jsx": "react",
@@ -11,6 +10,10 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "strictNullChecks": false,
-    "target": "es2017"
-  }
+    "target": "es2017",
+    "baseUrl": "src"
+  },
+  "files": [
+    "src/index.ts"
+  ]
 }
