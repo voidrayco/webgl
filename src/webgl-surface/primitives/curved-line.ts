@@ -267,7 +267,7 @@ const pickDistanceMethod = {
  */
 export class CurvedLine<T> extends Bounds<T> {
   /** Stores the segments that have been calculated. Only gets populated if cachesSegments is true */
-  cachedSegments: IPoint[];
+  cachedSegments: IPoint[] | null;
   /** Flag to indicate if this line caches its segments. Uses more ram but performs better if true */
   cachesSegments: boolean;
   /**
@@ -387,10 +387,14 @@ export class CurvedLine<T> extends Bounds<T> {
       }
 
       // Set the method that will be used for generating segments
-      this.segmentMethod = segmentMethods[numControlPoints];
+      const segmentMethod = segmentMethods[numControlPoints];
 
       // Make sure the input wasn't bad
-      if (!this.segmentMethod) {
+      if (segmentMethod) {
+        this.segmentMethod = segmentMethod;
+      }
+
+      else {
         throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point.');
       }
     }

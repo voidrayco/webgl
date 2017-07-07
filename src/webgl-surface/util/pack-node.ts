@@ -16,10 +16,10 @@ export interface ImageDimensions {
  * not violated and provide proper feedback for where to draw a given image
  */
 export class PackNode {
-  child: [PackNode, PackNode] = [null, null];
+  child: [PackNode | null, PackNode | null] = [null, null];
   isLeaf: boolean = true;
   nodeDimensions: Bounds<never>;
-  nodeImage: AtlasTexture = null;
+  nodeImage: AtlasTexture | null = null;
 
   constructor(x: number, y: number, width: number, height: number) {
     this.nodeDimensions = new Bounds<never>(x, x + width, y, y + height);
@@ -30,25 +30,29 @@ export class PackNode {
    */
   destroy() {
     this.nodeImage = null;
-    if (this.child[0]) { this.child[0].destroy(); }
-    if (this.child[1]) { this.child[1].destroy(); }
-    this.child[0] = undefined;
-    this.child[1] = undefined;
+    const child0 = this.child[0];
+    const child1 = this.child[1];
+    if (child0) { child0.destroy(); }
+    if (child1) { child1.destroy(); }
+    delete this.child[0];
+    delete this.child[1];
   }
 
   /**
    * Indicates if there is a child
    */
   hasChild(): boolean {
-    if (this.child[0] && !this.child[0].nodeImage) { return !this.child[0].isLeaf; }
-    if (this.child[1] && !this.child[1].nodeImage) { return !this.child[1].isLeaf; }
+    const child0 = this.child[0];
+    const child1 = this.child[1];
+    if (child0 && !child0.nodeImage) { return !child0.isLeaf; }
+    if (child1 && !child1.nodeImage) { return !child1.isLeaf; }
     return false;
   }
 
   /**
    * Inserts images into our mapping, fitting them appropriately
    */
-  insert(image: ImageDimensions): PackNode {
+  insert(image: ImageDimensions): PackNode | null {
     if (!this.isLeaf) {
       // Try inserting into first child
       const newNode: PackNode = this.child[0].insert(image);

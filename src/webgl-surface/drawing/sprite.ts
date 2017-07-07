@@ -6,7 +6,7 @@
  */
 export class Sprite {
   canvas:  HTMLCanvasElement;
-  context: CanvasRenderingContext2D;
+  context: CanvasRenderingContext2D | null;
   scaleX:  number = 1;
   scaleY:  number = 1;
 

@@ -59,6 +59,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
 
     // Set to true when the quad tree needs to be updated
     let needsTreeUpdate = false;
+    let toAddToTree: Bounds<any>[] = [];
 
     debug('props', props);
 
@@ -130,6 +131,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       this.quadGeometry.setDrawRange(0, quads.length * 6);
 
       needsTreeUpdate = true;
+      toAddToTree = toAddToTree.concat(quads);
       debug('Quad Buffers Created');
     }
 
@@ -139,13 +141,10 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
         this.quadTree = null;
       }
 
-      // Gather the items to place in the quad tree
-      const toAdd: Bounds<any>[] = quads;
-
       // Make the new quad tree and insert the new items
       this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
-      this.quadTree.bounds.copyBounds(toAdd[0]);
-      this.quadTree.addAll(toAdd);
+      this.quadTree.bounds.copyBounds(toAddToTree[0]);
+      this.quadTree.addAll(toAddToTree);
     }
   }
 

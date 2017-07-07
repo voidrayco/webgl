@@ -41,8 +41,8 @@ export class CustomSelection {
   clearSelection(category: string) {
     // We must have selected items to clear the selection
     if (this.getSelection(category).length) {
-      this.selections.set(category, null);
-      this.cachedSelection.set(category, null);
+      this.selections.delete(category);
+      this.cachedSelection.delete(category);
       this._didSelectionChange.set(category, true);
     }
   }
@@ -54,12 +54,12 @@ export class CustomSelection {
    * @param item The item to remove from being selected
    */
   deselect<T>(category: string, item: T) {
-    const selectionMap: Map<T, boolean> = this.selections.get(category);
+    const selectionMap: Map<T, boolean> | null | undefined = this.selections.get(category);
 
     // See if the item is selected already, if it is, clear the selection and bust caches
-    if (selectionMap.get(item)) {
+    if (selectionMap && selectionMap.get(item)) {
       // Clear the cache for the selection list
-      this.cachedSelection.set(category, null);
+      this.cachedSelection.delete(category);
       // Set the selection
       selectionMap.set(item, false);
       // Flag the category of selections as changed
@@ -73,7 +73,7 @@ export class CustomSelection {
    * @param {string} category The selection category to check
    */
   didSelectionCategoryChange(category: string): boolean {
-    return this._didSelectionChange.get(category);
+    return this._didSelectionChange.get(category) || false;
   }
 
   /**
@@ -115,7 +115,7 @@ export class CustomSelection {
       }
     }
 
-    return this.cachedSelection.get(category);
+    return this.cachedSelection.get(category) || [];
   }
 
   /**
@@ -125,7 +125,7 @@ export class CustomSelection {
    * @param item The item to flag as selected
    */
   select<T>(category: string, item: T) {
-    let selectionMap: Map<T, boolean> = this.selections.get(category);
+    let selectionMap: Map<T, boolean> | null | undefined = this.selections.get(category);
 
     if (!selectionMap) {
       selectionMap = new Map<T, boolean>();
@@ -134,7 +134,7 @@ export class CustomSelection {
 
     if (!selectionMap.get(item)) {
       // Clear the cache for the selection list
-      this.cachedSelection.set(category, null);
+      this.cachedSelection.delete(category);
       // Set the selection
       selectionMap.set(item, true);
       // Flag the category of selections as changed
@@ -149,7 +149,7 @@ export class CustomSelection {
    * @param item The item to flag as selected
    */
   toggleSelect<T>(category: string, item: T) {
-    let selectionMap: Map<T, boolean> = this.selections.get(category);
+    let selectionMap: Map<T, boolean> | null | undefined = this.selections.get(category);
 
     if (!selectionMap) {
       selectionMap = new Map<T, boolean>();
@@ -157,7 +157,7 @@ export class CustomSelection {
     }
 
     // Clear the cache for the selection list
-    this.cachedSelection.set(category, null);
+    this.cachedSelection.delete(category);
 
     // Toggle the selection off if already selected
     if (selectionMap.get(item)) {

@@ -44,10 +44,10 @@ export class AtlasManager {
    *               Images that keep an atlas ID of null indicates the image did not load
    *               correctly
    *
-   * @return {Texture} The Threejs texture that is created as our atlas. The images injected
-   *                   into the texture will be populated with the atlas'
+   * @return {Promise<Texture | null>} The Threejs texture that is created as our atlas. The images injected
+   *                                   into the texture will be populated with the atlas'
    */
-  async createAtlas(atlasName: string, images: AtlasTexture[]) {
+  async createAtlas(atlasName: string, images: AtlasTexture[]): Promise<Texture | null> {
     // Create a new mapping to track the packing within the texture
     const atlasMap: PackNode = new PackNode(0, 0, this.textureWidth, this.textureHeight);
     // Create the mapping element for the new atlas so we can track insertions / deletions
@@ -57,30 +57,34 @@ export class AtlasManager {
     // A three-js texture
     const canvas = document.createElement('canvas').getContext('2d');
 
-    // Size the canvas to the atlas size
-    canvas.canvas.width = this.textureWidth;
-    canvas.canvas.height = this.textureHeight;
+    if (canvas) {
+      // Size the canvas to the atlas size
+      canvas.canvas.width = this.textureWidth;
+      canvas.canvas.height = this.textureHeight;
 
-    // Now we load, pack in, and draw each requested image
-    for (const image of images) {
-      await this.draw(image, atlasName, canvas);
+      // Now we load, pack in, and draw each requested image
+      for (const image of images) {
+        await this.draw(image, atlasName, canvas);
+      }
+
+      // After loading we can transform the canvas to a glorious three texture to
+      // Be utilized
+      const texture = new Texture(canvas.canvas);
+
+      texture.premultiplyAlpha = true;
+      texture.generateMipmaps = true;
+
+      // Store the texture as the atlas.
+      this.atlasTexture[atlasName] = texture;
+      // Store the images as images within the atlas
+      this.atlasImages[atlasName] = new Array<AtlasTexture>().concat(images);
+
+      debug('Atlas Created-> texture: %o mapping: %o images: %o', texture, atlasMap, images);
+
+      return texture;
     }
 
-    // After loading we can transform the canvas to a glorious three texture to
-    // Be utilized
-    const texture = new Texture(canvas.canvas);
-
-    texture.premultiplyAlpha = true;
-    texture.generateMipmaps = true;
-
-    // Store the texture as the atlas.
-    this.atlasTexture[atlasName] = texture;
-    // Store the images as images within the atlas
-    this.atlasImages[atlasName] = [].concat(images);
-
-    debug('Atlas Created-> texture: %o mapping: %o images: %o', texture, atlasMap, images);
-
-    return texture;
+    return null;
   }
 
   /**
@@ -91,18 +95,18 @@ export class AtlasManager {
   destroyAtlas(atlasName: string) {
     if (this.atlasTexture[atlasName]) {
       this.atlasTexture[atlasName].dispose();
-      this.atlasTexture[atlasName] = null;
+      delete this.atlasTexture[atlasName];
     }
 
     if (this.atlasMap[atlasName]) {
       this.atlasMap[atlasName].destroy();
-      this.atlasMap[atlasName] = null;
+      delete this.atlasMap[atlasName];
     }
 
     if (this.atlasImages[atlasName]) {
       const none: IPoint = {x: 0, y: 0};
       this.atlasImages[atlasName].forEach(image => {
-        image.atlasReferenceID = null;
+        image.atlasReferenceID = '';
         image.pixelWidth = 0;
         image.pixelHeight = 0;
         image.atlasBL = none;
@@ -110,7 +114,8 @@ export class AtlasManager {
         image.atlasTL = none;
         image.atlasTR = none;
       });
-      this.atlasImages[atlasName] = null;
+
+      delete this.atlasImages[atlasName];
     }
   }
 
@@ -133,11 +138,11 @@ export class AtlasManager {
     // First we must load the image
     // Make a buffer to hold our new image
     // Load the image into memory, default to keeping the alpha channel
-    const loadedImage: HTMLImageElement = await this.loadImage(image);
+    const loadedImage: HTMLImageElement | null = await this.loadImage(image);
     // Make sure at this point the image knows it is not affiliated with an atlas
-    // If something goes wrong with loading or insertting this image, then a null
+    // If something goes wrong with loading or insertting this image, then an empty
     // Atlas value will indicate the image can not be used appropriately
-    image.atlasReferenceID = null;
+    image.atlasReferenceID = '';
 
     // Only a non-null image means the image loaded correctly
     if (loadedImage) {
@@ -219,8 +224,8 @@ export class AtlasManager {
    * @return {Promise<HTMLImageElement>} A promise to resolve to the loaded image
    *                                     or null if there was an error
    */
-  loadImage(texture: AtlasTexture): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
+  loadImage(texture: AtlasTexture): Promise<HTMLImageElement | null> {
+    return new Promise<HTMLImageElement | null>((resolve, reject) => {
       const image: HTMLImageElement = new Image();
 
       image.onload = function() {
