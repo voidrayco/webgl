@@ -13,7 +13,7 @@
     "strictNullChecks": false,
     "target": "es2017",
     "rootDirs": [
-      "./node_modules"
+      "node_modules"
     ]
   }
 }
