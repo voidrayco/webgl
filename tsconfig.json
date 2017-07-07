@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "allowUnreachableCode": false,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "experimentalDecorators": true,
     "importHelpers": true,
     "jsx": "react",
@@ -12,8 +12,10 @@
     "noUnusedLocals": true,
     "strictNullChecks": false,
     "target": "es2017",
-    "rootDirs": [
-      "node_modules"
-    ]
+    "paths": {
+      "*": [
+        "src/*"
+      ]
+    }
   }
 }
