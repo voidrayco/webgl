@@ -12,8 +12,5 @@
     "noUnusedLocals": true,
     "strictNullChecks": false,
     "target": "es2017"
-  },
-  "exclude": [
-    "node_modules"
-  ]
+  }
 }
