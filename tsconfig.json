@@ -11,6 +11,9 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "strictNullChecks": false,
-    "target": "es2017"
+    "target": "es2017",
+    "rootDirs": [
+      "./node_modules"
+    ]
   }
 }
