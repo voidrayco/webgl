@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "allowUnreachableCode": false,
-    "baseUrl": "/pipeline/source/src",
+    "baseUrl": "./src",
     "experimentalDecorators": true,
     "importHelpers": true,
     "jsx": "react",
