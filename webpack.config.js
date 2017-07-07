@@ -22,7 +22,7 @@ module.exports = {
     ],
   },
   resolve: {
-    modules: ['./node_modules', './src'],
+    modules: ['./node_modules', './src', './'],
     extensions: ['.ts', '.tsx', '.js'],
   },
   output: {
