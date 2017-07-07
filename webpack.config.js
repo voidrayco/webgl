@@ -11,37 +11,11 @@ module.exports = {
   entry: './src',
   module: {
     rules: [
-      {
-        test: /\.tsx?/,
-        use: tslintLoader,
-        enforce: 'pre'
-      },
-      {
-        test: /\.tsx?/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            transpileOnly: true
-          }
-        }
-      },
-      {
-        test: /\.less$/,
-        use: ['style-loader', 'css-loader', 'less-loader']
-      },
-      {
-        test: /index.html$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            name: 'index.html'
-          }
-        }
-      },
-      { // Currently used to load shaders into javascript files
-        test: /\.[fv]s$/,
-        use: ['raw-loader'],
-      },
+      {test: /\.tsx?/, use: tslintLoader, enforce: 'pre'},
+      {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: true}}},
+      {test: /\.less$/, use: ['style-loader', 'css-loader', 'less-loader']},
+      {test: /index.html$/, use: {loader: 'file-loader', options: {name: 'index.html'}}},
+      {test: /\.[fv]s$/, use: ['raw-loader']}, // Currently used to load shaders into javascript files
     ],
   },
   resolve: {
