@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node scripts/dev",
     "start": "node scripts/dev",
-    "build": "tslint ./src && webpack"
+    "build": "tslint -c ./tsconfig.json ./src && webpack"
   },
   "dependencies": {
     "@types/d3-color": "1.0.5",
