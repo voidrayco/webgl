@@ -2,28 +2,33 @@ This is a WebGL foundation library that VoidRay uses in our visualizations.
 
 ## Running
 
-Run
+Install dependencies
 
-`npm install`
-or
-`yarn install`
+```sh
+npm install
+# or
+yarn install
+```
 
 Then for development run
 
-```npm run dev```
+```sh
+npm run dev
+```
 
 To do a quick build and lint check run
 
-`npm run build`
+```sh
+npm run build
+```
 
 ## Contributing
-(Process for pull requests. Mention git-flow and using jira ticket keys at the start of the branch name
 
-- Every task MUST begin with a `JIRA ticket`. Locate the ticket and note the ticket number and the subject of the ticket.
+- Every task MUST begin with a JIRA ticket key. Locate the ticket and note the ticket number and the subject of the ticket. The key should look like `WEBGL-14`
 
-- Move the ticket to `In Progress`
+- Move the JIRA ticket to `In Progress`
 
-- Next create a `new branch` based off of the latest code (usually in master or dev)
+- Next create a new branch based off of the latest code (usually in master or dev)
 
 - The name of this branch will be as follows:
 
@@ -45,16 +50,17 @@ To do a quick build and lint check run
 
 - Now create a Pull Request from the UI or the CLI
 
-- The request MUST be reviewed. After review, you will make any necessary changes. After changes are made, push for review again. Once approved, an authorized individual will merge the change.
+- Wait for someone to review your pull request, then you merge your own PR when it's approved.
 
 ## Developing
-Mention VS Code, any useful extensions, and anything in "scripts" of package.json that might be useful
 
-Our primary development environment is `Visual Studio Code`.
+Our primary development environment is [Visual Studio Code].
+
+[Visual Studio Code]: https://code.visualstudio.com/
 
 It is recommended to have the following plugins:
 
-- TSLint
-- Document This
+- TSLint ([eg2.tslint](https://marketplace.visualstudio.com/items?itemName=eg2.tslint))
+- EditorConfig ([EditorConfig.EditorConfig](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig))
 
-You can browse the plugins list for any other helpful features you would like, so long as the feature does not create conflicts with VoidRay's style guide.
+You can browse the plugins list for any other helpful features you would like, so long as the feature does not create conflicts with VoidRay's [style guide](https://docs.google.com/document/d/1BGdhltNCKcxcUsNr9MrcIPPFjaSOL4gP1uhcnhcy5rQ/edit#heading=h.pwyf2uw9gb6s).
