@@ -162,7 +162,7 @@ export class AtlasManager {
       // Get the atlas map node
       const node: PackNode = this.atlasMap[atlasName];
       // Store the node resulting from the insert operation
-      const insertedNode: PackNode = node.insert(dimensions);
+      const insertedNode: PackNode | null = node.insert(dimensions);
 
       // If the result was NULL we did not successfully insert the image into any map
       if (insertedNode) {

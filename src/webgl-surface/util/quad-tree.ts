@@ -48,10 +48,10 @@ interface IVisitFunction<T extends Bounds<any>> {
  * @class Quadrants
  */
 class Quadrants<T extends Bounds<any>> {
-  TL: Node<T> = null;
-  TR: Node<T> = null;
-  BL: Node<T> = null;
-  BR: Node<T> = null;
+  TL: Node<T>;
+  TR: Node<T>;
+  BL: Node<T>;
+  BR: Node<T>;
 
   /**
    * Ensures all memory is released for all nodes and all references are removed
@@ -64,10 +64,6 @@ class Quadrants<T extends Bounds<any>> {
     this.TR.destroy();
     this.BL.destroy();
     this.BR.destroy();
-    this.TL = null;
-    this.TR = null;
-    this.BL = null;
-    this.BR = null;
   }
 
   /**
@@ -96,11 +92,11 @@ class Quadrants<T extends Bounds<any>> {
  * @class Node
  */
 export class Node<T extends Bounds<any>> {
-  bounds:        Bounds<any>  = null;
-  children:      T[]     = [];
-  childrenProps: any[]   = [];
-  depth:         number       = 0;
-  nodes:         Quadrants<T> = null;
+  bounds: Bounds<any>;
+  children: T[] = [];
+  childrenProps: any[] = [];
+  depth: number = 0;
+  nodes: Quadrants<T> | null = null;
 
   /**
    * Destroys this node and ensures all child nodes are destroyed as well.
@@ -108,8 +104,7 @@ export class Node<T extends Bounds<any>> {
    * @memberOf Node
    */
   destroy() {
-    this.children = null;
-    this.bounds   = null;
+    this.children = [];
 
     if (this.nodes) {
       this.nodes.destroy();
@@ -465,8 +460,11 @@ export class Node<T extends Bounds<any>> {
     this.children = [];
     this.childrenProps = [];
 
+    let child;
+
     while (allChildren.length > 0) {
-      this.doAdd(allChildren.pop());
+      child = allChildren.pop();
+      if (child) this.doAdd(child);
     }
   }
 

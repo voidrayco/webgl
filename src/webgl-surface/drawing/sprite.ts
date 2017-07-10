@@ -6,7 +6,7 @@
  */
 export class Sprite {
   canvas:  HTMLCanvasElement;
-  context: CanvasRenderingContext2D | null;
+  context: CanvasRenderingContext2D;
   scaleX:  number = 1;
   scaleY:  number = 1;
 
@@ -84,7 +84,13 @@ export class Sprite {
       canvas.width  = w * this.scaleX;
       canvas.height = h * this.scaleY;
 
-      this.context  = canvas.getContext('2d');
+      const context = canvas.getContext('2d');
+
+      if (context === null) {
+        throw new Error('Could not generate a canvas that produced a valid 2D context');
+      }
+
+      this.context  = context;
       this.canvas   = canvas;
     }
   }

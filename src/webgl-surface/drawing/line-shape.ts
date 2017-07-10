@@ -26,9 +26,7 @@ export class LineShape<T> extends Line<T> {
   constructor(p1: IPoint, p2: IPoint, d: T, r: number, g: number, b: number, a: number, r2: number, g2: number, b2: number, a2: number, thickness?: number) {
     super(p1, p2);
 
-    Object.assign(this, {
-      d, r, g, b, a, r2, g2, b2, a2,
-    });
+    Object.assign(this, { a, a2, b, b2, d, g, g2, r, r2 });
 
     if (thickness !== undefined) {
       this.thickness = thickness;
