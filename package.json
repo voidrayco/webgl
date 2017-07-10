@@ -15,7 +15,7 @@
     "@types/d3-color": "1.0.5",
     "@types/node": "8.0.7",
     "@types/react-dom": "15.5.1",
-    "@types/react": "15.0.3git 4",
+    "@types/react": "15.0.3",
     "bowser": "1.7.0",
     "d3-color": "1.0.3",
     "fork-ts-checker-webpack-plugin": "0.2.4",
