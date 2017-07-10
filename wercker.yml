@@ -1,7 +1,10 @@
-box: node:8.0.0
+box: kkarczmarczyk/node-yarn
 build:
   steps:
-    - npm-install
+    - script:
+      name: Yarn Install
+      code: |
+        yarn install
     - script:
         name: Test the build
         code: npm run build

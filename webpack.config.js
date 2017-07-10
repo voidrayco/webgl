@@ -15,9 +15,11 @@ module.exports = {
       {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: true}}},
       {test: /\.less$/, use: ['style-loader', 'css-loader', 'less-loader']},
       {test: /index.html$/, use: {loader: 'file-loader', options: {name: 'index.html'}}},
+      {test: /\.[fv]s$/, use: ['raw-loader']}, // Currently used to load shaders into javascript files
     ],
   },
   resolve: {
+    modules: ['./node_modules', './src'],
     extensions: ['.ts', '.tsx', '.js'],
   },
   output: {
