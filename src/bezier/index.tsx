@@ -3,6 +3,7 @@ import { Bounds } from 'webgl-surface/primitives/bounds';
 import { QuadGenerator } from './generators/quad-generator';
 import { BezierGL } from './gl/bezier-gl';
 import { IQuadShapeData } from './shape-data-types/quad-shape-data';
+const debug = require('debug')('bezier');
 
 interface IBezierProps {
   quadData: IQuadShapeData[]
@@ -33,6 +34,7 @@ export class Bezier extends React.Component<IBezierProps, any> {
     const { quadData } = this.props;
 
     this.quadGenerator.generate(quadData);
+    debug(this.quadGenerator.getBaseBuffer());
 
     return (
       <BezierGL
