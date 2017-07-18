@@ -19,7 +19,7 @@ interface IMainState {
 export class Main extends React.Component<any, IMainState> {
   // Set the default state
   state = {
-    currentTab: 1,
+    currentTab: 0,
   };
 
   /**
@@ -37,30 +37,31 @@ export class Main extends React.Component<any, IMainState> {
     let quadData: IQuadShapeData[] = [];
 
     if (this.state.currentTab === 0) {
+
       quadData = [...new Array(20)].map((_, i: number) =>
         ({
           color:rgb(1,1,1,1),
           id: i,
-          lineWidth: 1,
-          p1: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
-          p2: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          lineWidth: 4,
+          p1: {x:Math.random() * 480, y:Math.random() * 480},
+          p2: {x:Math.random() * 480, y:Math.random() * 480},
         }),
       );
     }
 
     if(this.state.currentTab===1){
       // Start point & end point
-      const p1:IPoint={x:150,y:150},p2:IPoint={x:500,y:150};
+      const p1:IPoint={x:100,y:150},p2:IPoint={x:550,y:150};
 
       // Control points
       const cps:IPoint[]=[];
-      const c1:IPoint={x:325,y:500},c2:IPoint={x:400,y:550};
+      const c1:IPoint={x:325,y:600},c2:IPoint={x:400,y:450};
 
       cps.push(c1);
       cps.push(c2);
 
       // Color
-      const color:RGBColor=rgb (0,0,1,1);
+      const color:RGBColor=rgb (0,1,0,1);
 
     /**
      * YoYo's  example: a curveshape with Tab=1
@@ -70,7 +71,7 @@ export class Main extends React.Component<any, IMainState> {
      * Number of segments: 40
      * Color: Blue
      */
-      const d:CurveShape<IPoint>=new CurveShape(p1,p2,cps,5,40,color);
+      const d:CurveShape<IPoint>=new CurveShape(p1,p2,cps,12,40,color);
 
       quadData=[...new Array(d.segNum)].map((_,i:number)=>
       ({
@@ -86,6 +87,7 @@ export class Main extends React.Component<any, IMainState> {
     return (
       <div>
         <button onClick={this.handleClickTab(0)}>View Quads</button>
+        <button onClick={this.handleClickTab(1)}>View Lines</button>
         <Bezier quadData={quadData}/>
       </div>
     );
