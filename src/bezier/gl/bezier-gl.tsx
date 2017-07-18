@@ -68,7 +68,6 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       debug('Bezier Quad vertex buffer updating %o', quads);
 
       // Since we have new quads, we need to clear the camera position as well
-      this.initCamera();
       this.quadSet = quads;
 
       const numVerticesPerQuad = 6;

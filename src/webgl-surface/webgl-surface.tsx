@@ -157,6 +157,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * and the animated methods will attempt executing again
    */
   animatedMethodBreak: boolean = false;
+  /**
+   * This viewport is the last viewport applied to the camera.
+   * If the props inject a new viewport, this is updated with that value so
+   * that the viewport will only be applied once if it doesn't change again.
+   */
+  appliedViewport: Bounds<any>;
   /** Used to aid in mouse interactions */
   distance = 0;
   /**
