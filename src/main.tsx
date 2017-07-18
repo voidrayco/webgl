@@ -2,6 +2,7 @@ import { rgb } from 'd3-color';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
+import { ILineShapeData } from './bezier/shape-data-types/line-shape-data';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 
 /**
@@ -35,23 +36,32 @@ export class Main extends React.Component<any, IMainState> {
     let quadData: IQuadShapeData[] = [];
 
     if (this.state.currentTab === 0) {
-
       quadData = [...new Array(20)].map((_, i: number) =>
         ({
-          color: rgb(1, 1, 1, 1),
           id: i,
-          lineWidth: 4,
-          p1: {x: Math.random() * 480, y: Math.random() * 480},
-          p2: {x: Math.random() * 480, y: Math.random() * 480},
-        }),
-      );
+          position: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          size: {width: Math.random() * 20 + 10, height: Math.random() * 20 + 10},
+        }));
+    }
+
+    let lineData: ILineShapeData[] = [];
+    if (this.state.currentTab === 1) {
+      lineData = [...new Array(20)].map((_, i: number) =>
+        ({
+          color1: rgb(1, 0, 0),
+          color2: rgb(0, 0, 1),
+          id: i,
+          p1: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          p2: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          thickness: 4,
+        }));
     }
 
     return (
       <div>
         <button onClick={this.handleClickTab(0)}>View Quads</button>
         <button onClick={this.handleClickTab(1)}>View Lines</button>
-        <Bezier quadData={quadData}/>
+        <Bezier quadData={quadData} lineData={lineData}/>
       </div>
     );
   }
