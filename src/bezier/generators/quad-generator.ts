@@ -46,7 +46,7 @@ export class QuadGenerator {
    */
   generateBaseBuffer(data: IQuadShapeData[]) {
     this.baseBuffer = data.map(d =>
-      new QuadShape<IQuadShapeData>(d.p1,d.p2,d.lineWidth,d.color),
+      new QuadShape<IQuadShapeData>(d.p1, d.p2, d.lineWidth, d.color),
     );
   }
 
