@@ -15,6 +15,8 @@ interface IBezierProps {
  * debugging purposes.
  */
 export class Bezier extends React.Component<IBezierProps, any> {
+  /** Indicates if this component has fully mounted already or not */
+  initialized: boolean = false;
   /** This is the generator that produces the buffers for our quads */
   quadGenerator: QuadGenerator;
 
@@ -26,6 +28,10 @@ export class Bezier extends React.Component<IBezierProps, any> {
     this.quadGenerator = new QuadGenerator();
   }
 
+  componentDidMount() {
+    this.initialized = true;
+  }
+
   /**
    * @override
    * The react render method
@@ -34,13 +40,14 @@ export class Bezier extends React.Component<IBezierProps, any> {
     const { quadData } = this.props;
 
     this.quadGenerator.generate(quadData);
-    debug(this.quadGenerator.getBaseBuffer());
+    debug('Bezier Quad buffer created %o', this.quadGenerator.getBaseBuffer());
 
     return (
       <BezierGL
         quads={this.quadGenerator.getBaseBuffer()}
         height={500}
         initialViewport={new Bounds<never>(0, 500, 0, 500)}
+        preventCameraInit={this.initialized}
         width={500}
       />
     );

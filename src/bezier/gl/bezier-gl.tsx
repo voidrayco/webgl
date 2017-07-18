@@ -5,7 +5,7 @@ import { AttributeSize, BufferUtil, IAttributeInfo } from 'webgl-surface/util/bu
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
 import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
-const debug = require('debug')('ConversationView:GPU');
+const debug = require('debug')('bezier');
 
 /** Attempt to determine if BufferAttribute is really a BufferAttribute */
 function isBufferAttributes(value: any): value is BufferAttribute {
@@ -65,6 +65,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
     // Commit circle changes to the GPU
     if (quads !== undefined && quads !== this.quadSet && isBufferAttributes(this.quadGeometry.attributes)) {
       let quad: QuadShape<IQuadShapeData>;
+      debug('Bezier Quad vertex buffer updating %o', quads);
 
       // Since we have new quads, we need to clear the camera position as well
       this.initCamera();
@@ -147,6 +148,8 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       this.quadTree.bounds.copyBounds(toAdd[0]);
       this.quadTree.addAll(toAdd);
     }
+
+    debug('CAMERA %o', this.camera);
   }
 
   /**
