@@ -12,14 +12,14 @@ export class Label<T> extends Bounds<T> {
   font: string = 'serif';
   fontSize: number = 10;
   fontWeight: number = 400;
-  maxWidth: number = undefined;
+  maxWidth: number;
   text: string = '';
   textAlign: 'start' | 'center' | 'right' = 'start';
   textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging' = 'alphabetic';
   zoomable: boolean = false;
 
   constructor(options: Partial<Label<T>> = {}) {
-    super(options.x, options.x + 1, options.y, options.y + 1);
+    super(options.x, (options.x || 0) + 1, options.y, (options.y || 0) + 1);
 
     // Set props
     Object.assign(this, options);

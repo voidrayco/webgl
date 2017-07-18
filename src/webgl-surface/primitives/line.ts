@@ -87,7 +87,13 @@ export class Line<T> extends Bounds<T> {
       }
     });
 
-    return closestLine;
+    // If a closest line is determined
+    if (closestLine) {
+      return closestLine;
+    }
+
+    // Otherwise, in the event of error, just return a line of some sort
+    return lines[0];
   }
 
   /**

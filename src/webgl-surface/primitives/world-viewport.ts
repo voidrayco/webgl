@@ -8,10 +8,10 @@
  * differences.
  */
 export interface IWorldViewport {
-  top: number
-  left: number
   bottom: number
+  left: number
   right: number
+  top: number
 }
 
 /**

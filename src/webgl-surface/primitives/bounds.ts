@@ -47,7 +47,7 @@ export class Bounds<T> {
    * @param top The top (y coordinate) of the instance
    * @param bottom The bottom of the instance
    */
-  constructor(left : number, right : number, top : number, bottom : number) {
+  constructor(left : number = 0, right : number = 0, top : number = 0, bottom : number = 0) {
     if (arguments.length === 4) {
       this.x = left;
       this.width = right - left;
