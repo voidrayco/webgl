@@ -35,15 +35,15 @@ npm run build
   `<feature | hotfix | task>/<PROJECT-Ticket #>-<Ticket subject kabob case>`
 
   > hotfix is used for bugs, task is used for misc, feature is for features
-
+  >
   > Eg - I have a ticket VOIDRAY-253 with the title Fix this stuff
   >     My branch name will be:
-
+  >
   > hotfix/VOIDRAY-253-fix-this-stuff
-
+  >
   > Eg - I have another ticket for a feature VOIDRAY-2384 with the title
   >      Make me something!
-
+  >
   > feature/VOIDRAY-2384-make-me-something
 
 - You now have a branch to work in! Make your changes and commit your changes. Then push to the repo using the exact same name as the branch.
