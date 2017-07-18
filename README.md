@@ -54,9 +54,7 @@ npm run build
 
 ## Developing
 
-``` sh
-Save multiple times for the linter to automatically correct many linting issues!
-```
+    Save multiple times for the linter to automatically correct many linting issues!
 
 Our primary development environment is [Visual Studio Code].
 
