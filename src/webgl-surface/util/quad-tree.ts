@@ -1,5 +1,5 @@
-import {Bounds} from '../primitives/bounds';
-import {IPoint} from '../primitives/point';
+import { Bounds } from '../primitives/bounds';
+import { IPoint } from '../primitives/point';
 
 // A configuration that controls how readily a quadtree will split to another level
 // Adjusting this number can improve or degrade your performance significantly and

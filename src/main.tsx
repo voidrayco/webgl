@@ -39,7 +39,8 @@ export class Main extends React.Component<any, IMainState> {
           id: i,
           position: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
           size: {width: Math.random() * 20 + 10, height: Math.random() * 20 + 10},
-        }));
+        }),
+      );
     }
 
     return (

@@ -1,4 +1,4 @@
-import {IPoint} from './point';
+import { IPoint } from './point';
 
 /**
  * Class to manage the x, y, width, and height of an object
