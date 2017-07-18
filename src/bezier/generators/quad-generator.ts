@@ -3,6 +3,8 @@ import { QuadShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
 
+const debug = require('debug')('bezier');
+
 /**
  * Generator for making our quad shape buffers. This class will guarantee changes
  * to the generated shapes will produce a different array pointer to the data.
@@ -36,6 +38,7 @@ export class QuadGenerator {
     this.bustCaches(data);
 
     if (this.bustBaseCache) {
+      debug('Recreating the base buffer!');
       this.generateBaseBuffer(data);
     }
   }
