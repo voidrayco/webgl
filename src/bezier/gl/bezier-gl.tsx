@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TrianglesDrawMode } from 'three';
 import { QuadShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { AttributeSize, BufferUtil, IAttributeInfo } from 'webgl-surface/util/buffer-util';
@@ -71,59 +71,63 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       this.quadSet = quads;
 
       const numVerticesPerQuad = 6;
-      const colorAttributeSize = 4;
 
       BufferUtil.updateBuffer(
         this.quadGeometry, this.quadAttributes, numVerticesPerQuad, quads.length,
         function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
           quad = quads[i];
-
-          // Copy first vertex twice for intro degenerate tri
-          positions[ppos] = quad.right;
-          positions[++ppos] = quad.bottom;
+          // YoYo changed here
+          // First triangle with p1, p3, p2
+          positions[ppos] = quad.p1.x;
+          positions[++ppos] = quad.p1.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
-          // Skip over degenerate tris color
-          cpos += colorAttributeSize;
 
-          // TR
-          positions[++ppos] = quad.right;
-          positions[++ppos] = quad.bottom;
-          positions[++ppos] = BASE_QUAD_DEPTH;
           colors[cpos] = quad.r;
           colors[++cpos] = quad.g;
           colors[++cpos] = quad.b;
           colors[++cpos] = quad.a;
-          // BR
-          positions[++ppos] = quad.right;
-          positions[++ppos] = quad.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-          // TL
-          positions[++ppos] = quad.x;
-          positions[++ppos] = quad.bottom;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-          // BL
-          positions[++ppos] = quad.x;
-          positions[++ppos] = quad.y;
+
+          positions[++ppos] = quad.p3.x;
+          positions[++ppos] = quad.p3.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[++cpos] = quad.r;
           colors[++cpos] = quad.g;
           colors[++cpos] = quad.b;
           colors[++cpos] = quad.a;
 
-          // Copy last vertex again for degenerate tri
-          positions[++ppos] = quad.x;
-          positions[++ppos] = quad.y;
+          positions[++ppos] = quad.p2.x;
+          positions[++ppos] = quad.p2.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
-          // Skip over degenerate tris for color
-          cpos += colorAttributeSize;
+          colors[++cpos] = quad.r;
+          colors[++cpos] = quad.g;
+          colors[++cpos] = quad.b;
+          colors[++cpos] = quad.a;
+
+          // Second triangle with p2, p3, p4
+          positions[++ppos] = quad.p2.x;
+          positions[++ppos] = quad.p2.y;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+          colors[++cpos] = quad.r;
+          colors[++cpos] = quad.g;
+          colors[++cpos] = quad.b;
+          colors[++cpos] = quad.a;
+
+          positions[++ppos] = quad.p3.x;
+          positions[++ppos] = quad.p3.y;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+          colors[++cpos] = quad.r;
+          colors[++cpos] = quad.g;
+          colors[++cpos] = quad.b;
+          colors[++cpos] = quad.a;
+
+          positions[++ppos] = quad.p4.x;
+          positions[++ppos] = quad.p4.y;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+
+          colors[++cpos] = quad.r;
+          colors[++cpos] = quad.g;
+          colors[++cpos] = quad.b;
+          colors[++cpos] = quad.a;
         },
       );
 
@@ -194,12 +198,12 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       ];
 
       const verticesPerQuad = 6;
-      const numQuads = 10000;
+      const numQuads = 100;
 
       this.quadGeometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.quadAttributes);
       this.quadSystem = new Mesh(this.quadGeometry, quadMaterial);
       this.quadSystem.frustumCulled = false;
-      this.quadSystem.drawMode = TriangleStripDrawMode;
+      this.quadSystem.drawMode = TrianglesDrawMode;
 
       // Place the mesh in the scene
       this.scene.add(this.quadSystem);
