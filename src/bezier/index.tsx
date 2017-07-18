@@ -9,16 +9,25 @@ interface IBezierProps {
   quadData: IQuadShapeData[]
 }
 
+interface IBezierState {
+  zoom: number
+}
+
 /**
  * This defines a component that will render some test results. The shapes
  * rendered will be quads or bezier curves. The quads are for sanity and
  * debugging purposes.
  */
-export class Bezier extends React.Component<IBezierProps, any> {
+export class Bezier extends React.Component<IBezierProps, IBezierState> {
   /** Indicates if this component has fully mounted already or not */
   initialized: boolean = false;
   /** This is the generator that produces the buffers for our quads */
   quadGenerator: QuadGenerator;
+
+  // Sets the default state
+  state: IBezierState = {
+    zoom: 1,
+  };
 
   /**
    * @override
@@ -30,6 +39,12 @@ export class Bezier extends React.Component<IBezierProps, any> {
 
   componentDidMount() {
     this.initialized = true;
+  }
+
+  handleZoomRequest = (zoom: number) => {
+    this.setState({
+      zoom,
+    });
   }
 
   /**
@@ -44,11 +59,12 @@ export class Bezier extends React.Component<IBezierProps, any> {
 
     return (
       <BezierGL
-        quads={this.quadGenerator.getBaseBuffer()}
         height={500}
-        initialViewport={new Bounds<never>(0, 500, 0, 500)}
-        preventCameraInit={this.initialized}
+        onZoomRequest={(zoom) => this.handleZoomRequest}
+        quads={this.quadGenerator.getBaseBuffer()}
+        viewport={new Bounds<never>(0, 500, 0, 500)}
         width={500}
+        zoom={this.state.zoom}
       />
     );
   }
