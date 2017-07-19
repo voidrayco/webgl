@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, LineSegments, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { LineShape } from 'webgl-surface/drawing/line-shape';
 import { QuadShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
@@ -53,7 +53,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
 
   lineAttributes: IAttributeInfo[];
   lineGeometry: BufferGeometry;
-  lineSystem2: LineSegments;
+  lineSystem2: Mesh;
   lineSet: LineShape<ILineShapeData>[] = [];
 
   /**
@@ -67,7 +67,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
     const {
       quads,
       lines,
-    } = this.props;
+    } = props;
 
     // Set to true when the quad tree needs to be updated
     let needsTreeUpdate = false;
@@ -154,7 +154,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       const toAdd: Bounds<any>[] = quads;
 
       this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
-      this.quadTree.bounds.copyBounds(toAdd[0]);
+      if ( toAdd.length > 0)this.quadTree.bounds.copyBounds(toAdd[0]);
       this.quadTree.addAll(toAdd);
     }
 
@@ -164,17 +164,17 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       debug('lines buffer updating %o', lines);
 
       // Since we have new quads, we need to clear the camera position as well
-      // This.initCamera();
-
+      this.initCamera();
       this.lineSet = lines;
 
-      const numVerticesPerLine = 2;
+      const numVerticesPerLine = 3;
 
       BufferUtil.updateBuffer(
         this.lineGeometry, this.lineAttributes, numVerticesPerLine, lines.length,
         function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
           line = lines[i];
-
+          // First point
+          debug('line is %o', line);
           positions[ppos] = line.p1.x;
           positions[++ppos] = line.p1.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
@@ -182,8 +182,18 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           colors[++cpos] = 1;
           colors[++cpos] = 1;
           colors[++cpos] = 1;
-          // BR
+
+          // Second point
           positions[++ppos] = line.p2.x;
+          positions[++ppos] = line.p2.y;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
+
+          // Third point
+          positions[++ppos] = line.p1.x;
           positions[++ppos] = line.p2.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[++cpos] = 1;
@@ -192,7 +202,8 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           colors[++cpos] = 1;
         },
       );
-      this.lineGeometry.setDrawRange(0, lines.length * 2);
+      this.lineGeometry.setDrawRange(0, lines.length * 3);
+      debug('lines buffer created');
     }
 
     debug('CAMERA %o', this.camera);
@@ -255,18 +266,19 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           size: AttributeSize.THREE,
         },
         {
-          defaults: [0, 0, 0, 1],
+          defaults: [0, 0, 1, 1],
           name: 'customColor',
           size: AttributeSize.FOUR,
         },
       ];
 
-      const verticesPerLine = 2;
+      const verticesPerLine = 3;
       const numLines = 20;
 
       this.lineGeometry = BufferUtil.makeBuffer(numLines * verticesPerLine, this.lineAttributes);
-      this.lineSystem2 = new LineSegments(this.lineGeometry, lineMaterial);
+      this.lineSystem2 = new Mesh(this.lineGeometry, lineMaterial);
       this.lineSystem2.frustumCulled = false;
+      this.lineSystem2.drawMode = TriangleStripDrawMode;
       this.scene.add(this.lineSystem2);
 
       const verticesPerQuad = 6;

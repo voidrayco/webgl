@@ -63,7 +63,7 @@ export class Bezier extends React.Component<IBezierProps, IBezierState> {
     debug('Bezier Quad buffer created %o', this.quadGenerator.getBaseBuffer());
 
     this.lineGenerator.generate(lineData);
-    debug(this.lineGenerator.getBaseBuffer());
+    debug('Lines buffer created %o', this.lineGenerator.getBaseBuffer());
 
     return (
       <BezierGL

@@ -18,7 +18,7 @@ interface IMainState {
 export class Main extends React.Component<any, IMainState> {
   // Set the default state
   state = {
-    currentTab: 0,
+    currentTab: 1,
   };
 
   /**
