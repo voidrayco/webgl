@@ -8,7 +8,7 @@ import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surfa
 import { ILineShapeData } from '../shape-data-types/line-shape-data';
 import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
 
-const debug = require('debug')('ConversationView:GPU');
+const debug = require('debug')('bezier');
 
 /** Attempt to determine if BufferAttribute is really a BufferAttribute */
 function isBufferAttributes(value: any): value is BufferAttribute {
@@ -146,18 +146,6 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       debug('Quad Buffers Created');
     }
 
-    if (needsTreeUpdate){
-      if (this.quadTree){
-        this.quadTree.destroy();
-        this.quadTree = null;
-      }
-      const toAdd: Bounds<any>[] = quads;
-
-      this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
-      if ( toAdd.length > 0)this.quadTree.bounds.copyBounds(toAdd[0]);
-      this.quadTree.addAll(toAdd);
-    }
-
     if (lines !== undefined && lines !== this.lineSet && isBufferAttributes(this.lineGeometry.attributes)) {
       let line: LineShape<ILineShapeData>;
 
@@ -204,6 +192,20 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       );
       this.lineGeometry.setDrawRange(0, lines.length * 3);
       debug('lines buffer created');
+    }
+
+    if (needsTreeUpdate){
+      if (this.quadTree){
+        this.quadTree.destroy();
+        this.quadTree = null;
+      }
+
+      const aggregate: Bounds<any>[] = [];
+      const toAdd = aggregate.concat(quads).concat(lines);
+
+      this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
+      if ( toAdd.length > 0) this.quadTree.bounds.copyBounds(toAdd[0]);
+      this.quadTree.addAll(toAdd);
     }
 
     debug('CAMERA %o', this.camera);
