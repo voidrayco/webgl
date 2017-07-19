@@ -703,7 +703,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     // Set up the camera now that the ctx is set up
     this.initCamera();
-
+    // Create a scene so we can add our buffer objects to it
+    this.scene = new Scene();
     // Fire our hook for starting up our specific buffer implementation
     this.initBuffers();
 
