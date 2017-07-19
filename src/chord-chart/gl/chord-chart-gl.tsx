@@ -1,5 +1,5 @@
 import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
-import { QuadShape } from 'webgl-surface/drawing/quad-shape';
+import { CurvedLineShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { AttributeSize, BufferUtil, IAttributeInfo } from 'webgl-surface/util/buffer-util';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
@@ -21,9 +21,13 @@ function isBufferAttributes(value: any): value is BufferAttribute {
 }
 
 // Local component properties interface
-interface IBezierGLProperties extends IWebGLSurfaceProperties {
-  /** The base, infrequently redrawn */
-  quads?: QuadShape<IQuadShapeData>[]
+interface IChordChartGLProperties extends IWebGLSurfaceProperties {
+  /** Lines that do not change often */
+  staticCurvedLines: any[],
+  /** Lines that change frequently due to interactions */
+  interactiveCurvedLines: any[],
+  /** Special case lines that use specific processes to animate */
+  animatedCurvedLines: any[],
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -37,24 +41,26 @@ const quadFragmentShader = require('./shaders/simple-quad.fs');
 /**
  * The base component for the communications view
  */
-export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
+export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   quadAttributes: IAttributeInfo[];
   quadGeometry: BufferGeometry;
   quadSystem: Mesh;
 
   /** The current dataset that is being rendered by this component */
-  quadSet: QuadShape<IQuadShapeData>[] = [];
+  staticCurvedLineSet: QuadShape<IQuadShapeData>[] = [];
 
   /**
    * Applies new props injected into this component.
    *
    * @param  props The new properties for this component
    */
-  applyBufferChanges(props: IBezierGLProperties) {
+  applyBufferChanges(props: IChordChartGLProperties) {
     debug('Applying props');
 
     const {
-      quads,
+      staticCurvedLines,
+      interactiveCurvedLines,
+      animatedCurvedLines,
     } = props;
 
     // Set to true when the quad tree needs to be updated
@@ -133,21 +139,6 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       debug('Quad Buffers Created');
     }
 
-    if (needsTreeUpdate) {
-      if (this.quadTree) {
-        this.quadTree.destroy();
-        this.quadTree = null;
-      }
-
-      // Gather the items to place in the quad tree
-      const toAdd: Bounds<any>[] = quads;
-
-      // Make the new quad tree and insert the new items
-      this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
-      this.quadTree.bounds.copyBounds(toAdd[0]);
-      this.quadTree.addAll(toAdd);
-    }
-
     debug('CAMERA %o', this.camera);
   }
 
@@ -164,9 +155,6 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       transparent: true,
       vertexShader: quadVertexShader,
     });
-
-    // Create a scene so we can add our buffer objects to it
-    this.scene = new Scene();
 
     // GENERATE THE QUAD BUFFER
     {
