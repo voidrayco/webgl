@@ -1,33 +1,19 @@
-import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
-import { CurvedLineShape } from 'webgl-surface/drawing/quad-shape';
+import { Mesh, NormalBlending, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
-import { AttributeSize, BufferUtil, IAttributeInfo } from 'webgl-surface/util/buffer-util';
+import { AttributeSize, BufferUtil, IBufferItems } from 'webgl-surface/util/buffer-util';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
-import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
 const debug = require('debug')('bezier');
-
-/** Attempt to determine if BufferAttribute is really a BufferAttribute */
-function isBufferAttributes(value: any): value is BufferAttribute {
-  if ('customColor' in value) { return true; }
-  if ('customInnerColor' in value) { return true; }
-  if ('position' in value) { return true; }
-  if ('size' in value) { return true; }
-  if ('texCoord' in value) { return true; }
-  if ('p1' in value) { return true; }
-  if ('p2' in value) { return true; }
-
-  return false;
-}
 
 // Local component properties interface
 interface IChordChartGLProperties extends IWebGLSurfaceProperties {
-  /** Lines that do not change often */
-  staticCurvedLines: any[],
-  /** Lines that change frequently due to interactions */
-  interactiveCurvedLines: any[],
   /** Special case lines that use specific processes to animate */
   animatedCurvedLines: any[],
+  /** Lines that change frequently due to interactions */
+  interactiveCurvedLines: any[],
+  /** Lines that do not change often */
+  staticCurvedLines: any[],
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -42,12 +28,16 @@ const quadFragmentShader = require('./shaders/simple-quad.fs');
  * The base component for the communications view
  */
 export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
-  quadAttributes: IAttributeInfo[];
-  quadGeometry: BufferGeometry;
-  quadSystem: Mesh;
+  animatedCurvedBufferItems: IBufferItems<CurvedLineShape<any>> = BufferUtil.makeBufferItems<CurvedLineShape<any>>();
+  interactiveCurvedBufferItems: IBufferItems<CurvedLineShape<any>> = BufferUtil.makeBufferItems<CurvedLineShape<any>>();
+  staticCurvedBufferItems: IBufferItems<CurvedLineShape<any>> = BufferUtil.makeBufferItems<CurvedLineShape<any>>();
 
   /** The current dataset that is being rendered by this component */
-  staticCurvedLineSet: QuadShape<IQuadShapeData>[] = [];
+  animatedCurvedLines: CurvedLineShape<any>[] = [];
+  /** The current dataset that is being rendered by this component */
+  interactiveCurvedLines: CurvedLineShape<any>[] = [];
+  /** The current dataset that is being rendered by this component */
+  staticCurvedLineSet: CurvedLineShape<any>[] = [];
 
   /**
    * Applies new props injected into this component.
@@ -59,8 +49,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
     const {
       staticCurvedLines,
-      interactiveCurvedLines,
-      animatedCurvedLines,
     } = props;
 
     // Set to true when the quad tree needs to be updated
@@ -68,75 +56,97 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
     debug('props', props);
 
-    // Commit circle changes to the GPU
-    if (quads !== undefined && quads !== this.quadSet && isBufferAttributes(this.quadGeometry.attributes)) {
-      let quad: QuadShape<IQuadShapeData>;
-      debug('Bezier Quad vertex buffer updating %o', quads);
+    // Commit static curved lines
+    {
+      BufferUtil.beginUpdates();
 
-      // Since we have new quads, we need to clear the camera position as well
-      this.quadSet = quads;
+      for (const curvedLine of staticCurvedLines) {
+        const numVerticesPerSegment = 6;
+        const colorAttributeSize = 4;
+        const strip = curvedLine.getTriangleStrip();
+        let TR;
+        let BR;
+        let TL;
+        let BL;
 
-      const numVerticesPerQuad = 6;
-      const colorAttributeSize = 4;
+        needsTreeUpdate = needsTreeUpdate || BufferUtil.updateBuffer(
+          staticCurvedLines, this.staticCurvedBufferItems,
+          numVerticesPerSegment, strip.length,
+          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
+            TR = strip[i];
+            BR = strip[i];
+            TL = strip[i];
+            BL = strip[i];
 
-      BufferUtil.updateBuffer(
-        this.quadGeometry, this.quadAttributes, numVerticesPerQuad, quads.length,
-        function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-          quad = quads[i];
+            // Copy first vertex twice for intro degenerate tri
+            positions[ppos] = TR.x;
+            positions[++ppos] = TR.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            // Skip over degenerate tris color
+            cpos += colorAttributeSize;
 
-          // Copy first vertex twice for intro degenerate tri
-          positions[ppos] = quad.right;
-          positions[++ppos] = quad.bottom;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          // Skip over degenerate tris color
-          cpos += colorAttributeSize;
+            // TR
+            positions[++ppos] = TR.x;
+            positions[++ppos] = TR.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            colors[cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+            // BR
+            positions[++ppos] = BR.x;
+            positions[++ppos] = BR.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            colors[++cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+            // TL
+            positions[++ppos] = TL.x;
+            positions[++ppos] = TL.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            colors[++cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+            // BL
+            positions[++ppos] = BL.x;
+            positions[++ppos] = BL.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            colors[++cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
 
-          // TR
-          positions[++ppos] = quad.right;
-          positions[++ppos] = quad.bottom;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-          // BR
-          positions[++ppos] = quad.right;
-          positions[++ppos] = quad.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-          // TL
-          positions[++ppos] = quad.x;
-          positions[++ppos] = quad.bottom;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-          // BL
-          positions[++ppos] = quad.x;
-          positions[++ppos] = quad.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
+            // Copy last vertex again for degenerate tri
+            positions[++ppos] = BL.x;
+            positions[++ppos] = BL.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            // Skip over degenerate tris for color
+            cpos += colorAttributeSize;
+          },
+        );
+      }
 
-          // Copy last vertex again for degenerate tri
-          positions[++ppos] = quad.x;
-          positions[++ppos] = quad.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          // Skip over degenerate tris for color
-          cpos += colorAttributeSize;
-        },
-      );
+      BufferUtil.endUpdates();
 
-      this.quadGeometry.setDrawRange(0, quads.length * 6);
+      this.staticCurvedBufferItems.geometry.setDrawRange(0, staticCurvedLines.length * 6);
+      debug('Curved Line Created');
+    }
 
-      needsTreeUpdate = true;
-      debug('Quad Buffers Created');
+    if (needsTreeUpdate) {
+      if (this.quadTree) {
+        this.quadTree.destroy();
+        this.quadTree = null;
+      }
+
+      // Gather the items to place in the quad tree
+      const toAdd: Bounds<any>[] = staticCurvedLines;
+
+      // Make the new quad tree and insert the new items
+      this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
+      this.quadTree.bounds.copyBounds(toAdd[0]);
+      this.quadTree.addAll(toAdd);
     }
 
     debug('CAMERA %o', this.camera);
@@ -158,7 +168,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
     // GENERATE THE QUAD BUFFER
     {
-      this.quadAttributes = [
+      this.staticCurvedBufferItems.attributes = [
         {
           defaults: [0, 0, BASE_QUAD_DEPTH],
           name: 'position',
@@ -169,28 +179,18 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           name: 'customColor',
           size: AttributeSize.FOUR,
         },
-        {
-          defaults: [0, 0, 0, 1],
-          name: 'customInnerColor',
-          size: AttributeSize.FOUR,
-        },
-        {
-          defaults: [1, 1],
-          name: 'size',
-          size: AttributeSize.TWO,
-        },
       ];
 
       const verticesPerQuad = 6;
       const numQuads = 10000;
 
-      this.quadGeometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.quadAttributes);
-      this.quadSystem = new Mesh(this.quadGeometry, quadMaterial);
-      this.quadSystem.frustumCulled = false;
-      this.quadSystem.drawMode = TriangleStripDrawMode;
+      this.staticCurvedBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticCurvedBufferItems.attributes);
+      this.staticCurvedBufferItems.system = new Mesh(this.staticCurvedBufferItems.geometry, quadMaterial);
+      this.staticCurvedBufferItems.system.frustumCulled = false;
+      this.staticCurvedBufferItems.system.drawMode = TriangleStripDrawMode;
 
       // Place the mesh in the scene
-      this.scene.add(this.quadSystem);
+      this.scene.add(this.staticCurvedBufferItems.system);
     }
   }
 

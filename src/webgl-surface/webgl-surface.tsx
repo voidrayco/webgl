@@ -1,7 +1,7 @@
 import { rgb } from 'd3-color';
 import { merge } from 'ramda';
 import * as React from 'react';
-import { BufferGeometry, Color, Mesh, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
+import { BufferGeometry, Color, CullFaceNone, Mesh, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
 import { Label } from './drawing/label';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
@@ -719,6 +719,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(w, h);
     this.renderer.setClearColor(BACKGROUND_COLOR);
+    this.renderer.setFaceCulling(CullFaceNone);
 
     // Set up DOM interaction with the renderer
     const container = el;

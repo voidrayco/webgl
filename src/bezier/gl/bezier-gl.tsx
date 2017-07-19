@@ -1,7 +1,7 @@
-import { BufferAttribute, BufferGeometry, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { BufferAttribute, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { QuadShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
-import { AttributeSize, BufferUtil, IAttributeInfo } from 'webgl-surface/util/buffer-util';
+import { AttributeSize, BufferUtil, IBufferItems } from 'webgl-surface/util/buffer-util';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
 import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
@@ -38,9 +38,7 @@ const quadFragmentShader = require('./shaders/simple-quad.fs');
  * The base component for the communications view
  */
 export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
-  quadAttributes: IAttributeInfo[];
-  quadGeometry: BufferGeometry;
-  quadSystem: Mesh;
+  quadItems: IBufferItems<QuadShape<IQuadShapeData>> = BufferUtil.makeBufferItems();
 
   /** The current dataset that is being rendered by this component */
   quadSet: QuadShape<IQuadShapeData>[] = [];
@@ -63,7 +61,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
     debug('props', props);
 
     // Commit circle changes to the GPU
-    if (quads !== undefined && quads !== this.quadSet && isBufferAttributes(this.quadGeometry.attributes)) {
+    if (quads !== undefined && quads !== this.quadSet && isBufferAttributes(this.quadItems.geometry.attributes)) {
       let quad: QuadShape<IQuadShapeData>;
       debug('Bezier Quad vertex buffer updating %o', quads);
 
@@ -74,7 +72,8 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       const colorAttributeSize = 4;
 
       BufferUtil.updateBuffer(
-        this.quadGeometry, this.quadAttributes, numVerticesPerQuad, quads.length,
+        quads, this.quadItems,
+        numVerticesPerQuad, quads.length,
         function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
           quad = quads[i];
 
@@ -127,7 +126,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
         },
       );
 
-      this.quadGeometry.setDrawRange(0, quads.length * 6);
+      this.quadItems.geometry.setDrawRange(0, quads.length * 6);
 
       needsTreeUpdate = true;
       debug('Quad Buffers Created');
@@ -170,7 +169,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
 
     // GENERATE THE QUAD BUFFER
     {
-      this.quadAttributes = [
+      this.quadItems.attributes = [
         {
           defaults: [0, 0, BASE_QUAD_DEPTH],
           name: 'position',
@@ -196,13 +195,13 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       const verticesPerQuad = 6;
       const numQuads = 10000;
 
-      this.quadGeometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.quadAttributes);
-      this.quadSystem = new Mesh(this.quadGeometry, quadMaterial);
-      this.quadSystem.frustumCulled = false;
-      this.quadSystem.drawMode = TriangleStripDrawMode;
+      this.quadItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.quadItems.attributes);
+      this.quadItems.system = new Mesh(this.quadItems.geometry, quadMaterial);
+      this.quadItems.system.frustumCulled = false;
+      this.quadItems.system.drawMode = TriangleStripDrawMode;
 
       // Place the mesh in the scene
-      this.scene.add(this.quadSystem);
+      this.scene.add(this.quadItems.system);
     }
   }
 

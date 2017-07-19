@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
+import { ChordChart } from './chord-chart';
 
 /**
  * The state of the application
@@ -17,6 +18,7 @@ export class Main extends React.Component<any, IMainState> {
   // Set the default state
   state = {
     currentTab: 0,
+    currentChordTab: 0,
   };
 
   /**
@@ -32,6 +34,7 @@ export class Main extends React.Component<any, IMainState> {
    */
   render() {
     let quadData: IQuadShapeData[] = [];
+    let chordData = [];
 
     if (this.state.currentTab === 0) {
       quadData = [...new Array(20)].map((_, i: number) =>
@@ -43,10 +46,16 @@ export class Main extends React.Component<any, IMainState> {
       );
     }
 
+    if (this.state.currentChordTab === 0) {
+      chordData = [];
+    }
+
     return (
       <div>
         <button onClick={this.handleClickTab(0)}>View Quads</button>
         <Bezier quadData={quadData}/>
+        <button onClick={this.handleClickTab(0)}>View Chord Demo</button>
+        <ChordChart />
       </div>
     );
   }

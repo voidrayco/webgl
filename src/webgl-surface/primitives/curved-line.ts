@@ -393,7 +393,12 @@ export class CurvedLine<T> extends Bounds<T> {
       if (!this.segmentMethod) {
         throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point.');
       }
+
+      this.encapsulatePoints(controlPoints);
     }
+
+    this.encapsulatePoint(p1);
+    this.encapsulatePoint(p2);
 
     // Invalidate caches if they exist
     this.cachedSegments = null;
