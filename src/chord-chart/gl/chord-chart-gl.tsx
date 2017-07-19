@@ -9,11 +9,11 @@ const debug = require('debug')('bezier');
 // Local component properties interface
 interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   /** Special case lines that use specific processes to animate */
-  animatedCurvedLines: any[],
+  animatedCurvedLines?: any[],
   /** Lines that change frequently due to interactions */
-  interactiveCurvedLines: any[],
+  interactiveCurvedLines?: any[],
   /** Lines that do not change often */
-  staticCurvedLines: any[],
+  staticCurvedLines?: any[],
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -21,16 +21,16 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
 const BASE_QUAD_DEPTH = 0;
 
 // --[ SHADERS ]-------------------------------------------
-const quadVertexShader = require('./shaders/simple-quad.vs');
-const quadFragmentShader = require('./shaders/simple-quad.fs');
+const fillVertexShader = require('./shaders/simple-fill.vs');
+const fillFragmentShader = require('./shaders/simple-fill.fs');
 
 /**
  * The base component for the communications view
  */
 export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
-  animatedCurvedBufferItems: IBufferItems<CurvedLineShape<any>> = BufferUtil.makeBufferItems<CurvedLineShape<any>>();
-  interactiveCurvedBufferItems: IBufferItems<CurvedLineShape<any>> = BufferUtil.makeBufferItems<CurvedLineShape<any>>();
-  staticCurvedBufferItems: IBufferItems<CurvedLineShape<any>> = BufferUtil.makeBufferItems<CurvedLineShape<any>>();
+  animatedCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
+  interactiveCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
+  staticCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
 
   /** The current dataset that is being rendered by this component */
   animatedCurvedLines: CurvedLineShape<any>[] = [];
@@ -161,9 +161,9 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     const quadMaterial = new ShaderMaterial({
       blending: NormalBlending,
       depthTest: true,
-      fragmentShader: quadFragmentShader,
+      fragmentShader: fillFragmentShader,
       transparent: true,
-      vertexShader: quadVertexShader,
+      vertexShader: fillVertexShader,
     });
 
     // GENERATE THE QUAD BUFFER

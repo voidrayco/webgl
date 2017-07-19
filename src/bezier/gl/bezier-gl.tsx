@@ -38,7 +38,7 @@ const quadFragmentShader = require('./shaders/simple-quad.fs');
  * The base component for the communications view
  */
 export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
-  quadItems: IBufferItems<QuadShape<IQuadShapeData>> = BufferUtil.makeBufferItems();
+  quadItems: IBufferItems<QuadShape<IQuadShapeData>, Mesh> = BufferUtil.makeBufferItems();
 
   /** The current dataset that is being rendered by this component */
   quadSet: QuadShape<IQuadShapeData>[] = [];

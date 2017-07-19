@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, LineSegments, LineStrip, Mesh, Points } from 'three';
+import { BufferAttribute, BufferGeometry } from 'three';
 const debug = require('debug')('WebGLSurface:BufferUtil');
 
 export enum AttributeSize {
@@ -18,10 +18,10 @@ export interface IAttributeInfo {
  * These are all of the items needed for rendering and determining if a re-render
  * is necessary
  */
-export interface IBufferItems<T> {
+export interface IBufferItems<T, U> {
   attributes: IAttributeInfo[],
   geometry: BufferGeometry,
-  system: Mesh | Points | LineSegments | LineStrip,
+  system: U,
   currentData: T[],
 }
 
@@ -312,7 +312,7 @@ export class BufferUtil {
    *
    * @return {boolean} True if the buffer was updated with this call
    */
-  static updateBuffer<T>(newData: T[], bufferItems: IBufferItems<T>, vertexBatch: number, numBatches: number, updateAccessor: Function): boolean {
+  static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function): boolean {
     const attributes = bufferItems.attributes;
     const buffer = bufferItems.geometry;
 
@@ -354,7 +354,7 @@ export class BufferUtil {
    *
    * @returns {IBufferItems<T>} An empty object of the particular buffer items needed
    */
-  static makeBufferItems<T>(): IBufferItems<T> {
+  static makeBufferItems<T, U>(): IBufferItems<T, U> {
     return {
       attributes: [],
       currentData: [],

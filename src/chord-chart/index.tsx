@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { Bounds } from 'webgl-surface/primitives/bounds';
-import { QuadGenerator } from './generators/quad-generator';
+import { ChordGenerator } from './generators/chord/chord-generator';
 import { ChordChartGL } from './gl/chord-chart-gl';
-import { IQuadShapeData } from './shape-data-types/quad-shape-data';
 const debug = require('debug')('bezier');
 
 interface IChordChartProps {
@@ -21,7 +20,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   /** Indicates if this component has fully mounted already or not */
   initialized: boolean = false;
   /** This is the generator that produces the buffers for our quads */
-  quadGenerator: QuadGenerator;
+  chordGenerator: ChordGenerator;
 
   // Sets the default state
   state: IChordChartState = {
@@ -33,7 +32,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    * We initialize any needed state here
    */
   componentWillMount() {
-    this.quadGenerator = new QuadGenerator();
+    this.chordGenerator = new ChordGenerator();
   }
 
   componentDidMount() {
@@ -51,16 +50,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    * The react render method
    */
   render() {
-    const { quadData } = this.props;
-
-    this.quadGenerator.generate(quadData);
-    debug('Bezier Quad buffer created %o', this.quadGenerator.getBaseBuffer());
+    this.chordGenerator.generate();
+    debug('Bezier Quad buffer created %o', this.chordGenerator.getBaseBuffer());
 
     return (
       <ChordChartGL
         height={500}
         onZoomRequest={(zoom) => this.handleZoomRequest}
-        quads={this.quadGenerator.getBaseBuffer()}
+        staticCurvedLines={this.chordGenerator.getBaseBuffer()}
         viewport={new Bounds<never>(0, 500, 0, 500)}
         width={500}
         zoom={this.state.zoom}
