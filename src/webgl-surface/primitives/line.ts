@@ -1,5 +1,5 @@
-import {Bounds} from './bounds';
-import {IPoint} from './point';
+import { Bounds } from './bounds';
+import { IPoint } from './point';
 
 /**
  * Represents a line with a given slope

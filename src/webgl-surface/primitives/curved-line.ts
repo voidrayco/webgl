@@ -306,6 +306,7 @@ export class CurvedLine<T> extends Bounds<T> {
     // Apply the relevant properties to the curve
     this.cachesSegments = cacheSegments;
     this.type = type;
+    this.resolution = resolution;
     // Set the metrics for this curved line
     this.setPoints(p1, p2, controlPoints);
     // Set the method that will be used for calculating distance from a point

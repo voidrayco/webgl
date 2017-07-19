@@ -829,6 +829,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(w, h);
     this.renderer.setClearColor(new Color().setRGB(38 / 255, 50 / 255, 78 / 255));
+    this.renderer.setFaceCulling(CullFaceNone);
 
     return true;
   }

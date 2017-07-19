@@ -4,7 +4,7 @@ import { Bounds } from 'webgl-surface/primitives/bounds';
 import { AttributeSize, BufferUtil, IBufferItems } from 'webgl-surface/util/buffer-util';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
-const debug = require('debug')('bezier');
+const debug = require('debug')('chord-chart');
 
 // Local component properties interface
 interface IChordChartGLProperties extends IWebGLSurfaceProperties {
@@ -13,7 +13,7 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   /** Lines that change frequently due to interactions */
   interactiveCurvedLines?: any[],
   /** Lines that do not change often */
-  staticCurvedLines?: any[],
+  staticCurvedLines?: CurvedLineShape<any>[],
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -58,12 +58,14 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
     // Commit static curved lines
     {
+      const numVerticesPerSegment = 6;
+      const colorAttributeSize = 4;
+
       BufferUtil.beginUpdates();
 
       for (const curvedLine of staticCurvedLines) {
-        const numVerticesPerSegment = 6;
-        const colorAttributeSize = 4;
         const strip = curvedLine.getTriangleStrip();
+        debug('DRAWING STRIP', curvedLine, strip);
         let TR;
         let BR;
         let TL;
@@ -71,7 +73,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
         needsTreeUpdate = needsTreeUpdate || BufferUtil.updateBuffer(
           staticCurvedLines, this.staticCurvedBufferItems,
-          numVerticesPerSegment, strip.length,
+          numVerticesPerSegment, strip.length / 4.0,
           function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
             TR = strip[i];
             BR = strip[i];
@@ -124,14 +126,15 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             positions[++ppos] = BASE_QUAD_DEPTH;
             // Skip over degenerate tris for color
             cpos += colorAttributeSize;
+            debug(positions);
           },
         );
       }
 
-      BufferUtil.endUpdates();
+      const numBatches = BufferUtil.endUpdates();
 
-      this.staticCurvedBufferItems.geometry.setDrawRange(0, staticCurvedLines.length * 6);
-      debug('Curved Line Created');
+      this.staticCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+      debug('Curved Lines Created. Segments drawn: %o', numBatches);
     }
 
     if (needsTreeUpdate) {
