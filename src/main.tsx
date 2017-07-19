@@ -34,8 +34,10 @@ export class Main extends React.Component<any, IMainState> {
    */
   render() {
     let quadData: IQuadShapeData[] = [];
+    let lineData: ILineShapeData[] = [];
 
     if (this.state.currentTab === 0) {
+      lineData = [];
       quadData = [...new Array(20)].map((_, i: number) =>
         ({
           id: i,
@@ -44,8 +46,8 @@ export class Main extends React.Component<any, IMainState> {
         }));
     }
 
-    let lineData: ILineShapeData[] = [];
     if (this.state.currentTab === 1) {
+      quadData = [];
       lineData = [...new Array(20)].map((_, i: number) =>
         ({
           color1: rgb(1, 0, 0),
@@ -61,7 +63,10 @@ export class Main extends React.Component<any, IMainState> {
       <div>
         <button onClick={this.handleClickTab(0)}>View Quads</button>
         <button onClick={this.handleClickTab(1)}>View Lines</button>
-        <Bezier quadData={quadData} lineData={lineData}/>
+        <Bezier
+         quadData={quadData}
+         lineData={lineData}
+        />
       </div>
     );
   }

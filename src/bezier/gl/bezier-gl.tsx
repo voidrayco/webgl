@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, Line, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { BufferAttribute, BufferGeometry, LineSegments, Mesh, NormalBlending, Scene, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { LineShape } from 'webgl-surface/drawing/line-shape';
 import { QuadShape } from 'webgl-surface/drawing/quad-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
@@ -37,6 +37,8 @@ const BASE_QUAD_DEPTH = 0;
 // --[ SHADERS ]-------------------------------------------
 const quadVertexShader = require('./shaders/simple-quad.vs');
 const quadFragmentShader = require('./shaders/simple-quad.fs');
+const lineVertextShader = require('./shaders/simple-line.vs');
+const lineFragmentShader = require('./shaders/simple-line.fs');
 
 /**
  * The base component for the communications view
@@ -51,7 +53,7 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
 
   lineAttributes: IAttributeInfo[];
   lineGeometry: BufferGeometry;
-  linSystem: Line;
+  lineSystem2: LineSegments;
   lineSet: LineShape<ILineShapeData>[] = [];
 
   /**
@@ -65,16 +67,17 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
     const {
       quads,
       lines,
-    } = props;
+    } = this.props;
 
     // Set to true when the quad tree needs to be updated
     let needsTreeUpdate = false;
 
-    debug('props', props);
+    debug('props', this.props);
 
     // Commit circle changes to the GPU
     if (quads !== undefined && quads !== this.quadSet && isBufferAttributes(this.quadGeometry.attributes)) {
       let quad: QuadShape<IQuadShapeData>;
+      debug('Bezier Quad vertex buffer updating %o', quads);
 
       // Since we have new quads, we need to clear the camera position as well
       this.initCamera();
@@ -143,16 +146,13 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       debug('Quad Buffers Created');
     }
 
-    if (needsTreeUpdate) {
-      if (this.quadTree) {
+    if (needsTreeUpdate){
+      if (this.quadTree){
         this.quadTree.destroy();
         this.quadTree = null;
       }
-
-      // Gather the items to place in the quad tree
       const toAdd: Bounds<any>[] = quads;
 
-      // Make the new quad tree and insert the new items
       this.quadTree = new QuadTree<Bounds<any>>(0, 0, 0, 0);
       this.quadTree.bounds.copyBounds(toAdd[0]);
       this.quadTree.addAll(toAdd);
@@ -161,11 +161,11 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
     if (lines !== undefined && lines !== this.lineSet && isBufferAttributes(this.lineGeometry.attributes)) {
       let line: LineShape<ILineShapeData>;
 
-      // Since we have new quads, we need to clear the camera position as well
-      this.initCamera();
-      this.lineSet = lines;
+      debug('lines buffer updating %o', lines);
 
-      this.initCamera();
+      // Since we have new quads, we need to clear the camera position as well
+      // This.initCamera();
+
       this.lineSet = lines;
 
       const numVerticesPerLine = 2;
@@ -178,24 +178,24 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
           positions[ppos] = line.p1.x;
           positions[++ppos] = line.p1.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[cpos] = line.r;
-          colors[++cpos] = line.g;
-          colors[++cpos] = line.b;
-          colors[++cpos] = line.a;
+          colors[cpos] = 1;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
           // BR
           positions[++ppos] = line.p2.x;
           positions[++ppos] = line.p2.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = line.r;
-          colors[++cpos] = line.g;
-          colors[++cpos] = line.b;
-          colors[++cpos] = line.a;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
+          colors[++cpos] = 1;
         },
       );
-
       this.lineGeometry.setDrawRange(0, lines.length * 2);
     }
 
+    debug('CAMERA %o', this.camera);
   }
 
   /**
@@ -210,6 +210,14 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       fragmentShader: quadFragmentShader,
       transparent: true,
       vertexShader: quadVertexShader,
+    });
+
+    const lineMaterial = new ShaderMaterial({
+      blending: NormalBlending,
+      depthTest: true,
+      fragmentShader: lineFragmentShader,
+      transparent: true,
+      vertexShader: lineVertextShader,
     });
 
     // Create a scene so we can add our buffer objects to it
@@ -240,24 +248,36 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
         },
       ];
 
+      this.lineAttributes = [
+        {
+          defaults: [0, 0, BASE_QUAD_DEPTH],
+          name: 'position',
+          size: AttributeSize.THREE,
+        },
+        {
+          defaults: [0, 0, 0, 1],
+          name: 'customColor',
+          size: AttributeSize.FOUR,
+        },
+      ];
+
+      const verticesPerLine = 2;
+      const numLines = 20;
+
+      this.lineGeometry = BufferUtil.makeBuffer(numLines * verticesPerLine, this.lineAttributes);
+      this.lineSystem2 = new LineSegments(this.lineGeometry, lineMaterial);
+      this.lineSystem2.frustumCulled = false;
+      this.scene.add(this.lineSystem2);
+
       const verticesPerQuad = 6;
-      const numQuads = 10000;
+      const numQuads = 20;
 
       this.quadGeometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.quadAttributes);
       this.quadSystem = new Mesh(this.quadGeometry, quadMaterial);
       this.quadSystem.frustumCulled = false;
       this.quadSystem.drawMode = TriangleStripDrawMode;
-
       // Place the mesh in the scene
       this.scene.add(this.quadSystem);
-
-      const verticesPerLine = 2;
-      const numLines = 10000;
-
-      this.lineGeometry = BufferUtil.makeBuffer(numLines * verticesPerLine, this.quadAttributes);
-      this.linSystem = new Line(this.lineGeometry, quadMaterial);
-      // Place the mesh in the scene
-      this.scene.add(this.linSystem);
     }
   }
 

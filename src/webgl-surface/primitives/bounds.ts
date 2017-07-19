@@ -87,7 +87,7 @@ export class Bounds<T> {
    * @param b The bounds whose dimensions we wish to copy
    */
   copyBounds(b: Bounds<any>) {
-    this.height =  b.height;
+    this.height = b.height;
     this.width  = b.width;
     this.x      = b.x;
     this.y      = b.y;

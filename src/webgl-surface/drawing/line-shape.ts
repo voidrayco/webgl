@@ -9,12 +9,12 @@ export class LineShape<T> extends Line<T> {
   r: number = 1;
   g: number = 0;
   b: number = 0;
-  a: number = 0;
+  a: number = 1;
   // Color 2 ?
   r2: number = 1;
   g2: number = 0;
   b2: number = 0;
-  a2: number = 0;
+  a2: number = 1;
   // Other properties
   cull: boolean = true;
   selectedIndex: number;
