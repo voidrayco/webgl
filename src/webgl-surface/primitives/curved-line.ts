@@ -392,7 +392,7 @@ export class CurvedLine<T> extends Bounds<T> {
 
       // Make sure the input wasn't bad
       if (!this.segmentMethod) {
-        throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point.');
+        throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point. Or 0 for a straight line');
       }
 
       this.encapsulatePoints(controlPoints);

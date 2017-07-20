@@ -60,6 +60,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     {
       const numVerticesPerSegment = 6;
       const colorAttributeSize = 4;
+      let stripPos = 0;
 
       BufferUtil.beginUpdates();
 
@@ -75,10 +76,11 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           staticCurvedLines, this.staticCurvedBufferItems,
           numVerticesPerSegment, strip.length / 4.0,
           function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-            TR = strip[i];
-            BR = strip[i];
-            TL = strip[i];
-            BL = strip[i];
+            stripPos = i * 4;
+            TR = strip[stripPos];
+            BR = strip[stripPos + 1];
+            TL = strip[stripPos + 2];
+            BL = strip[stripPos + 3];
 
             // Copy first vertex twice for intro degenerate tri
             positions[ppos] = TR.x;
@@ -126,7 +128,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             positions[++ppos] = BASE_QUAD_DEPTH;
             // Skip over degenerate tris for color
             cpos += colorAttributeSize;
-            debug(positions);
           },
         );
       }
