@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { ChordGenerator } from './generators/chord/chord-generator';
-import { LabelGenerator } from './generators/labels/label-generator';
+import { LabelGenerator } from './generators/label/label-generator';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection } from './selections/selection';
 
@@ -59,13 +59,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   render() {
     this.chordGenerator.generate(testChordData, this.selection);
-    this.labelGenerator.generate([
-      'This be a long string of nonsense',
-      'This be a long string of nonsense',
-      'This be a long string of nonsense',
-      'This be a long string of nonsense',
-      'This be a long string of nonsense',
-    ]);
+    this.labelGenerator.generate(testChordData, this.selection);
 
     return (
       <ChordChartGL
