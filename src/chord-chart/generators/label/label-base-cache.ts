@@ -1,5 +1,6 @@
 import { rgb, RGBColor } from 'd3-color';
 import { Label } from 'webgl-surface/drawing/label';
+import { AnchorPosition } from 'webgl-surface/primitives/rotateable-quad';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
@@ -23,11 +24,11 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
     const circleRadius = 10;
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
 
-    const labelPoints = this.preProcessData(data, circleRadius);
-    const labels = labelPoints.map((labelPoint) => {
+    const labelsData = this.preProcessData(data, circleRadius);
+    const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
       const color = selection ? rgb(r, g, b, inactiveOpacity) : rgb(r, g, b, activeOpacity);
-      const point = {x: labelPoint.x, y: labelPoint.y};
+      const point = {x: labelData.point.x, y: labelData.point.y};
 
       const label = new Label<any>({
         color: color,
@@ -38,8 +39,9 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
-      label.setRotation(Math.PI / 4);
       label.setLocation(point);
+      label.setRotation(labelData.angle);
+      label.setAnchor(labelData.anchor);
 
       return label;
     });
@@ -57,13 +59,17 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       return {x, y};
     };
 
-    const labelPoints = data.endpoints.map((endpoint) => {
+    const labelData = data.endpoints.map((endpoint) => {
         const startAngle = endpoint.startAngle;
-        const endAngle = endpoint.endAngle;
-        const point = calculatePoint(startAngle + (endAngle - startAngle));
-        return point;
+        const angle = startAngle + (endpoint.endAngle - startAngle);
+        const angleIntersection =  angle - (Math.PI / 2);
+        // MiddleRight if angle in left hemisphere. else middleLeft
+        const anchor = (angle > 0 && angle < Math.PI / 2)
+          || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+        const point = calculatePoint(angle);
+        return {point, angle: angleIntersection, anchor};
     });
 
-    return labelPoints;
+    return labelData;
   }
 }
