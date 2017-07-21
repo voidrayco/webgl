@@ -1,17 +1,32 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { ChordBaseCache } from './chord-base-cache';
+
+const debug = require('debug')('chord-chart');
 
 export class ChordGenerator {
-  baseBuffer: CurvedLineShape<ICurvedLineData>[];
+  chordBase: ChordBaseCache = new ChordBaseCache();
+
+  /**
+   * Flag which caches need busting
+   */
+  bustCaches() {
+    this.chordBase.bustCache = true;
+  }
 
   /**
    * Generates the buffers for static chords in the charts
    */
   generate() {
-    // TODO
+    debug('Generating chords');
+    this.bustCaches();
+    this.chordBase.generate();
   }
 
+  /**
+   * Get the base buffer
+   */
   getBaseBuffer(): CurvedLineShape<ICurvedLineData>[] {
-    return this.baseBuffer;
+    return this.chordBase.getBuffer();
   }
 }

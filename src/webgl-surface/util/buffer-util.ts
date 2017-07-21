@@ -232,9 +232,12 @@ export class BufferUtil {
    * This stops updates streaming into the buffers and makes it where an update
    * will always just start at the beginning of the buffer.
    */
-  static endUpdates() {
+  static endUpdates(): number {
+    const totalBatches = lastBatchRegister;
     isStreamUpdatingRegister = false;
     lastBatchRegister = 0;
+
+    return totalBatches;
   }
 
   /**

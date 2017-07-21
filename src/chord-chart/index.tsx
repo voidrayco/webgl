@@ -2,6 +2,8 @@ import * as React from 'react';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { ChordChartGL } from './gl/chord-chart-gl';
+import { Selection } from './selections/selection';
+
 const debug = require('debug')('bezier');
 
 interface IChordChartProps {
@@ -21,6 +23,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   initialized: boolean = false;
   /** This is the generator that produces the buffers for our quads */
   chordGenerator: ChordGenerator;
+  /** Selection manager */
+  selection: Selection = new Selection();
 
   // Sets the default state
   state: IChordChartState = {
