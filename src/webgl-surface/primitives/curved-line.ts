@@ -312,6 +312,14 @@ export class CurvedLine<T> extends Bounds<T> {
     this.distanceMethod = pickDistanceMethod[type];
   }
 
+  get values() {
+    return{
+      controlPoints: this.controlPoints,
+      p1: this.p1,
+      p2: this.p2,
+    };
+  }
+
   /**
    * Calculates the nearest distance from the provided point to this curved line
    *
