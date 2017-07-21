@@ -21,7 +21,7 @@ export class LabelGenerator {
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
       label.setRotation(i * (Math.PI / 4));
-      label.setLocation({x: i * 20 + 0.5, y: i * 20 + 0.5});
+      label.setLocation({x: 0.5, y: 0.5});
 
       return label;
     });

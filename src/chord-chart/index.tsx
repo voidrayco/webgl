@@ -5,6 +5,8 @@ import { LabelGenerator } from './generators/labels/label-generator';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection } from './selections/selection';
 
+const testChordData = require('./test-data/chord-data.json');
+
 interface IChordChartProps {
 }
 
@@ -56,8 +58,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    * The react render method
    */
   render() {
-    this.chordGenerator.generate();
-    this.labelGenerator.generate(['Test1', 'Test2', 'This be a long string of nonsense', '0', '123']);
+    this.chordGenerator.generate(testChordData, this.selection);
+    this.labelGenerator.generate([
+      'This be a long string of nonsense',
+      'This be a long string of nonsense',
+      'This be a long string of nonsense',
+      'This be a long string of nonsense',
+      'This be a long string of nonsense',
+    ]);
 
     return (
       <ChordChartGL

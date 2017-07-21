@@ -194,14 +194,14 @@ export class RotateableQuad<T> extends Bounds<T> {
   update() {
     // Calculate the pieces of the transformation
     // Const anchorMat: Matrix4 = new Matrix4().makeTranslation(-this.anchor.x, -this.anchor.y, 0);
-    // Const rotationMat: Matrix4 = new Matrix4().makeRotationZ(this.rotation);
+    const rotationMat: Matrix4 = new Matrix4().makeRotationZ(this.rotation);
     const locationMat: Matrix4 = new Matrix4().makeTranslation(this.location.x, this.location.y, 0);
 
     // Compose the transform based on the pieces and apply them
     // In the proper compositing order
     this.transform = new Matrix4()
       .multiply(locationMat)
-      // .multiply(rotationMat)
+      .multiply(rotationMat)
       // .multiply(anchorMat)
     ;
 
@@ -210,8 +210,6 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.TR = this.base[1].clone().applyMatrix4(this.transform);
     this.BL = this.base[2].clone().applyMatrix4(this.transform);
     this.BR = this.base[3].clone().applyMatrix4(this.transform);
-
-    debug('BASE: %o', this.base);
 
     // Update the bounds of this object
     this.x = this.TL.x;
