@@ -29,14 +29,23 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     const segments = this.preProcessData(data, circleRadius);
     const circleEdges = segments.map((segment) => {
       const {r, g, b} = defaultColor;
-      const color = selection ? rgb(r, g, b, inactiveOpacity) : rgb(r, g, b, activeOpacity);
-      return new CurvedLineShape(
+      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
+        rgb(r, g, b, inactiveOpacity) :
+        rgb(r, g, b, activeOpacity)
+      ;
+
+      const curve = new CurvedLineShape(
         CurveType.Circular,
         {x: segment.p1.x, y: segment.p1.y},
         {x: segment.p2.x, y: segment.p2.y},
         [{x: segment.controlPoint.x, y: segment.controlPoint.y}],
         rgb(color.r, color.g, color.b, color.opacity),
+        200,
       );
+
+      curve.lineWidth = 20;
+
+      return curve;
     });
 
     debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);

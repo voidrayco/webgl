@@ -21,13 +21,16 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
   buildCache(data: IData, config: IChordChartConfig, selection: Selection){
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
-    const circleRadius = 10;
+    const circleRadius = config.radius;
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
 
     const labelsData = this.preProcessData(data, circleRadius);
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
-      const color = selection ? rgb(r, g, b, inactiveOpacity) : rgb(r, g, b, activeOpacity);
+      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
+        rgb(r, g, b, inactiveOpacity) :
+        rgb(r, g, b, activeOpacity)
+      ;
       const point = {x: labelData.point.x, y: labelData.point.y};
 
       const label = new Label<any>({
@@ -39,6 +42,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
+      label.rasterizationPadding.width = 4;
       label.setLocation(point);
       label.setRotation(labelData.angle);
       label.setAnchor(labelData.anchor);
