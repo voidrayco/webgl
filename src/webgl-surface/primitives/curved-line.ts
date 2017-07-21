@@ -314,7 +314,7 @@ export class CurvedLine<T> extends Bounds<T> {
   }
 
   get values() {
-    return{
+    return {
       controlPoints: this.controlPoints,
       p1: this.p1,
       p2: this.p2,
