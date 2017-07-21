@@ -1,50 +1,12 @@
-import { rgb, RGBColor } from 'd3-color';
+import { rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
-import { IPoint } from 'webgl-surface/primitives/point';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
 const debug = require('debug')('chords');
-
-export interface IData {
-  endpoints: IEndpoint[];
-  flows: IFlow[];
-}
-
-export interface IEndpoint {
-  id: string;
-  flowAngles: IFlowAngle;
-  startAngle: number;
-  endAngle: number;
-  outgoingCount: number;
-  incomingCount: number;
-  _outflowIdx?: number;  // Default to 0
-  _inflowIdx?: number;
-}
-
-interface IFlowAngle {
-  angleStep: number;
-  startAngle: number;
-}
-
-interface IFlow {
-  srcExpandedTarget: string;
-  srcTarget: string;
-  destExpandedTarget: string;
-  destTarget: string;
-  srcIndex: number;
-  dstIndex: number;
-  baseColor: RGBColor;  // Is this what the data stores?
-}
-
-interface ICurveData {
-  p1: IPoint;
-  p2: IPoint;
-  controlPoint: IPoint;
-  color: RGBColor;
-}
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -71,14 +33,14 @@ function getFlowAngle(endpoint: IEndpoint, flowIndex: number) {
  * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
 export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLineData>> {
-  generate(data: IData, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, selection: Selection) {
+  buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
-    const circleRadius = 200;
+    const circleRadius = config.radius;
 
     const curves = this.preProcessData(data, circleRadius);
     const curveShapes = curves.map((curve) => {

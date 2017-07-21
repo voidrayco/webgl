@@ -3,8 +3,6 @@ import { Bounds } from './bounds';
 import { IPoint } from './point';
 import { ISize } from './size';
 
-const debug = require('debug')('webgl-surface:Labels');
-
 export enum AnchorPosition {
   BottomLeft,
   BottomRight,

@@ -3,6 +3,8 @@ import { Bounds } from './bounds';
 import { Line } from './line';
 import { IPoint, Point } from './point';
 
+const debug = require('debug')('bezier');
+
 /**
  * This enum covers the type of curved lines that can be made. Making a specific curve
  *
@@ -179,26 +181,34 @@ function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
 
   // Generate a line so we can have a perpendicular calculation
   const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
-  const radius: number = straightLine.distanceTo(line.controlPoints[0]);
+  let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
   // We get the midpoint of the line as we want to align the center of the circle with this point
   const midPoint: IPoint = Point.getMidpoint(line.p1, line.p2);
+  const minRadius = Point.getDistance(midPoint, line.p1);
+
+  // The shortest the radius can be is the distance from the line to the mid point
+  // Anything shorter will just result in a hemisphere being rendered
+  if (radius < minRadius) {
+    radius = Point.getDistance(midPoint, line.p1);
+  }
+
   // Get the perpendicular direction to the line so we can calculate the center of our circle
   // From the mid point
   const perpendicular: IPoint = straightLine.perpendicular;
 
   // Calculate the location of the center of the circle
   const circleCenter: IPoint = {
-    x: perpendicular.x * radius + midPoint.x,
-    y: perpendicular.y * radius + midPoint.y,
+    x: perpendicular.x * (radius - minRadius) + midPoint.x,
+    y: perpendicular.y * (radius - minRadius) + midPoint.y,
   };
 
   // Get the direction vector from the circle center to the first end point
   const direction1 = Point.getDirection(circleCenter, line.p1);
-  // Get the angle of the that vector
+  // Get the angle of the first vector
   const theta1 = Math.atan2(direction1.y, direction1.x);
   // Get the direction vector from the circle center to the second end point
-  const direction2 = Point.getDirection(circleCenter, line.p1);
-  // Get the angle of the that vector
+  const direction2 = Point.getDirection(circleCenter, line.p2);
+  // Get the angle of the second vector
   const theta2 = Math.atan2(direction2.y, direction2.x);
   // Calculate how much to increment theta in our parametric circular equation
   const dTheta = (theta2 - theta1) / line.resolution;
@@ -207,7 +217,7 @@ function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
   // Parametric equation
   const segments: IPoint[] = [];
 
-  for (let i = 0, end = line.resolution; i < end; ++i) {
+  for (let i = 0, end = line.resolution + 1; i < end; ++i) {
     segments.push({
       x: Math.cos(theta1 + (dTheta * i)) * radius + circleCenter.x,
       y: Math.sin(theta1 + (dTheta * i)) * radius + circleCenter.y,
@@ -219,7 +229,8 @@ function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
     line.cachedSegments = segments;
   }
 
-  return [];
+  debug('Generated Circular Segments: %o dTheta: %o radius: %o', segments, dTheta, radius);
+  return segments;
 }
 
 /**

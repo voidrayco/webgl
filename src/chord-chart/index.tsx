@@ -2,9 +2,12 @@ import * as React from 'react';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
+import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
+import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection } from './selections/selection';
 
+const debug = require('debug')('bezier');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -26,6 +29,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   chordGenerator: ChordGenerator;
   /** This is the generator that produces the buffers for our labels */
   labelGenerator: LabelGenerator;
+  /** This is the generator that produces the buffers for our outer rings */
+  outerRingGenerator: OuterRingGenerator;
   /** Selection manager */
   selection: Selection = new Selection();
 
@@ -41,6 +46,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   componentWillMount() {
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
+    this.outerRingGenerator = new OuterRingGenerator();
   }
 
   componentDidMount() {
@@ -58,15 +64,20 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    * The react render method
    */
   render() {
-    this.chordGenerator.generate(testChordData, this.selection);
-    this.labelGenerator.generate(testChordData, this.selection);
+    const config: IChordChartConfig = {
+      radius: 200,
+    };
+
+    this.chordGenerator.generate(testChordData, config, this.selection);
+    this.outerRingGenerator.generate(testChordData, config, this.selection);
+    this.labelGenerator.generate(testChordData, config, this.selection);
 
     return (
       <ChordChartGL
         height={500}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
-        staticCurvedLines={this.chordGenerator.getBaseBuffer()}
+        staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
         viewport={new Bounds<never>(0, 500, 0, 500)}
         width={500}
         zoom={this.state.zoom}

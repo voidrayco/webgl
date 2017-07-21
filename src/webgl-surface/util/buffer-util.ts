@@ -319,8 +319,12 @@ export class BufferUtil {
     const attributes = bufferItems.attributes;
     const buffer = bufferItems.geometry;
 
+    // If we passed the data check on the first pass, then all future streamed updates
+    // Should pass as well
+    const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
+
     // We check if there is a reference change in the data indicating a buffer push needs to happen
-    if (newData !== undefined && newData !== bufferItems.currentData) {
+    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed) {
       // If we aren't streaming updates, then we always start at the beginning
       if (!isStreamUpdatingRegister) {
         // Reset out last batch register as this is an entriely new update

@@ -1,6 +1,6 @@
 import { Label } from 'webgl-surface/drawing/label';
 import { Selection } from '../../selections/selection';
-import { IData } from '../chord/chord-base-cache';
+import { IChordChartConfig, IData } from '../types';
 import { LabelBaseCache } from './label-base-cache';
 
 const debug = require('debug')('webgl-surface:Labels');
@@ -14,10 +14,10 @@ export class LabelGenerator {
   }
 
   /** */
-  generate(data: IData, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, selection: Selection) {
     debug('Generating Labels');
     this.bustCaches();
-    this.baseCache.generate(data, selection);
+    this.baseCache.generate(data, config, selection);
   }
 
   getBaseBuffer() {

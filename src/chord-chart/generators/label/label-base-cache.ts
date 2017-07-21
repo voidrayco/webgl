@@ -3,7 +3,7 @@ import { Label } from 'webgl-surface/drawing/label';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
-import { IData } from '../chord/chord-base-cache';
+import { IChordChartConfig, IData } from '../types';
 
 /**
  * Responsible for generating the static outer rings in the system
@@ -13,11 +13,11 @@ import { IData } from '../chord/chord-base-cache';
  * @extends {ShapeBufferCache<Label<ICurvedLineData>>}
  */
 export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
-  generate(data: IData, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, selection: Selection){
+  buildCache(data: IData, config: IChordChartConfig, selection: Selection){
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
     const circleRadius = 10;

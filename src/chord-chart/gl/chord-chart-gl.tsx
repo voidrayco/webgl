@@ -83,16 +83,18 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       BufferUtil.beginUpdates();
 
       for (const curvedLine of staticCurvedLines) {
+        debug(curvedLine);
         const strip = curvedLine.getTriangleStrip();
         let TR;
         let BR;
         let TL;
         let BL;
 
-        needsTreeUpdate = needsTreeUpdate || BufferUtil.updateBuffer(
+        needsTreeUpdate = BufferUtil.updateBuffer(
           staticCurvedLines, this.staticCurvedBufferItems,
           numVerticesPerSegment, strip.length / 4.0,
           function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
+            debug(i, ppos, cpos);
             stripPos = i * 4;
             TR = strip[stripPos];
             BR = strip[stripPos + 1];
@@ -147,11 +149,19 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             cpos += colorAttributeSize;
           },
         );
+
+        // If no updating is happening, just quit the loop
+        if (!needsTreeUpdate) {
+          break;
+        }
       }
 
       const numBatches = BufferUtil.endUpdates();
 
-      this.staticCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+      // Only if updates happened, should this change
+      if (needsTreeUpdate) {
+        this.staticCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+      }
       debug('Curved Lines Created. Segments drawn: %o', numBatches);
     }
 

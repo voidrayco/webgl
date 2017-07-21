@@ -1,5 +1,7 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
+import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { IChordChartConfig, IData as IChordData } from '../types';
 import { OuterRingBaseCache } from './outer-ring-base-cache';
 
 const debug = require('debug')('outer-ring-chart');
@@ -17,10 +19,10 @@ export class OuterRingGenerator {
   /**
    * Generates the buffers for static outer rings in the charts
    */
-  generate() {
+  generate(data: IChordData, config: IChordChartConfig, selection: Selection) {
     debug('Generating outer rings');
     this.bustCaches();
-    this.outerRingBase.generate();
+    this.outerRingBase.generate(data, config, selection);
   }
 
   /**
