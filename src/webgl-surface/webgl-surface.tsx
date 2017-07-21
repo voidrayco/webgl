@@ -399,9 +399,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         };
 
         // Apply Zoom
-        const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.viewport.width);
-        const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.viewport.height);
-        const zoomToFit = Math.min(zoomToFitH, zoomToFitV);
+        // Const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.viewport.width);
+        // Const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.viewport.height);
+        // Const zoomToFit = Math.min(zoomToFitH, zoomToFitV);
+        const zoomToFit = 1;
 
         const destZoom = this.destinationZoom * zoomToFit;
         const dZoom = Math.abs(destZoom - this.targetZoom);
@@ -579,9 +580,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.currentY = this.destinationY = mid.y;
 
           // Calculate the zoom level when the input zoom is at 1
-          const zoomToFitH = this.ctx.width / this.quadTree.bounds.width;
-          const zoomToFitV = this.ctx.height / this.quadTree.bounds.height;
-          const zoomAtOne = Math.min(zoomToFitH, zoomToFitV);
+          // Const zoomToFitH = this.ctx.width / this.quadTree.bounds.width;
+          // Const zoomToFitV = this.ctx.height / this.quadTree.bounds.height;
+          // Const zoomAtOne = Math.min(zoomToFitH, zoomToFitV);
+          const zoomAtOne = 1;
 
           // Calculate the zoom needed for the viewport
           const zoomToFitViewH = this.ctx.width / props.viewport.width;
@@ -589,7 +591,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           const zoomToFit = Math.min(zoomToFitViewH, zoomToFitViewV);
 
           // This adjusts the destination zxoom by a tiny amount so the view will redraw
-          const microAdjustment = 0.001;
+          const microAdjustment = 1.001;
 
           // Make our destination zoom a zoom that will fit the dimensions of the viewport
           // Relative to the zoom at one level
