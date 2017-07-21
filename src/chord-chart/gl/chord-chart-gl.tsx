@@ -167,7 +167,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
         uniforms.atlasTexture.value = this.atlasManager.getAtlasTexture(this.atlasNames.labels);
         this.atlasManager.getAtlasTexture(this.atlasNames.labels).needsUpdate = true;
         this.atlasManager.getAtlasTexture(this.atlasNames.labels).magFilter = NearestFilter;
-        this.atlasManager.getAtlasTexture(this.atlasNames.labels).minFilter = NearestFilter;
+        // This.atlasManager.getAtlasTexture(this.atlasNames.labels).minFilter = NearestFilter;
         this.atlasManager.getAtlasTexture(this.atlasNames.labels).anisotropy = 2;
 
         // Make some constants and props for our buffer update loop

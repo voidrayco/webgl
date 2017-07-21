@@ -17,10 +17,11 @@ export class LabelGenerator {
         text: lbl,
       });
 
-      label.rasterizationOffset.y = 10;
+      label.rasterizationOffset.y = 10.5;
+      label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
       label.setRotation(i * (Math.PI / 4));
-      label.setLocation({x: i * 20, y: i * 20});
+      label.setLocation({x: i * 20 + 0.5, y: i * 20 + 0.5});
 
       return label;
     });
