@@ -184,6 +184,10 @@ export class Point {
     };
   }
 
+  static make(x: number, y: number) {
+    return {x, y};
+  }
+
   /**
    * Scales a point by a given amount
    *

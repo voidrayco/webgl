@@ -1,12 +1,15 @@
-import {rgb, RGBColor} from 'd3-color';
-import {omit} from 'ramda';
-import {Bounds} from '../primitives/bounds';
-import {Sprite} from './sprite';
+import { rgb, RGBColor } from 'd3-color';
+import { omit } from 'ramda';
+import { IPoint } from '../primitives/point';
+import { AnchorPosition, RotateableQuad } from '../primitives/rotateable-quad';
+import { ISize } from '../primitives/size';
+import { Sprite } from './sprite';
+import { AtlasTexture } from './texture/atlas-texture';
 
 const measurement = new Sprite(200, 200, 1, 1);
 const defaultColor: RGBColor = rgb(255, 255, 255, 1);
 
-export class Label<T> extends Bounds<T> {
+export class Label<T> extends RotateableQuad<T> {
   color: RGBColor = defaultColor;
   direction: string = 'inherit';
   font: string = 'serif';
@@ -18,8 +21,30 @@ export class Label<T> extends Bounds<T> {
   textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging' = 'alphabetic';
   zoomable: boolean = false;
 
+  /** This contains the texture information that was used to rasterize the label */
+  rasterizedLabel: AtlasTexture;
+  /**
+   * This contains an adjustment to aid in the rasterization process. Getting
+   * reliable dimensions for fonts and text can be incredibly challenging,
+   * thus, this allows you to offset the rasterization if you get pieces of
+   * the label cut off.
+   */
+  rasterizationOffset: IPoint = {x: 0, y: 12};
+  /**
+   * This contains an adjustment to aid in the rasterization process. Getting
+   * reliable dimensions for fonts and text can be incredibly challenging,
+   * thus, this allows you to pad the rasterization space if you get pieces of
+   * the label cut off.
+   */
+  rasterizationPadding: ISize = {width: 0, height: 0};
+
+  /**
+   * Creates an instance of Label.
+   *
+   * @param {Partial<Label<T>>} [options={}]
+   */
   constructor(options: Partial<Label<T>> = {}) {
-    super(options.x, options.x + 1, options.y, options.y + 1);
+    super({x: 0, y: 0}, {width: 1, height: 1}, 0, AnchorPosition.TopLeft);
 
     // Set props
     Object.assign(this, options);
@@ -31,9 +56,11 @@ export class Label<T> extends Bounds<T> {
     measurement.context.font = this.makeCSSFont();
     const measuredSize = measurement.context.measureText(this.text);
 
-    // Adjust bounds to measurement
-    this.height = this.fontSize;
-    this.width = measuredSize.width;
+    // Adjust the dimensions to the measurement
+    this.setSize({
+      height: this.fontSize + 10,
+      width: measuredSize.width,
+    });
   }
 
   /**

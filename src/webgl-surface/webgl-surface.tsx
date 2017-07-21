@@ -1,8 +1,9 @@
-import { rgb } from 'd3-color';
 import { merge } from 'ramda';
 import * as React from 'react';
-import { BufferGeometry, Color, CullFaceNone, Mesh, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
+import { Color, CullFaceNone, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
 import { Label } from './drawing/label';
+import { AtlasManager } from './drawing/texture/atlas-manager';
+import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
@@ -12,6 +13,7 @@ import { QuadTree } from './util/quad-tree';
 import { IScreenContext } from './util/screen-context';
 const debug = require('debug')('webgl-surface:GPU');
 const debugCam = require('debug')('webgl-surface:Camera');
+const debugLabels = require('debug')('webgl-surface:Labels');
 
 /**
  * This enum names the base methods that are passed into the applyPropsMethods
@@ -25,6 +27,8 @@ export enum BaseApplyPropsMethods {
   BUFFERCHANGES,
   /** Initializes camera properties to facilitate smoothe start up */
   CAMERA,
+  /** Generates the labels as images within the atlas manager */
+  LABELS,
 }
 
 /**
@@ -100,7 +104,7 @@ export interface IWebGLSurfaceProperties {
   /** This will be the view the camera focuses on when the camera is initialized */
   viewport?: Bounds<never>
   /** All of the labels to be rendered by the system */
-  labels?: Label<never>[]
+  labels?: Label<any>[]
   /** Provides feedback when the surface is double clicked */
   onDoubleClick?(e: React.MouseEvent<Element>): void
   /** Provides feedback when the mouse has moved */
@@ -143,6 +147,12 @@ function sign(value: number): number {
  * The base component for the communications view
  */
 export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Component<T, U> {
+  /** This is the atlas manager for managing images and labels rendered as textures */
+  atlasManager: AtlasManager = new AtlasManager(2048, 2048);
+  /** Tracks the names of the atlas' generated */
+  atlasNames = {
+    labels: 'labels',
+  };
   /**
    * List of methods that execute within the animation loop. Makes adding and removing these methods
    * simpler to manage, as well as gives a clear and optimized way of overriding existing methods
@@ -180,15 +190,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * start taking place.
    */
   disableMouseInteraction: number = 0;
-  lineGeometry: BufferGeometry;
-  lineSystem: Mesh;
   forceDraw: boolean;
   projection: IProjection;
   renderEl: HTMLElement;
   renderer: WebGLRenderer;
   scene: Scene;
   sizeCamera: OrthographicCamera | null = null;
-  textContext: CanvasRenderingContext2D;
   /** Keep track of the current zoom so it can be set in requestAnimationFrame */
   currentZoom = 1;
   /** Horizontal destination the camera will pan to */
@@ -233,6 +240,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** When this is set, the draw loop continues to run. Used by the draw loop to complete animations */
   animating: boolean = false;
   labels: Label<any>[] = [];
+  labelsReady: boolean = false;
 
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
@@ -520,6 +528,38 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         return {};
       },
 
+      [BaseApplyPropsMethods.LABELS]: (props: T): IApplyPropsMethodResponse => {
+        const response = {};
+
+        // If we have a new labels reference we must regenerate the labels in our image lookup
+        if (props.labels && props.labels !== this.labels) {
+          debugLabels('Labels are being comitted to an Atlas %o', props.labels);
+          // Flag the labels as incapable of rendering
+          this.labelsReady = false;
+          // Store the set of labels we are rendering so that they do not get re-generated
+          // In the atlas rapidly.
+          this.labels = props.labels;
+
+          if (this.atlasManager.getAtlasTexture(this.atlasNames.labels)) {
+            this.atlasManager.destroyAtlas(this.atlasNames.labels);
+          }
+
+          const textures = props.labels.map(label => new AtlasTexture(null, label));
+
+          debugLabels('Creating the atlas for labels based on these textures %o', textures);
+          this.atlasManager.createAtlas(this.atlasNames.labels, textures)
+          .then(() => {
+            debugLabels('Labels rasterized within the atlas!');
+            this.forceDraw = true;
+            this.labelsReady = true;
+            // Reapply the props so any buffers that were not updating can update now
+            this.applyProps(this.props);
+          });
+        }
+
+        return response;
+      },
+
       [BaseApplyPropsMethods.BUFFERCHANGES]: (props: T): IApplyPropsMethodResponse => {
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
@@ -627,6 +667,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     const basePropsMethods = this.applyPropsMethodsBase();
     this.propsMethodList = this.applyPropsMethods(basePropsMethods, [
       basePropsMethods[BaseApplyPropsMethods.INITIALIZE],
+      basePropsMethods[BaseApplyPropsMethods.LABELS],
       basePropsMethods[BaseApplyPropsMethods.BUFFERCHANGES],
       basePropsMethods[BaseApplyPropsMethods.CAMERA],
     ]);
@@ -669,7 +710,15 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.renderEl = null;
     this.renderer = null;
     this.scene = null;
-    this.textContext = null;
+  }
+
+  /**
+   * This is the draw method executed from the animation loop. Everytime, this is
+   * called, the webgl surface will be redrawn.
+   */
+  draw = () => {
+    // Draw the 3D scene
+    this.renderer.render(this.scene, this.camera);
   }
 
   /**
@@ -779,17 +828,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   /**
-   * This initialized the text canvas object for rendering text
-   *
-   * @param {HTMLCanvasElement} n The canvas element where text will be rendered
-   */
-  initTextCanvas = (n: HTMLCanvasElement) => {
-    if (n) {
-      this.textContext = n.getContext('2d');
-    }
-  }
-
-  /**
    * This is executed when our rendering surface (the canvas) changes in size in any
    * way. It will make sure our renderer matches the context to prevent scaling
    * and other deformations.
@@ -853,43 +891,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     );
 
     this.onViewport(visible, this.projection, this.ctx);
-  }
-
-  /**
-   * This is the draw method executed from the animation loop. Everytime, this is
-   * called, the webgl surface will be redrawn.
-   */
-  draw = () => {
-    // Draw the 3D scene
-    this.renderer.render(this.scene, this.camera);
-
-    // Render the labels
-    const context = this.textContext;
-    const screen: IPoint = { x: 0, y: 0 };
-    const worldToScreen = this.projection.worldToScreen;
-    let color;
-    let fontSize;
-
-    context.clearRect(0, 0, this.ctx.width, this.ctx.height);
-
-    const labels = this.props.labels || [];
-    labels.forEach((label: Label<any>) => {
-      fontSize = label.fontSize;
-
-      color = rgb(
-        label.color.r,
-        label.color.g,
-        label.color.b,
-        label.color.opacity,
-      );
-
-      worldToScreen(label.x, label.y, screen);
-      context.font = label.makeCSSFont(fontSize);
-      context.textAlign = label.textAlign;
-      context.textBaseline = label.textBaseline;
-      context.fillStyle = color.toString();
-      context.fillText(label.text, screen.x, screen.y);
-    });
   }
 
   /**
@@ -1286,16 +1287,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   /**
-   * We make the ref application be a declared function so react does not find the need to execute the
-   * application numerous times for a detected changed method
-   *
-   * @param {HTMLElement} n This is the canvas element from the dom for text
-   */
-  applyTextRef = (n: HTMLCanvasElement) => {
-    this.initTextCanvas(n);
-  }
-
-  /**
    * @override
    * Only re-render if the dimensions of the component have changed. All other
    * internal render updates are handled internally
@@ -1330,16 +1321,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   render() {
     const { width, height } = this.props;
 
-    const position: 'relative' | 'initial' | 'inherit' | 'unset' | 'static' | 'absolute' | 'fixed' | 'sticky' = 'absolute';
-
-    const style = {
-      height,
-      left: 0,
-      position,
-      top: 0,
-      width,
-    };
-
     return (
       <div
         onMouseDown={this.handleMouseDown}
@@ -1354,9 +1335,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         }}
         style={{ position: 'relative', width: width, height: height }}>
         <div ref={this.applyRef} />
-        <div style={style}>
-          <canvas width={width} height={height} ref={this.applyTextRef} />
-        </div>
       </div>
     );
   }

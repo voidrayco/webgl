@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { ChordGenerator } from './generators/chord/chord-generator';
+import { LabelGenerator } from './generators/labels/label-generator';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection } from './selections/selection';
-
-const debug = require('debug')('bezier');
 
 interface IChordChartProps {
 }
@@ -23,6 +22,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   initialized: boolean = false;
   /** This is the generator that produces the buffers for our quads */
   chordGenerator: ChordGenerator;
+  /** This is the generator that produces the buffers for our labels */
+  labelGenerator: LabelGenerator;
   /** Selection manager */
   selection: Selection = new Selection();
 
@@ -37,6 +38,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   componentWillMount() {
     this.chordGenerator = new ChordGenerator();
+    this.labelGenerator = new LabelGenerator();
   }
 
   componentDidMount() {
@@ -55,11 +57,12 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   render() {
     this.chordGenerator.generate();
-    debug('Bezier Quad buffer created %o', this.chordGenerator.getBaseBuffer());
+    this.labelGenerator.generate(['Test1', 'Test2', 'This be a long string of nonsense', '0', '123']);
 
     return (
       <ChordChartGL
         height={500}
+        labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer()}
         viewport={new Bounds<never>(0, 500, 0, 500)}

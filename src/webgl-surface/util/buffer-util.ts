@@ -349,6 +349,13 @@ export class BufferUtil {
       return true;
     }
 
+    // Even if the data does not match, keep moving forward the appropriate amount in
+    // The buffer
+    else {
+      // Move our register forward in case we are in a stream update
+      lastBatchRegister += numBatches;
+    }
+
     return false;
   }
 

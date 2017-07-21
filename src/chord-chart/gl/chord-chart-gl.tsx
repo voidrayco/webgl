@@ -1,9 +1,19 @@
-import { Mesh, NormalBlending, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import {
+  CustomBlending,
+  IUniform,
+  Mesh,
+  NormalBlending,
+  OneFactor,
+  ShaderMaterial,
+  TriangleStripDrawMode,
+} from 'three';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
+import { Label } from 'webgl-surface/drawing/label';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { AttributeSize, BufferUtil, IBufferItems } from 'webgl-surface/util/buffer-util';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
+
 const debug = require('debug')('chord-chart');
 
 // Local component properties interface
@@ -23,14 +33,20 @@ const BASE_QUAD_DEPTH = 0;
 // --[ SHADERS ]-------------------------------------------
 const fillVertexShader = require('./shaders/simple-fill.vs');
 const fillFragmentShader = require('./shaders/simple-fill.fs');
+const textureVertexShader = require('webgl-surface/shaders/textured-quad.vs');
+const textureFragmentShader = require('webgl-surface/shaders/textured-quad.fs');
 
 /**
  * The base component for the communications view
  */
 export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
+  // CURVED LINE BUFFER ITEMS
   animatedCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
   interactiveCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
   staticCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
+
+  // LABELS BUFFER ITEMS
+  staticLabelBufferItems: IBufferItems<Label<any>, Mesh> = BufferUtil.makeBufferItems();
 
   /** The current dataset that is being rendered by this component */
   animatedCurvedLines: CurvedLineShape<any>[] = [];
@@ -48,6 +64,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     debug('Applying props');
 
     const {
+      labels,
       staticCurvedLines,
     } = props;
 
@@ -66,7 +83,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
       for (const curvedLine of staticCurvedLines) {
         const strip = curvedLine.getTriangleStrip();
-        debug('DRAWING STRIP', curvedLine, strip);
         let TR;
         let BR;
         let TL;
@@ -138,6 +154,99 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       debug('Curved Lines Created. Segments drawn: %o', numBatches);
     }
 
+    // BUFFERING LABELS
+    {
+      // If the labels are ready, then we buffer in their images for drawing
+      if (this.labelsReady) {
+        debug('Labels are ready and will be buffered in now. %o', labels);
+
+        // Make sure the uniforms for anything using the label's atlas texture is updated
+        const material: ShaderMaterial = this.staticLabelBufferItems.system.material as ShaderMaterial;
+        const uniforms: { [k: string]: IUniform } = material.uniforms;
+        uniforms.atlasTexture.value = this.atlasManager.getAtlasTexture(this.atlasNames.labels);
+        this.atlasManager.getAtlasTexture(this.atlasNames.labels).needsUpdate = true;
+
+        // Make some constants and props for our buffer update loop
+        const numVerticesPerQuad = 6;
+        const colorAttributeSize = 3;
+        const texCoordAttributeSize = 3;
+        let label;
+        let texture;
+
+        BufferUtil.updateBuffer(
+          labels, this.staticLabelBufferItems,
+          numVerticesPerQuad, labels.length,
+          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number, texCoords: Float32Array, tpos: number) {
+            label = labels[i];
+            texture = label.rasterizedLabel;
+            // Make sure the label is updated with it's latest metrics
+            label.update();
+
+            // Copy first vertex twice for intro degenerate tri
+            positions[ppos] = label.BR.x;
+            positions[++ppos] = label.BR.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            // Skip over degenerate tris color and tex
+            cpos += colorAttributeSize;
+            tpos += texCoordAttributeSize;
+
+            // BR
+            positions[++ppos] = label.BR.x;
+            positions[++ppos] = label.BR.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            texCoords[tpos] = texture.atlasBR.x;
+            texCoords[++tpos] = texture.atlasBR.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // TR
+            positions[++ppos] = label.TR.x;
+            positions[++ppos] = label.TR.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            texCoords[++tpos] = texture.atlasTR.x;
+            texCoords[++tpos] = texture.atlasTR.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // BL
+            positions[++ppos] = label.BL.x;
+            positions[++ppos] = label.BL.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            texCoords[++tpos] = texture.atlasBL.x;
+            texCoords[++tpos] = texture.atlasBL.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[++cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // TL
+            positions[++ppos] = label.TL.x;
+            positions[++ppos] = label.TL.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+            texCoords[++tpos] = texture.atlasTL.x;
+            texCoords[++tpos] = texture.atlasTL.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[++cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+
+            // Copy last vertex again for degenerate tri
+            positions[++ppos] = label.TL.x;
+            positions[++ppos] = label.TL.y;
+            positions[++ppos] = BASE_QUAD_DEPTH;
+          },
+        );
+
+        this.staticLabelBufferItems.geometry.setDrawRange(0, numVerticesPerQuad * labels.length);
+      }
+
+      // If the labels are not ready, then we do not allow labels to be drawn
+      else {
+        this.staticLabelBufferItems.geometry.setDrawRange(0, 0);
+      }
+    }
+
     if (needsTreeUpdate) {
       if (this.quadTree) {
         this.quadTree.destroy();
@@ -170,6 +279,21 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       vertexShader: fillVertexShader,
     });
 
+    const texUniforms = {
+      atlasTexture: { type: 't', value: this.atlasManager.getAtlasTexture(this.atlasNames.labels) },
+    };
+
+    const textureMaterial = new ShaderMaterial({
+      blending: CustomBlending,
+      depthTest: true,
+      fragmentShader: textureFragmentShader,
+      transparent: true,
+      uniforms: texUniforms,
+      vertexShader: textureVertexShader,
+    });
+
+    textureMaterial.blendSrc = OneFactor;
+
     // GENERATE THE QUAD BUFFER
     {
       this.staticCurvedBufferItems.attributes = [
@@ -195,6 +319,38 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
       // Place the mesh in the scene
       this.scene.add(this.staticCurvedBufferItems.system);
+    }
+
+    // GENERATE THE LABEL BUFFER
+    {
+      this.staticLabelBufferItems.attributes = [
+        {
+          defaults: [0, 0, BASE_QUAD_DEPTH],
+          name: 'position',
+          size: AttributeSize.THREE,
+        },
+        {
+          defaults: [0, 0, 0],
+          name: 'customColor',
+          size: AttributeSize.THREE,
+        },
+        {
+          defaults: [0, 0, 1],
+          name: 'texCoord',
+          size: AttributeSize.THREE,
+        },
+      ];
+
+      const verticesPerQuad = 6;
+      const numQuads = 10000;
+
+      this.staticLabelBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticLabelBufferItems.attributes);
+      this.staticLabelBufferItems.system = new Mesh(this.staticLabelBufferItems.geometry, textureMaterial);
+      this.staticLabelBufferItems.system.frustumCulled = false;
+      this.staticLabelBufferItems.system.drawMode = TriangleStripDrawMode;
+
+      // Place the mesh in the scene
+      this.scene.add(this.staticLabelBufferItems.system);
     }
   }
 

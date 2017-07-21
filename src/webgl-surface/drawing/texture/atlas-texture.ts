@@ -1,4 +1,5 @@
-import {IPoint} from '../../primitives/point';
+import { IPoint } from '../../primitives/point';
+import { Label } from '../label';
 
 /**
  * Defines a texture that is located on an atlas
@@ -6,6 +7,8 @@ import {IPoint} from '../../primitives/point';
 export class AtlasTexture {
   // Stores where this image was loaded from the file system
   imagePath: string;
+  // Stores the string label this image has rendered rather than the path
+  label: Label<any>;
 
   /** Stores the aspect ratio of the image for quick reference */
   aspectRatio: number = 1.0;
@@ -27,7 +30,13 @@ export class AtlasTexture {
    *
    * @param path The path to the image resource to be loaded into the atlas.
    */
-  constructor(path: string) {
+  constructor(path?: string, label?: Label<any>) {
     this.imagePath = path;
+    this.label = label;
+
+    // Let the label keep track of it's rasterization
+    if (label) {
+      this.label.rasterizedLabel = this;
+    }
   }
 }
