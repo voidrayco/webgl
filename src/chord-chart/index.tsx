@@ -7,7 +7,6 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection } from './selections/selection';
 
-const debug = require('debug')('bezier');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {

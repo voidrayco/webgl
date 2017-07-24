@@ -2,7 +2,6 @@ import {
   CustomBlending,
   IUniform,
   Mesh,
-  NearestFilter,
   NormalBlending,
   OneFactor,
   ShaderMaterial,
