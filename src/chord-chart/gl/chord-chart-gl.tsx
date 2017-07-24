@@ -18,11 +18,10 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
 
 // --[ CONSTANTS ]-------------------------------------------
 // Indicate how big our buffers for vertices can be
-const BASE_QUAD_DEPTH = 0;
 
 // --[ SHADERS ]-------------------------------------------
-const fillVertexShader = require('./shaders/simple-fill.vs');
-const fillFragmentShader = require('./shaders/simple-fill.fs');
+const fillVertexShader = require('./shaders/chord_test.vs');
+const fillFragmentShader = require('./shaders/chord_test.fs');
 
 /**
  * The base component for the communications view
@@ -60,74 +59,63 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     {
       const numVerticesPerSegment = 6;
       const colorAttributeSize = 4;
-      let stripPos = 0;
 
       BufferUtil.beginUpdates();
 
       for (const curvedLine of staticCurvedLines) {
-        const strip = curvedLine.getTriangleStrip();
-        debug('DRAWING STRIP', curvedLine, strip);
-        let TR;
-        let BR;
-        let TL;
-        let BL;
 
         needsTreeUpdate = needsTreeUpdate || BufferUtil.updateBuffer(
           staticCurvedLines, this.staticCurvedBufferItems,
-          numVerticesPerSegment, strip.length / 4.0,
-          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-            stripPos = i * 4;
-            TR = strip[stripPos];
-            BR = strip[stripPos + 1];
-            TL = strip[stripPos + 2];
-            BL = strip[stripPos + 3];
+          numVerticesPerSegment, 20,
+          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number, normalDir: Float32Array, npos: number) {
+              positions[ppos] = i / 20;
+              positions[++ppos] = (i - 1) / 20;
+              positions[++ppos] = (i + 1) / 20;
+              cpos += colorAttributeSize;
+              normalDir[npos] = 0;
 
-            // Copy first vertex twice for intro degenerate tri
-            positions[ppos] = TR.x;
-            positions[++ppos] = TR.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
-            // Skip over degenerate tris color
-            cpos += colorAttributeSize;
+              positions[++ppos] = i / 20;
+              positions[++ppos] = (i - 1) / 20;
+              positions[++ppos] = (i + 1) / 20;
+              colors[cpos] = curvedLine.r;
+              colors[++cpos] = curvedLine.g;
+              colors[++cpos] = curvedLine.b;
+              colors[++cpos] = curvedLine.a;
+              normalDir[++npos] = 0;
 
-            // TR
-            positions[++ppos] = TR.x;
-            positions[++ppos] = TR.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
-            colors[cpos] = curvedLine.r;
-            colors[++cpos] = curvedLine.g;
-            colors[++cpos] = curvedLine.b;
-            colors[++cpos] = curvedLine.a;
-            // BR
-            positions[++ppos] = BR.x;
-            positions[++ppos] = BR.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
-            colors[++cpos] = curvedLine.r;
-            colors[++cpos] = curvedLine.g;
-            colors[++cpos] = curvedLine.b;
-            colors[++cpos] = curvedLine.a;
-            // TL
-            positions[++ppos] = TL.x;
-            positions[++ppos] = TL.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
-            colors[++cpos] = curvedLine.r;
-            colors[++cpos] = curvedLine.g;
-            colors[++cpos] = curvedLine.b;
-            colors[++cpos] = curvedLine.a;
-            // BL
-            positions[++ppos] = BL.x;
-            positions[++ppos] = BL.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
-            colors[++cpos] = curvedLine.r;
-            colors[++cpos] = curvedLine.g;
-            colors[++cpos] = curvedLine.b;
-            colors[++cpos] = curvedLine.a;
+              positions[++ppos] = i / 20;
+              positions[++ppos] = (i - 1) / 20;
+              positions[++ppos] = (i + 1) / 20;
+              colors[++cpos] = curvedLine.r;
+              colors[++cpos] = curvedLine.g;
+              colors[++cpos] = curvedLine.b;
+              colors[++cpos] = curvedLine.a;
+              normalDir[++npos] = 1;
 
-            // Copy last vertex again for degenerate tri
-            positions[++ppos] = BL.x;
-            positions[++ppos] = BL.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
-            // Skip over degenerate tris for color
-            cpos += colorAttributeSize;
+              positions[++ppos] = (i + 1) / 20;
+              positions[++ppos] = i / 20;
+              positions[++ppos] = (i + 2) / 20;
+              colors[++cpos] = curvedLine.r;
+              colors[++cpos] = curvedLine.g;
+              colors[++cpos] = curvedLine.b;
+              colors[++cpos] = curvedLine.a;
+              normalDir[++npos] = 0;
+
+              positions[++ppos] = (i + 1) / 20;
+              positions[++ppos] = i / 20;
+              positions[++ppos] = (i + 2) / 20;
+              colors[++cpos] = curvedLine.r;
+              colors[++cpos] = curvedLine.g;
+              colors[++cpos] = curvedLine.b;
+              colors[++cpos] = curvedLine.a;
+              normalDir[++npos] = 1;
+
+              positions[++ppos] = (i + 1) / 20;
+              positions[++ppos] = i / 20;
+              positions[++ppos] = (i + 2) / 20;
+              cpos += colorAttributeSize;
+              normalDir[++npos] = 1;
+              debug('temp i is %o', (i + 1) / 20);
           },
         );
       }
@@ -174,19 +162,39 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     {
       this.staticCurvedBufferItems.attributes = [
         {
-          defaults: [0, 0, BASE_QUAD_DEPTH],
+          defaults: [0, -1, -1],
           name: 'position',
           size: AttributeSize.THREE,
         },
         {
-          defaults: [0, 0, 0, 1],
+          defaults: [0, 0, 1, 1],
           name: 'customColor',
           size: AttributeSize.FOUR,
+        },
+        {
+          defaults: [0],
+          name: 'normalDirection',
+          size: AttributeSize.ONE,
+        },
+        {
+          defaults: [100, 100, 400, 100],
+          name: 'endPoints',
+          size: AttributeSize.FOUR,
+        },
+        {
+          defaults: [250, 350],
+          name: 'controlPoint',
+          size: AttributeSize.TWO,
+        },
+        {
+          defaults: [2],
+          name: 'line_width_half',
+          size: AttributeSize.ONE,
         },
       ];
 
       const verticesPerQuad = 6;
-      const numQuads = 10000;
+      const numQuads = 20;
 
       this.staticCurvedBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticCurvedBufferItems.attributes);
       this.staticCurvedBufferItems.system = new Mesh(this.staticCurvedBufferItems.geometry, quadMaterial);

@@ -101,6 +101,7 @@ function updateBuffer1(numBatches: number, updateAccessor: Function) {
 }
 
 function updateBuffer2(numBatches: number, updateAccessor: Function) {
+  debug('updatBuffer2 %o', numBatches);
   for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
     attrIndex1 = i * attrIndexIncr1;
