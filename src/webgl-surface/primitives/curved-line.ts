@@ -179,7 +179,7 @@ function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
   if (line.cachesSegments && line.cachedSegments) {
     return line.cachedSegments;
   }
-
+  debug('CW');
   // Generate a line so we can have a perpendicular calculation
   const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
   let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
@@ -202,26 +202,29 @@ function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
     x: perpendicular.x * (radius - minRadius) + midPoint.x,
     y: perpendicular.y * (radius - minRadius) + midPoint.y,
   };
-
+  debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
   // Get the direction vector from the circle center to the first end point
   const direction1 = Point.getDirection(circleCenter, line.p1);
   // Get the angle of the first vector
-  const theta1 = Math.atan2(direction1.y, direction1.x);
+  let theta1 = Math.atan2(direction1.y, direction1.x);
   // Get the direction vector from the circle center to the second end point
+
   const direction2 = Point.getDirection(circleCenter, line.p2);
   // Get the angle of the second vector
   const theta2 = Math.atan2(direction2.y, direction2.x);
   // Calculate how much to increment theta in our parametric circular equation
-  const dTheta = (theta2 - theta1) / line.resolution;
+  if (theta1 < theta2)theta1 += Math.PI * 2;
+  const dTheta = (theta1 - theta2) / line.resolution;
 
+  debug('theta1 is %o, theta2 is %o', theta1, theta2);
   // Compute the segments based on the information we have gathered by applying it to a circular
   // Parametric equation
   const segments: IPoint[] = [];
 
   for (let i = 0, end = line.resolution + 1; i < end; ++i) {
     segments.push({
-      x: Math.cos(theta1 + (dTheta * i)) * radius + circleCenter.x,
-      y: Math.sin(theta1 + (dTheta * i)) * radius + circleCenter.y,
+      x: Math.cos(theta1 - (dTheta * i)) * radius + circleCenter.x,
+      y: Math.sin(theta1 - (dTheta * i)) * radius + circleCenter.y,
     });
   }
 
@@ -239,6 +242,7 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
     return line.cachedSegments;
   }
 
+  debug('CCW');
   const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
   let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
 
@@ -249,12 +253,17 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
     radius = Point.getDistance(midPoint, line.p1);
   }
 
-  const perpendicular: IPoint = straightLine.perpendicular;
+  debug('radius is %o, minRadius is %o', radius, minRadius);
 
+  const perpendicular: IPoint = straightLine.perpendicular;
+  debug('perpendicular is %o', perpendicular);
   const circleCenter: IPoint = {
-    x: perpendicular.x * (radius - minRadius) + midPoint.x,
-    y: perpendicular.y * (radius - minRadius) + midPoint.y,
+    x: -perpendicular.x * (radius - minRadius) + midPoint.x,
+    y: -perpendicular.y * (radius - minRadius) + midPoint.y,
   };
+
+  debug('p1 is %o, p2 is %o', line.p1, line.p2);
+  debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
 
   const direction1 =  Point.getDirection(circleCenter, line.p1);
 
@@ -262,16 +271,19 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
 
   const direction2 = Point.getDirection(circleCenter, line.p2);
 
-  const theta2 = Math.atan2(direction2.y, direction2.x);
+  let theta2 = Math.atan2(direction2.y, direction2.x);
+
+  if (theta2 < theta1)theta2 += Math.PI * 2;
 
   const dTheta = (theta2 - theta1) / line.resolution;
 
   const segments: IPoint[] = [];
 
+  // CCW, from p2 to p1
   for (let i = 0, end = line.resolution + 1; i < end; ++i){
     segments.push({
-      x: Math.cos(theta2 - (dTheta * i)) * radius + circleCenter.x,
-      y: Math.sin(theta2 - (dTheta * i)) * radius + circleCenter.y,
+      x: Math.cos(theta1 + (dTheta * i)) * radius + circleCenter.x,
+      y: Math.sin(theta1 + (dTheta * i)) * radius + circleCenter.y,
     });
   }
 
@@ -461,7 +473,7 @@ export class CurvedLine<T> extends Bounds<T> {
 
       // Set the method that will be used for generating segments
       this.segmentMethod = segmentMethods[numControlPoints];
-
+      debug('sementMethod is %o', this.segmentMethod);
       // Make sure the input wasn't bad
       if (!this.segmentMethod) {
         throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point. Or 0 for a straight line');

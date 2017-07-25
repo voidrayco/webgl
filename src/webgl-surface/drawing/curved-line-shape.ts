@@ -137,6 +137,7 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
       normal.push(line.perpendicular);
     }
 
+    // Use the new normals to generate quads
     for (let i = 0; i < lineStrip.length - 1; i++){
       const previous: IPoint = lineStrip[i];
       const current: IPoint = lineStrip[i + 1];
