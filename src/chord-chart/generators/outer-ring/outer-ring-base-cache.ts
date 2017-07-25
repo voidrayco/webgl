@@ -35,7 +35,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       ;
 
       const curve = new CurvedLineShape(
-        CurveType.CircularCCW,
+        CurveType.CircularCW,
         {x: segment.p1.x, y: segment.p1.y},
         {x: segment.p2.x, y: segment.p2.y},
         [{x: segment.controlPoint.x, y: segment.controlPoint.y}],
@@ -57,8 +57,8 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     const controlPoint = {x: 0, y: 0};
 
     const calculatePoint = (radianAngle: number) => {
-      const x =  circleRadius * Math.cos(radianAngle);
-      const y =  circleRadius * Math.sin(radianAngle);
+      const x = circleRadius * Math.cos(radianAngle);
+      const y = circleRadius * Math.sin(radianAngle);
       return {x, y};
     };
 

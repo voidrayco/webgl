@@ -9,11 +9,11 @@
       "id": "NetworkObject_3",
       "incomingCount": 69,
       "outgoingCount": 42,
-      "startAngle": 0,
+      "startAngle": -1.570796,
       "totalCount": 111
     },
     {
-      "endAngle": 1.57079,
+      "endAngle": 1.77079,
       "flowAngles": {
         "angleStep": 0.128,
         "startAngle": 1.603
@@ -21,7 +21,7 @@
       "id": "NetworkObject_4",
       "incomingCount": 9,
       "outgoingCount": 4,
-      "startAngle": 0,
+      "startAngle": 1.57079,
       "totalCount": 13
     }
   ],

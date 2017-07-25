@@ -196,11 +196,12 @@ function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
   // Get the perpendicular direction to the line so we can calculate the center of our circle
   // From the mid point
   const perpendicular: IPoint = straightLine.perpendicular;
+  const distance = Math.sqrt(radius * radius - minRadius * minRadius);
 
   // Calculate the location of the center of the circle
   const circleCenter: IPoint = {
-    x: perpendicular.x * (radius - minRadius) + midPoint.x,
-    y: perpendicular.y * (radius - minRadius) + midPoint.y,
+    x: perpendicular.x * distance + midPoint.x,
+    y: perpendicular.y * distance + midPoint.y,
   };
   debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
   // Get the direction vector from the circle center to the first end point
@@ -257,9 +258,10 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
 
   const perpendicular: IPoint = straightLine.perpendicular;
   debug('perpendicular is %o', perpendicular);
+  const distance = Math.sqrt(radius * radius - minRadius * minRadius);
   const circleCenter: IPoint = {
-    x: -perpendicular.x * (radius - minRadius) + midPoint.x,
-    y: -perpendicular.y * (radius - minRadius) + midPoint.y,
+    x: -perpendicular.x * distance + midPoint.x,
+    y: -perpendicular.y * distance + midPoint.y,
   };
 
   debug('p1 is %o, p2 is %o', line.p1, line.p2);
