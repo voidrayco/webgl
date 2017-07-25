@@ -62,6 +62,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     const controlPoint = {x: 0, y: 0};
     const curveData: ICurveData[] = [];
 
+    //Sort endpoints
+
     // First initialize any details not set in the endpoint
     data.endpoints.forEach(end => {
       end._inflowIdx = 0;
@@ -72,15 +74,17 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     data.endpoints.forEach((endpoint) => {
       data.flows.forEach((flow) => {
         if (flow.srcTarget === endpoint.id){
-          const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
-          const p1 = calculatePoint(circleRadius, p1FlowAngle);
-          const destEndpoint = getEndpoint(data, flow.destTarget);
-          const p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.outgoingCount + destEndpoint._inflowIdx);
-          const p2 = calculatePoint(circleRadius, p2FlowAngle);
-          const color = flow.baseColor;
-          endpoint._outflowIdx++;
-          endpoint._inflowIdx++;
-          curveData.push({p1, p2, controlPoint, color});
+          const destEndpoint = getEndpoint(data, flow.dstTarget);
+          if (destEndpoint){
+            const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
+            const p1 = calculatePoint(circleRadius, p1FlowAngle);
+            const p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.outgoingCount + destEndpoint._inflowIdx);
+            const p2 = calculatePoint(circleRadius, p2FlowAngle);
+            const color = flow.baseColor;
+            endpoint._outflowIdx++;
+            endpoint._inflowIdx++;
+            curveData.push({p1, p2, controlPoint, color});
+          }
         }
       });
     });
