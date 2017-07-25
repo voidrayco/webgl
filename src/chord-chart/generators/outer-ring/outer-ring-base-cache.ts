@@ -35,7 +35,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       ;
 
       const curve = new CurvedLineShape(
-        CurveType.Circular,
+        CurveType.CircularCW,
         {x: segment.p1.x, y: segment.p1.y},
         {x: segment.p2.x, y: segment.p2.y},
         [{x: segment.controlPoint.x, y: segment.controlPoint.y}],

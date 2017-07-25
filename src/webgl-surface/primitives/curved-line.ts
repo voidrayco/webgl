@@ -19,7 +19,8 @@ export enum CurveType {
    * circular arc is determined by how far the control point is from the straight line that can be made from the two
    * end points.
    */
-  Circular,
+  CircularCCW,
+  CircularCW,
   /**
    * This ignores the control points altogether and just created a straight line with a single segment that consists
    * of the specified endpoints
@@ -174,7 +175,7 @@ function makeBezier3Segments(line: CurvedLine<any>): IPoint[] {
  * @param {CurvedLine<any>} line
  * @returns {IPoint[]}
  */
-function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
+function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
   if (line.cachesSegments && line.cachedSegments) {
     return line.cachedSegments;
   }
@@ -233,6 +234,54 @@ function makeCircularSegments(line: CurvedLine<any>): IPoint[] {
   return segments;
 }
 
+function makeCircularCCWSegments(line: CurvedLine<any>) {
+  if (line.cachesSegments && line.cachedSegments){
+    return line.cachedSegments;
+  }
+
+  const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
+  let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
+
+  const midPoint: IPoint = Point.getMidpoint(line.p1, line.p2);
+  const minRadius = Point.getDistance(midPoint, line.p1);
+
+  if (radius < minRadius){
+    radius = Point.getDistance(midPoint, line.p1);
+  }
+
+  const perpendicular: IPoint = straightLine.perpendicular;
+
+  const circleCenter: IPoint = {
+    x: perpendicular.x * (radius - minRadius) + midPoint.x,
+    y: perpendicular.y * (radius - minRadius) + midPoint.y,
+  };
+
+  const direction1 =  Point.getDirection(circleCenter, line.p1);
+
+  const theta1 = Math.atan2(direction1.y, direction1.x);
+
+  const direction2 = Point.getDirection(circleCenter, line.p2);
+
+  const theta2 = Math.atan2(direction2.y, direction2.x);
+
+  const dTheta = (theta2 - theta1) / line.resolution;
+
+  const segments: IPoint[] = [];
+
+  for (let i = 0, end = line.resolution + 1; i < end; ++i){
+    segments.push({
+      x: Math.cos(theta2 - (dTheta * i)) * radius + circleCenter.x,
+      y: Math.sin(theta2 - (dTheta * i)) * radius + circleCenter.y,
+    });
+  }
+
+  if (line.cachedSegments){
+    line.cachedSegments = segments;
+  }
+
+  return segments;
+}
+
 /**
  * Makes the segments for a line that is straight, thus only 1 segments is needed
  * and will be generated.
@@ -251,9 +300,13 @@ const pickSegmentMethod = {
     makeBezier2Segments,
     makeBezier3Segments,
   ],
-  [CurveType.Circular]: [
+  [CurveType.CircularCW]: [
     null,
-    makeCircularSegments,
+    makeCircularCWSegments,
+  ],
+  [CurveType.CircularCCW]: [
+    null,
+    makeCircularCCWSegments,
   ],
   [CurveType.Straight]: [
     makeStraightSegments,
@@ -263,7 +316,7 @@ const pickSegmentMethod = {
 /** A quick lookup for a proper distance calculating method for a curved line  */
 const pickDistanceMethod = {
   [CurveType.Bezier]: bezierDistance,
-  [CurveType.Circular]: circularDistance,
+  [CurveType.CircularCW]: circularDistance,
   [CurveType.Straight]: straightDistance,
 };
 
