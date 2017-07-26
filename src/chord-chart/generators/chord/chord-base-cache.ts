@@ -22,7 +22,7 @@ function calculatePoint(radius: number, flowAngle: number) {
 }
 
 function getFlowAngle(endpoint: IEndpoint, flowIndex: number) {
-  return endpoint.startAngle + (endpoint.flowAngles.angleStep * flowIndex);
+  return endpoint.flowAngles.startAngle + (endpoint.flowAngles.angleStep * flowIndex);
 }
 
 /**
@@ -82,8 +82,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
             const p1 = calculatePoint(circleRadius - 10, p1FlowAngle);
             const p2FlowAngle = getFlowAngle(destEndpoint,
-               destEndpoint._inflowIdx);
-            const p2 = calculatePoint(circleRadius + 10, p2FlowAngle);
+               destEndpoint.outgoingCount + destEndpoint._inflowIdx);
+            const p2 = calculatePoint(circleRadius + 11, p2FlowAngle);
             const color = flow.baseColor;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
