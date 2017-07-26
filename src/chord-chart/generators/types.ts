@@ -30,7 +30,7 @@ export interface IFlow {
   srcExpandedTarget: string;
   srcTarget: string;
   destExpandedTarget: string;
-  destTarget: string;
+  dstTarget: string;
   srcIndex: number;
   dstIndex: number;
   baseColor: RGBColor;  // Is this what the data stores?
