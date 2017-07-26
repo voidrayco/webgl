@@ -1,0 +1,50 @@
+{
+  "endpoints": [
+    {
+      "endAngle": 1.57079,
+      "flowAngles": {
+        "angleStep": 0.0188,
+        "startAngle": -1.04719
+      },
+      "id": "NetworkObject_3",
+      "incomingCount": 69,
+      "outgoingCount": 42,
+      "startAngle": -1.570796,
+      "totalCount": 111
+    },
+    {
+      "endAngle": 1.77079,
+      "flowAngles": {
+        "angleStep": 0.128,
+        "startAngle": 1.603
+      },
+      "id": "NetworkObject_4",
+      "incomingCount": 9,
+      "outgoingCount": 4,
+      "startAngle": 1.57079,
+      "totalCount": 13
+    }
+  ],
+  "flows": [
+    {
+      "destTarget": "NetworkObject_3",
+      "srcTarget": "NetworkObject_4",
+      "baseColor": {
+        "r": 1,
+        "g": 1,
+        "b": 1,
+        "opacity": 1
+      }
+    },
+    {
+      "destTarget": "NetworkObject_3",
+      "srcTarget": "NetworkObject_4",
+      "baseColor": {
+        "r": 1,
+        "g": 0.5,
+        "b": 1,
+        "opacity": 0.5
+      }
+    }
+  ]
+}

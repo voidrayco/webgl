@@ -1,9 +1,12 @@
-const debug = require('debug')('CommunicationsView:Atlas');
-import {Texture} from 'three';
-import {Bounds} from '../../primitives/bounds';
-import {IPoint} from '../../primitives/point';
-import {ImageDimensions, PackNode} from '../../util/pack-node';
-import {AtlasTexture} from './atlas-texture';
+import { rgb } from 'd3-color';
+import { Texture } from 'three';
+import { Bounds } from '../../primitives/bounds';
+import { IPoint } from '../../primitives/point';
+import { ImageDimensions, PackNode } from '../../util/pack-node';
+import { AtlasTexture } from './atlas-texture';
+
+const debug = require('debug')('webgl-surface:Atlas');
+const debugLabels = require('debug')('webgl-surface:Labels');
 
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
@@ -130,6 +133,7 @@ export class AtlasManager {
       debug('Can not load image, invalid Atlas Name: %o for atlasMaps: %o', atlasName, this.atlasMap);
       return false;
     }
+
     // First we must load the image
     // Make a buffer to hold our new image
     // Load the image into memory, default to keeping the alpha channel
@@ -153,7 +157,6 @@ export class AtlasManager {
       // Auto add a buffer in
       dimensions.second.width += 1;
       dimensions.second.height += 1;
-
       // Get the atlas map node
       const node: PackNode = this.atlasMap[atlasName];
       // Store the node resulting from the insert operation
@@ -162,6 +165,11 @@ export class AtlasManager {
       // If the result was NULL we did not successfully insert the image into any map
       if (insertedNode) {
         debug('Atlas location determined: %o', insertedNode);
+
+        if (image.label) {
+          debugLabels('Atlas location determined. PackNode: %o Dimensions: %o', insertedNode, dimensions);
+        }
+
         // Apply the image to the node
         insertedNode.nodeImage = image;
 
@@ -219,22 +227,90 @@ export class AtlasManager {
    * @return {Promise<HTMLImageElement>} A promise to resolve to the loaded image
    *                                     or null if there was an error
    */
-  loadImage(texture: AtlasTexture): Promise<HTMLImageElement> {
-    return new Promise((resolve, reject) => {
-      const image: HTMLImageElement = new Image();
+  loadImage(texture: AtlasTexture): Promise<HTMLImageElement | null> {
+    if (texture.imagePath) {
+      return new Promise((resolve, reject) => {
+        const image: HTMLImageElement = new Image();
 
-      image.onload = function() {
-        texture.pixelWidth = image.width;
-        texture.pixelHeight = image.height;
-        texture.aspectRatio = image.width / image.height;
-        resolve(image);
-      };
+        image.onload = function() {
+          texture.pixelWidth = image.width;
+          texture.pixelHeight = image.height;
+          texture.aspectRatio = image.width / image.height;
+          resolve(image);
+        };
 
-      image.onerror = function() {
-        resolve(null);
-      };
+        image.onerror = function() {
+          resolve(null);
+        };
 
-      image.src = texture.imagePath;
-    });
+        image.src = texture.imagePath;
+      });
+    }
+
+    else if (texture.label) {
+      return new Promise((resolve, reject) => {
+        const label = texture.label;
+        const labelSize = label.getSize();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set the dimensions of the canvas/texture space we will be using to rasterize
+        // The label. Use the label's rasterization controls to aid in rendering the label
+        canvas.width = labelSize.width + texture.label.rasterizationPadding.width;
+        canvas.height = labelSize.height + texture.label.rasterizationPadding.height;
+
+        if (ctx) {
+          const fontSize = label.fontSize;
+
+          const color = rgb(
+            label.color.r * 255,
+            label.color.g * 255,
+            label.color.b * 255,
+            label.color.opacity,
+          );
+
+          ctx.font = label.makeCSSFont(fontSize);
+          ctx.textAlign = label.textAlign;
+          ctx.textBaseline = label.textBaseline;
+          ctx.fillStyle = color.toString();
+
+          // Render the label to the canvas/texture space. This utilizes the label's
+          // Rasterization metrics to aid in getting a clean render.
+          ctx.fillText(
+            label.text,
+            texture.label.rasterizationOffset.x,
+            texture.label.height / 2 + texture.label.rasterizationOffset.y,
+          );
+
+          const image: HTMLImageElement = new Image();
+
+          image.onload = function() {
+            // Here we use the canvas dimensions and NOT the image dimensions
+            // As the image dimensions are unreliable here when setting the src
+            // To a data url
+            texture.pixelWidth = image.width;
+            texture.pixelHeight = image.height;
+            texture.aspectRatio = image.width / image.height;
+
+            debugLabels('Applying size based on rasterization to the Label: w: %o h: %o', image.width, image.height);
+
+            label.setSize({
+              height: image.height,
+              width: image.width,
+            });
+
+            resolve(image);
+          };
+
+          image.onerror = function() {
+            resolve(null);
+          };
+
+          image.src = canvas.toDataURL('image/png');
+        }
+      });
+    }
+
+    return Promise.resolve(null);
   }
 }
