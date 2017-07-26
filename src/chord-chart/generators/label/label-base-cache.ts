@@ -5,7 +5,7 @@ import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData } from '../types';
-
+const debug = require('debug')('label');
 /**
  * Responsible for generating the static outer rings in the system
  *
@@ -38,6 +38,15 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         fontSize: 14,
         text: 'TEXT',
       });
+      const width = label.getSize().width + 20;
+      if (labelData.anchor === AnchorPosition.MiddleLeft){
+        point.x = point.x - width * Math.cos(labelData.angle);
+        point.y = point.y - width * Math.sin(labelData.angle);
+      }
+      if (labelData.anchor === AnchorPosition.MiddleRight){
+        point.x = point.x + 20 * Math.cos(labelData.angle);
+        point.y = point.y + 20 * Math.sin(labelData.angle);
+      }
 
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
@@ -46,7 +55,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       label.setLocation(point);
       label.setRotation(labelData.angle);
       label.setAnchor(labelData.anchor);
-
+      debug('label width after is %o', label.width);
       return label;
     });
 
@@ -65,11 +74,15 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
 
     const labelData = data.endpoints.map((endpoint) => {
         const startAngle = endpoint.startAngle;
+        debug('startAngle is %o', startAngle);
         const angle = startAngle + (endpoint.endAngle - startAngle);
-        const angleIntersection =  angle - (Math.PI / 2);
+        debug('angle is %o', angle);
+        let angleIntersection =  angle ;
         // MiddleRight if angle in left hemisphere. else middleLeft
         const anchor = (angle > 0 && angle < Math.PI / 2)
           || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+        debug('anchor is %o', anchor);
+        if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
         const point = calculatePoint(angle);
         return {point, angle: angleIntersection, anchor};
     });
