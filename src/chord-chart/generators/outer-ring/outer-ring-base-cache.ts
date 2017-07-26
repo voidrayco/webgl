@@ -63,8 +63,8 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     };
 
     const segments = data.endpoints.map((endpoint) => {
-      const p1 = calculatePoint(endpoint.startAngle);
-      const p2 = calculatePoint(endpoint.endAngle);
+      const p1 = calculatePoint(endpoint.startAngle + 0.01);
+      const p2 = calculatePoint(endpoint.endAngle - 0.01);
       return {p1, p2, controlPoint};
     });
 

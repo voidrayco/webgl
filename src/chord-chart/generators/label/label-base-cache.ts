@@ -80,7 +80,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         let angleIntersection =  angle ;
         // MiddleRight if angle in left hemisphere. else middleLeft
         const anchor = (angle > 0 && angle < Math.PI / 2)
-          || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+          || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ?
+          AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
         debug('anchor is %o', anchor);
         if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
         const point = calculatePoint(angle);

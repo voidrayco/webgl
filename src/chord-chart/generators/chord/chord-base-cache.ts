@@ -49,8 +49,12 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
         rgb(r, g, b, inactiveOpacity) :
         rgb(r, g, b, activeOpacity)
       ;
-      return new CurvedLineShape(CurveType.Bezier, {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
-        [{x: curve.controlPoint.x, y: curve.controlPoint.y}], color);
+      return new CurvedLineShape(
+        CurveType.Bezier,
+        {x: curve.p1.x, y: curve.p1.y},
+        {x: curve.p2.x, y: curve.p2.y},
+        [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
+        color);
     });
 
     this.buffer = curveShapes;
@@ -73,14 +77,16 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
       data.flows.forEach((flow) => {
         if (flow.srcTarget === endpoint.id){
           const destEndpoint = getEndpoint(data, flow.dstTarget);
+          debug('source is %o,destination is %o', flow.srcTarget, destEndpoint);
           if (destEndpoint){
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
-            const p1 = calculatePoint(circleRadius, p1FlowAngle);
-            const p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.outgoingCount + destEndpoint._inflowIdx);
-            const p2 = calculatePoint(circleRadius, p2FlowAngle);
+            const p1 = calculatePoint(circleRadius - 10, p1FlowAngle);
+            const p2FlowAngle = getFlowAngle(destEndpoint,
+               destEndpoint._inflowIdx);
+            const p2 = calculatePoint(circleRadius + 10, p2FlowAngle);
             const color = flow.baseColor;
             endpoint._outflowIdx++;
-            endpoint._inflowIdx++;
+            destEndpoint._inflowIdx++;
             curveData.push({p1, p2, controlPoint, color});
           }
         }

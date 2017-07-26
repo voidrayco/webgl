@@ -378,7 +378,8 @@ export class CurvedLine<T> extends Bounds<T> {
    *
    * @memberof CurvedLine
    */
-  constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[], resolution: number = 20, cacheSegments: boolean = false) {
+  constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[],
+     resolution: number = 20, cacheSegments: boolean = false) {
     super(0, 0, 0, 0);
 
     // Apply the relevant properties to the curve
