@@ -72,15 +72,17 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     data.endpoints.forEach((endpoint) => {
       data.flows.forEach((flow) => {
         if (flow.srcTarget === endpoint.id){
-          const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
-          const p1 = calculatePoint(circleRadius, p1FlowAngle);
           const destEndpoint = getEndpoint(data, flow.destTarget);
-          const p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.outgoingCount + destEndpoint._inflowIdx);
-          const p2 = calculatePoint(circleRadius, p2FlowAngle);
-          const color = flow.baseColor;
-          endpoint._outflowIdx++;
-          endpoint._inflowIdx++;
-          curveData.push({p1, p2, controlPoint, color});
+          if (destEndpoint){
+            const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
+            const p1 = calculatePoint(circleRadius, p1FlowAngle);
+            const p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.outgoingCount + destEndpoint._inflowIdx);
+            const p2 = calculatePoint(circleRadius, p2FlowAngle);
+            const color = flow.baseColor;
+            endpoint._outflowIdx++;
+            endpoint._inflowIdx++;
+            curveData.push({p1, p2, controlPoint, color});
+          }
         }
       });
     });
