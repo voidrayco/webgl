@@ -31,7 +31,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         rgb(r, g, b, inactiveOpacity) :
         rgb(r, g, b, activeOpacity)
       ;
-      let point = {x: labelData.point.x, y: labelData.point.y};
+      const point = {x: labelData.point.x, y: labelData.point.y};
 
       const label = new Label<any>({
         color: color,
@@ -39,8 +39,14 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         text: 'TEXT',
       });
       const width = label.getSize().width + 20;
-      if (labelData.anchor === 5)point = {x: point.x - width * Math.cos(labelData.angle), y: point.y - width * Math.sin(labelData.angle)};
-      if (labelData.anchor === 6)point = {x: point.x + 25 * Math.cos(labelData.angle), y: point.y + 20 * Math.sin(labelData.angle)};
+      if (labelData.anchor === AnchorPosition.MiddleLeft){
+        point.x = point.x - width * Math.cos(labelData.angle);
+        point.y = point.y - width * Math.sin(labelData.angle);
+      }
+      if (labelData.anchor === AnchorPosition.MiddleRight){
+        point.x = point.x + 20 * Math.cos(labelData.angle);
+        point.y = point.y + 20 * Math.sin(labelData.angle);
+      }
 
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
@@ -76,7 +82,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         const anchor = (angle > 0 && angle < Math.PI / 2)
           || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
         debug('anchor is %o', anchor);
-        if (anchor === 5)angleIntersection += Math.PI;
+        if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
         const point = calculatePoint(angle);
         return {point, angle: angleIntersection, anchor};
     });
