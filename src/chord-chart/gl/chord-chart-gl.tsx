@@ -36,6 +36,7 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
 // --[ CONSTANTS ]-------------------------------------------
 // Indicate how big our buffers for vertices can be
 const BASE_QUAD_DEPTH = 0;
+const INTERACTION_QUAD_DEPTH = 5;
 
 // --[ SHADERS ]-------------------------------------------
 const fillVertexShader = require('./shaders/simple-fill.vs');
@@ -73,6 +74,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     const {
       labels,
       staticCurvedLines,
+      interactiveCurvedLines,
     } = props;
 
     // Set to true when the quad tree needs to be updated
@@ -110,14 +112,14 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             // Copy first vertex twice for intro degenerate tri
             positions[ppos] = TR.x;
             positions[++ppos] = TR.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
+            positions[++ppos] = curvedLine.depth;
             // Skip over degenerate tris color
             cpos += colorAttributeSize;
 
             // TR
             positions[++ppos] = TR.x;
             positions[++ppos] = TR.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
+            positions[++ppos] = curvedLine.depth;
             colors[cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
@@ -125,7 +127,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             // BR
             positions[++ppos] = BR.x;
             positions[++ppos] = BR.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
+            positions[++ppos] = curvedLine.depth;
             colors[++cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
@@ -133,7 +135,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             // TL
             positions[++ppos] = TL.x;
             positions[++ppos] = TL.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
+            positions[++ppos] = curvedLine.depth;
             colors[++cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
@@ -141,7 +143,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             // BL
             positions[++ppos] = BL.x;
             positions[++ppos] = BL.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
+            positions[++ppos] = curvedLine.depth;
             colors[++cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
@@ -150,7 +152,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
             // Copy last vertex again for degenerate tri
             positions[++ppos] = BL.x;
             positions[++ppos] = BL.y;
-            positions[++ppos] = BASE_QUAD_DEPTH;
+            positions[++ppos] = curvedLine.depth;
             // Skip over degenerate tris for color
             cpos += colorAttributeSize;
           },
@@ -168,6 +170,100 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       if (needsTreeUpdate) {
         this.staticCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
       }
+      debug('Curved Lines Created. Segments drawn: %o', numBatches);
+    }
+
+    // Commit interactive curved lines
+    {
+      const numVerticesPerSegment = 6;
+      const colorAttributeSize = 4;
+      let stripPos = 0;
+      let willUpdate = false;
+
+      BufferUtil.beginUpdates();
+
+      for (const curvedLine of interactiveCurvedLines) {
+        debug(curvedLine);
+        const strip = curvedLine.getTriangleStrip();
+        let TR;
+        let BR;
+        let TL;
+        let BL;
+
+        willUpdate = BufferUtil.updateBuffer(
+          interactiveCurvedLines, this.interactiveCurvedBufferItems,
+          numVerticesPerSegment, strip.length / 4.0,
+          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
+            debug(i, ppos, cpos);
+            stripPos = i * 4;
+            TR = strip[stripPos];
+            BR = strip[stripPos + 1];
+            TL = strip[stripPos + 2];
+            BL = strip[stripPos + 3];
+
+            // Copy first vertex twice for intro degenerate tri
+            positions[ppos] = TR.x;
+            positions[++ppos] = TR.y;
+            positions[++ppos] = curvedLine.depth;
+            // Skip over degenerate tris color
+            cpos += colorAttributeSize;
+
+            // TR
+            positions[++ppos] = TR.x;
+            positions[++ppos] = TR.y;
+            positions[++ppos] = curvedLine.depth;
+            colors[cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+            // BR
+            positions[++ppos] = BR.x;
+            positions[++ppos] = BR.y;
+            positions[++ppos] = curvedLine.depth;
+            colors[++cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+            // TL
+            positions[++ppos] = TL.x;
+            positions[++ppos] = TL.y;
+            positions[++ppos] = curvedLine.depth;
+            colors[++cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+            // BL
+            positions[++ppos] = BL.x;
+            positions[++ppos] = BL.y;
+            positions[++ppos] = curvedLine.depth;
+            colors[++cpos] = curvedLine.r;
+            colors[++cpos] = curvedLine.g;
+            colors[++cpos] = curvedLine.b;
+            colors[++cpos] = curvedLine.a;
+
+            // Copy last vertex again for degenerate tri
+            positions[++ppos] = BL.x;
+            positions[++ppos] = BL.y;
+            positions[++ppos] = curvedLine.depth;
+            // Skip over degenerate tris for color
+            cpos += colorAttributeSize;
+          },
+        );
+
+        // If no updating is happening, just quit the loop
+        if (!willUpdate) {
+          break;
+        }
+      }
+
+      const numBatches = BufferUtil.endUpdates();
+
+      // Only if updates happened, should this change
+      if (needsTreeUpdate) {
+        this.interactiveCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+      }
+
+      this.forceDraw = true;
       debug('Curved Lines Created. Segments drawn: %o', numBatches);
     }
 
@@ -339,6 +435,33 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
       // Place the mesh in the scene
       this.scene.add(this.staticCurvedBufferItems.system);
+    }
+
+    // GENERATE THE INTERACTION QUAD BUFFER
+    {
+      this.interactiveCurvedBufferItems.attributes = [
+        {
+          defaults: [0, 0, BASE_QUAD_DEPTH],
+          name: 'position',
+          size: AttributeSize.THREE,
+        },
+        {
+          defaults: [0, 0, 0, 1],
+          name: 'customColor',
+          size: AttributeSize.FOUR,
+        },
+      ];
+
+      const verticesPerQuad = 6;
+      const numQuads = 10000;
+
+      this.interactiveCurvedBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.interactiveCurvedBufferItems.attributes);
+      this.interactiveCurvedBufferItems.system = new Mesh(this.interactiveCurvedBufferItems.geometry, quadMaterial);
+      this.interactiveCurvedBufferItems.system.frustumCulled = false;
+      this.interactiveCurvedBufferItems.system.drawMode = TriangleStripDrawMode;
+
+      // Place the mesh in the scene
+      this.scene.add(this.interactiveCurvedBufferItems.system);
     }
 
     // GENERATE THE LABEL BUFFER

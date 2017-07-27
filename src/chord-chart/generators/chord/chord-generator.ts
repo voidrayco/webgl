@@ -16,7 +16,7 @@ export class ChordGenerator {
    */
   bustCaches(selection: Selection) {
     this.chordBase.bustCache = true;
-    if (selection.getSelection(SelectionType.MOUSE_OVER).length > 0) {
+    if (selection.didSelectionCategoryChange(SelectionType.MOUSE_OVER)) {
       this.chordInteractions.bustCache = true;
     }
   }
@@ -36,5 +36,9 @@ export class ChordGenerator {
    */
   getBaseBuffer(): CurvedLineShape<ICurvedLineData>[] {
     return this.chordBase.getBuffer();
+  }
+
+  getInteractionBuffer(): CurvedLineShape<ICurvedLineData>[] {
+    return this.chordInteractions.getBuffer();
   }
 }
