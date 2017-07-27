@@ -645,15 +645,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     }
   }
 
-  /**
-   * Hook for subclasses to respond to mouse up events and the items that were interacted with in the process
-   *
-   * @param {React.MouseEvent} e The react synthetic event associated with the action
-   * @param {Bounds[]} hitInside The items the mouse interacted with
-   * @param {IPoint} mouse The location of the mouse on the screen
-   * @param {IPoint} world The location of the mouse projected into the world
-   * @param {IProjection} projection The projection methods to go between the screen and world space
-   */
   onMouseUp(e: React.MouseEvent<HTMLDivElement>, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
     // Const selections: CurvedLineShape<any>[] = [];
     const clickedCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside);
