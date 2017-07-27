@@ -25,7 +25,6 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
     const circleRadius = config.radius;
-    const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
     const segmentSpace: number = config.space; // It used to seperate segments
 
     const segments = this.preProcessData(data, circleRadius, segmentSpace);
