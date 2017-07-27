@@ -1,4 +1,4 @@
-import { HSLColor } from 'd3-color';
+import { HSLColor, RGBColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export interface IChordChartConfig {
