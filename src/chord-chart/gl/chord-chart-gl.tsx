@@ -10,7 +10,10 @@ import {
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Label } from 'webgl-surface/drawing/label';
 import { Bounds } from 'webgl-surface/primitives/bounds';
+import { IPoint } from 'webgl-surface/primitives/point';
 import { AttributeSize, BufferUtil, IBufferItems } from 'webgl-surface/util/buffer-util';
+import { IProjection } from 'webgl-surface/util/projection';
+import { filterQuery } from 'webgl-surface/util/quad-tree';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
 
@@ -24,6 +27,10 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   interactiveCurvedLines?: any[],
   /** Lines that do not change often */
   staticCurvedLines?: CurvedLineShape<any>[],
+  /** Event handlers */
+  onMouseHover?: any,
+  onMouseLeave?: any,
+  onMouseUp?: any
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -364,6 +371,57 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
       // Place the mesh in the scene
       this.scene.add(this.staticLabelBufferItems.system);
+    }
+  }
+
+  onMouseHover(hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
+    // Filter out curves that presently exist in interactiveCurvedLines
+    const hitCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside); // Includes outerRings and chords
+    const selections = hitCurvedLines.filter((curve, idx) => {
+      if (curve.distanceTo(world) < 4) {
+        return true;
+      }
+      return false;
+    });
+    if (this.props.onMouseHover){
+      this.props.onMouseHover(selections);
+    }
+  }
+
+  onMouseLeave(left: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
+    // Const selections: CurvedLineShape<any>[] = [];
+    const leftCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], left);
+    const selections = leftCurvedLines.filter((curve, idx) => {
+      if (curve.distanceTo(world) > 4) {
+        return true;
+      }
+      return false;
+    });
+    if (this.props.onMouseLeave){
+      this.props.onMouseLeave(selections);
+    }
+  }
+
+  /**
+   * Hook for subclasses to respond to mouse up events and the items that were interacted with in the process
+   *
+   * @param {React.MouseEvent} e The react synthetic event associated with the action
+   * @param {Bounds[]} hitInside The items the mouse interacted with
+   * @param {IPoint} mouse The location of the mouse on the screen
+   * @param {IPoint} world The location of the mouse projected into the world
+   * @param {IProjection} projection The projection methods to go between the screen and world space
+   */
+  onMouseUp(e: React.MouseEvent<HTMLDivElement>, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
+    // Const selections: CurvedLineShape<any>[] = [];
+    const clickedCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside);
+    const selections = clickedCurvedLines.filter((curve, idx) => {
+      if (curve.distanceTo(world) < 4) {
+        return true;
+      }
+      return false;
+    });
+    if (this.props.onMouseUp){
+      this.props.onMouseUp(selections);
     }
   }
 
