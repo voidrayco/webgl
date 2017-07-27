@@ -78,6 +78,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   render() {
     const config: IChordChartConfig = {
       radius: 200,
+      ringWidth: 20,
+      space: 0.005,
     };
 
     this.chordGenerator.generate(testChordData, config, this.selection);
