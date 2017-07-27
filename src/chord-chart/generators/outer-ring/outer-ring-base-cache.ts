@@ -2,7 +2,7 @@ import { rgb, RGBColor } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType} from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData } from '../types';
 
@@ -21,17 +21,15 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
   }
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection){
-    const inactiveOpacity: number = 0.3;
-    const activeOpacity: number = 1;
     const circleRadius = config.radius;
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
 
     const segments = this.preProcessData(data, circleRadius);
     const circleEdges = segments.map((segment) => {
       const {r, g, b} = defaultColor;
-      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
-        rgb(r, g, b, inactiveOpacity) :
-        rgb(r, g, b, activeOpacity)
+      const color = selection.getSelection(SelectionType.MOUSE_OVER).length > 0 ?
+        rgb(r, g, b).darker() :
+        rgb(r, g, b)
       ;
 
       const curve = new CurvedLineShape(

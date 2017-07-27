@@ -627,7 +627,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       return false;
     });
     if (this.props.onMouseHover){
-      this.props.onMouseHover(selections);
+      this.props.onMouseHover(selections, mouse, world, projection);
     }
   }
 
@@ -641,7 +641,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       return false;
     });
     if (this.props.onMouseLeave){
-      this.props.onMouseLeave(selections);
+      this.props.onMouseLeave(selections, mouse, world, projection);
     }
   }
 
@@ -655,7 +655,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       return false;
     });
     if (this.props.onMouseUp){
-      this.props.onMouseUp(selections);
+      this.props.onMouseUp(selections, mouse, world, projection);
     }
   }
 

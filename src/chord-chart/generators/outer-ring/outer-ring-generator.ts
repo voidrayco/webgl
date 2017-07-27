@@ -1,5 +1,5 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData as IChordData } from '../types';
 import { OuterRingBaseCache } from './outer-ring-base-cache';
@@ -18,11 +18,12 @@ export class OuterRingGenerator {
    * Flag which caches need busting
    */
   bustCaches(data: IChordData, config: IChordChartConfig, selection: Selection) {
-    if (data !== this.lastData) {
+    if (data !== this.lastData || selection.didSelectionCategoryChange(SelectionType.MOUSE_OVER)) {
       this.outerRingBase.bustCache = true;
+      this.outerRingInteraction.bustCache = true;
     }
 
-    this.lastData = data;
+     this.lastData = data;
   }
 
   /**

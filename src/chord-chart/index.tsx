@@ -61,13 +61,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     });
   }
 
-  handleMouseHover = (selections: any[]) => {
+  handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
     this.selection.clearSelection(SelectionType.MOUSE_OVER);
-    selections.forEach(selection => {
-      this.selection.select(SelectionType.MOUSE_OVER, selection);
-    });
 
-    this.forceUpdate();
+    if (selections.length > 0) {
+      const selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      this.selection.select(SelectionType.MOUSE_OVER, selection);
+      this.forceUpdate();
+    }
   }
 
   /**
@@ -90,7 +91,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
         interactiveCurvedLines={this.chordGenerator.getInteractionBuffer().concat(this.outerRingGenerator.getInteractionBuffer())}
-        onMouseHover={(selections: any[]) => this.handleMouseHover(selections)}
+        onMouseHover={(selections, mouse, world, projection) => this.handleMouseHover(selections, mouse, world, projection)}
         viewport={this.viewport}
         width={this.viewport.width}
         zoom={this.state.zoom}
