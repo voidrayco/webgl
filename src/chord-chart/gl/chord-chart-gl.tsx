@@ -30,9 +30,9 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   /** Lines that do not change often */
   staticCurvedLines?: CurvedLineShape<any>[],
   /** Event handlers */
-  onMouseHover?: any,
-  onMouseLeave?: any,
-  onMouseUp?: any
+  onMouseHover?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
+  onMouseLeave?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
+  onMouseUp?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void
 }
 
 // --[ CONSTANTS ]-------------------------------------------
