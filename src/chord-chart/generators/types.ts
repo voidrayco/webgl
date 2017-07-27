@@ -1,4 +1,4 @@
-import { RGBColor } from 'd3-color';
+import { HSLColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export interface IChordChartConfig {
@@ -33,7 +33,7 @@ export interface IFlow {
   dstTarget: string;
   srcIndex: number;
   dstIndex: number;
-  baseColor: RGBColor;  // Is this what the data stores?
+  baseColor: HSLColor;  // Is this what the data stores?
 }
 
 export interface ICurveData {

@@ -1,4 +1,4 @@
-import { rgb } from 'd3-color';
+import { hsl, rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
@@ -78,7 +78,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
             const p1 = calculatePoint(circleRadius, p1FlowAngle);
             const p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.outgoingCount + destEndpoint._inflowIdx);
             const p2 = calculatePoint(circleRadius, p2FlowAngle);
-            const color = flow.baseColor;
+            const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
+
             endpoint._outflowIdx++;
             endpoint._inflowIdx++;
             curveData.push({p1, p2, controlPoint, color});
