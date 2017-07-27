@@ -126,7 +126,7 @@ function makeBezier2Segments(line: CurvedLine<any>): IPoint[] {
   const p2 = line.p2;
   const c1 = line.controlPoints[0];
 
-  for (let i = 0, end = line.resolution; i < end; ++i) {
+  for (let i = 0, end = line.resolution; i <= end; ++i) {
     segments.push(bezier2(dt * i, p1, p2, c1));
   }
 
@@ -156,7 +156,7 @@ function makeBezier3Segments(line: CurvedLine<any>): IPoint[] {
   const c1 = line.controlPoints[0];
   const c2 = line.controlPoints[1];
 
-  for (let i = 0, end = line.resolution; i < end; ++i) {
+  for (let i = 0, end = line.resolution; i <= end; ++i) {
     segments.push(bezier3(dt * i, p1, p2, c1, c2));
   }
 
@@ -379,7 +379,8 @@ export class CurvedLine<T> extends Bounds<T> {
    *
    * @memberof CurvedLine
    */
-  constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[], resolution: number = 20, cacheSegments: boolean = false) {
+  constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[],
+     resolution: number = 20, cacheSegments: boolean = false) {
     super(0, 0, 0, 0);
 
     // Apply the relevant properties to the curve
