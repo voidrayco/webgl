@@ -33,6 +33,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   outerRingGenerator: OuterRingGenerator;
   /** Selection manager */
   selection: Selection = new Selection();
+  // Make sure we don't recreate the bound object
+  viewport: Bounds<never> = new Bounds<never>(-350, 350, -350, 350);
 
   // Sets the default state
   state: IChordChartState = {
@@ -83,13 +85,13 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
     return (
       <ChordChartGL
-        height={700}
+        height={this.viewport.height}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
         onMouseHover={(selections: any[]) => this.handleMouseHover(selections)}
-        viewport={new Bounds<never>(-350, 350, -350, 350)}
-        width={700}
+        viewport={this.viewport}
+        width={this.viewport.width}
         zoom={this.state.zoom}
       />
     );
