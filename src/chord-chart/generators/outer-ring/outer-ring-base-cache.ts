@@ -44,6 +44,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       );
 
       curve.lineWidth = 20;
+      curve.depth = 20;
 
       return curve;
     });

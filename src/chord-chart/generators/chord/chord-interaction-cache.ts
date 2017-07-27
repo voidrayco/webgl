@@ -21,11 +21,18 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
 
   buildCache(selection: Selection) {
     this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSE_OVER).map(curve => {
-      debug(curve);
       // Duplicate the curves with active color
-      const color = rgb(255, 0, 0, 1);
-      return new CurvedLineShape(CurveType.Bezier, {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
-        [{x: curve.controlPoints[0].x, y: curve.controlPoints[0].y}], color);
+      const color = rgb(1, 0, 0, 1);
+      const curvedLine = new CurvedLineShape(
+        CurveType.Bezier,
+        {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
+        [{x: curve.controlPoints[0].x, y: curve.controlPoints[0].y}],
+        color,
+      );
+
+      curvedLine.depth = 10;
+
+      return curvedLine;
     });
 
     debug(this.buffer);

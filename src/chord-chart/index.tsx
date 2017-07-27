@@ -89,6 +89,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
+        interactiveCurvedLines={this.chordGenerator.getInteractionBuffer().concat(this.outerRingGenerator.getInteractionBuffer())}
         onMouseHover={(selections: any[]) => this.handleMouseHover(selections)}
         viewport={this.viewport}
         width={this.viewport.width}
