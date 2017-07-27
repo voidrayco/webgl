@@ -446,6 +446,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   /**
+   * This is a hook for subclasses to be able to apply label buffer changes after the system has
+   * prepped the labels for render.
+   */
+  applyLabelBufferChanges(props: T) {
+    // Note: For subclasses
+  }
+
+  /**
    * Applies new props injected into this component.
    *
    * Applying new props does not entail that a re-render will happen so we
@@ -564,6 +572,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       [BaseApplyPropsMethods.BUFFERCHANGES]: (props: T): IApplyPropsMethodResponse => {
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
+
+        // We call the label buffering when the labels are ready to render
+        if (this.labelsReady) {
+          this.applyLabelBufferChanges(props);
+        }
+
         return {};
       },
 
