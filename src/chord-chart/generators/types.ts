@@ -2,7 +2,8 @@ import { RGBColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export interface IChordChartConfig {
-  radius: number
+  radius: number;
+  ringWidth: number;
 }
 
 export interface IData {
@@ -17,6 +18,7 @@ export interface IEndpoint {
   endAngle: number;
   outgoingCount: number;
   incomingCount: number;
+  totalCount: number;
   _outflowIdx?: number;  // Default to 0
   _inflowIdx?: number;
 }

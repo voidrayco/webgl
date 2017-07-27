@@ -22,7 +22,8 @@ function calculatePoint(radius: number, flowAngle: number) {
 }
 
 function getFlowAngle(endpoint: IEndpoint, flowIndex: number) {
-  return endpoint.flowAngles.startAngle + (endpoint.flowAngles.angleStep * flowIndex);
+  const angleStep: number = (endpoint.endAngle - endpoint.startAngle) / endpoint.totalCount;
+  return endpoint.startAngle + (angleStep * flowIndex);
 }
 
 /**
@@ -41,8 +42,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
     const circleRadius = config.radius;
+    const circleWidth = config.ringWidth;
 
-    const curves = this.preProcessData(data, circleRadius);
+    const curves = this.preProcessData(data, circleRadius, circleWidth);
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -62,7 +64,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
   }
 
   // Data comes from catbird-ui >> d3Chart.loadData()
-  preProcessData(data: IData, circleRadius: number) {
+  preProcessData(data: IData, circleRadius: number, circleWidth: number) {
     const controlPoint = {x: 0, y: 0};
     const curveData: ICurveData[] = [];
 
@@ -80,10 +82,10 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
           debug('source is %o,destination is %o', flow.srcTarget, destEndpoint);
           if (destEndpoint){
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx);
-            const p1 = calculatePoint(circleRadius, p1FlowAngle);
+            const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle);
             const p2FlowAngle = getFlowAngle(destEndpoint,
                destEndpoint.outgoingCount + destEndpoint._inflowIdx);
-            const p2 = calculatePoint(circleRadius, p2FlowAngle);
+            const p2 = calculatePoint(circleRadius + circleWidth / 2, p2FlowAngle);
             const color = flow.baseColor;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
