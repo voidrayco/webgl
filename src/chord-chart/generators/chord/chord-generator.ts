@@ -1,5 +1,5 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData as IChordData } from '../types';
 import { ChordBaseCache } from './chord-base-cache';
@@ -16,7 +16,9 @@ export class ChordGenerator {
    */
   bustCaches(selection: Selection) {
     this.chordBase.bustCache = true;
-    this.chordInteractions.bustCache = true;
+    if (selection.getSelection(SelectionType.MOUSE_OVER).length > 0) {
+      this.chordInteractions.bustCache = true;
+    }
   }
 
   /**
