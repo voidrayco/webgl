@@ -2,11 +2,11 @@ import { rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
-const debug = require('debug')('chords');
+const debug = require('debug')('chord-base-cache');
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -38,17 +38,22 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
   }
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
-    const inactiveOpacity: number = 0.3;
+    const inactiveOpacity: number = 0;
     const activeOpacity: number = 1;
     const circleRadius = config.radius;
 
     const curves = this.preProcessData(data, circleRadius);
     const curveShapes = curves.map((curve) => {
+      debug(curve);
       const {r, g, b} = curve.color;
-      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
+      debug(`mouse over: ${selection.getSelection(SelectionType.MOUSE_OVER).length}`);
+      let color = selection.getSelection(SelectionType.MOUSE_OVER).length === 0 ?
         rgb(r, g, b, inactiveOpacity) :
         rgb(r, g, b, activeOpacity)
       ;
+      debug(color);
+      color = rgb(1, 0, 0, 0.1);
+      debug(color);
       return new CurvedLineShape(CurveType.Bezier, {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
         [{x: curve.controlPoint.x, y: curve.controlPoint.y}], color);
     });

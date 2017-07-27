@@ -58,6 +58,10 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     });
   }
 
+  handleHover = () => {
+    this.forceUpdate();
+  }
+
   /**
    * @override
    * The react render method
@@ -73,12 +77,12 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
     return (
       <ChordChartGL
-        height={500}
+        height={700}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
-        viewport={new Bounds<never>(0, 500, 0, 500)}
-        width={500}
+        viewport={new Bounds<never>(0, 700, 0, 700)}
+        width={700}
         zoom={this.state.zoom}
       />
     );

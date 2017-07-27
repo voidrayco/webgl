@@ -1,19 +1,22 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData as IChordData } from '../types';
 import { ChordBaseCache } from './chord-base-cache';
+import { ChordInteractionsCache } from './chord-interaction-cache';
 
-const debug = require('debug')('chord-chart');
+const debug = require('debug')('chord-generator');
 
 export class ChordGenerator {
   chordBase: ChordBaseCache = new ChordBaseCache();
+  chordInteractions: ChordInteractionsCache = new ChordInteractionsCache();
 
   /**
    * Flag which caches need busting
    */
-  bustCaches() {
+  bustCaches(selection: Selection) {
     this.chordBase.bustCache = true;
+    this.chordInteractions.bustCache = true;
   }
 
   /**
@@ -21,8 +24,9 @@ export class ChordGenerator {
    */
   generate(data: IChordData, config: IChordChartConfig, selection: Selection) {
     debug('Generating chords');
-    this.bustCaches();
+    this.bustCaches(selection);
     this.chordBase.generate(data, config, selection);
+    this.chordInteractions.generate(selection);
   }
 
   /**

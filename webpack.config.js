@@ -2,7 +2,7 @@ const {resolve} = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const tslintLoader = {loader: 'tslint-loader', options: {
-  fix: true,
+  // fix: true,
   emitErrors: true,
   // failOnHint: true,
 }};

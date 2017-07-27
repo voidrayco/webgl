@@ -5,7 +5,7 @@ import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 
-const debug = require('debug')('chord-chart');
+const debug = require('debug')('chord-interaction-cache');
 
 /**
  * Responsible for generating the static chords in the system
@@ -21,12 +21,13 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
 
   buildCache(selection: Selection) {
     const activeOpacity: number = 1;
-
-    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSE_OVER).map(selected =>
+    debug('building cache');
+    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSE_OVER).map(selected => {
+      debug(selected);
       // Duplicate the curves with active color
-      new CurvedLineShape(CurveType.Bezier, {x: selected.p1.x, y: selected.p1.y}, {x: selected.p2.x, y: selected.p2.y},
+      return new CurvedLineShape(CurveType.Bezier, {x: selected.p1.x, y: selected.p1.y}, {x: selected.p2.x, y: selected.p2.y},
       [{x: selected.controlPoints[0].x, y: selected.controlPoints[0].y}],
-      rgb(selected.color.r, selected.color.g, selected.color.b, activeOpacity)),
-    );
+      rgb(selected.color.r, selected.color.g, selected.color.b, activeOpacity));
+    });
   }
 }

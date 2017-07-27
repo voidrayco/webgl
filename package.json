@@ -7,9 +7,10 @@
     "node": "8.1.2"
   },
   "scripts": {
+    "build": "tslint src && webpack",
     "dev": "node scripts/dev",
-    "start": "node scripts/dev",
-    "build": "tslint src && webpack"
+    "lint": "tslint src",
+    "start": "node scripts/dev"
   },
   "dependencies": {
     "@types/d3-color": "1.0.5",

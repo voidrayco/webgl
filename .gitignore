@@ -10,3 +10,4 @@ build
 .idea
 # VS Code (IDE)
 .vscode
+npm-debug.log
