@@ -1,16 +1,24 @@
+import { difference } from 'lodash';
 import { Label } from 'webgl-surface/drawing/label';
 import { Selection } from '../../selections/selection';
 import { IChordChartConfig, IData } from '../types';
 import { LabelBaseCache } from './label-base-cache';
 
-const debug = require('debug')('webgl-surface:Labels');
+const debug = require('debug')('label-generator');
 
 export class LabelGenerator {
   baseCache: LabelBaseCache = new LabelBaseCache();
   allLabels: Label<any>[];
+  cachedBuffer: Label<any>[];
 
   bustCaches() {
-    this.baseCache.bustCache = true;
+    debug(this.baseCache);
+    debug(this.cachedBuffer);
+    debug(difference(this.baseCache.buffer, this.cachedBuffer));
+    if (difference(this.baseCache.buffer, this.cachedBuffer).length > 0) {
+      this.cachedBuffer = this.baseCache.buffer;
+      this.baseCache.bustCache = true;
+    }
   }
 
   /** */

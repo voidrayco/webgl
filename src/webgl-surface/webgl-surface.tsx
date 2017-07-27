@@ -620,6 +620,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           // Let's disable mouse interactions for a little bit until the camera has settled into place
           const framesToDisable = 10;
           this.disableMouseInteraction = framesToDisable;
+          this.appliedViewport = props.viewport;
 
           debugCam('init cam', this.currentX, this.currentY);
         }

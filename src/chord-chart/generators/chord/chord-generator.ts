@@ -1,5 +1,5 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { Selection, SelectionType } from '../../selections/selection';
+import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData as IChordData } from '../types';
 import { ChordBaseCache } from './chord-base-cache';

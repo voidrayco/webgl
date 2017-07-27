@@ -5,8 +5,9 @@ import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
-import { Selection } from './selections/selection';
+import { Selection, SelectionType } from './selections/selection';
 
+// Debug const debug = require('debug')('chord-index');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -58,7 +59,12 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     });
   }
 
-  handleHover = () => {
+  handleMouseHover = (selections: any[]) => {
+    this.selection.clearSelection(SelectionType.MOUSE_OVER);
+    selections.forEach(selection => {
+      this.selection.select(SelectionType.MOUSE_OVER, selection);
+    });
+
     this.forceUpdate();
   }
 
@@ -81,7 +87,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
-        viewport={new Bounds<never>(0, 700, 0, 700)}
+        onMouseHover={(selections: any[]) => this.handleMouseHover(selections)}
+        viewport={new Bounds<never>(-350, 350, -350, 350)}
         width={700}
         zoom={this.state.zoom}
       />

@@ -44,16 +44,13 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
 
     const curves = this.preProcessData(data, circleRadius);
     const curveShapes = curves.map((curve) => {
-      debug(curve);
       const {r, g, b} = curve.color;
-      debug(`mouse over: ${selection.getSelection(SelectionType.MOUSE_OVER).length}`);
-      let color = selection.getSelection(SelectionType.MOUSE_OVER).length === 0 ?
+      debug(curve);
+      const color = selection.getSelection(SelectionType.MOUSE_OVER).length === 0 ?
         rgb(r, g, b, inactiveOpacity) :
         rgb(r, g, b, activeOpacity)
       ;
-      debug(color);
-      color = rgb(1, 0, 0, 0.1);
-      debug(color);
+
       return new CurvedLineShape(CurveType.Bezier, {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
         [{x: curve.controlPoint.x, y: curve.controlPoint.y}], color);
     });
