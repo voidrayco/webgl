@@ -331,6 +331,7 @@ const pickSegmentMethod = {
 const pickDistanceMethod = {
   [CurveType.Bezier]: bezierDistance,
   [CurveType.CircularCW]: circularDistance,
+  [CurveType.CircularCCW]: circularDistance,
   [CurveType.Straight]: straightDistance,
 };
 
