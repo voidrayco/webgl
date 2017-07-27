@@ -39,13 +39,19 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         text: 'TEXT',
       });
       const width = label.getSize().width + 20;
+      const height = label.fontSize;
+      debug('height is %o', height);
       if (labelData.anchor === AnchorPosition.MiddleLeft){
-        point.x = point.x - width * Math.cos(labelData.angle);
-        point.y = point.y - width * Math.sin(labelData.angle);
+        point.x = point.x - width * Math.cos(labelData.angle)
+        - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
+        point.y = point.y - width * Math.sin(labelData.angle)
+        - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
       }
       if (labelData.anchor === AnchorPosition.MiddleRight){
-        point.x = point.x + 20 * Math.cos(labelData.angle);
-        point.y = point.y + 20 * Math.sin(labelData.angle);
+        point.x = point.x + 20 * Math.cos(labelData.angle)
+        - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
+        point.y = point.y + 20 * Math.sin(labelData.angle)
+        - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
       }
 
       label.rasterizationOffset.y = 10.5;
@@ -75,12 +81,15 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
     const labelData = data.endpoints.map((endpoint) => {
         const startAngle = endpoint.startAngle;
         debug('startAngle is %o', startAngle);
-        const angle = startAngle + (endpoint.endAngle - startAngle);
+        let angle = startAngle + (endpoint.endAngle - startAngle) / 2;
         debug('angle is %o', angle);
         let angleIntersection =  angle ;
         // MiddleRight if angle in left hemisphere. else middleLeft
-        const anchor = (angle > 0 && angle < Math.PI / 2)
-          || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+        if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
+        if (angle < 0) angle += 2 * Math.PI;
+        const anchor = (angle >= 0 && angle < Math.PI / 2)
+          || (angle > (3 * Math.PI) / 2) && angle <= (2 * Math.PI) ?
+          AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
         debug('anchor is %o', anchor);
         if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
         const point = calculatePoint(angle);

@@ -25,7 +25,10 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
     const circleRadius = config.radius;
-    const segments = this.preProcessData(data, circleRadius);
+    const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
+    const segmentSpace: number = config.space; // It used to seperate segments
+
+    const segments = this.preProcessData(data, circleRadius, segmentSpace);
     const circleEdges = segments.map((segment) => {
       const {r, g, b} = segment.color;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -42,7 +45,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
         200,
       );
 
-      curve.lineWidth = 20;
+      curve.lineWidth = config.ringWidth;
 
       return curve;
     });
@@ -52,7 +55,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
   }
 
   // Data = d3chart.loadData();
-  preProcessData(data: IData, circleRadius: number) {
+  preProcessData(data: IData, circleRadius: number, segmentSpace: number) {
     const controlPoint = {x: 0, y: 0};
 
     const calculatePoint = (radianAngle: number) => {
@@ -65,8 +68,8 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       endpoint.id);
     const calculateColor = scaleOrdinal(schemeCategory20).domain(ids);
     const segments = data.endpoints.map((endpoint) => {
-      const p1 = calculatePoint(endpoint.startAngle);
-      const p2 = calculatePoint(endpoint.endAngle);
+      const p1 = calculatePoint(endpoint.startAngle + segmentSpace);
+      const p2 = calculatePoint(endpoint.endAngle - segmentSpace);
       const colorVal = rgb(color(calculateColor(endpoint.id)));
       return {p1, p2, controlPoint, color: colorVal};
     });
