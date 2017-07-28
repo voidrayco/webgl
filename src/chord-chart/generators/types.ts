@@ -14,6 +14,7 @@ export interface IData {
 
 export interface IEndpoint {
   id: string;
+  name: string;
   flowAngles: IFlowAngle;
   startAngle: number;
   endAngle: number;

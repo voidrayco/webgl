@@ -2,6 +2,7 @@
   "endpoints": [
       {  
          "id":"TrustZone_12",
+         "name":".16 Network",
          "incomingCount":0,
          "outgoingCount":0,
          "totalCount":0,
@@ -14,6 +15,7 @@
       },
       {  
          "id":"TrustZone_6",
+         "name":"Administrator Proxy",
          "incomingCount":0,
          "outgoingCount":0,
          "totalCount":0,
@@ -26,6 +28,7 @@
       },
       {  
          "id":"TrustZone_Security",
+         "name":"Security",
          "incomingCount":0,
          "outgoingCount":0,
          "totalCount":0,
@@ -38,6 +41,7 @@
       },
       {  
          "id":"TrustZone_2",
+         "name":"Management",
          "incomingCount":0,
          "outgoingCount":0,
          "totalCount":0,
@@ -50,6 +54,7 @@
       },
       {  
          "id":"TrustZone_5",
+         "name":"Administrators",
          "incomingCount":0,
          "outgoingCount":0,
          "totalCount":0,
@@ -62,6 +67,7 @@
       },
       {  
          "id":"TrustZone_3",
+         "name":"HypervisorShield",
          "incomingCount":0,
          "outgoingCount":0,
          "totalCount":0,
@@ -74,6 +80,7 @@
       },
       {  
          "id":"TrustZone_Untrusted",
+         "name":"Untrusted",
          "incomingCount":12,
          "outgoingCount":19,
          "totalCount":31,
@@ -86,6 +93,7 @@
       },
       {  
          "id":"TrustZone_13",
+         "name":".10 Network",
          "incomingCount":0,
          "outgoingCount":4,
          "totalCount":4,
@@ -98,6 +106,7 @@
       },
       {  
          "id":"TrustZone_10",
+         "name":".15 Network",
          "incomingCount":1,
          "outgoingCount":3,
          "totalCount":4,
@@ -110,6 +119,7 @@
       },
       {  
          "id":"TrustZone_8",
+         "name":".11 Network",
          "incomingCount":46,
          "outgoingCount":61,
          "totalCount":107,
@@ -122,6 +132,7 @@
       },
       {  
          "id":"TrustZone_14",
+         "name":"Backend Databases",
          "incomingCount":4,
          "outgoingCount":2,
          "totalCount":6,
@@ -134,6 +145,7 @@
       },
       {  
          "id":"TrustZone_11",
+         "name":".20 Network",
          "incomingCount":0,
          "outgoingCount":1,
          "totalCount":1,
@@ -146,6 +158,7 @@
       },
       {  
          "id":"NetworkObject_3",
+         "name":"IP Space N.O.",
          "incomingCount":69,
          "outgoingCount":42,
          "totalCount":111,
