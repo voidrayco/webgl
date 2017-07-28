@@ -49,12 +49,12 @@ export class Main extends React.Component<any, IMainState> {
     if (type === '+'){
       const diffQty = testChordData.flows.length - currentVisibleFlows.length;
       if (diffQty === 0) return;
-      const randomAddItemGenerator = RANDOM.array(diffQty < 10 ? diffQty : CHORD_CHANGE_INTERVAL, RANDOM.item(difference(testChordData.flows, currentVisibleFlows)));
+      const randomAddItemGenerator = RANDOM.array(diffQty < CHORD_CHANGE_INTERVAL ? diffQty : CHORD_CHANGE_INTERVAL, RANDOM.item(difference(testChordData.flows, currentVisibleFlows)));
       const newFlows: IFlow[] = randomAddItemGenerator();
       const visibleFlows = union(currentVisibleFlows, newFlows);
       this.setState({visibleFlows});
     }else {
-      const randomRemoveItemGenerator = RANDOM.array(currentVisibleFlows < 10 ? currentVisibleFlows.length : CHORD_CHANGE_INTERVAL, RANDOM.item(currentVisibleFlows));
+      const randomRemoveItemGenerator = RANDOM.array(currentVisibleFlows < CHORD_CHANGE_INTERVAL ? currentVisibleFlows.length : CHORD_CHANGE_INTERVAL, RANDOM.item(currentVisibleFlows));
       const removedFlows: IFlow[] = randomRemoveItemGenerator();
       const visibleFlows = difference(currentVisibleFlows, removedFlows);
       this.setState({visibleFlows});
