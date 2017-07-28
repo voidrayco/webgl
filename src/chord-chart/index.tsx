@@ -66,8 +66,16 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
 
     if (selections.length > 0) {
-      const selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-      debug(selection);
+      let selection;
+      // If has outer ring thing grab it instead 
+      const filteredSelections = selections.filter(s => s.type === 1)
+      if (filteredSelections.length > 0) {
+        selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      } else {
+        selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      }
+
+      // Types: 0 = chord, 1 = outer ring
       let type;
       if (selection.type === 0) {
         type = SelectionType.MOUSEOVER_CHORD;
