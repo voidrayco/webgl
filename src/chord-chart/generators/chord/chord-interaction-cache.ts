@@ -5,7 +5,7 @@ import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 
-const debug = require('debug')('chord-interaction-cache');
+// Debug const debug = require('debug')('chord-interaction-cache');
 
 /**
  * Responsible for generating the static chords in the system
@@ -20,10 +20,9 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
   }
 
   buildCache(selection: Selection) {
-    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSE_OVER).map(curve => {
+    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_CHORD).map(curve => {
       // Duplicate the curves with active color
-      const color = rgb(curve.r, curve.g, curve.b);
-      debug(color);
+      const color = rgb(curve.r, curve.g, curve.b).brighter();
       const curvedLine = new CurvedLineShape(
         CurveType.Bezier,
         {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
@@ -32,10 +31,7 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
       );
 
       curvedLine.depth = 10;
-
       return curvedLine;
     });
-
-    debug(this.buffer);
   }
 }

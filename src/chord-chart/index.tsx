@@ -7,7 +7,7 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 
-// Debug const debug = require('debug')('chord-index');
+const debug = require('debug')('chord-index');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -62,11 +62,19 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   }
 
   handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
-    this.selection.clearSelection(SelectionType.MOUSE_OVER);
+    this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
+    this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
 
     if (selections.length > 0) {
       const selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-      this.selection.select(SelectionType.MOUSE_OVER, selection);
+      debug(selection);
+      let type;
+      if (selection.type === 0) {
+        type = SelectionType.MOUSEOVER_CHORD;
+      } else {
+        type = SelectionType.MOUSEOVER_OUTER_RING;
+      }
+      this.selection.select(type, selection);
       this.forceUpdate();
     }
   }

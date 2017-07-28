@@ -18,7 +18,7 @@ export class OuterRingGenerator {
    * Flag which caches need busting
    */
   bustCaches(data: IChordData, config: IChordChartConfig, selection: Selection) {
-    if (data !== this.lastData || selection.didSelectionCategoryChange(SelectionType.MOUSE_OVER)) {
+    if (data !== this.lastData || selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_OUTER_RING)) {
       this.outerRingBase.bustCache = true;
       this.outerRingInteraction.bustCache = true;
     }

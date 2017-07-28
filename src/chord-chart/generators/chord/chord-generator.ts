@@ -16,7 +16,7 @@ export class ChordGenerator {
    */
   bustCaches(selection: Selection) {
     this.chordBase.bustCache = true;
-    if (selection.didSelectionCategoryChange(SelectionType.MOUSE_OVER)) {
+    if (selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD)) {
       this.chordInteractions.bustCache = true;
     }
   }

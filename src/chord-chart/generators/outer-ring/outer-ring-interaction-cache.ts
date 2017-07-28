@@ -4,7 +4,7 @@ import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
-// Debug const debug = require('debug')('outer-ring-interaction-cache');
+// DEBUG const debug = require('debug')('outer-ring-interaction-cache');
 /**
  * Responsible for generating the static OuterRings in the system
  *
@@ -18,12 +18,12 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
   }
 
   buildCache(selection: Selection) {
-    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSE_OVER).map(selected => {
+    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
       // Duplicate the curves with active color
-      const color = rgb(selected.r, selected.g, selected.b);
+      const color = rgb(selected.r, selected.g, selected.b).brighter();
       const curvedLine = new CurvedLineShape(
         CurveType.CircularCCW,
-        {x: selected.p1.x, y: selected.p1.y}, 
+        {x: selected.p1.x, y: selected.p1.y},
         {x: selected.p2.x, y: selected.p2.y},
         [{x: selected.controlPoints[0].x, y: selected.controlPoints[0].y}],
         color,
@@ -32,7 +32,6 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
 
       curvedLine.lineWidth = 20;
       curvedLine.depth = 21;
-
       return curvedLine;
     });
   }
