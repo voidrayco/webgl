@@ -41,7 +41,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
     const inactiveOpacity: number = 0.3;
-    const activeOpacity: number = 1;
+    const activeOpacity: number = 1.0;
     const circleRadius = config.radius;
     const circleWidth = config.ringWidth;
     const segmentSpace = config.space;
@@ -90,7 +90,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
             const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle);
             const p2FlowAngle = getFlowAngle(destEndpoint,
                destEndpoint.outgoingCount + destEndpoint._inflowIdx, segmentSpace);
-            const p2 = calculatePoint(circleRadius + circleWidth / 2, p2FlowAngle);
+            const p2 = calculatePoint(circleRadius - circleWidth / 2, p2FlowAngle);
             const color = flow.baseColor;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
