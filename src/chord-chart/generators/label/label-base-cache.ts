@@ -23,8 +23,10 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
     const activeOpacity: number = 1;
     const circleRadius = config.radius;
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
+    const hemiSphere = config.hemiSphere;
+    const hemiDistance = config.hemiDistance;
 
-    const labelsData = this.preProcessData(data, circleRadius);
+    const labelsData = this.preProcessData(data, circleRadius, hemiSphere, hemiDistance);
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -69,12 +71,27 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
   }
 
   // Data = d3chart.loadData();
-  preProcessData(data: IData, circleRadius: number) {
+  preProcessData(data: IData, circleRadius: number, hemiSphere: boolean, hemiDistance: number) {
     // Const controlPoint = {x: 0, y: 0};
 
+    function adjustAngle(angle: number){
+      if (angle < 0)angle += 2 * Math.PI;
+      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
+      return angle;
+    }
+
     const calculatePoint = (radianAngle: number) => {
-      const x = circleRadius * Math.cos(radianAngle);
+      radianAngle = adjustAngle(radianAngle);
+      let x = circleRadius * Math.cos(radianAngle);
       const y = circleRadius * Math.sin(radianAngle);
+      if (hemiSphere){
+        if ((radianAngle >= 0 && radianAngle < Math.PI / 2) ||
+           (radianAngle >= Math.PI * 3 / 2 && radianAngle < Math.PI * 2)){
+            x = circleRadius * Math.cos(radianAngle) + hemiDistance;
+        }else{
+            x = circleRadius * Math.cos(radianAngle) - hemiDistance;
+        }
+      }
       return {x, y};
     };
 

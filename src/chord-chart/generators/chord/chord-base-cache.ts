@@ -15,12 +15,6 @@ function getEndpoint(data: IData, targetName: string) {
   return data.endpoints.find(isTarget);
 }
 
-function calculatePoint(radius: number, flowAngle: number) {
-  const x = radius * Math.cos(flowAngle);
-  const y = radius * Math.sin(flowAngle);
-  return {x, y};
-}
-
 function getFlowAngle(endpoint: IEndpoint, flowIndex: number, segmentSpace: number) {
   const angleStep: number = (endpoint.endAngle - endpoint.startAngle
     - 2 * segmentSpace) / endpoint.totalCount;
@@ -45,8 +39,11 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     const circleRadius = config.radius;
     const circleWidth = config.ringWidth;
     const segmentSpace = config.space;
+    const hemiSphere = config.hemiSphere;
+    const hemiDistance = config.hemiDistance;
 
-    const curves = this.preProcessData(data, circleRadius, circleWidth, segmentSpace);
+    const curves = this.preProcessData(data, circleRadius, circleWidth, segmentSpace,
+       hemiSphere, hemiDistance);
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -69,7 +66,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
   }
 
   // Data comes from catbird-ui >> d3Chart.loadData()
-  preProcessData(data: IData, circleRadius: number, circleWidth: number, segmentSpace: number) {
+  preProcessData(data: IData, circleRadius: number, circleWidth: number, segmentSpace: number,
+     hemiSphere: boolean, hemiDistance: number) {
     const controlPoint = {x: 0, y: 0};
     const curveData: ICurveData[] = [];
 
@@ -79,6 +77,26 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
       end._outflowIdx = 0;
     });
 
+    function adjustAngle(angle: number){
+      if (angle < 0)angle += 2 * Math.PI;
+      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
+      return angle;
+    }
+
+    function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean) {
+      flowAngle = adjustAngle(flowAngle);
+      let x = radius * Math.cos(flowAngle);
+      const y = radius * Math.sin(flowAngle);
+      if (hemiSphere){
+        if ((flowAngle >= 0 && flowAngle < Math.PI / 2) ||
+           (flowAngle >= Math.PI * 3 / 2 && flowAngle < Math.PI * 2)){
+            x = radius * Math.cos(flowAngle) + hemiDistance;
+        }else{
+            x = radius * Math.cos(flowAngle) - hemiDistance;
+        }
+      }
+      return {x, y};
+    }
     // Loop thrugh each endpoint and analyze the flows
     data.endpoints.forEach((endpoint) => {
       data.flows.forEach((flow) => {
@@ -87,10 +105,10 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
           debug('source is %o,destination is %o', flow.srcTarget, destEndpoint);
           if (destEndpoint){
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
-            const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle);
+            const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle, hemiSphere);
             const p2FlowAngle = getFlowAngle(destEndpoint,
-               destEndpoint.outgoingCount + destEndpoint._inflowIdx, segmentSpace);
-            const p2 = calculatePoint(circleRadius - circleWidth / 2, p2FlowAngle);
+               destEndpoint.totalCount - 1 - destEndpoint._inflowIdx, segmentSpace);
+            const p2 = calculatePoint(circleRadius - circleWidth / 2, p2FlowAngle, hemiSphere);
             const color = flow.baseColor;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;

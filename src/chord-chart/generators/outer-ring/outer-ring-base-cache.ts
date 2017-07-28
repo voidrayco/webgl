@@ -26,8 +26,10 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     const circleRadius = config.radius;
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
     const segmentSpace: number = config.space; // It used to seperate segments
+    const hemiSphere: boolean = config.hemiSphere;
+    const hemiDistance: number = config.hemiDistance;
 
-    const segments = this.preProcessData(data, circleRadius, segmentSpace);
+    const segments = this.preProcessData(data, circleRadius, segmentSpace, hemiSphere, hemiDistance);
     const circleEdges = segments.map((segment) => {
       const {r, g, b} = defaultColor;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -54,18 +56,46 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
   }
 
   // Data = d3chart.loadData();
-  preProcessData(data: IData, circleRadius: number, segmentSpace: number) {
-    const controlPoint = {x: 0, y: 0};
+  preProcessData(data: IData, circleRadius: number, segmentSpace: number, hemiSphere: boolean,
+     hemiDistance: number) {
+    let controlPoint = {x: 0, y: 0};
+
+    // Keep the angle in the range from 0 to 2*Pi
+    function adjustAngle(angle: number){
+      if (angle < 0)angle += 2 * Math.PI;
+      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
+      return angle;
+    }
 
     const calculatePoint = (radianAngle: number) => {
-      const x = circleRadius * Math.cos(radianAngle);
+      radianAngle = adjustAngle(radianAngle);
+      let x = circleRadius * Math.cos(radianAngle);
       const y = circleRadius * Math.sin(radianAngle);
+      // Change the position in hemiSphere
+      if (hemiSphere){
+        if ((radianAngle >= 0 && radianAngle < Math.PI / 2) ||
+           (radianAngle >= Math.PI * 3 / 2 && radianAngle < Math.PI * 2)){
+            x = circleRadius * Math.cos(radianAngle) + hemiDistance;
+        }else{
+            x = circleRadius * Math.cos(radianAngle) - hemiDistance;
+        }
+      }
       return {x, y};
     };
 
     const segments = data.endpoints.map((endpoint) => {
       const p1 = calculatePoint(endpoint.startAngle + segmentSpace);
       const p2 = calculatePoint(endpoint.endAngle - segmentSpace);
+      // Change controlPoint in hemiSphere
+      if (hemiSphere){
+        const angle = adjustAngle(endpoint.startAngle + segmentSpace);
+        if ((angle >= 0 && angle < Math.PI / 2) ||
+           (angle >= (3 * Math.PI ) / 2 && angle < Math.PI * 2)){
+             controlPoint = {x: hemiDistance, y: 0};
+        }else{
+             controlPoint = {x: -hemiDistance, y: 0};
+        }
+      }
       return {p1, p2, controlPoint};
     });
 
