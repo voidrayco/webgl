@@ -1,14 +1,24 @@
+import { addIndex, difference, map, union } from 'ramda';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
+import { IData as IChordData, IFlow } from './chord-chart/generators/types';
+
+const testChordData = require('./chord-chart/test-data/chord-data.json');
+// Assign unique id to all flows for uniqueness
+const mapIndexed = addIndex(map);
+mapIndexed((val, idx) => val.id = idx, testChordData.flows);
+
+const RANDOM = require('random');
 
 /**
  * The state of the application
  */
 interface IMainState {
-  currentTab: number
+  currentTab: number,
+  visibleFlows: IFlow[];
 }
 
 /**
@@ -18,6 +28,7 @@ export class Main extends React.Component<any, IMainState> {
   // Set the default state
   state = {
     currentTab: 0,
+    visibleFlows: testChordData.flows,
   };
 
   /**
@@ -28,12 +39,35 @@ export class Main extends React.Component<any, IMainState> {
   handleClickTab = (tab: number) => () => this.setState({currentTab: tab});
 
   /**
+   * Generates a handler to set the currently viewable chords
+   *
+   * @param {number} tab
+   */
+  handleChordVisibilityClick = (type: string) => () => {
+    const CHORD_CHANGE_INTERVAL = 10;
+    const currentVisibleFlows = this.state.visibleFlows;
+    if (type === '+'){
+      const diffQty = testChordData.flows.length - currentVisibleFlows.length;
+      if (diffQty === 0) return;
+      const randomAddItemGenerator = RANDOM.array(diffQty < 10 ? diffQty : CHORD_CHANGE_INTERVAL, RANDOM.item(difference(testChordData.flows, currentVisibleFlows)));
+      const newFlows: IFlow[] = randomAddItemGenerator();
+      const visibleFlows = union(currentVisibleFlows, newFlows);
+      this.setState({visibleFlows});
+    }else {
+      const randomRemoveItemGenerator = RANDOM.array(currentVisibleFlows < 10 ? currentVisibleFlows.length : CHORD_CHANGE_INTERVAL, RANDOM.item(currentVisibleFlows));
+      const removedFlows: IFlow[] = randomRemoveItemGenerator();
+      const visibleFlows = difference(currentVisibleFlows, removedFlows);
+      this.setState({visibleFlows});
+    }
+  }
+
+  /**
    * @override
    * The React defined render method
    */
   render() {
     let quadData: IQuadShapeData[] = [];
-    let chordData = [];
+    const chordData: IChordData = Object.assign([], testChordData);
     let component;
 
     if (this.state.currentTab === 0) {
@@ -51,10 +85,10 @@ export class Main extends React.Component<any, IMainState> {
     }
 
     if (this.state.currentTab === 1) {
-      chordData = [];
-
+      // ChordData = [];
+      chordData.flows = this.state.visibleFlows;
       component = (
-        <ChordChart />
+        <ChordChart testChordData={chordData} />
       );
     }
 
@@ -62,6 +96,8 @@ export class Main extends React.Component<any, IMainState> {
       <div>
         <button onClick={this.handleClickTab(0)}>View Quads</button>
         <button onClick={this.handleClickTab(1)}>View Chord Demo</button>
+        <button onClick={this.handleChordVisibilityClick('+')}>+</button>
+        <button onClick={this.handleChordVisibilityClick('-')}>-</button>
         {component}
       </div>
     );
