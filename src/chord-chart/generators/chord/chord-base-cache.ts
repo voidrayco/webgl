@@ -67,7 +67,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
 
   // Data comes from catbird-ui >> d3Chart.loadData()
   preProcessData(data: IData, circleRadius: number, circleWidth: number, segmentSpace: number,
-     hemiSphere: boolean, hemiDistance: number) {
+    hemiSphere: boolean, hemiDistance: number) {
     const controlPoint = {x: 0, y: 0};
     const curveData: ICurveData[] = [];
 

@@ -40,20 +40,31 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         fontSize: 14,
         text: 'TEXT',
       });
-      const width = label.getSize().width + 20;
+      const width = label.getSize().width + config.ringWidth;
       const height = label.fontSize;
       debug('height is %o', height);
       if (labelData.anchor === AnchorPosition.MiddleLeft){
-        point.x = point.x - width * Math.cos(labelData.angle)
+        if (!hemiSphere){
+          point.x = point.x - width * Math.cos(labelData.angle)
         - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-        point.y = point.y - width * Math.sin(labelData.angle)
+          point.y = point.y - width * Math.sin(labelData.angle)
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
+        }else{
+          labelData.angle -= Math.PI;
+          point.x = point.x + config.ringWidth * Math.cos(labelData.angle) - width / 2;
+          point.y = point.y + config.ringWidth * Math.sin(labelData.angle) - height / 2;
+        }
       }
       if (labelData.anchor === AnchorPosition.MiddleRight){
-        point.x = point.x + 20 * Math.cos(labelData.angle)
+        if (!hemiSphere){
+          point.x = point.x + 0.5 * width * Math.cos(labelData.angle)
         - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-        point.y = point.y + 20 * Math.sin(labelData.angle)
+          point.y = point.y + 0.5 * width * Math.sin(labelData.angle)
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
+        }else{
+          point.x = point.x + config.ringWidth * Math.cos(labelData.angle);
+          point.y = point.y + config.ringWidth * Math.sin(labelData.angle) - height / 2;
+        }
       }
 
       label.rasterizationOffset.y = 10.5;
@@ -62,6 +73,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       label.rasterizationPadding.width = 4;
       label.setLocation(point);
       label.setRotation(labelData.angle);
+      if (hemiSphere)label.setRotation(0);
       label.setAnchor(labelData.anchor);
       debug('label width after is %o', label.width);
       return label;

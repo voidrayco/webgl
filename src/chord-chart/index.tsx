@@ -10,6 +10,7 @@ import { Selection } from './selections/selection';
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
+  hemiSphere: boolean;
 }
 
 interface IChordChartState {
@@ -65,7 +66,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   render() {
     const config: IChordChartConfig = {
       hemiDistance: 50,
-      hemiSphere: true,
+      hemiSphere: this.props.hemiSphere,
       radius: 200,
       ringWidth: 20,
       space: 0.005,

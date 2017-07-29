@@ -20,6 +20,8 @@ export class Main extends React.Component<any, IMainState> {
     currentTab: 0,
   };
 
+  hemiSphere: boolean = false;
+
   /**
    * Generates a handler to set the current tab index
    *
@@ -31,7 +33,7 @@ export class Main extends React.Component<any, IMainState> {
    * @override
    * The React defined render method
    */
-  render() {
+  render(){
     let quadData: IQuadShapeData[] = [];
     let chordData = [];
     let component;
@@ -54,7 +56,14 @@ export class Main extends React.Component<any, IMainState> {
       chordData = [];
 
       component = (
-        <ChordChart />
+        <ChordChart hemiSphere={this.hemiSphere}/>
+      );
+    }
+    if (this.state.currentTab === 2){
+      this.hemiSphere = !this.hemiSphere;
+
+      component = (
+        <ChordChart hemiSphere={this.hemiSphere}/>
       );
     }
 
@@ -62,6 +71,7 @@ export class Main extends React.Component<any, IMainState> {
       <div>
         <button onClick={this.handleClickTab(0)}>View Quads</button>
         <button onClick={this.handleClickTab(1)}>View Chord Demo</button>
+        <button onClick={this.handleClickTab(2)}>HemiSphere</button>
         {component}
       </div>
     );
