@@ -21,7 +21,7 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
     this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
       // Duplicate the curves with active color
       debug(selected);
-      const color = rgb(selected.r, selected.g, selected.b).brighter();
+      const color = rgb(1, 1, 1);
       const curvedLine = new CurvedLineShape(
         CurveType.CircularCCW,
         {x: selected.p1.x, y: selected.p1.y},
