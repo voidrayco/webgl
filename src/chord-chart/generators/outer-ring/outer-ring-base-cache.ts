@@ -1,4 +1,5 @@
-import { rgb, RGBColor } from 'd3-color';
+import { color, rgb } from 'd3-color';
+import { scaleOrdinal, schemeCategory20 } from 'd3-scale';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
@@ -22,12 +23,11 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection){
     const circleRadius = config.radius;
-    const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
     const segmentSpace: number = config.space; // It used to seperate segments
 
     const segments = this.preProcessData(data, circleRadius, segmentSpace);
     const circleEdges = segments.map((segment) => {
-      const {r, g, b} = defaultColor;
+      const {r, g, b} = segment.color;
       const d3Color = rgb(r, g, b);
       const color = selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0 ? d3Color.darker() : d3Color;
 
@@ -60,10 +60,14 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       return {x, y};
     };
 
+    const ids = data.endpoints.map((endpoint) =>
+      endpoint.id);
+    const calculateColor = scaleOrdinal(schemeCategory20).domain(ids);
     const segments = data.endpoints.map((endpoint) => {
       const p1 = calculatePoint(endpoint.startAngle + segmentSpace);
       const p2 = calculatePoint(endpoint.endAngle - segmentSpace);
-      return {p1, p2, controlPoint};
+      const colorVal = rgb(color(calculateColor(endpoint.id)));
+      return {p1, p2, controlPoint, color: colorVal};
     });
 
     return segments;
