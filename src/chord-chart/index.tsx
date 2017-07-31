@@ -7,7 +7,7 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 
-const debug = require('debug')('chord-index');
+// DEBUG const debug = require('debug')('chord-index');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -67,8 +67,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
     if (selections.length > 0) {
       let selection;
-      // If has outer ring thing grab it instead 
-      const filteredSelections = selections.filter(s => s.type === 1)
+      // If has outer ring thing grab it instead
+      const filteredSelections = selections.filter(s => s.type === 1);
       if (filteredSelections.length > 0) {
         selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
       } else {
