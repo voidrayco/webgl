@@ -5,8 +5,9 @@ import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
-import { Selection } from './selections/selection';
+import { Selection, SelectionType } from './selections/selection';
 
+// DEBUG const debug = require('debug')('chord-index');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -32,6 +33,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   outerRingGenerator: OuterRingGenerator;
   /** Selection manager */
   selection: Selection = new Selection();
+  // Make sure we don't recreate the bound object
+  viewport: Bounds<never> = new Bounds<never>(-350, 350, -350, 350);
 
   // Sets the default state
   state: IChordChartState = {
@@ -58,6 +61,32 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     });
   }
 
+  handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
+    this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
+    this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
+
+    if (selections.length > 0) {
+      let selection;
+      // If has outer ring thing grab it instead
+      const filteredSelections = selections.filter(s => s.type === 1);
+      if (filteredSelections.length > 0) {
+        selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      } else {
+        selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      }
+
+      // Types: 0 = chord, 1 = outer ring
+      let type;
+      if (selection.type === 0) {
+        type = SelectionType.MOUSEOVER_CHORD;
+      } else {
+        type = SelectionType.MOUSEOVER_OUTER_RING;
+      }
+      this.selection.select(type, selection);
+      this.forceUpdate();
+    }
+  }
+
   /**
    * @override
    * The react render method
@@ -75,12 +104,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
     return (
       <ChordChartGL
-        height={500}
+        height={this.viewport.height}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
-        viewport={new Bounds<never>(0, 500, 0, 500)}
-        width={500}
+        interactiveCurvedLines={this.chordGenerator.getInteractionBuffer().concat(this.outerRingGenerator.getInteractionBuffer())}
+        onMouseHover={(selections, mouse, world, projection) => this.handleMouseHover(selections, mouse, world, projection)}
+        viewport={this.viewport}
+        width={this.viewport.width}
         zoom={this.state.zoom}
       />
     );

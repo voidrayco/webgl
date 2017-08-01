@@ -10,3 +10,5 @@ build
 .idea
 # VS Code (IDE)
 .vscode
+npm*log-*
+*.log
