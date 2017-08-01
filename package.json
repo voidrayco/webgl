@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "engines": {
-    "node": "8.1.2"
+    "node": "7.10.1"
   },
   "scripts": {
     "build": "tslint src && webpack",
