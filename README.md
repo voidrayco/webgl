@@ -3,7 +3,7 @@ This is a WebGL foundation library that VoidRay uses in our visualizations.
 ## Running
 
 This project is using the node version from package.json. At the time of writing
-this, that version is `1.7.10`
+this, that version is `7.10.1`
 
 Install dependencies
 
