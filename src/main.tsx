@@ -206,12 +206,6 @@ export class Main extends React.Component<any, IMainState> {
     srcEndpoint.totalCount += delta;
     dstEndpoint.incomingCount += delta;
     dstEndpoint.totalCount += delta;
-
-    // This.recalculateAngles();
-    // FlowAngles: {
-    //   AngleStep: -0.04150943396226415,   // TODO
-    //   StartAngle: 4.648628101218721,   // TODO
-    // },
     return endpoints;
   }
 

@@ -8,11 +8,7 @@
          "placement": "topology",
          "totalCount":0,
          "startAngle":1.5707963267948966,
-         "endAngle":1.7398275190890962,
-         "flowAngles":{  
-            "startAngle":1.6553119229419964,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":1.7398275190890962
       },
       {  
          "id":"TrustZone_6",
@@ -22,11 +18,7 @@
          "placement": "topology",
          "totalCount":0,
          "startAngle":1.7398275190890962,
-         "endAngle":1.9088587113832958,
-         "flowAngles":{  
-            "startAngle":1.824343115236196,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":1.9088587113832958
       },
       {  
          "id":"TrustZone_Security",
@@ -36,11 +28,7 @@
          "placement": "topology",
          "totalCount":0,
          "startAngle":1.9088587113832958,
-         "endAngle":2.0778899036774954,
-         "flowAngles":{  
-            "startAngle":1.9933743075303956,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":2.0778899036774954
       },
       {  
          "id":"TrustZone_2",
@@ -50,11 +38,7 @@
          "placement": "topology",
          "totalCount":0,
          "startAngle":2.0778899036774954,
-         "endAngle":2.246921095971695,
-         "flowAngles":{  
-            "startAngle":2.162405499824595,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":2.246921095971695
       },
       {  
          "id":"TrustZone_5",
@@ -64,11 +48,7 @@
          "placement": "topology",
          "totalCount":0,
          "startAngle":2.246921095971695,
-         "endAngle":2.4159522882658946,
-         "flowAngles":{  
-            "startAngle":2.331436692118795,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":2.4159522882658946
       },
       {  
          "id":"TrustZone_3",
@@ -78,11 +58,7 @@
          "placement": "topology",
          "totalCount":0,
          "startAngle":2.4159522882658946,
-         "endAngle":2.584983480560094,
-         "flowAngles":{  
-            "startAngle":2.5004678844129944,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":2.584983480560094
       },
       {  
          "id":"TrustZone_Untrusted",
@@ -92,11 +68,7 @@
          "placement": "topology",
          "totalCount":31,
          "startAngle":2.584983480560094,
-         "endAngle":2.754014672854294,
-         "flowAngles":{  
-            "startAngle":2.754014672854294,
-            "angleStep":-0.005452619106264503
-         }
+         "endAngle":2.754014672854294
       },
       {  
          "id":"TrustZone_13",
@@ -106,11 +78,7 @@
          "placement": "topology",
          "totalCount":4,
          "startAngle":2.754014672854294,
-         "endAngle":2.9230458651484934,
-         "flowAngles":{  
-            "startAngle":2.921549136925922,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":2.9230458651484934
       },
       {  
          "id":"TrustZone_10",
@@ -120,11 +88,7 @@
          "placement": "topology",
          "totalCount":4,
          "startAngle":2.9230458651484934,
-         "endAngle":3.1980978523054926,
-         "flowAngles":{  
-            "startAngle":3.1435907266515213,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":3.1980978523054926
       },
       {  
          "id":"TrustZone_8",
@@ -134,11 +98,7 @@
          "placement": "topology",
          "totalCount":107,
          "startAngle":3.1980978523054926,
-         "endAngle":4.26830580093349,
-         "flowAngles":{  
-            "startAngle":4.26830580093349,
-            "angleStep":-0.010001943445121472
-         }
+         "endAngle":4.26830580093349
       },
       {  
          "id":"TrustZone_14",
@@ -148,11 +108,7 @@
          "placement": "topology",
          "totalCount":6,
          "startAngle":4.26830580093349,
-         "endAngle":4.543357788090489,
-         "flowAngles":{  
-            "startAngle":4.530360096398782,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":4.543357788090489
       },
       {  
          "id":"TrustZone_11",
@@ -162,11 +118,7 @@
          "placement": "topology",
          "totalCount":1,
          "startAngle":4.543357788090489,
-         "endAngle":4.712388980384689,
-         "flowAngles":{  
-            "startAngle":4.648628101218721,
-            "angleStep":-0.04150943396226415
-         }
+         "endAngle":4.712388980384689
       },
       {  
          "id":"NetworkObject_3",
@@ -176,11 +128,7 @@
          "placement": "remote",
          "totalCount":111,
          "startAngle":-1.5707963267948966,
-         "endAngle":1.5707963267948966,
-         "flowAngles":{  
-            "startAngle":-1.0471975511965976,
-            "angleStep":0.018868424345884642
-         }
+         "endAngle":1.5707963267948966
       }
    ],
    "flows": [  
