@@ -1,8 +1,10 @@
-import { RGBColor } from 'd3-color';
+import { HSLColor, RGBColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export interface IChordChartConfig {
-  radius: number
+  radius: number;
+  ringWidth: number;
+  space: number;
 }
 
 export interface IData {
@@ -12,11 +14,13 @@ export interface IData {
 
 export interface IEndpoint {
   id: string;
+  name: string;
   flowAngles: IFlowAngle;
   startAngle: number;
   endAngle: number;
   outgoingCount: number;
   incomingCount: number;
+  totalCount: number;
   _outflowIdx?: number;  // Default to 0
   _inflowIdx?: number;
 }
@@ -30,10 +34,10 @@ export interface IFlow {
   srcExpandedTarget: string;
   srcTarget: string;
   destExpandedTarget: string;
-  destTarget: string;
+  dstTarget: string;
   srcIndex: number;
   dstIndex: number;
-  baseColor: RGBColor;  // Is this what the data stores?
+  baseColor: HSLColor;  // Is this what the data stores?
 }
 
 export interface ICurveData {

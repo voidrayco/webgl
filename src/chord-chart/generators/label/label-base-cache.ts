@@ -5,7 +5,7 @@ import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData } from '../types';
-
+const debug = require('debug')('label');
 /**
  * Responsible for generating the static outer rings in the system
  *
@@ -36,8 +36,23 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       const label = new Label<any>({
         color: color,
         fontSize: 14,
-        text: 'TEXT',
+        text: labelData.name,
       });
+      const width = label.getSize().width + 20;
+      const height = label.fontSize;
+      debug('height is %o', height);
+      if (labelData.anchor === AnchorPosition.MiddleLeft){
+        point.x = point.x - width * Math.cos(labelData.angle)
+        - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
+        point.y = point.y - width * Math.sin(labelData.angle)
+        - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
+      }
+      if (labelData.anchor === AnchorPosition.MiddleRight){
+        point.x = point.x + 20 * Math.cos(labelData.angle)
+        - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
+        point.y = point.y + 20 * Math.sin(labelData.angle)
+        - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
+      }
 
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
@@ -46,7 +61,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       label.setLocation(point);
       label.setRotation(labelData.angle);
       label.setAnchor(labelData.anchor);
-
+      debug('label width after is %o', label.width);
       return label;
     });
 
@@ -65,13 +80,20 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
 
     const labelData = data.endpoints.map((endpoint) => {
         const startAngle = endpoint.startAngle;
-        const angle = startAngle + (endpoint.endAngle - startAngle);
-        const angleIntersection =  angle - (Math.PI / 2);
+        debug('startAngle is %o', startAngle);
+        let angle = startAngle + (endpoint.endAngle - startAngle) / 2;
+        debug('angle is %o', angle);
+        let angleIntersection =  angle ;
         // MiddleRight if angle in left hemisphere. else middleLeft
-        const anchor = (angle > 0 && angle < Math.PI / 2)
-          || (angle > (3 * Math.PI) / 2) && angle < (2 * Math.PI) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+        if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
+        if (angle < 0) angle += 2 * Math.PI;
+        const anchor = (angle >= 0 && angle < Math.PI / 2)
+          || (angle > (3 * Math.PI) / 2) && angle <= (2 * Math.PI) ?
+          AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+        debug('anchor is %o', anchor);
+        if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
         const point = calculatePoint(angle);
-        return {point, angle: angleIntersection, anchor};
+        return {point, angle: angleIntersection, anchor, name: endpoint.name};
     });
 
     return labelData;

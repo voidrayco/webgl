@@ -102,6 +102,7 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
 
     // Make a container to hold our triangle strip info
     const strip: IPoint[] = [];
+    const normal: IPoint[] = [];
     // Start with calculating the line strip so we can use the line segments
     // To produce the quads we need to render
     const lineStrip = this.getLineStrip();
@@ -116,32 +117,48 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
       return [];
     }
 
-    // Go through the linestrip to analyze each segment and covert it to a quad
-    lineStrip.reduce((previous: IPoint, current: IPoint): IPoint => {
-      // Update our line object with our new segment
-      line.setPoints(previous, current);
-      // Use the perpendicular calculation to produce our quad
-      // Make the points where they will be in Clockwise fashion in our buffer
+    // Calculate bisecting normal or each node
+    for (let i = 0; i < lineStrip.length - 1; i++){
+      line.setPoints(lineStrip[i], lineStrip[i + 1]);
+      if (normal.length === 0){
+        normal.push(line.perpendicular);
+      }else{
+        // Sum of two normals of a point
+        const temp: IPoint = {
+          x: normal[i].x + line.perpendicular.x,
+          y: normal[i].y + line.perpendicular.y,
+        };
+        // Normalize the sum of two normals
+        const sqrt = Math.sqrt(temp.x * temp.x + temp.y * temp.y);
+        temp.x = temp.x / sqrt;
+        temp.y = temp.y / sqrt;
+        normal[i] = temp;
+      }
+      normal.push(line.perpendicular);
+    }
+
+    // Use the new normals to generate quads
+    for (let i = 0; i < lineStrip.length - 1; i++){
+      const previous: IPoint = lineStrip[i];
+      const current: IPoint = lineStrip[i + 1];
       // TR
       strip.push(
         Point.add(
-          Point.scale(line.perpendicular, -lineWidthHalf, scaledPoint),
+          Point.scale(normal[i + 1], -lineWidthHalf, scaledPoint),
           current,
         ),
       );
-
       // BR
       strip.push(
         Point.add(
-          Point.scale(line.perpendicular, lineWidthHalf, scaledPoint),
+          Point.scale(normal[i + 1], lineWidthHalf, scaledPoint),
           current,
         ),
       );
-
       // TL
       strip.push(
         Point.add(
-          Point.scale(line.perpendicular, -lineWidthHalf, scaledPoint),
+          Point.scale(normal[i], -lineWidthHalf, scaledPoint),
           previous,
         ),
       );
@@ -149,13 +166,11 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
       // BL
       strip.push(
         Point.add(
-          Point.scale(line.perpendicular, lineWidthHalf, scaledPoint),
+          Point.scale(normal[i], lineWidthHalf, scaledPoint),
           previous,
         ),
       );
-
-      return current;
-    });
+    }
 
     return strip;
   }

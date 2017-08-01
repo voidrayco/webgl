@@ -7,7 +7,6 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection } from './selections/selection';
 
-const debug = require('debug')('bezier');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -66,6 +65,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   render() {
     const config: IChordChartConfig = {
       radius: 200,
+      ringWidth: 20,
+      space: 0.005,
     };
 
     this.chordGenerator.generate(testChordData, config, this.selection);
