@@ -98,7 +98,7 @@ export interface IWebGLSurfaceProperties {
   /** The forced size of the render surface */
   height?: number
   /** This will be the view the camera focuses on when the camera is initialized */
-  initialViewport?: Bounds<never>
+  viewport?: Bounds<never>
   /** All of the labels to be rendered by the system */
   labels?: Label<never>[]
   /** Provides feedback when the surface is double clicked */
@@ -110,13 +110,11 @@ export interface IWebGLSurfaceProperties {
    * This includes moments such as initializing the camera to focus on a
    * provided viewport.
    */
-  onZoomRequest?(zoom: number): void
-  /** Prevents the Camera from re-initializing when a new items list is input */
-  preventCameraInit?: boolean
+  onZoomRequest(zoom: number): void
   /** The forced size of the render surface */
   width?: number
   /** The zoom level that the camera should apply */
-  zoom?: number
+  zoom: number
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -157,6 +155,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * and the animated methods will attempt executing again
    */
   animatedMethodBreak: boolean = false;
+  /**
+   * This viewport is the last viewport applied to the camera.
+   * If the props inject a new viewport, this is updated with that value so
+   * that the viewport will only be applied once if it doesn't change again.
+   */
+  appliedViewport: Bounds<any>;
   /** Used to aid in mouse interactions */
   distance = 0;
   /**
@@ -229,9 +233,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** When this is set, the draw loop continues to run. Used by the draw loop to complete animations */
   animating: boolean = false;
   labels: Label<any>[] = [];
-
-  /** Inidcates if the camera needs it's position initialized */
-  camNeedsInit: boolean = false;
 
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
@@ -390,8 +391,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         };
 
         // Apply Zoom
-        const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.initialViewport.width);
-        const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.initialViewport.height);
+        const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.viewport.width);
+        const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.viewport.height);
         const zoomToFit = Math.min(zoomToFitH, zoomToFitV);
 
         const destZoom = this.destinationZoom * zoomToFit;
@@ -528,19 +529,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       [BaseApplyPropsMethods.CAMERA]: (props: T): IApplyPropsMethodResponse => {
         this.destinationZoom = props.zoom;
 
-        // Prevent camera initialization needs
-        if (props.preventCameraInit) {
-          debug('New Items, but camera requested to stay still');
-          this.camNeedsInit = false;
-        }
-
         // On initialization this should start with some base camera metrics
-        if (this.camNeedsInit && props.initialViewport && this.quadTree) {
-          debugCam('Initialize Camera Position: %o World Space Bounds: %o', props.initialViewport, this.quadTree.bounds);
-          this.camNeedsInit = false;
+        if (props.viewport && props.viewport !== this.appliedViewport && this.quadTree) {
+          debugCam('Applying viewport to camera: %o World Space Bounds: %o', props.viewport, this.quadTree.bounds);
 
           // Position the camera over the mid of the specified viewport
-          const mid = props.initialViewport.mid;
+          const mid = props.viewport.mid;
           this.currentX = this.destinationX = mid.x;
           this.currentY = this.destinationY = mid.y;
 
@@ -550,8 +544,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           const zoomAtOne = Math.min(zoomToFitH, zoomToFitV);
 
           // Calculate the zoom needed for the viewport
-          const zoomToFitViewH = this.ctx.width / props.initialViewport.width;
-          const zoomToFitViewV = this.ctx.height / props.initialViewport.height;
+          const zoomToFitViewH = this.ctx.width / props.viewport.width;
+          const zoomToFitViewV = this.ctx.height / props.viewport.height;
           const zoomToFit = Math.min(zoomToFitViewH, zoomToFitViewV);
 
           // This adjusts the destination zxoom by a tiny amount so the view will redraw
@@ -728,9 +722,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Set up DOM interaction with the renderer
     const container = el;
     container.appendChild(this.renderer.domElement);
-
-    // Indicates this went through an intialization process
-    this.camNeedsInit = true;
   }
 
   /**
