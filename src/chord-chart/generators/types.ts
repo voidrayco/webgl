@@ -21,7 +21,6 @@ export interface IEndpoint {
   outgoingCount: number;
   incomingCount: number;
   totalCount: number;
-  placement: string;
   _outflowIdx?: number;  // Default to 0
   _inflowIdx?: number;
 }

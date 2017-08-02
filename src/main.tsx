@@ -8,10 +8,6 @@ import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
-// Assign unique id to all flows for uniqueness
-// Const mapIndexed = addIndex(map);
-// MapIndexed((val, idx) => val.id = idx, testChordData.flows);
-
 const RANDOM = require('random');
 
 /**
@@ -21,12 +17,6 @@ interface IMainState {
   currentTab: number,
   visibleFlows: IFlow[];
   visibleEndpoints: IEndpoint[];
-}
-
-interface IHemisphere {
-  endAngle: number,
-  name: string;
-  startAngle: number;
 }
 
 /**
@@ -91,24 +81,8 @@ export class Main extends React.Component<any, IMainState> {
 
   MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
   ROTATION = -Math.PI / 2;
-  HEMISPHERE_1: IHemisphere = {
-    endAngle: Math.PI + this.ROTATION,
-    name: 'remote',
-    startAngle: this.ROTATION,
-  };
-  HEMISPHERE_2: IHemisphere = {
-    endAngle: (2 * Math.PI) + this.ROTATION,
-    name: 'topology',
-    startAngle: (Math.PI) + this.ROTATION,
-  };
   adjectiveGenerator = RANDOM.item(this.ADJECTIVES);
   nounGenerator = RANDOM.item(this.NOUNS);
-  hemisphereGenerator = RANDOM.item([this.HEMISPHERE_1, this.HEMISPHERE_2]);
-
-  getHemisphereEndpoints = (hemisphere: string, endpoints: IEndpoint[]) => {
-    const hemisphereEndpoints = endpoints.filter((endpoint) => endpoint.placement === hemisphere);
-    return hemisphereEndpoints;
-  }
 
   // Removes all endpoints from selection that are smaller than the specified range
   filterEndpoints(endpoints: IEndpoint[], minRange: number){
@@ -118,17 +92,10 @@ export class Main extends React.Component<any, IMainState> {
 
   injectEndpoint = (endpoints: IEndpoint[]) => {
     // Find endpoint to break into two--------
-    let hemisphere = this.hemisphereGenerator();
-    let hemisphereEndpoints = this.getHemisphereEndpoints(hemisphere.name, endpoints);
-    let filteredEndpoints = this.filterEndpoints(hemisphereEndpoints, this.MINIMUM_ENDPOINT_SIZE);
+    const filteredEndpoints = this.filterEndpoints(endpoints, this.MINIMUM_ENDPOINT_SIZE);
     if (filteredEndpoints.length < 1){
-      // Switch hemisphere
-      hemisphere = hemisphere === this.HEMISPHERE_1 ? this.HEMISPHERE_2 : this.HEMISPHERE_1;
-      hemisphereEndpoints = this.getHemisphereEndpoints(hemisphere.name, endpoints);
-      filteredEndpoints = this.filterEndpoints(hemisphereEndpoints, this.MINIMUM_ENDPOINT_SIZE);
-      if (filteredEndpoints.length < 1) return endpoints; // Don't change anything if no splitable endpoint
+      return endpoints;
     }
-
     // Break endpoint into two and inject new endpoint into one side (currently start side only)
     const getRandomEndpoint = RANDOM.item(filteredEndpoints);
     const randomEndpoint = getRandomEndpoint();
@@ -149,7 +116,6 @@ export class Main extends React.Component<any, IMainState> {
       incomingCount: 0,
       name,
       outgoingCount: 0,
-      placement: hemisphere.name,
       startAngle: randomStartAngle,
       totalCount: 0,
     };
@@ -158,18 +124,11 @@ export class Main extends React.Component<any, IMainState> {
   }
 
   removeEndpoint = (endpoints: IEndpoint[], flows: IFlow[]) => {
-    // Find usable hemisphere for endpoint removal
-    let hemisphere = this.hemisphereGenerator();
-    let hemisphereEndpoints = this.getHemisphereEndpoints(hemisphere.name, endpoints);
-    if (hemisphereEndpoints.length < 2) {
-      // Switch hemisphere
-      hemisphere = hemisphere === this.HEMISPHERE_1 ? this.HEMISPHERE_2 : this.HEMISPHERE_1;
-      hemisphereEndpoints = this.getHemisphereEndpoints(hemisphere.name, endpoints);
-      if (hemisphereEndpoints.length < 2) return {endpoints, flows};  // Don't change anything if no usable hemisphere
+    if (endpoints.length < 2) {
+      return {endpoints, flows};
     }
-
     // Remove endpoint--------------
-    const randomRemoveEndpoint = RANDOM.item(hemisphereEndpoints);
+    const randomRemoveEndpoint = RANDOM.item(endpoints);
     const removedEndpoint: IEndpoint = randomRemoveEndpoint();
     const newEndpoints = difference(endpoints, [removedEndpoint]);
 
@@ -180,12 +139,11 @@ export class Main extends React.Component<any, IMainState> {
     // Adjust adjacent endpoint to fill in removed endpoint slice-------------
     const startAngle = removedEndpoint.startAngle, endAngle = removedEndpoint.endAngle;
     const trueStartAngle = startAngle > endAngle ? endAngle : startAngle;
-    const isFirstEndpointInHemisphere =  (trueStartAngle > hemisphere.startAngle) ? false : true;
-    const adjacentEndpoint = hemisphereEndpoints.find((endpoint) =>
-      isFirstEndpointInHemisphere ? endpoint.startAngle === removedEndpoint.endAngle : endpoint.endAngle === removedEndpoint.startAngle);
-    isFirstEndpointInHemisphere ? adjacentEndpoint.startAngle = removedEndpoint.startAngle :
+    const isFirstEndpoint =  (trueStartAngle > (0 + this.ROTATION)) ? false : true;
+    const adjacentEndpoint = endpoints.find((endpoint) =>
+      isFirstEndpoint ? endpoint.startAngle === removedEndpoint.endAngle : endpoint.endAngle === removedEndpoint.startAngle);
+    isFirstEndpoint ? adjacentEndpoint.startAngle = removedEndpoint.startAngle :
       adjacentEndpoint.endAngle = removedEndpoint.endAngle;
-
     return {endpoints: newEndpoints, flows: newFlows};
   }
 
@@ -263,10 +221,8 @@ export class Main extends React.Component<any, IMainState> {
    * @param {string} type - 'add' or 'remove' endpoint
    */
   updateEndpoints = (type: string) => () => {
-    // Const hemisphere = this.hemisphereGenerator();
     if (type === '+'){
       const visibleEndpoints = this.injectEndpoint(this.state.visibleEndpoints);
-      // Const visibleEndpoints = union(this.state.visibleEndpoints, hemisphereEndpoints);
       this.setState({visibleEndpoints});
     }else if (this.state.visibleEndpoints.length > 0){
       const newData = this.removeEndpoint(this.state.visibleEndpoints, this.state.visibleFlows);
