@@ -37,12 +37,22 @@ export class Main extends React.Component<any, IMainState> {
   ADJECTIVES = [ 'Good', 'New', 'First', 'Last', 'Long', 'Great', 'Little', 'Own', 'Other', 'Old', 'Right', 'Big', 'High', 'Different', 'Small', 'Large', 'Next', 'Early', 'Young', 'Important', 'Few', 'Public', 'Bad', 'Same', 'Able', 'Adorable', 'Beautiful', 'Clean', 'Drab', 'Elegant', 'Fancy', 'Glamorous', 'Handsome', 'Long', 'Magnificent', 'Old-fashioned', 'Plain', 'Quaint', 'Sparkling', 'Ugliest', 'Unsightly', 'Wide-eyed', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Gray', 'Black', 'White', 'Alive', 'Better', 'Careful', 'Clever', 'Dead', 'Easy', 'Famous', 'Gifted', 'Helpful', 'Important', 'Inexpensive', 'Mushy', 'Odd', 'Powerful', 'Rich', 'Shy', 'Tender', 'Uninterested', 'Vast', 'Wrong', 'Agreeable', 'Brave', 'Calm', 'Delightful', 'Eager', 'Faithful', 'Gentle', 'Happy', 'Jolly', 'Kind', 'Lively', 'Nice', 'Obedient', 'Proud', 'Relieved', 'Silly', 'Thankful', 'Victorious', 'Witty', 'Zealous', 'Angry', 'Bewildered', 'Clumsy', 'Defeated', 'Embarrassed', 'Fierce', 'Grumpy', 'Helpless', 'Itchy', 'Jealous', 'Lazy', 'Mysterious', 'Nervous', 'Obnoxious', 'Panicky', 'Repulsive', 'Scary', 'Thoughtless', 'Uptight', 'Worried', 'Broad', 'Chubby', 'Crooked', 'Curved', 'Deep', 'Flat', 'High', 'Hollow', 'Low', 'Narrow', 'Round', 'Shallow', 'Skinny', 'Square', 'Steep', 'Straight', 'Wide', 'Big', 'Colossal', 'Fat', 'Gigantic', 'Great', 'Huge', 'Immense', 'Large', 'Little', 'Mammoth', 'Massive', 'Miniature', 'Petite', 'Puny', 'Scrawny', 'Short', 'Small', 'Tall', 'Teeny', 'Teeny-tiny', 'Tiny', 'Cooing', 'Deafening', 'Faint', 'Hissing', 'Loud', 'Melodic', 'Noisy', 'Purring', 'Quiet', 'Raspy', 'Screeching', 'Thundering', 'Voiceless', 'Whispering', 'Ancient', 'Brief', 'Early', 'Fast', 'Late', 'Long', 'Modern', 'Old', 'Old-fashioned', 'Quick', 'Rapid', 'Short', 'Slow', 'Swift', 'Young', 'Bitter', 'Delicious', 'Fresh', 'Greasy', 'Juicy', 'Hot', 'Icy', 'Loose', 'Melted', 'Nutritious', 'Prickly', 'Rainy', 'Rotten', 'Salty', 'Sticky', 'Strong', 'Sweet', 'Tart', 'Tasteless', 'Uneven', 'Weak', 'Wet', 'Wooden', 'Yummy', 'Boiling', 'Breeze', 'Broken', 'Bumpy', 'Chilly', 'Cold', 'Cool', 'Creepy', 'Crooked', 'Cuddly', 'Curly', 'Damaged', 'Damp', 'Dirty', 'Dry', 'Dusty', 'Filthy', 'Flaky', 'Fluffy', 'Freezing', 'Hot', 'Warm', 'Wet', 'Abundant', 'Empty', 'Few', 'Full', 'Heavy', 'Light', 'Many', 'Numerous', 'Sparse', 'Substantial' ];
   NOUNS = [ 'History', 'Way', 'Art', 'World', 'Information', 'Map', 'Family', 'Government', 'Health', 'System', 'Computer', 'Year', 'Music', 'Person', 'Reading', 'Method', 'Data', 'Food', 'Understanding', 'Theory', 'Law', 'Bird', 'Literature', 'Problem', 'Software', 'Control', 'Knowledge', 'Power', 'Ability', 'Economics', 'Internet', 'Television', 'Science', 'Library', 'Nature', 'Fact', 'Product', 'Idea', 'Temperature', 'Investment', 'Area', 'Society', 'Activity', 'Story', 'Industry', 'Media', 'Thing', 'Oven', 'Community', 'Definition', 'Safety', 'Quality', 'Development', 'Language', 'Management', 'Player', 'Variety', 'Video', 'Week', 'Security', 'Country', 'Exam', 'Movie', 'Organization', 'Equipment', 'Physics', 'Analysis', 'Policy', 'Series', 'Thought', 'Basis', 'Boyfriend', 'Direction', 'Strategy', 'Technology', 'Army', 'Camera', 'Freedom', 'Paper', 'Environment', 'Child', 'Instance', 'Month', 'Truth', 'Marketing', 'University', 'Writing', 'Article', 'Department', 'Difference', 'Goal', 'News', 'Audience', 'Fishing', 'Growth', 'Income', 'Marriage', 'User', 'Combination', 'Failure', 'Meaning', 'Medicine', 'Philosophy', 'Teacher', 'Communication', 'Night', 'Chemistry', 'Disease', 'Disk', 'Energy', 'Nation', 'Road', 'Role', 'Soup', 'Advertising', 'Location', 'Success', 'Addition', 'Apartment', 'Education', 'Math', 'Moment', 'Painting', 'Politics', 'Attention', 'Decision', 'Event', 'Property', 'Shopping', 'Student', 'Wood', 'Competition', 'Distribution', 'Entertainment', 'Office', 'Population', 'President', 'Unit', 'Category', 'Cigarette', 'Context', 'Introduction', 'Opportunity', 'Performance', 'Driver', 'Flight', 'Length', 'Magazine' ];
 
-  // Set the default state
-  state = {
-    currentTab: 0,
-    visibleEndpoints: testChordData.endpoints,
-    visibleFlows: testChordData.flows,
-  };
+  constructor(props: IMainState){
+    super(props);
+    this.state = {
+      currentTab: 0,
+      visibleEndpoints: this.buildInitialEndpoints(testChordData.endpoints),
+      visibleFlows: this.buildInitialFlows(testChordData.flows),
+    };
+  }
+
+  buildInitialEndpoints(endpoints: IEndpoint[]){
+    return endpoints;
+  }
+
+  buildInitialFlows(flows: IFlow[]){
+    return flows;
+  }
 
   /**
    * Returns array of flows that have the src or dst endpoint passed in
@@ -50,7 +60,7 @@ export class Main extends React.Component<any, IMainState> {
    * @param {IEndpoint} endpoint
    * @param {string} type - 'outgoing' or 'incoming'
    */
-  getFlowCountByEndpoint(endpoint: IEndpoint, type: string){
+  getFlowsByEndpoint(endpoint: IEndpoint, type: string){
     return this.state.visibleFlows.filter((flow: IFlow) => {
       if ((type === 'outgoing' && flow.srcTarget === endpoint.id) ||
         (type === 'incoming' && flow.dstTarget === endpoint.id)){
@@ -62,17 +72,19 @@ export class Main extends React.Component<any, IMainState> {
 
   generateFlow = () => {
     const getRandomEndpoint = RANDOM.item(this.state.visibleEndpoints);
-    const src = getRandomEndpoint();
-    let dst = getRandomEndpoint();
+    const src: IEndpoint = getRandomEndpoint();
+    let dst: IEndpoint = getRandomEndpoint();
     while (dst.id === src.id) dst = getRandomEndpoint();
     const color = hsl(this.getHslRandomHVal(), 1, this.getHslRandomLVal());
+    const incomingFlows = this.getFlowsByEndpoint(dst, 'incoming');
+    const outgoingFlows = this.getFlowsByEndpoint(src, 'outgoing');
     return {
       baseColor: color,
       destExpandedTarget: '',  // Future TODO
-      dstIndex: this.getFlowCountByEndpoint(dst, 'incoming') + 1,
+      dstIndex: incomingFlows.length ? incomingFlows.length + 1 : 1,
       dstTarget: dst.id,
       srcExpandedTarget: '',  // Future TODO
-      srcIndex: this.getFlowCountByEndpoint(src, 'outgoing') + 1,
+      srcIndex: outgoingFlows.length ? outgoingFlows.length + 1 : 1,
       srcTarget: src.id,
     };
   }
