@@ -1,12 +1,12 @@
-import { rgb } from 'd3-color';
+import { hsl, rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
-const debug = require('debug')('chords');
+const debug = require('debug')('chord-base-cache');
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -34,8 +34,6 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
   }
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
-    const inactiveOpacity: number = 0.3;
-    const activeOpacity: number = 1.0;
     const circleRadius = config.radius;
     const circleWidth = config.ringWidth;
     const segmentSpace = config.space;
@@ -46,10 +44,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
        hemiSphere, hemiDistance);
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
-      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
-        rgb(r, g, b, inactiveOpacity) :
-        rgb(r, g, b, activeOpacity)
-      ;
+      const d3Color = rgb(r, g, b);
+      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? d3Color.darker() : d3Color;
+
       const curve1 = new CurvedLineShape(
         CurveType.Bezier,
         {x: curve.p1.x, y: curve.p1.y},
@@ -58,7 +55,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
         color);
 
       curve1.lineWidth = 3;
-       return curve1;
+      return curve1;
     });
 
     this.buffer = curveShapes;
@@ -109,7 +106,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
             const p2FlowAngle = getFlowAngle(destEndpoint,
                destEndpoint.totalCount - 1 - destEndpoint._inflowIdx, segmentSpace);
             const p2 = calculatePoint(circleRadius - circleWidth / 2, p2FlowAngle, hemiSphere);
-            const color = flow.baseColor;
+            const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
             curveData.push({p1, p2, controlPoint, color});

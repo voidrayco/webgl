@@ -331,6 +331,7 @@ const pickSegmentMethod = {
 const pickDistanceMethod = {
   [CurveType.Bezier]: bezierDistance,
   [CurveType.CircularCW]: circularDistance,
+  [CurveType.CircularCCW]: circularDistance,
   [CurveType.Straight]: straightDistance,
 };
 
@@ -482,7 +483,13 @@ export class CurvedLine<T> extends Bounds<T> {
         throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point. Or 0 for a straight line');
       }
 
-      this.encapsulatePoints(controlPoints);
+      if (this.type === CurveType.Bezier) {
+        this.encapsulatePoints(controlPoints);
+      }
+
+      else if (this.type === CurveType.CircularCCW || this.type === CurveType.CircularCW) {
+        this.encapsulatePoints(this.getLineStrip());
+      }
     }
 
     this.encapsulatePoint(p1);
