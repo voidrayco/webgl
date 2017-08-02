@@ -8,12 +8,6 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 
-<<<<<<< HEAD
-=======
-// DEBUG const debug = require('debug')('chord-index');
-const testChordData = require('./test-data/chord-data.json');
-
->>>>>>> 11445dc16f88eef9276bb4f9723a048d9be42f28
 interface IChordChartProps {
   testChordData: IChordData;
 }
