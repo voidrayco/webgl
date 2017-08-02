@@ -1,7 +1,8 @@
 import { CustomSelection } from 'webgl-surface/util/custom-selection';
 
 export enum SelectionType {
-  MOUSE_OVER,
+  MOUSEOVER_OUTER_RING,
+  MOUSEOVER_CHORD,
   SELECTED_CHORD,
   RELATED_SELECTED_OUTER_SECTIONS,
 }

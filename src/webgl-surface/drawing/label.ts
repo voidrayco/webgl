@@ -11,6 +11,7 @@ const defaultColor: RGBColor = rgb(255, 255, 255, 1);
 
 export class Label<T> extends RotateableQuad<T> {
   color: RGBColor = defaultColor;
+  depth: number = 0;
   direction: string = 'inherit';
   font: string = 'serif';
   fontSize: number = 10;
