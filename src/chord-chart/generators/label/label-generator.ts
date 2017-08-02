@@ -3,20 +3,25 @@ import { Selection } from '../../selections/selection';
 import { IChordChartConfig, IData } from '../types';
 import { LabelBaseCache } from './label-base-cache';
 
-const debug = require('debug')('webgl-surface:Labels');
+const debug = require('debug')('label-generator');
 
 export class LabelGenerator {
   baseCache: LabelBaseCache = new LabelBaseCache();
   allLabels: Label<any>[];
+  currentData: IData;
 
-  bustCaches() {
-    this.baseCache.bustCache = true;
+  bustCaches(data: IData, config: IChordChartConfig, selection: Selection) {
+    if (data !== this.currentData) {
+      this.baseCache.bustCache = true;
+    }
+
+    this.currentData = data;
   }
 
   /** */
   generate(data: IData, config: IChordChartConfig, selection: Selection) {
     debug('Generating Labels');
-    this.bustCaches();
+    this.bustCaches(data, config, selection);
     this.baseCache.generate(data, config, selection);
   }
 
