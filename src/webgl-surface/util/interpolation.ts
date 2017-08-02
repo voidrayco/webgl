@@ -1,52 +1,33 @@
 import { IPoint } from '../primitives/point';
+/**
+ * YoYo created
+ */
 
 /**
- * This calculates a quadratic bezier curve.
  *
- * We use specific bezier curve implementations for low degree curves as it is
- * much much faster to calculate.
- *
- * @param {number} t The 0 - 1 time interval for the part of the curve we desire
- * @param {IPoint} p1 The First end point of the curve
- * @param {IPoint} p2 The second end point of the curve
- * @param {IPoint} c1 The control point of the curve
- *
- * @returns {IPoint} The calculated point on the curve for the provided time interval
+ * @param t it should be in [0,1]
+ * @param p0 first point
+ * @param p1 contro point 1
+ * @param p2 end point
  */
-export function bezier2(t: number, p1: IPoint, p2: IPoint, c1: IPoint): IPoint {
-  const t2 = t * t;
-  const mt = 1 - t;
-  const mt2 = mt * mt;
-
-  return {
-    x: p1.x * mt2 + c1.x * 2 * mt * t + p2.x * t2,
-    y: p1.y * mt2 + c1.y * 2 * mt * t + p2.y * t2,
-  };
+export function bezier2(t: number, p0: IPoint, p1: IPoint, p2: IPoint): IPoint{
+    return {
+        x: (1 - t) * (1 - t) * p0.x + 2 * t * (1 - t) * p1.x + t * t * p2.x,
+        y: (1 - t) * (1 - t) * p0.y + 2 * t * (1 - t) * p1.y + t * t * p2.y,
+    };
 }
 
 /**
- * This calculates a cubic bezier curve.
  *
- * We use specific bezier curve implementations for low degree curves as it is
- * much much faster to calculate.
- *
- * @param {number} t The 0 - 1 time interval for the part of the curve we desire
- * @param {IPoint} p1 The First end point of the curve
- * @param {IPoint} p2 The second end point of the curve
- * @param {IPoint} c1 The first control point of the curve
- * @param {IPoint} c2 The second control point of the curve
- *
- * @returns {IPoint} The calculated point on the curve for the provided time interval
+ * @param t in [0,1]
+ * @param p0 start point
+ * @param p1 control point 1
+ * @param p2 control point 2
+ * @param p3 end point
  */
-export function bezier3(t: number, p1: IPoint, p2: IPoint, c1: IPoint, c2: IPoint): IPoint {
-  const t2 = t * t;
-  const t3 = t2 * t;
-  const mt = 1 - t;
-  const mt2 = mt * mt;
-  const mt3 = mt2 * mt;
-
-  return {
-    x: p1.x * mt3 + 3 * c1.x * mt2 * t + 3 * c2.x * mt * t2 + p2.x * t3,
-    y: p1.y * mt3 + 3 * c1.y * mt2 * t + 3 * c2.y * mt * t2 + p2.y * t3,
-  };
+export function bezier3(t: number, p0: IPoint, p1: IPoint, p2: IPoint, p3: IPoint): IPoint{
+    return {
+        x: (1 - t) * (1 - t) * (1 - t) * p0.x + 3 * t * (1 - t) * (1 - t) * p1.x + 3 * t * t * (1 - t) * p2.x + t * t * t * p3.x,
+        y: (1 - t) * (1 - t) * (1 - t) * p0.y + 3 * t * (1 - t) * (1 - t) * p1.y + 3 * t * t * (1 - t) * p2.y + t * t * t * p3.y,
+    };
 }
