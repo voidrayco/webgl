@@ -5,7 +5,6 @@
          "name":".16 Network",
          "incomingCount":0,
          "outgoingCount":0,
-         "placement": "topology",
          "totalCount":0,
          "startAngle":1.5707963267948966,
          "endAngle":1.7398275190890962
@@ -15,7 +14,6 @@
          "name":"Administrator Proxy",
          "incomingCount":0,
          "outgoingCount":0,
-         "placement": "topology",
          "totalCount":0,
          "startAngle":1.7398275190890962,
          "endAngle":1.9088587113832958
@@ -25,7 +23,6 @@
          "name":"Security",
          "incomingCount":0,
          "outgoingCount":0,
-         "placement": "topology",
          "totalCount":0,
          "startAngle":1.9088587113832958,
          "endAngle":2.0778899036774954
@@ -35,7 +32,6 @@
          "name":"Management",
          "incomingCount":0,
          "outgoingCount":0,
-         "placement": "topology",
          "totalCount":0,
          "startAngle":2.0778899036774954,
          "endAngle":2.246921095971695
@@ -45,7 +41,6 @@
          "name":"Administrators",
          "incomingCount":0,
          "outgoingCount":0,
-         "placement": "topology",
          "totalCount":0,
          "startAngle":2.246921095971695,
          "endAngle":2.4159522882658946
@@ -55,7 +50,6 @@
          "name":"HypervisorShield",
          "incomingCount":0,
          "outgoingCount":0,
-         "placement": "topology",
          "totalCount":0,
          "startAngle":2.4159522882658946,
          "endAngle":2.584983480560094
@@ -65,7 +59,6 @@
          "name":"Untrusted",
          "incomingCount":12,
          "outgoingCount":19,
-         "placement": "topology",
          "totalCount":31,
          "startAngle":2.584983480560094,
          "endAngle":2.754014672854294
@@ -75,7 +68,6 @@
          "name":".10 Network",
          "incomingCount":0,
          "outgoingCount":4,
-         "placement": "topology",
          "totalCount":4,
          "startAngle":2.754014672854294,
          "endAngle":2.9230458651484934
@@ -85,7 +77,6 @@
          "name":".15 Network",
          "incomingCount":1,
          "outgoingCount":3,
-         "placement": "topology",
          "totalCount":4,
          "startAngle":2.9230458651484934,
          "endAngle":3.1980978523054926
@@ -95,7 +86,6 @@
          "name":".11 Network",
          "incomingCount":46,
          "outgoingCount":61,
-         "placement": "topology",
          "totalCount":107,
          "startAngle":3.1980978523054926,
          "endAngle":4.26830580093349
@@ -105,7 +95,6 @@
          "name":"Backend Databases",
          "incomingCount":4,
          "outgoingCount":2,
-         "placement": "topology",
          "totalCount":6,
          "startAngle":4.26830580093349,
          "endAngle":4.543357788090489
@@ -115,7 +104,6 @@
          "name":".20 Network",
          "incomingCount":0,
          "outgoingCount":1,
-         "placement": "topology",
          "totalCount":1,
          "startAngle":4.543357788090489,
          "endAngle":4.712388980384689
@@ -125,7 +113,6 @@
          "name":"IP Space N.O.",
          "incomingCount":69,
          "outgoingCount":42,
-         "placement": "remote",
          "totalCount":111,
          "startAngle":-1.5707963267948966,
          "endAngle":1.5707963267948966
