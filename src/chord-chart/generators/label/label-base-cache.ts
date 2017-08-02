@@ -51,15 +51,15 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
         }else{
           labelData.angle -= Math.PI;
-          point.x = point.x + config.ringWidth * Math.cos(labelData.angle) - width / 2;
+          point.x = point.x + config.ringWidth * Math.cos(labelData.angle) - width ;
           point.y = point.y + config.ringWidth * Math.sin(labelData.angle) - height / 2;
         }
       }
       if (labelData.anchor === AnchorPosition.MiddleRight){
         if (!hemiSphere){
-          point.x = point.x + 0.5 * width * Math.cos(labelData.angle)
+          point.x = point.x + 0.5 * config.ringWidth * Math.cos(labelData.angle)
         - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-          point.y = point.y + 0.5 * width * Math.sin(labelData.angle)
+          point.y = point.y + 0.5 * config.ringWidth * Math.sin(labelData.angle)
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
         }else{
           point.x = point.x + config.ringWidth * Math.cos(labelData.angle);

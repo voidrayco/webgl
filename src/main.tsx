@@ -1,11 +1,9 @@
-import { rgb, RGBColor } from 'd3-color';
+import { rgb } from 'd3-color';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
-import { CurveShape } from './webgl-surface/drawing/curve-shape';
-import { IPoint } from './webgl-surface/primitives/point';
 
 /**
  * The state of the application
@@ -20,10 +18,8 @@ interface IMainState {
 export class Main extends React.Component<any, IMainState> {
   // Set the default state
   state = {
-    currentTab: 1,
+    currentTab: 0,
   };
-
-  hemiSphere: boolean = false;
 
   /**
    * Generates a handler to set the current tab index
@@ -40,6 +36,7 @@ export class Main extends React.Component<any, IMainState> {
     let quadData: IQuadShapeData[] = [];
     let chordData = [];
     let component;
+    let hasHemiSphere: boolean = false;
 
     if (this.state.currentTab === 0) {
       quadData = [...new Array(200)].map((_, i: number) =>
@@ -59,53 +56,15 @@ export class Main extends React.Component<any, IMainState> {
 
     if (this.state.currentTab === 1) {
       chordData = [];
-
-      this.hemiSphere = false;
-
+      hasHemiSphere = false;
       component = (
-        <ChordChart hemiSphere={this.hemiSphere}/>
+        <ChordChart hemiSphere={hasHemiSphere}/>
       );
     }
     if (this.state.currentTab === 2){
-      this.hemiSphere = true;
-
+      hasHemiSphere = true;
       component = (
-        <ChordChart hemiSphere={this.hemiSphere}/>
-      );
-    }
-
-    if (this.state.currentTab === 1){
-      // Start point & end point
-      const p1: IPoint = {x: 150, y: 150}, p2: IPoint = {x: 500, y: 150};
-
-      // Control points
-      const cps: IPoint[] = [];
-      const c1: IPoint = {x: 325, y: 500}, c2: IPoint = {x: 400, y: 550};
-
-      cps.push(c1);
-      cps.push(c2);
-
-      // Color
-      const color: RGBColor = rgb (0, 0, 1, 1);
-
-    /**
-     * YoYo's  example: a curveshape with Tab=1
-     * Start points:p1 {150,150}, p2 {500,150}
-     * Control points: c1 {325,500}, c2 {400,550}
-     * LindeWidth: 5
-     * Number of segments: 40
-     * Color: Blue
-     */
-      const d: CurveShape<IPoint> = new CurveShape(p1, p2, cps, 5, 40, color);
-
-      quadData = [...new Array(d.segNum)].map((_, i: number) =>
-      ({
-          color: d.color,
-          id: i,
-          lineWidth: d.lineWidth,
-          p1: d.segPoints[i],
-          p2: d.segPoints[i + 1],
-      }),
+        <ChordChart hemiSphere={hasHemiSphere}/>
       );
     }
 
