@@ -29,6 +29,8 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   interactiveLabels?: Label<any>[],
   /** Lines that do not change often */
   staticCurvedLines?: CurvedLineShape<any>[],
+  /** It is used to seperater from curved lines */
+  staticRingLines?: CurvedLineShape<any>[],
   /** Event handlers */
   onMouseHover?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
   onMouseLeave?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
@@ -40,6 +42,7 @@ interface IChordChartGLProperties extends IWebGLSurfaceProperties {
 const BASE_QUAD_DEPTH = 0;
 
 // --[ SHADERS ]-------------------------------------------
+const bezierVertexShader = require('./shaders/bezier.vs');
 const fillVertexShader = require('./shaders/simple-fill.vs');
 const fillFragmentShader = require('./shaders/simple-fill.fs');
 const textureVertexShader = require('webgl-surface/shaders/textured-quad.vs');
@@ -53,6 +56,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   animatedCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
   interactiveCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
   staticCurvedBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
+  staticRingBufferItems: IBufferItems<CurvedLineShape<any>, Mesh> = BufferUtil.makeBufferItems();
 
   // LABELS BUFFER ITEMS
   staticLabelBufferItems: IBufferItems<Label<any>, Mesh> = BufferUtil.makeBufferItems();
@@ -75,6 +79,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
     const {
       staticCurvedLines,
+      staticRingLines,
       interactiveCurvedLines,
     } = props;
 
@@ -87,75 +92,110 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     {
       const numVerticesPerSegment = 6;
       const colorAttributeSize = 4;
-      let stripPos = 0;
+      const length = 20;
 
       BufferUtil.beginUpdates();
 
       for (const curvedLine of staticCurvedLines) {
-        debug(curvedLine);
-        const strip = curvedLine.getTriangleStrip();
-        let TR;
-        let BR;
-        let TL;
-        let BL;
 
         needsTreeUpdate = BufferUtil.updateBuffer(
           staticCurvedLines, this.staticCurvedBufferItems,
-          numVerticesPerSegment, strip.length / 4.0,
-          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-
-            stripPos = i * 4;
-            TR = strip[stripPos];
-            BR = strip[stripPos + 1];
-            TL = strip[stripPos + 2];
-            BL = strip[stripPos + 3];
+          numVerticesPerSegment, length,
+          function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number,
+            normals: Float32Array, npos: number, endPoints: Float32Array, epos: number,
+            controlPoints: Float32Array, copos: number) {
 
             // Copy first vertex twice for intro degenerate tri
-            positions[ppos] = TR.x;
-            positions[++ppos] = TR.y;
-            positions[++ppos] = curvedLine.depth;
+            positions[ppos] = (i + 1) / length;
+            positions[++ppos] = i / length;
+            positions[++ppos] = (i + 2) / length;
             // Skip over degenerate tris color
             cpos += colorAttributeSize;
+            normals[npos] = 1;
+            endPoints[epos] = curvedLine.p1.x;
+            endPoints[++epos] = curvedLine.p1.y;
+            endPoints[++epos] = curvedLine.p2.x;
+            endPoints[++epos] = curvedLine.p2.y;
+            controlPoints[copos] = curvedLine.controlPoints[0].x;
+            controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
             // TR
-            positions[++ppos] = TR.x;
-            positions[++ppos] = TR.y;
-            positions[++ppos] = curvedLine.depth;
+            positions[++ppos] = (i + 1) / length;
+            positions[++ppos] = i / length;
+            positions[++ppos] = (i + 2) / length;
             colors[cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
             colors[++cpos] = curvedLine.a;
+            normals[++npos] = 1;
+            endPoints[++epos] = curvedLine.p1.x;
+            endPoints[++epos] = curvedLine.p1.y;
+            endPoints[++epos] = curvedLine.p2.x;
+            endPoints[++epos] = curvedLine.p2.y;
+            controlPoints[++copos] = curvedLine.controlPoints[0].x;
+            controlPoints[++copos] = curvedLine.controlPoints[0].y;
+
             // BR
-            positions[++ppos] = BR.x;
-            positions[++ppos] = BR.y;
-            positions[++ppos] = curvedLine.depth;
+            positions[++ppos] = (i + 1) / length;
+            positions[++ppos] = i / length;
+            positions[++ppos] = (i + 2) / length;
             colors[++cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
             colors[++cpos] = curvedLine.a;
+            normals[++npos] = -1;
+            endPoints[++epos] = curvedLine.p1.x;
+            endPoints[++epos] = curvedLine.p1.y;
+            endPoints[++epos] = curvedLine.p2.x;
+            endPoints[++epos] = curvedLine.p2.y;
+            controlPoints[++copos] = curvedLine.controlPoints[0].x;
+            controlPoints[++copos] = curvedLine.controlPoints[0].y;
+
             // TL
-            positions[++ppos] = TL.x;
-            positions[++ppos] = TL.y;
-            positions[++ppos] = curvedLine.depth;
+            positions[++ppos] = i / length;
+            positions[++ppos] = (i - 1) / length;
+            positions[++ppos] = (i + 1) / length;
             colors[++cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
             colors[++cpos] = curvedLine.a;
+            normals[++npos] = 1;
+            endPoints[++epos] = curvedLine.p1.x;
+            endPoints[++epos] = curvedLine.p1.y;
+            endPoints[++epos] = curvedLine.p2.x;
+            endPoints[++epos] = curvedLine.p2.y;
+            controlPoints[++copos] = curvedLine.controlPoints[0].x;
+            controlPoints[++copos] = curvedLine.controlPoints[0].y;
+
             // BL
-            positions[++ppos] = BL.x;
-            positions[++ppos] = BL.y;
-            positions[++ppos] = curvedLine.depth;
+            positions[++ppos] = i / length;
+            positions[++ppos] = (i - 1) / length;
+            positions[++ppos] = (i + 1) / length;
             colors[++cpos] = curvedLine.r;
             colors[++cpos] = curvedLine.g;
             colors[++cpos] = curvedLine.b;
             colors[++cpos] = curvedLine.a;
+            normals[++npos] = -1;
+            endPoints[++epos] = curvedLine.p1.x;
+            endPoints[++epos] = curvedLine.p1.y;
+            endPoints[++epos] = curvedLine.p2.x;
+            endPoints[++epos] = curvedLine.p2.y;
+            controlPoints[++copos] = curvedLine.controlPoints[0].x;
+            controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
             // Copy last vertex again for degenerate tri
-            positions[++ppos] = BL.x;
-            positions[++ppos] = BL.y;
-            positions[++ppos] = curvedLine.depth;
+            positions[++ppos] = i / length;
+            positions[++ppos] = (i - 1) / length;
+            positions[++ppos] = (i + 1) / length;
             // Skip over degenerate tris for color
             cpos += colorAttributeSize;
+            normals[++npos] = -1;
+            endPoints[++epos] = curvedLine.p1.x;
+            endPoints[++epos] = curvedLine.p1.y;
+            endPoints[++epos] = curvedLine.p2.x;
+            endPoints[++epos] = curvedLine.p2.y;
+            controlPoints[++copos] = curvedLine.controlPoints[0].x;
+            controlPoints[++copos] = curvedLine.controlPoints[0].y;
           },
         );
 
@@ -172,6 +212,90 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
         this.staticCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
       }
       debug('Curved Lines Created. Segments drawn: %o', numBatches);
+    }
+
+    // Commit ring curved lines using old methods
+    {
+      const numVerticesPerSegment = 6;
+      const colorAttributeSize = 4;
+      let stripPos = 0;
+
+      BufferUtil.beginUpdates();
+
+      for (const curvedLine of staticRingLines){
+        const strip = curvedLine.getTriangleStrip();
+        let TR;
+        let BR;
+        let TL;
+        let BL;
+
+        needsTreeUpdate = BufferUtil.updateBuffer(staticRingLines, this.staticRingBufferItems, numVerticesPerSegment, strip.length / 4,
+        function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number){
+          stripPos = i * 4;
+          TR = strip[stripPos];
+          BR = strip[stripPos + 1];
+          TL = strip[stripPos + 2];
+          BL = strip[stripPos + 3];
+          // 1
+          positions[ppos] = TR.x;
+          positions[++ppos] = TR.y;
+          positions[++ppos] = curvedLine.depth;
+          cpos += colorAttributeSize;
+
+          // 2
+          positions[++ppos] = TR.x;
+          positions[++ppos] = TR.y;
+          positions[++ppos] = curvedLine.depth;
+          colors[cpos] = curvedLine.r;
+          colors[++cpos] = curvedLine.g;
+          colors[++cpos] = curvedLine.b;
+          colors[++cpos] = curvedLine.a;
+
+          // 3
+          positions[++ppos] = BR.x;
+          positions[++ppos] = BR.y;
+          positions[++ppos] = curvedLine.depth;
+          colors[++cpos] = curvedLine.r;
+          colors[++cpos] = curvedLine.g;
+          colors[++cpos] = curvedLine.b;
+          colors[++cpos] = curvedLine.a;
+
+          // 4
+          positions[++ppos] = TL.x;
+          positions[++ppos] = TL.y;
+          positions[++ppos] = curvedLine.depth;
+          colors[++cpos] = curvedLine.r;
+          colors[++cpos] = curvedLine.g;
+          colors[++cpos] = curvedLine.b;
+          colors[++cpos] = curvedLine.a;
+
+          // 5
+          positions[++ppos] = BL.x;
+          positions[++ppos] = BL.y;
+          positions[++ppos] = curvedLine.depth;
+          colors[++cpos] = curvedLine.r;
+          colors[++cpos] = curvedLine.g;
+          colors[++cpos] = curvedLine.b;
+          colors[++cpos] = curvedLine.a;
+
+          // 6
+          positions[++ppos] = BL.x;
+          positions[++ppos] = BL.y;
+          positions[++ppos] = curvedLine.depth;
+          cpos += colorAttributeSize;
+        },
+      );
+
+        if (!needsTreeUpdate){
+          break;
+        }
+      }
+
+      const numBatches = BufferUtil.endUpdates();
+
+      if (needsTreeUpdate){
+        this.staticRingBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+      }
     }
 
     // Commit interactive curved lines
@@ -480,6 +604,15 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       depthTest: true,
       fragmentShader: fillFragmentShader,
       transparent: true,
+      uniforms: {halfLinewidth: {value: 1.0}},
+      vertexShader: bezierVertexShader,
+    });
+
+    const ringMaterial = new ShaderMaterial({
+      blending: NormalBlending,
+      depthTest: true,
+      fragmentShader: fillFragmentShader,
+      transparent: true,
       vertexShader: fillVertexShader,
     });
 
@@ -511,6 +644,21 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           name: 'customColor',
           size: AttributeSize.FOUR,
         },
+        {
+          defaults: [1],
+          name: 'normalDirection',
+          size: AttributeSize.ONE,
+        },
+        {
+          defaults: [0, 0, 0, 0],
+          name: 'endPoints',
+          size: AttributeSize.FOUR,
+        },
+        {
+          defaults: [0, 0],
+          name: 'controlPoint',
+          size: AttributeSize.TWO,
+        },
       ];
 
       const verticesPerQuad = 6;
@@ -524,6 +672,33 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
       // Place the mesh in the scene
       this.scene.add(this.staticCurvedBufferItems.system);
+    }
+
+    // GENERATE RING QUAD BUFFER
+    {
+      this.staticRingBufferItems.attributes = [
+        {
+          defaults: [0, 0, BASE_QUAD_DEPTH],
+          name: 'position',
+          size: AttributeSize.THREE,
+        },
+        {
+          defaults: [0, 0, 0, 1],
+          name: 'customColor',
+          size: AttributeSize.FOUR,
+        },
+      ];
+
+      const verticesPerQuad = 6;
+      const numQuads = 100000;
+
+      this.staticRingBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad,
+        this.staticRingBufferItems.attributes);
+      this.staticRingBufferItems.system = new Mesh(this.staticRingBufferItems.geometry, ringMaterial);
+      this.staticRingBufferItems.system.frustumCulled = false;
+      this.staticRingBufferItems.system.drawMode = TriangleStripDrawMode;
+
+      this.scene.add(this.staticRingBufferItems.system);
     }
 
     // GENERATE THE INTERACTION QUAD BUFFER
