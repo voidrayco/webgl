@@ -1,121 +1,69 @@
 {
   "endpoints": [
       {  
-         "id":"TrustZone_12",
-         "name":".16 Network",
-         "incomingCount":0,
-         "outgoingCount":0,
-         "totalCount":0,
-         "startAngle":1.5707963267948966,
-         "endAngle":1.7398275190890962
+         "id":"p3",
+         "weight": 23,
+         "parent": "hemisphere1"
       },
       {  
          "id":"TrustZone_6",
-         "name":"Administrator Proxy",
-         "incomingCount":0,
-         "outgoingCount":0,
-         "totalCount":0,
-         "startAngle":1.7398275190890962,
-         "endAngle":1.9088587113832958
+         "weight": 21,
+         "parent": "hemisphere1"
       },
       {  
-         "id":"TrustZone_Security",
-         "name":"Security",
-         "incomingCount":0,
-         "outgoingCount":0,
-         "totalCount":0,
-         "startAngle":1.9088587113832958,
-         "endAngle":2.0778899036774954
+         "id":"hemisphere1",
+         "weight": 60,
+         "parent": ""
       },
       {  
-         "id":"TrustZone_2",
-         "name":"Management",
-         "incomingCount":0,
-         "outgoingCount":0,
-         "totalCount":0,
-         "startAngle":2.0778899036774954,
-         "endAngle":2.246921095971695
+         "id":"hemisphere2",
+         "weight": 40,
+         "parent": ""
       },
       {  
-         "id":"TrustZone_5",
-         "name":"Administrators",
-         "incomingCount":0,
-         "outgoingCount":0,
-         "totalCount":0,
-         "startAngle":2.246921095971695,
-         "endAngle":2.4159522882658946
+         "id":"p4",
+         "weight": 66,
+         "parent": "p3"
       },
       {  
          "id":"TrustZone_3",
-         "name":"HypervisorShield",
-         "incomingCount":0,
-         "outgoingCount":0,
-         "totalCount":0,
-         "startAngle":2.4159522882658946,
-         "endAngle":2.584983480560094
+         "weight": 43,
+         "parent": "p3"
       },
       {  
          "id":"TrustZone_Untrusted",
-         "name":"Untrusted",
-         "incomingCount":12,
-         "outgoingCount":19,
-         "totalCount":31,
-         "startAngle":2.584983480560094,
-         "endAngle":2.754014672854294
+         "weight": 21,
+         "parent": "hemisphere2"
       },
       {  
          "id":"TrustZone_13",
-         "name":".10 Network",
-         "incomingCount":0,
-         "outgoingCount":4,
-         "totalCount":4,
-         "startAngle":2.754014672854294,
-         "endAngle":2.9230458651484934
+         "weight": 27,
+         "parent": "hemisphere2"
       },
       {  
          "id":"TrustZone_10",
-         "name":".15 Network",
-         "incomingCount":1,
-         "outgoingCount":3,
-         "totalCount":4,
-         "startAngle":2.9230458651484934,
-         "endAngle":3.1980978523054926
+         "weight": 64,
+         "parent": "hemisphere2"
       },
       {  
          "id":"TrustZone_8",
-         "name":".11 Network",
-         "incomingCount":46,
-         "outgoingCount":61,
-         "totalCount":107,
-         "startAngle":3.1980978523054926,
-         "endAngle":4.26830580093349
+         "weight": 27,
+         "parent": "hemisphere2"
       },
       {  
          "id":"TrustZone_14",
-         "name":"Backend Databases",
-         "incomingCount":4,
-         "outgoingCount":2,
-         "totalCount":6,
-         "startAngle":4.26830580093349,
-         "endAngle":4.543357788090489
+         "weight": 65,
+         "parent": "hemisphere2"
       },
       {  
          "id":"TrustZone_11",
-         "name":".20 Network",
-         "incomingCount":0,
-         "outgoingCount":1,
-         "totalCount":1,
-         "startAngle":4.543357788090489,
-         "endAngle":4.712388980384689
+         "weight": 23,
+         "parent": "hemisphere2"
       },
       {  
          "id":"NetworkObject_3",
-         "name":"IP Space N.O.",
-         "incomingCount":69,
-         "outgoingCount":42,
-         "totalCount":111,
-         "startAngle":-1.5707963267948966,
-         "endAngle":1.5707963267948966
+         "weight": 25,
+         "parent": "hemisphere2"
       }
    ],
    "flows": [  
