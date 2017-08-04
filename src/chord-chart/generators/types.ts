@@ -15,6 +15,7 @@ export interface IData {
 export interface IEndpoint {
   children?: IEndpoint[]
   id: string;
+  name: string;
   startAngle: number;
   endAngle: number;
   outgoingCount: number;

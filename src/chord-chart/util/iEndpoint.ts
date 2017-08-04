@@ -122,10 +122,12 @@ export function createEndpoint(boundsEndpoint: IEndpoint){
     const getRandomStartAngleInsideEndpoint = RANDOM.float(startAngle, endAngle);
     const randomStartAngle = getRandomStartAngleInsideEndpoint();
     const id = adjectiveGenerator() + nounGenerator();
+    const name = id;
     const newEndpoint = {
         endAngle,
         id,
         incomingCount: 0,
+        name,
         outgoingCount: 0,
         parent: boundsEndpoint.parent,
         startAngle: randomStartAngle,
