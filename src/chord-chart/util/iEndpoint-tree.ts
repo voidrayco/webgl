@@ -54,7 +54,7 @@ function _calculateSiblingAnglesAndWeight(children: IEndpoint[], parent: IEndpoi
     let currentAngle = parent.startAngle;
     return children.map((child) => {
         const width = (child.weight / totalChildrenWeight) * (parent.endAngle - parent.startAngle);
-        const node = {startAngle: currentAngle, endAngle: currentAngle + width, ...child};
+        const node = {...child, startAngle: currentAngle, endAngle: currentAngle + width};
         currentAngle += width;
         return node;
     });
@@ -162,25 +162,6 @@ export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
  * @param {IEndpoint[]} id - endpoint id
  * @param {IEndpoint[]} tree - tree of endpoints
  */
-// Export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
-//     Let endpoint = null;
-//     Const findEndpointById = (endpoint: IEndpoint) => {
-//         If (endpoint.id === id) return endpoint;
-//         Else return false;
-//     };
-//     Tree.map((root: IEndpoint) => {
-//         Endpoint = traverseSubtree(root, findEndpointById, 'depthFirst');
-//     });
-//     Return endpoint;
-// }
-
-/**
- * Finds endpoint by id in tree structure
- *
- * @export
- * @param {IEndpoint[]} id - endpoint id
- * @param {IEndpoint[]} tree - tree of endpoints
- */
 export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
     let foundNode: IEndpoint = null;
 
@@ -196,7 +177,6 @@ export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
                 break;
             } else if (node && node.children && node.children.length) {
                 node.children.every((node, i) => {
-                    // If (foundNode) return false;    // Terminate early if node found
                     stack.push(node);
                     return true;
                 });
