@@ -8,6 +8,9 @@ import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
 const debug = require('debug')('chord-base-cache');
 
+const FADED_ALPHA = 0.1;
+const UNFADED_ALPHA = 0.5;
+
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
     return endpoint.id === targetName;
@@ -47,8 +50,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     const curves = this.preProcessData(data, circleRadius, circleWidth, segmentSpace);
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
-      const d3Color = rgb(r, g, b);
-      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? d3Color.darker() : d3Color;
+      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
 
       const curve1 = new CurvedLineShape(
         CurveType.Bezier,
@@ -87,13 +89,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
             const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle);
             const p2FlowAngle = getFlowAngle(destEndpoint,
                destEndpoint.outgoingCount + destEndpoint._inflowIdx, segmentSpace);
-<<<<<<< HEAD
-            const p2 = calculatePoint(circleRadius - circleWidth / 2, p2FlowAngle);
-            const color = flow.baseColor;
-=======
             const p2 = calculatePoint(circleRadius + circleWidth / 2, p2FlowAngle);
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
->>>>>>> 94d2e902e12566a484784a90594e74f75dd5fed5
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
             curveData.push({p1, p2, controlPoint, color});
