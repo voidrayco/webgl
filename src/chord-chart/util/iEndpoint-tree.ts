@@ -17,7 +17,7 @@ export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
         parent = typeof parent !== 'undefined' ? parent : null;
         let children = endpoints.filter((child) => child.parent === parent.id);
         if (children.length > 0){
-            children = _calculateSiblingAnglesAndWeight(children, parent);
+            children = _calculateSiblingAnglesAndWeight(children, parent.startAngle, parent.endAngle);
             if (_isRoot(parent)){
                 tree = children;
             }else{
@@ -49,12 +49,12 @@ export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
     return tree;
 }
 
-function _calculateSiblingAnglesAndWeight(children: IEndpoint[], parent: IEndpoint){
+function _calculateSiblingAnglesAndWeight(children: IEndpoint[], startAngle: number, endAngle: number){
     const totalChildrenWeight = _getTotalWeight(children);
-    let currentAngle = parent.startAngle;
+    let currentAngle = startAngle;
     return children.map((child) => {
-        const width = (child.weight / totalChildrenWeight) * (parent.endAngle - parent.startAngle);
-        const node = {startAngle: currentAngle, endAngle: currentAngle + width, ...child};
+        const width = (child.weight / totalChildrenWeight) * (endAngle - startAngle);
+        const node = {...child, startAngle: currentAngle, endAngle: currentAngle + width};
         currentAngle += width;
         return node;
     });
@@ -132,8 +132,12 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
  * @param {IEndpoint[]} endpoint - new endpoint to add
  */
 export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
-    const parent = getEndpointById(endpoint.parent, tree);
-    parent.children.push(endpoint);
+    if (_isRoot(endpoint)){
+        tree.push(endpoint);
+    }else{
+        const parent = getEndpointById(endpoint.parent, tree);
+        parent.children.push(endpoint);
+    }
     return tree;
 }
 
@@ -144,35 +148,22 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
  * @param {IEndpoint[]} endpoint - endpoint to be removed
  */
 export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
-    const parent = getEndpointById(endpoint.parent, tree);
-    if (parent){
-        let newChildren = parent.children.filter((child) => child.id !== endpoint.id);
-        if (newChildren.length > 0){
-            newChildren = _calculateSiblingAnglesAndWeight(newChildren, parent);
+    const HEMISPHERE_SIZE = Math.PI;
+    if (_isRoot(endpoint) && tree.length > 2){
+        tree = tree.filter((root) => root.id !== endpoint.id);
+        tree = _calculateSiblingAnglesAndWeight(tree, 0, HEMISPHERE_SIZE);
+    }else{
+        const parent = getEndpointById(endpoint.parent, tree);
+        if (parent){
+            let newChildren = parent.children.filter((child) => child.id !== endpoint.id);
+            if (newChildren.length > 0){
+                newChildren = _calculateSiblingAnglesAndWeight(newChildren, parent.startAngle, parent.endAngle);
+            }
+            parent.children = newChildren;
         }
-        parent.children = newChildren;
     }
     return tree;
 }
-
-/**
- * Finds endpoint by id in tree structure
- *
- * @export
- * @param {IEndpoint[]} id - endpoint id
- * @param {IEndpoint[]} tree - tree of endpoints
- */
-// Export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
-//     Let endpoint = null;
-//     Const findEndpointById = (endpoint: IEndpoint) => {
-//         If (endpoint.id === id) return endpoint;
-//         Else return false;
-//     };
-//     Tree.map((root: IEndpoint) => {
-//         Endpoint = traverseSubtree(root, findEndpointById, 'depthFirst');
-//     });
-//     Return endpoint;
-// }
 
 /**
  * Finds endpoint by id in tree structure
@@ -196,7 +187,6 @@ export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
                 break;
             } else if (node && node.children && node.children.length) {
                 node.children.every((node, i) => {
-                    // If (foundNode) return false;    // Terminate early if node found
                     stack.push(node);
                     return true;
                 });

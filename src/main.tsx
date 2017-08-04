@@ -54,20 +54,28 @@ export class Main extends React.Component<any, IMainState> {
    *
    * @param {string} endpoints - list of leaf level endpoints
    */
-  addEndpoint = (tree: IEndpoint[]) => {
+  addEndpoint = () => {
+    const tree = this.state.tree;
+
     // Find endpoint to break into two--------
     const leafEndpoints = getTreeLeafNodes(tree);
     const filteredEndpoints = filterEndpoints(leafEndpoints, this.MINIMUM_ENDPOINT_SIZE);
+
+    // If no end points to remove, just exit
     if (filteredEndpoints.length < 1){
-      return tree;
+      return;
     }
+
     // Break endpoint into two and inject new endpoint into one side (currently start side only)
     const getRandomEndpoint = RANDOM.item(filteredEndpoints);
     const boundsEndpoint = getRandomEndpoint();
     const newEndpoint = createEndpoint(boundsEndpoint);
     boundsEndpoint.endAngle = newEndpoint.startAngle;
     boundsEndpoint.weight = boundsEndpoint.weight - newEndpoint.weight;
-    return addEndpointToTree(newEndpoint, tree);
+
+    this.setState({
+      tree: addEndpointToTree(newEndpoint, tree),
+    });
   }
 
   /**
@@ -76,10 +84,10 @@ export class Main extends React.Component<any, IMainState> {
    * @param {string} tree - tree of endpoints
    * @param {string} flows - list of leaf level flows
    */
-  removeEndpoint = (tree: IEndpoint[], flows: IFlow[]) => {
-    // If (tree.length < 2) {
-    //   Return {endpoints, flows};
-    // }
+  removeEndpoint = () => {
+    let tree = this.state.tree;
+    const flows = this.state.flows;
+
     // Remove endpoint--------------
     const leafEndpoints = getTreeLeafNodes(this.state.tree);
     const randomRemoveEndpoint = RANDOM.item(leafEndpoints);
@@ -90,59 +98,37 @@ export class Main extends React.Component<any, IMainState> {
     const newFlows = flows.filter((flow) =>
       (removedEndpoint.id !== flow.srcTarget && removedEndpoint.id !== flow.dstTarget));
 
-    return {tree, flows: newFlows};
+    this.setState({tree, flows: newFlows});
   }
 
-  addChords = (tree: IEndpoint[], flows: IFlow[]) => {
+  addChords = () => {
+    let tree = this.state.tree;
+    const flows = this.state.flows;
     const newFlows: IFlow[] = [];
+
     for (let a = 0; a < this.CHORD_CHANGE_QTY; a++){
       const flow: IFlow = createFlow(flows, tree);
       newFlows.push(flow);
       tree = addFlowToEndpoints(flow, tree);
     }
+
     const updatedFlows = union(flows, newFlows);
     this.setState({flows: updatedFlows, tree});
   }
 
-  removeChords = (tree: IEndpoint[], flows: IFlow[]) => {
+  removeChords = () => {
+    let tree = this.state.tree;
+    const flows = this.state.flows;
     const removeQty = flows.length < this.CHORD_CHANGE_QTY ? flows.length : this.CHORD_CHANGE_QTY;
     const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
     const removedFlows: IFlow[] = randomRemoveFlow();
     const updatedFlows = difference(flows, removedFlows);
+
     removedFlows.forEach((flow) => {
       tree = removeFlowFromEndpoints(flow, tree);
     });
+
     this.setState({flows: updatedFlows, tree});
-  }
-
-  /**
-   * Local method that updates page's internal react state for chord interactions
-   *
-   * @param {string} type - 'add' or 'remove' chord
-   */
-  updateChords = (type: string) => () => {
-    if (type === '+') this.addChords(this.state.tree, this.state.flows);
-    else this.removeChords(this.state.tree, this.state.flows);
-  }
-
-  /**
-   * Local method that updates page's internal react state for endpoint interactions
-   *
-   * @param {string} type - 'add' or 'remove' endpoint
-   */
-  updateEndpoints = (type: string) => () => {
-    if (type === '+'){
-      const tree = this.addEndpoint(this.state.tree);
-      this.setState({tree});
-    }else{
-      const leafNodes = getTreeLeafNodes(this.state.tree);
-      if (leafNodes.length > 0){
-        const newData = this.removeEndpoint(this.state.tree, this.state.flows);
-        if (newData){
-          this.setState({tree: newData.tree, flows: newData.flows});
-        }
-      }
-    }
   }
 
   /**
@@ -192,11 +178,11 @@ export class Main extends React.Component<any, IMainState> {
           <button onClick={this.handleClickTab(0)}>View Quads</button>
           <button onClick={this.handleClickTab(1)}>View Chord Demo</button>
           <span>Endpoint</span>
-          <button onClick={this.updateEndpoints('+')}>+</button>
-          <button onClick={this.updateEndpoints('-')}>-</button>
+          <button onClick={this.addEndpoint}>+</button>
+          <button onClick={this.removeEndpoint}>-</button>
           <span>Chord</span>
-          <button onClick={this.updateChords('+')}>+</button>
-          <button onClick={this.updateChords('-')}>-</button>
+          <button onClick={this.addChords}>+</button>
+          <button onClick={this.removeChords}>-</button>
         </div>
       </div>
     );
