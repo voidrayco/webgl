@@ -11,30 +11,19 @@ import { IEndpoint } from '../generators/types';
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
 export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
-    // Function to calculate aggregated weight for set of endpoints
-    const getTotalWeight = (endpoints: IEndpoint[]) => endpoints.reduce(function(accum: number, endpoint: IEndpoint){
-        return endpoint.id === '' ? accum : accum + endpoint.weight;
-    }, 0);
     // Builds nested subtrees under each root level IEndpoint (ie hemispheres)
     const buildSubtree = ( endpoints: IEndpoint[], parent: IEndpoint, tree: IEndpoint[] ) => {
         tree = typeof tree !== 'undefined' ? tree : [];
         parent = typeof parent !== 'undefined' ? parent : null;
         let children = endpoints.filter((child) => child.parent === parent.id);
         if (children.length > 0){
-        let currentAngle = parent.startAngle;
-        const totalChildrenWeight = getTotalWeight(children);
-        children = children.map((child) => {
-            const width = (child.weight / totalChildrenWeight) * (parent.endAngle - parent.startAngle);
-            const node = {startAngle: currentAngle, endAngle: currentAngle + width, ...child};
-            currentAngle += width;
-            return node;
-        });
-        if (_isRoot(parent)){
-            tree = children;
-        }else{
-            parent.children = children;
-        }
-        children.forEach((child) => buildSubtree( endpoints, child, []));
+            children = _calculateSiblingAnglesAndWeight(children, parent);
+            if (_isRoot(parent)){
+                tree = children;
+            }else{
+                parent.children = children;
+            }
+            children.forEach((child) => buildSubtree( endpoints, child, []));
         }
         return tree;
     };
@@ -46,7 +35,7 @@ export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
     });
     let roots = flatTree.filter(_isRoot);
     let currentAngle = 0;
-    const totalParentWeight = getTotalWeight(roots);
+    const totalParentWeight = _getTotalWeight(roots);
     roots = roots.map((root) => {
         const width = (root.weight / totalParentWeight) * 2 * Math.PI;
         const newRoot = {...root, startAngle: currentAngle, endAngle: currentAngle + width };
@@ -58,6 +47,42 @@ export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
         return node;
     });
     return tree;
+}
+
+function _calculateSiblingAnglesAndWeight(children: IEndpoint[], parent: IEndpoint){
+    const totalChildrenWeight = _getTotalWeight(children);
+    let currentAngle = parent.startAngle;
+    return children.map((child) => {
+        const width = (child.weight / totalChildrenWeight) * (parent.endAngle - parent.startAngle);
+        const node = {startAngle: currentAngle, endAngle: currentAngle + width, ...child};
+        currentAngle += width;
+        return node;
+    });
+}
+
+// Function to calculate aggregated weight for set of endpoints
+function _getTotalWeight(endpoints: IEndpoint[]){
+    return endpoints.reduce(function(accum: number, endpoint: IEndpoint){
+        return endpoint.id === '' ? accum : accum + endpoint.weight;
+    }, 0);
+}
+
+/**
+ * Traverses tree structure with provided algorithm path, executing callback function at each node. If callback returns true, traversal is terminated.
+ *
+ * @export
+ * @param {IEndpoint[]} tree - tree of endpoints
+ */
+export function traverseSubtree(startNode: IEndpoint, callback: Function, traversalType: string){
+    const visitNodeDepthFirst = (node: IEndpoint, callback: Function) => {
+        if (callback) {
+            callback(node);
+        }
+        if (node.children) node.children.forEach((child) => visitNodeDepthFirst(child, callback));
+    };
+    if (traversalType === 'depthFirst'){
+        return visitNodeDepthFirst(startNode, callback);
+    }
 }
 
 /**
@@ -79,6 +104,9 @@ export function flattenTree(tree: IEndpoint[]): IEndpoint[]{
 }
 
 function _isLeaf(endpoint: IEndpoint){
+    if (typeof endpoint.children === 'undefined' || endpoint.children === null){
+        return true;
+    }
     return endpoint.children.length === 0;
 }
 
@@ -98,19 +126,89 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
 }
 
 /**
- * Traverses tree structure with provided algorithm path, executing callback function at each node.
+ * Add endpoint to tree
  *
  * @export
+ * @param {IEndpoint[]} endpoint - new endpoint to add
+ */
+export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
+    const parent = getEndpointById(endpoint.parent, tree);
+    parent.children.push(endpoint);
+    return tree;
+}
+
+/**
+ * Remove endpoint from tree
+ *
+ * @export
+ * @param {IEndpoint[]} endpoint - endpoint to be removed
+ */
+export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
+    const parent = getEndpointById(endpoint.parent, tree);
+    if (parent){
+        let newChildren = parent.children.filter((child) => child.id !== endpoint.id);
+        if (newChildren.length > 0){
+            newChildren = _calculateSiblingAnglesAndWeight(newChildren, parent);
+        }
+        parent.children = newChildren;
+    }
+    return tree;
+}
+
+/**
+ * Finds endpoint by id in tree structure
+ *
+ * @export
+ * @param {IEndpoint[]} id - endpoint id
  * @param {IEndpoint[]} tree - tree of endpoints
  */
-export function traverseSubtree(startNode: IEndpoint, callback: Function, traversalType: string){
-    const visitNodeDepthFirst = (node: IEndpoint, callback: Function) => {
-        if (callback) {
-            callback(node);
+// Export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
+//     Let endpoint = null;
+//     Const findEndpointById = (endpoint: IEndpoint) => {
+//         If (endpoint.id === id) return endpoint;
+//         Else return false;
+//     };
+//     Tree.map((root: IEndpoint) => {
+//         Endpoint = traverseSubtree(root, findEndpointById, 'depthFirst');
+//     });
+//     Return endpoint;
+// }
+
+/**
+ * Finds endpoint by id in tree structure
+ *
+ * @export
+ * @param {IEndpoint[]} id - endpoint id
+ * @param {IEndpoint[]} tree - tree of endpoints
+ */
+export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
+    let foundNode: IEndpoint = null;
+
+    const searchSubtree = (root: IEndpoint) => {
+        const stack: IEndpoint[] = [];
+        let node: IEndpoint = null;
+        stack.push(root);
+        while (stack.length > 0) {
+            node = stack.pop();
+            if (node && node.id === id) {
+                // Found it!
+                foundNode = node;
+                break;
+            } else if (node && node.children && node.children.length) {
+                node.children.every((node, i) => {
+                    if (foundNode) return false;    // Terminate early if node found
+                    if (node.children) stack.push(node.children[i]);
+                    return true;
+                });
+            }
         }
-        node.children.forEach((child) => visitNodeDepthFirst(child, callback));
     };
-    if (traversalType === 'depthFirst'){
-        visitNodeDepthFirst(startNode, callback);
-    }
+
+    tree.every((root) => {
+        searchSubtree(root);
+        if (foundNode) return false;
+        return true;
+    });
+
+    return foundNode;
 }

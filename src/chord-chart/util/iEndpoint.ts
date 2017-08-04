@@ -1,4 +1,5 @@
 import { IEndpoint, IFlow } from '../generators/types';
+import { getEndpointById } from './iEndpoint-tree';
 
 const RANDOM = require('random');
 const ADJECTIVES = [ 'Good', 'New', 'First', 'Last', 'Long', 'Great', 'Little', 'Own', 'Other', 'Old', 'Right', 'Big', 'High', 'Different', 'Small', 'Large', 'Next', 'Early', 'Young', 'Important', 'Few', 'Public', 'Bad', 'Same', 'Able', 'Adorable', 'Beautiful', 'Clean', 'Drab', 'Elegant', 'Fancy', 'Glamorous', 'Handsome', 'Long', 'Magnificent', 'Old-fashioned', 'Plain', 'Quaint', 'Sparkling', 'Ugliest', 'Unsightly', 'Wide-eyed', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Gray', 'Black', 'White', 'Alive', 'Better', 'Careful', 'Clever', 'Dead', 'Easy', 'Famous', 'Gifted', 'Helpful', 'Important', 'Inexpensive', 'Mushy', 'Odd', 'Powerful', 'Rich', 'Shy', 'Tender', 'Uninterested', 'Vast', 'Wrong', 'Agreeable', 'Brave', 'Calm', 'Delightful', 'Eager', 'Faithful', 'Gentle', 'Happy', 'Jolly', 'Kind', 'Lively', 'Nice', 'Obedient', 'Proud', 'Relieved', 'Silly', 'Thankful', 'Victorious', 'Witty', 'Zealous', 'Angry', 'Bewildered', 'Clumsy', 'Defeated', 'Embarrassed', 'Fierce', 'Grumpy', 'Helpless', 'Itchy', 'Jealous', 'Lazy', 'Mysterious', 'Nervous', 'Obnoxious', 'Panicky', 'Repulsive', 'Scary', 'Thoughtless', 'Uptight', 'Worried', 'Broad', 'Chubby', 'Crooked', 'Curved', 'Deep', 'Flat', 'High', 'Hollow', 'Low', 'Narrow', 'Round', 'Shallow', 'Skinny', 'Square', 'Steep', 'Straight', 'Wide', 'Big', 'Colossal', 'Fat', 'Gigantic', 'Great', 'Huge', 'Immense', 'Large', 'Little', 'Mammoth', 'Massive', 'Miniature', 'Petite', 'Puny', 'Scrawny', 'Short', 'Small', 'Tall', 'Teeny', 'Teeny-tiny', 'Tiny', 'Cooing', 'Deafening', 'Faint', 'Hissing', 'Loud', 'Melodic', 'Noisy', 'Purring', 'Quiet', 'Raspy', 'Screeching', 'Thundering', 'Voiceless', 'Whispering', 'Ancient', 'Brief', 'Early', 'Fast', 'Late', 'Long', 'Modern', 'Old', 'Old-fashioned', 'Quick', 'Rapid', 'Short', 'Slow', 'Swift', 'Young', 'Bitter', 'Delicious', 'Fresh', 'Greasy', 'Juicy', 'Hot', 'Icy', 'Loose', 'Melted', 'Nutritious', 'Prickly', 'Rainy', 'Rotten', 'Salty', 'Sticky', 'Strong', 'Sweet', 'Tart', 'Tasteless', 'Uneven', 'Weak', 'Wet', 'Wooden', 'Yummy', 'Boiling', 'Breeze', 'Broken', 'Bumpy', 'Chilly', 'Cold', 'Cool', 'Creepy', 'Crooked', 'Cuddly', 'Curly', 'Damaged', 'Damp', 'Dirty', 'Dry', 'Dusty', 'Filthy', 'Flaky', 'Fluffy', 'Freezing', 'Hot', 'Warm', 'Wet', 'Abundant', 'Empty', 'Few', 'Full', 'Heavy', 'Light', 'Many', 'Numerous', 'Sparse', 'Substantial' ];
@@ -7,13 +8,15 @@ const adjectiveGenerator = RANDOM.item(ADJECTIVES);
 const nounGenerator = RANDOM.item(NOUNS);
 
 /**
- * Return endpoint with matching property value for 'id'
+ * Initializes endpoints from json data to have all properties of IEndpoint interface
  *
- * @export
- * @param {IEndpoint[]} tree - flat list of endpoints
+ * @param {IEndpoint[]} endpoints - flat list of endpoints
  */
-export function getEndpointById(endpoints: IEndpoint[], id: string){
-    return endpoints.find((endpoint: IEndpoint) => endpoint.id === id);
+export function addPropertiesToEndpoints(endpoints: IEndpoint[]){
+    endpoints.forEach((endpoint) => {
+        endpoint.children = [];
+    });
+    return endpoints;
 }
 
 /**
@@ -52,7 +55,7 @@ export function getFlowsByEndpoint(endpoint: IEndpoint, flows: IFlow[], type ? :
 /**
  * Removes all endpoints from selection that are smaller than the specified range
  *
- * @param {IEndpoint[]} endpoints - float list of endpoints
+ * @param {IEndpoint[]} endpoints - flat list of endpoints
  * @param {number} minRange - minimum endAngle-startAngle size of endpoint
  */
 export function filterEndpoints(endpoints: IEndpoint[], minRange: number) {
@@ -60,35 +63,35 @@ export function filterEndpoints(endpoints: IEndpoint[], minRange: number) {
         Math.abs(endpoint.endAngle - endpoint.startAngle) > minRange);
 }
 
-function _updateRelatedEndpoints(flow: IFlow, endpoints: IEndpoint[], isAdd: boolean) {
-    const srcEndpoint = getEndpointById(endpoints, flow.srcTarget);
-    const dstEndpoint = getEndpointById(endpoints, flow.dstTarget);
+function _updateRelatedEndpoints(flow: IFlow, tree: IEndpoint[], isAdd: boolean) {
+    const srcEndpoint = getEndpointById(flow.srcTarget, tree);
+    const dstEndpoint = getEndpointById(flow.dstTarget, tree);
     const delta = isAdd ? 1 : -1;
     srcEndpoint.outgoingCount += delta;
     srcEndpoint.totalCount += delta;
     dstEndpoint.incomingCount += delta;
     dstEndpoint.totalCount += delta;
-    return endpoints;
+    return tree;
 }
 
 /**
  * Updates endpoint data to account for removed flow
  *
  * @param {IFlow} flow - flow that is being added or removed
- * @param {IEndpoint[]} endpoints - float list of all endpoints
+ * @param {IEndpoint[]} endpoints - tree of endpoints
  */
-export function removeFlowFromEndpoints(flow: IFlow, endpoints: IEndpoint[]){
-    return _updateRelatedEndpoints(flow, endpoints, false);
+export function removeFlowFromEndpoints(flow: IFlow, tree: IEndpoint[]){
+    return _updateRelatedEndpoints(flow, tree, false);
 }
 
 /**
  * Updates endpoint data to account for added flow
  *
  * @param {IFlow} flow - flow that is being added or removed
- * @param {IEndpoint[]} endpoints - float list of all endpoints
+ * @param {IEndpoint[]} tree - tree of endpoints
  */
-export function addFlowToEndpoints(flow: IFlow, endpoints: IEndpoint[]){
-    return _updateRelatedEndpoints(flow, endpoints, true);
+export function addFlowToEndpoints(flow: IFlow, tree: IEndpoint[]){
+    return _updateRelatedEndpoints(flow, tree, true);
 }
 
 /**

@@ -5,8 +5,8 @@ import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
-import { addFlowToEndpoints, createEndpoint, filterEndpoints, getFlowsByEndpoint, removeFlowFromEndpoints, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
-import { generateTree, getTreeLeafNodes } from './chord-chart/util/iEndpoint-tree';
+import { addFlowToEndpoints, addPropertiesToEndpoints, createEndpoint, filterEndpoints, removeFlowFromEndpoints, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
+import { addEndpointToTree, generateTree, getTreeLeafNodes, removeEndpointFromTree } from './chord-chart/util/iEndpoint-tree';
 import { createFlow } from './chord-chart/util/iFlow';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
@@ -17,8 +17,8 @@ const RANDOM = require('random');
  */
 interface IMainState {
   currentTab: number,
-  leafFlows: IFlow[];
-  leafEndpoints: IEndpoint[]; // To prevent redundant calculations
+  flows: IFlow[];
+  // LeafEndpoints: IEndpoint[]; // To prevent redundant calculations
   tree: IEndpoint[];
 }
 
@@ -28,32 +28,24 @@ interface IMainState {
 export class Main extends React.Component<any, IMainState> {
   CHORD_CHANGE_QTY = 5;
   MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
-  ROTATION = -Math.PI / 2;
 
   constructor(props: IMainState){
     super(props);
     const endpoints = this.convertJsonData(JSON.parse(JSON.stringify(testChordData.endpoints)), JSON.parse(JSON.stringify(testChordData.flows)));
     const tree: IEndpoint[] = generateTree(endpoints);
-    const leafEndpoints = getTreeLeafNodes(tree);
+    // Const leafEndpoints = getTreeLeafNodes(tree);
     this.state = {
       currentTab: 0,
-      leafEndpoints,
-      leafFlows: this.buildInitialFlows(testChordData.flows, leafEndpoints),
+      // LeafEndpoints,
+      // LeafFlows: this.buildInitialFlows(testChordData.flows, leafEndpoints),
+      flows: testChordData.flows,
       tree,
     };
   }
 
   convertJsonData(endpoints: IEndpoint[], flows: IFlow[]){
-    const updatedEndpoints = setEndpointFlowCounts(endpoints, flows);
+    const updatedEndpoints = addPropertiesToEndpoints(setEndpointFlowCounts(endpoints, flows));
     return updatedEndpoints;
-  }
-
-  buildInitialFlows(flows: IFlow[], leafEndpoints: IEndpoint[]){
-    let leafFlows: IFlow[] = [];
-    leafEndpoints.forEach((endpoint) => {
-      leafFlows = union(leafFlows, getFlowsByEndpoint(endpoint, flows));
-    });
-    return leafFlows;
   }
 
   /**
@@ -61,11 +53,12 @@ export class Main extends React.Component<any, IMainState> {
    *
    * @param {string} endpoints - list of leaf level endpoints
    */
-  addEndpoint = (leafEndpoints: IEndpoint[]) => {
+  addEndpoint = (tree: IEndpoint[]) => {
     // Find endpoint to break into two--------
+    const leafEndpoints = getTreeLeafNodes(tree);
     const filteredEndpoints = filterEndpoints(leafEndpoints, this.MINIMUM_ENDPOINT_SIZE);
     if (filteredEndpoints.length < 1){
-      return leafEndpoints;
+      return tree;
     }
     // Break endpoint into two and inject new endpoint into one side (currently start side only)
     const getRandomEndpoint = RANDOM.item(filteredEndpoints);
@@ -73,60 +66,52 @@ export class Main extends React.Component<any, IMainState> {
     const newEndpoint = createEndpoint(boundsEndpoint);
     boundsEndpoint.endAngle = newEndpoint.startAngle;
     boundsEndpoint.weight = boundsEndpoint.weight - newEndpoint.weight;
-    return union(leafEndpoints, [newEndpoint]);
+    return addEndpointToTree(newEndpoint, tree);
   }
 
   /**
    * Removes an existing leaf-level endpoint, adjusting other endpoints to fill in space
    *
-   * @param {string} endpoints - list of leaf level endpoints
+   * @param {string} tree - tree of endpoints
    * @param {string} flows - list of leaf level flows
    */
-  removeEndpoint = (endpoints: IEndpoint[], flows: IFlow[]) => {
-    if (endpoints.length < 2) {
-      return {endpoints, flows};
-    }
+  removeEndpoint = (tree: IEndpoint[], flows: IFlow[]) => {
+    // If (tree.length < 2) {
+    //   Return {endpoints, flows};
+    // }
     // Remove endpoint--------------
-    const randomRemoveEndpoint = RANDOM.item(endpoints);
+    const leafEndpoints = getTreeLeafNodes(this.state.tree);
+    const randomRemoveEndpoint = RANDOM.item(leafEndpoints);
     const removedEndpoint: IEndpoint = randomRemoveEndpoint();
-    const newEndpoints = difference(endpoints, [removedEndpoint]);
+    tree = removeEndpointFromTree(removedEndpoint, tree);
 
     // Remove associated flows-------------
     const newFlows = flows.filter((flow) =>
       (removedEndpoint.id !== flow.srcTarget && removedEndpoint.id !== flow.dstTarget));
 
-    // Adjust adjacent endpoint to fill in removed endpoint slice-------------
-    const startAngle = removedEndpoint.startAngle, endAngle = removedEndpoint.endAngle;
-    const trueStartAngle = startAngle > endAngle ? endAngle : startAngle;
-    const isFirstEndpoint =  (trueStartAngle > (0 + this.ROTATION)) ? false : true;
-    const adjacentEndpoint = endpoints.find((endpoint) =>
-      isFirstEndpoint ? endpoint.startAngle === removedEndpoint.endAngle : endpoint.endAngle === removedEndpoint.startAngle);
-    isFirstEndpoint ? adjacentEndpoint.startAngle = removedEndpoint.startAngle :
-      adjacentEndpoint.endAngle = removedEndpoint.endAngle;
-    return {endpoints: newEndpoints, flows: newFlows};
+    return {tree, flows: newFlows};
   }
 
-  addChords = (endpoints: IEndpoint[], flows: IFlow[]) => {
+  addChords = (tree: IEndpoint[], flows: IFlow[]) => {
     const newFlows: IFlow[] = [];
     for (let a = 0; a < this.CHORD_CHANGE_QTY; a++){
-      const flow: IFlow = createFlow(flows, this.state.leafEndpoints);
+      const flow: IFlow = createFlow(flows, tree);
       newFlows.push(flow);
-      endpoints = addFlowToEndpoints(flow, endpoints);
+      tree = addFlowToEndpoints(flow, tree);
     }
-    const leafFlows = union(this.state.leafFlows, newFlows);
-    this.setState({leafFlows, leafEndpoints: endpoints});
+    const updatedFlows = union(flows, newFlows);
+    this.setState({flows: updatedFlows, tree});
   }
 
-  removeChords = (endpoints: IEndpoint[]) => {
-    const flows = this.state.leafFlows;
+  removeChords = (tree: IEndpoint[], flows: IFlow[]) => {
     const removeQty = flows.length < this.CHORD_CHANGE_QTY ? flows.length : this.CHORD_CHANGE_QTY;
     const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
     const removedFlows: IFlow[] = randomRemoveFlow();
-    const leafFlows = difference(flows, removedFlows);
+    const updatedFlows = difference(flows, removedFlows);
     removedFlows.forEach((flow) => {
-      endpoints = removeFlowFromEndpoints(flow, endpoints);
+      tree = removeFlowFromEndpoints(flow, tree);
     });
-    this.setState({leafFlows, leafEndpoints: endpoints});
+    this.setState({flows: updatedFlows, tree});
   }
 
   /**
@@ -135,8 +120,8 @@ export class Main extends React.Component<any, IMainState> {
    * @param {string} type - 'add' or 'remove' chord
    */
   updateChords = (type: string) => () => {
-    if (type === '+') this.addChords(this.state.leafEndpoints, this.state.leafFlows);
-    else this.removeChords(this.state.leafEndpoints);
+    if (type === '+') this.addChords(this.state.tree, this.state.flows);
+    else this.removeChords(this.state.tree, this.state.flows);
   }
 
   /**
@@ -146,12 +131,15 @@ export class Main extends React.Component<any, IMainState> {
    */
   updateEndpoints = (type: string) => () => {
     if (type === '+'){
-      const leafEndpoints = this.addEndpoint(this.state.leafEndpoints);
-      this.setState({leafEndpoints});
-    }else if (this.state.leafEndpoints.length > 0){
-      const newData = this.removeEndpoint(this.state.leafEndpoints, this.state.leafFlows);
-      if (newData){
-        this.setState({leafEndpoints: newData.endpoints, leafFlows: newData.flows});
+      const tree = this.addEndpoint(this.state.tree);
+      this.setState({tree});
+    }else{
+      const leafNodes = getTreeLeafNodes(this.state.tree);
+      if (leafNodes.length > 0){
+        const newData = this.removeEndpoint(this.state.tree, this.state.flows);
+        if (newData){
+          this.setState({tree: newData.tree, flows: newData.flows});
+        }
       }
     }
   }
@@ -187,8 +175,8 @@ export class Main extends React.Component<any, IMainState> {
     }
 
     if (this.state.currentTab === 1) {
-      chordData.flows = this.state.leafFlows;
-      chordData.endpoints = this.state.leafEndpoints;
+      chordData.flows = this.state.flows;
+      chordData.endpoints = getTreeLeafNodes(this.state.tree);
       component = (
         <ChordChart testChordData={chordData} />
       );
