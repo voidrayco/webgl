@@ -5,7 +5,7 @@ import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
-import { addFlowToEndpoints, addPropertiesToEndpoints, createEndpoint, filterEndpoints, removeFlowFromEndpoints, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
+import { addFlowToEndpoints, addPropertiesToEndpoints, createEndpoint, filterEndpoints, polarizeStartAndEndAngles, removeFlowFromEndpoints, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
 import { addEndpointToTree, generateTree, getTreeLeafNodes, removeEndpointFromTree } from './chord-chart/util/iEndpoint-tree';
 import { createFlow } from './chord-chart/util/iFlow';
 
@@ -45,7 +45,7 @@ export class Main extends React.Component<any, IMainState> {
   }
 
   convertJsonData(endpoints: IEndpoint[], flows: IFlow[]){
-    const updatedEndpoints = addPropertiesToEndpoints(setEndpointFlowCounts(endpoints, flows));
+    const updatedEndpoints = addPropertiesToEndpoints( polarizeStartAndEndAngles( setEndpointFlowCounts(endpoints, flows)));
     return updatedEndpoints;
   }
 

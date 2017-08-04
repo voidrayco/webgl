@@ -148,10 +148,10 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
  * @param {IEndpoint[]} endpoint - endpoint to be removed
  */
 export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
-    const HEMISPHERE_SIZE = Math.PI;
+    const CIRCLE_SIZE = 2 * Math.PI;
     if (_isRoot(endpoint) && tree.length > 2){
         tree = tree.filter((root) => root.id !== endpoint.id);
-        tree = _calculateSiblingAnglesAndWeight(tree, 0, HEMISPHERE_SIZE);
+        tree = _calculateSiblingAnglesAndWeight(tree, 0, CIRCLE_SIZE);
     }else{
         const parent = getEndpointById(endpoint.parent, tree);
         if (parent){

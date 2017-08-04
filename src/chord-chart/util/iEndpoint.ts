@@ -37,6 +37,23 @@ export function setEndpointFlowCounts(endpoints: IEndpoint[], flows: IFlow[]){
 }
 
 /**
+ * Sets start angle to always be smallest angle and end angle to be greatest angle for each endpoint
+ *
+ * @param {IEndpoint[]} endpoints - flat list of endpoints
+ */
+export function polarizeStartAndEndAngles(endpoints: IEndpoint[]){
+    endpoints.forEach((endpoint) => {
+        const getTrueStartAngle = (startAngle: number, endAngle: number) => startAngle > endAngle ? endAngle : startAngle;
+        const getTrueEndAngle = (startAngle: number, endAngle: number) => startAngle > endAngle ? startAngle : endAngle;
+        const startAngle = getTrueStartAngle(endpoint.startAngle, endpoint.endAngle);
+        const endAngle = getTrueEndAngle(endpoint.startAngle, endpoint.endAngle);
+        endpoint.startAngle = startAngle;
+        endpoint.endAngle = endAngle;
+    });
+    return endpoints;
+}
+
+/**
  * Returns array of flows associated with the passed in endpoint
  *
  * @param {IEndpoint} endpoint
@@ -100,22 +117,20 @@ export function addFlowToEndpoints(flow: IFlow, tree: IEndpoint[]){
  * @param {IEndpoint} boundsEndpoint - endpoint that is used as bounds for creating new endpoint
  */
 export function createEndpoint(boundsEndpoint: IEndpoint){
-    const getTrueStartAngle = (startAngle: number, endAngle: number) => startAngle > endAngle ? endAngle : startAngle;
-    const getTrueEndAngle = (startAngle: number, endAngle: number) => startAngle > endAngle ? startAngle : endAngle;
-    const startAngle = getTrueStartAngle(boundsEndpoint.startAngle, boundsEndpoint.endAngle);
-    const endAngle = getTrueEndAngle(boundsEndpoint.startAngle, boundsEndpoint.endAngle);
+    const endAngle = boundsEndpoint.endAngle;
+    const startAngle = boundsEndpoint.startAngle;
     const getRandomStartAngleInsideEndpoint = RANDOM.float(startAngle, endAngle);
     const randomStartAngle = getRandomStartAngleInsideEndpoint();
     const id = adjectiveGenerator() + nounGenerator();
     const newEndpoint = {
-        endAngle: boundsEndpoint.endAngle,
+        endAngle,
         id,
         incomingCount: 0,
         outgoingCount: 0,
         parent: boundsEndpoint.parent,
         startAngle: randomStartAngle,
         totalCount: 0,
-        weight: boundsEndpoint.weight * ((endAngle - startAngle) / boundsEndpoint.endAngle - boundsEndpoint.startAngle),
+        weight: boundsEndpoint.weight * ((endAngle - randomStartAngle) / (endAngle - startAngle)),
     };
     return newEndpoint;
 }
