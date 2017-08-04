@@ -3,7 +3,6 @@ import { IEndpoint } from '../generators/types';
 /**
  * Recursively builds up a nested tree of IEndpoints from flat set of IEndpoints, adding a children[] to each endpoint
  * and calculating startAngle and endAngle for each IEndpoint accounting for nested angles.
- * Root level is expected to contain a property parent = ''
  * Angles calculated in radians
  *
  * @export
@@ -58,6 +57,34 @@ function _calculateSiblingAnglesAndWeight(children: IEndpoint[], startAngle: num
         currentAngle += width;
         return node;
     });
+}
+
+/**
+ * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
+ * Angles calculated in radians
+ *
+ * @export
+ * @param {IEndpoint[]} endpoints - graph endpoint set
+ * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
+ */
+export function recalculateTree(tree: IEndpoint[]){
+    const CIRCLE_CIRCUMFERENCE = 2 * Math.PI;
+    tree = _calculateSiblingAnglesAndWeight(tree, 0, CIRCLE_CIRCUMFERENCE);
+    tree.map((root) => {
+        _recalculateSubtree(root);
+    });
+    return tree;
+}
+
+// Recalculates subtree for passed in tree node -- modifies passed in object
+function _recalculateSubtree(parent: IEndpoint){
+    parent = typeof parent !== 'undefined' ? parent : null;
+    let children = parent.children;
+    if (children && children.length > 0){
+        children = _calculateSiblingAnglesAndWeight(children, parent.startAngle, parent.endAngle);
+        parent.children = children;
+        children.forEach(_recalculateSubtree);
+    }
 }
 
 // Function to calculate aggregated weight for set of endpoints
@@ -148,21 +175,21 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
  * @param {IEndpoint[]} endpoint - endpoint to be removed
  */
 export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
-    const CIRCLE_SIZE = 2 * Math.PI;
+    // Remove node from tree
     if (_isRoot(endpoint) && tree.length > 2){
         tree = tree.filter((root) => root.id !== endpoint.id);
-        tree = _calculateSiblingAnglesAndWeight(tree, 0, CIRCLE_SIZE);
     }else{
         const parent = getEndpointById(endpoint.parent, tree);
         if (parent){
-            let newChildren = parent.children.filter((child) => child.id !== endpoint.id);
-            if (newChildren.length > 0){
-                newChildren = _calculateSiblingAnglesAndWeight(newChildren, parent.startAngle, parent.endAngle);
-            }
+            const newChildren = parent.children.filter((child) => child.id !== endpoint.id);
+            // If (newChildren.length > 0){
+            //     NewChildren = _calculateSiblingAnglesAndWeight(newChildren, parent.startAngle, parent.endAngle);
+            // }
             parent.children = newChildren;
         }
     }
-    return tree;
+    // Recalculate tree properties after removal
+    return recalculateTree(tree);
 }
 
 /**
