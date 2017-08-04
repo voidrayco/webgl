@@ -48,4 +48,5 @@ export interface ICurveData {
   color: RGBColor;
   endpoint: {};
   destEndpoint: {};
+  source: IFlow;
 }

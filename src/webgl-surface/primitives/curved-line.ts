@@ -454,6 +454,7 @@ export class CurvedLine<T> extends Bounds<T> {
    * @param {IPoint} p1
    * @param {IPoint} p2
    * @param {IPoint[]} controlPoints
+   * @param {boolean} preventRebounding If set, this will prevent the bounds from being recalculated
    */
   setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]) {
     // Apply the points

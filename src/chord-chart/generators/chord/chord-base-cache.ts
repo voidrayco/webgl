@@ -1,12 +1,12 @@
+import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
 import { hsl, rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
-import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { IChordData } from '../../shape-data-types/chord-data';
+import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
-
-const debug = require('debug')('chord-base-cache');
 
 const FADED_ALPHA = 0.1;
 const UNFADED_ALPHA = 0.5;
@@ -37,35 +37,55 @@ function getFlowAngle(endpoint: IEndpoint, flowIndex: number, segmentSpace: numb
  * @class ChordBaseCache
  * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
-export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLineData>> {
-  generate(data: IData, config: IChordChartConfig, selection: Selection) {
+export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>> {
+  generate(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
+  buildCache(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
     const circleRadius = config.radius;
     const circleWidth = config.ringWidth;
     const segmentSpace = config.space;
-
     const curves = this.preProcessData(data, circleRadius, circleWidth, segmentSpace);
+
+    // Map the outer rings by id
+    const ringById = new Map<string, CurvedLineShape<IOuterRingData>>();
+
+    outerRings.getBaseBuffer().forEach(ring => {
+      ringById.set(ring.d.source.id, ring);
+    });
+
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
       const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
 
-      const curve1 = new CurvedLineShape(
+      const newCurve = new CurvedLineShape<IChordData>(
         CurveType.Bezier,
         {x: curve.p1.x, y: curve.p1.y},
         {x: curve.p2.x, y: curve.p2.y},
         [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
         color);
 
-      curve1.d = {relations: [curve.endpoint, curve.destEndpoint]};
-      curve1.lineWidth = 3;
-      return curve1;
+      // Set the relational and domain information for the chord
+      newCurve.d = {
+        outerRings: [
+          ringById.get(curve.source.srcTarget),
+          ringById.get(curve.source.dstTarget),
+        ],
+        source: curve.source,
+      };
+
+      // Apply the relational information to the outer rings as well
+      newCurve.d.outerRings.forEach(ring => {
+        ring.d.chords.push(newCurve);
+      });
+
+      newCurve.lineWidth = 3;
+
+      return newCurve;
     });
 
     this.buffer = curveShapes;
-    debug('Generated CurvedLines for base chord cache: %o', curveShapes);
   }
 
   // Data comes from catbird-ui >> d3Chart.loadData()
@@ -84,17 +104,30 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
       data.flows.forEach((flow) => {
         if (flow.srcTarget === endpoint.id){
           const destEndpoint = getEndpoint(data, flow.dstTarget);
-          debug('source is %o,destination is %o', flow.srcTarget, destEndpoint);
+
           if (destEndpoint){
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
             const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle);
-            const p2FlowAngle = getFlowAngle(destEndpoint,
-               destEndpoint.outgoingCount + destEndpoint._inflowIdx, segmentSpace);
+            const p2FlowAngle = getFlowAngle(
+              destEndpoint,
+              destEndpoint.outgoingCount + destEndpoint._inflowIdx,
+              segmentSpace,
+            );
+
             const p2 = calculatePoint(circleRadius + circleWidth / 2, p2FlowAngle);
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
-            curveData.push({p1, p2, controlPoint, color, endpoint, destEndpoint});
+
+            curveData.push({
+              color,
+              controlPoint,
+              destEndpoint,
+              endpoint,
+              p1,
+              p2,
+              source: flow,
+            });
           }
         }
       });

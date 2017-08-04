@@ -1,6 +1,6 @@
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Selection, SelectionType } from '../../selections/selection';
-import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, IData as IChordData } from '../types';
 import { OuterRingBaseCache } from './outer-ring-base-cache';
 import { OuterRingInteractionsCache } from './outer-ring-interaction-cache';
@@ -40,11 +40,11 @@ export class OuterRingGenerator {
   /**
    * Get the base buffer
    */
-  getBaseBuffer(): CurvedLineShape<ICurvedLineData>[] {
+  getBaseBuffer(): CurvedLineShape<IOuterRingData>[] {
     return this.outerRingBase.getBuffer();
   }
 
-  getInteractionBuffer(): CurvedLineShape<ICurvedLineData>[] {
+  getInteractionBuffer(): CurvedLineShape<IOuterRingData>[] {
     return this.outerRingInteraction.getBuffer();
   }
 }

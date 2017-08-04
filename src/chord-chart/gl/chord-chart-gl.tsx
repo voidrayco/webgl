@@ -65,6 +65,9 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   /** The current dataset that is being rendered by this component */
   staticCurvedLineSet: CurvedLineShape<any>[] = [];
 
+  // Keeps track of some maouse interaction states
+  mouseHovered = new Map<any, boolean>();
+
   /**
    * Applies new props injected into this component.
    *
@@ -92,7 +95,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       BufferUtil.beginUpdates();
 
       for (const curvedLine of staticCurvedLines) {
-        debug(curvedLine);
         const strip = curvedLine.getTriangleStrip();
         let TR;
         let BR;
@@ -183,7 +185,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       BufferUtil.beginUpdates();
 
       for (const curvedLine of interactiveCurvedLines) {
-        debug(curvedLine);
         const strip = curvedLine.getTriangleStrip();
         let TR;
         let BR;
@@ -194,7 +195,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           interactiveCurvedLines, this.interactiveCurvedBufferItems,
           numVerticesPerSegment, strip.length / 4.0,
           function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-            debug(i, ppos, cpos);
             stripPos = i * 4;
             TR = strip[stripPos];
             BR = strip[stripPos + 1];
@@ -627,27 +627,52 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
   onMouseHover(hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
     // Filter out curves that presently exist in interactiveCurvedLines
-    const hitCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside); // Includes outerRings and chords
+    // Includes outerRings and chords
+    const hitCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside);
+    // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
+    const screenDistance = projection.screenSizeToWorld(1, 1).width;
+    // This will keep track of all items that were hovered but are no longer hovered
+    const leftItems: CurvedLineShape<any>[] = [];
+
     const selections = hitCurvedLines.filter((curve, idx) => {
-      if (curve.distanceTo(world) < 4) {
+      if (curve.distanceTo(world) < screenDistance) {
+        this.mouseHovered.set(curve, true);
         return true;
       }
+
+      else if (this.mouseHovered.get(curve)) {
+        this.mouseHovered.delete(curve);
+        leftItems.push(curve);
+      }
+
       return false;
     });
+
     if (this.props.onMouseHover){
       this.props.onMouseHover(selections, mouse, world, projection);
+    }
+
+    if (this.props.onMouseLeave){
+      this.props.onMouseLeave(leftItems, mouse, world, projection);
     }
   }
 
   onMouseLeave(left: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
     // Const selections: CurvedLineShape<any>[] = [];
     const leftCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], left);
+    // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
+    const screenDistance = projection.screenSizeToWorld(1, 1).width;
+
     const selections = leftCurvedLines.filter((curve, idx) => {
-      if (curve.distanceTo(world) > 4) {
-        return true;
+      if (curve.distanceTo(world) > screenDistance) {
+        if (this.mouseHovered.get(curve)) {
+          this.mouseHovered.delete(curve);
+          return true;
+        }
       }
       return false;
     });
+
     if (this.props.onMouseLeave){
       this.props.onMouseLeave(selections, mouse, world, projection);
     }
@@ -656,12 +681,16 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   onMouseUp(e: React.MouseEvent<HTMLDivElement>, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
     // Const selections: CurvedLineShape<any>[] = [];
     const clickedCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside);
+    // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
+    const screenDistance = projection.screenSizeToWorld(1, 1).width;
+
     const selections = clickedCurvedLines.filter((curve, idx) => {
-      if (curve.distanceTo(world) < 4) {
+      if (curve.distanceTo(world) < screenDistance) {
         return true;
       }
       return false;
     });
+
     if (this.props.onMouseUp){
       this.props.onMouseUp(selections, mouse, world, projection);
     }

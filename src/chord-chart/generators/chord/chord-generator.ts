@@ -1,7 +1,8 @@
+import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Selection, SelectionType } from '../../selections/selection';
-import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
-import { IChordChartConfig, IData as IChordData } from '../types';
+import { IChordData } from '../../shape-data-types/chord-data';
+import { IChordChartConfig, IData } from '../types';
 import { ChordBaseCache } from './chord-base-cache';
 import { ChordInteractionsCache } from './chord-interaction-cache';
 
@@ -24,21 +25,21 @@ export class ChordGenerator {
   /**
    * Generates the buffers for static chords in the charts
    */
-  generate(data: IChordData, config: IChordChartConfig, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
     debug('Generating chords');
     this.bustCaches(selection);
-    this.chordBase.generate(data, config, selection);
+    this.chordBase.generate(data, config, outerRings, selection);
     this.chordInteractions.generate(config, selection);
   }
 
   /**
    * Get the base buffer
    */
-  getBaseBuffer(): CurvedLineShape<ICurvedLineData>[] {
+  getBaseBuffer(): CurvedLineShape<IChordData>[] {
     return this.chordBase.getBuffer();
   }
 
-  getInteractionBuffer(): CurvedLineShape<ICurvedLineData>[] {
+  getInteractionBuffer(): CurvedLineShape<IChordData>[] {
     return this.chordInteractions.getBuffer();
   }
 }
