@@ -196,8 +196,8 @@ export function getEndpointById(id: string, tree: IEndpoint[]): IEndpoint{
                 break;
             } else if (node && node.children && node.children.length) {
                 node.children.every((node, i) => {
-                    if (foundNode) return false;    // Terminate early if node found
-                    if (node.children) stack.push(node.children[i]);
+                    // If (foundNode) return false;    // Terminate early if node found
+                    stack.push(node);
                     return true;
                 });
             }
