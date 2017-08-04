@@ -2,11 +2,14 @@ import { hsl, rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
 const debug = require('debug')('chord-base-cache');
+
+const FADED_ALPHA = 0.1;
+const UNFADED_ALPHA = 0.5;
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -47,7 +50,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     const curves = this.preProcessData(data, circleRadius, circleWidth, segmentSpace);
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
-      const color = rgb(r, g, b);
+      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
 
       const curve1 = new CurvedLineShape(
         CurveType.Bezier,

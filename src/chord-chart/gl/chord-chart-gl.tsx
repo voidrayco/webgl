@@ -103,7 +103,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           staticCurvedLines, this.staticCurvedBufferItems,
           numVerticesPerSegment, strip.length / 4.0,
           function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-            debug(i, ppos, cpos);
             stripPos = i * 4;
             TR = strip[stripPos];
             BR = strip[stripPos + 1];
@@ -516,8 +515,14 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       const verticesPerQuad = 6;
       const numQuads = 100000;
 
-      this.staticCurvedBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticCurvedBufferItems.attributes);
-      this.staticCurvedBufferItems.system = new Mesh(this.staticCurvedBufferItems.geometry, quadMaterial);
+      this.staticCurvedBufferItems.geometry = BufferUtil.makeBuffer(
+        numQuads * verticesPerQuad,
+        this.staticCurvedBufferItems.attributes,
+      );
+      this.staticCurvedBufferItems.system = new Mesh(
+        this.staticCurvedBufferItems.geometry,
+        quadMaterial,
+      );
       this.staticCurvedBufferItems.system.frustumCulled = false;
       this.staticCurvedBufferItems.system.drawMode = TriangleStripDrawMode;
 
@@ -575,7 +580,10 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       const verticesPerQuad = 6;
       const numQuads = 10000;
 
-      this.staticLabelBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticLabelBufferItems.attributes);
+      this.staticLabelBufferItems.geometry = BufferUtil.makeBuffer(
+        numQuads * verticesPerQuad,
+        this.staticLabelBufferItems.attributes,
+      );
       this.staticLabelBufferItems.system = new Mesh(this.staticLabelBufferItems.geometry, textureMaterial);
       this.staticLabelBufferItems.system.frustumCulled = false;
       this.staticLabelBufferItems.system.drawMode = TriangleStripDrawMode;
