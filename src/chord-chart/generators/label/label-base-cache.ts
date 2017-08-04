@@ -36,7 +36,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
       const label = new Label<any>({
         color: color,
         fontSize: 14,
-        text: 'TEXT',
+        text: labelData.name,
       });
       const width = label.getSize().width + 20;
       const height = label.fontSize;
@@ -93,7 +93,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
         debug('anchor is %o', anchor);
         if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
         const point = calculatePoint(angle);
-        return {point, angle: angleIntersection, anchor};
+        return {point, angle: angleIntersection, anchor, name: endpoint.name};
     });
 
     return labelData;
