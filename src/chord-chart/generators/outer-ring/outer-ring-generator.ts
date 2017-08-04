@@ -32,8 +32,9 @@ export class OuterRingGenerator {
   generate(data: IChordData, config: IChordChartConfig, selection: Selection) {
     debug('Generating outer rings');
     this.bustCaches(data, config, selection);
+    debug(data);
     this.outerRingBase.generate(data, config, selection);
-    this.outerRingInteraction.generate(selection);
+    this.outerRingInteraction.generate(data, config, selection);
   }
 
   /**

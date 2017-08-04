@@ -28,7 +28,7 @@ export class ChordGenerator {
     debug('Generating chords');
     this.bustCaches(selection);
     this.chordBase.generate(data, config, selection);
-    this.chordInteractions.generate(selection);
+    this.chordInteractions.generate(config, selection);
   }
 
   /**

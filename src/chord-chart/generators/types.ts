@@ -45,4 +45,6 @@ export interface ICurveData {
   p2: IPoint;
   controlPoint: IPoint;
   color: RGBColor;
+  endpoint: {};
+  destEndpoint: {};
 }

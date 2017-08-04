@@ -3,11 +3,12 @@ import { scaleOrdinal, schemeCategory20 } from 'd3-scale';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection, SelectionType } from '../../selections/selection';
+import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData } from '../types';
 
-const debug = require('debug')('chord-chart');
+const debug = require('debug')('outer-ring-base');
+const depth = 21;
 
 /**
  * Responsible for generating the static outer rings in the system
@@ -24,12 +25,12 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
   buildCache(data: IData, config: IChordChartConfig, selection: Selection){
     const circleRadius = config.radius;
     const segmentSpace: number = config.space; // It used to seperate segments
+    debug(data);
 
     const segments = this.preProcessData(data, circleRadius, segmentSpace);
     const circleEdges = segments.map((segment) => {
       const {r, g, b} = segment.color;
-      const d3Color = rgb(r, g, b);
-      const color = selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0 ? d3Color.darker() : d3Color;
+      const color = rgb(r, g, b);
 
       const curve = new CurvedLineShape(
         CurveType.CircularCCW,
@@ -41,7 +42,8 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       );
 
       curve.lineWidth = config.ringWidth;
-      curve.depth = 21;
+      curve.depth = depth;
+      curve.d = {relations: segment.flows};
 
       return curve;
     });
@@ -60,14 +62,18 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
       return {x, y};
     };
 
-    const ids = data.endpoints.map((endpoint) =>
-      endpoint.id);
+    const ids = data.endpoints.map((endpoint) => endpoint.id);
     const calculateColor = scaleOrdinal(schemeCategory20).domain(ids);
     const segments = data.endpoints.map((endpoint) => {
       const p1 = calculatePoint(endpoint.startAngle + segmentSpace);
       const p2 = calculatePoint(endpoint.endAngle - segmentSpace);
       const colorVal = rgb(color(calculateColor(endpoint.id)));
-      return {p1, p2, controlPoint, color: colorVal};
+
+      const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);
+
+      debug(flows);
+
+      return {p1, p2, controlPoint, color: colorVal, flows};
     });
 
     return segments;

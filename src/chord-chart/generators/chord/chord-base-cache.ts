@@ -2,7 +2,7 @@ import { hsl, rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection, SelectionType } from '../../selections/selection';
+import { Selection } from '../../selections/selection';
 import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
@@ -47,8 +47,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
     const curves = this.preProcessData(data, circleRadius, circleWidth, segmentSpace);
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
-      const d3Color = rgb(r, g, b);
-      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? d3Color.darker() : d3Color;
+      const color = rgb(r, g, b);
 
       const curve1 = new CurvedLineShape(
         CurveType.Bezier,
@@ -57,6 +56,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
         [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
         color);
 
+      curve1.d = {relations: [curve.endpoint, curve.destEndpoint]};
       curve1.lineWidth = 3;
       return curve1;
     });
@@ -91,7 +91,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<ICurvedLine
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
-            curveData.push({p1, p2, controlPoint, color});
+            curveData.push({p1, p2, controlPoint, color, endpoint, destEndpoint});
           }
         }
       });

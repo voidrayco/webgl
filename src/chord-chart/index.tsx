@@ -7,7 +7,7 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 
-// DEBUG const debug = require('debug')('chord-index');
+const debug = require('debug')('chord-index');
 const testChordData = require('./test-data/chord-data.json');
 
 interface IChordChartProps {
@@ -82,6 +82,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       } else {
         type = SelectionType.MOUSEOVER_OUTER_RING;
       }
+      debug(selection);
       this.selection.select(type, selection);
       this.forceUpdate();
     }
