@@ -7,10 +7,11 @@ import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig, IData, IEndpoint } from '../types';
 
 const color = rgb(1, 1, 1);
-const debug = require('debug')('outer-ring-interaction-cache');
+// Const debug = require('debug')('outer-ring-interaction-cache');
 const depth = 21;
 const lineDepth = 10;
-const lineWidth = 20;
+const ringWidth = 20;
+const lineWidth = 3;
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -47,7 +48,7 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
     const shapes = Array<any>();
 
     selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
-      // Duplicate the curves with active color
+      // Highlight hovered ring
       const curvedLine = new CurvedLineShape(
         CurveType.CircularCCW,
         {x: selected.p1.x, y: selected.p1.y},
@@ -57,10 +58,9 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
         200,
       );
 
-      curvedLine.lineWidth = lineWidth;
+      curvedLine.lineWidth = ringWidth;
       curvedLine.depth = depth;
       shapes.push(curvedLine);
-      debug(selected);
 
       // Draw related flows
       if (selected.d){
@@ -79,13 +79,14 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
           const destEndpoint = getEndpoint(data, flow.dstTarget);
           const controlPoint = {x: 0, y: 0};
 
-          const calculatePoint2 = (radianAngle: number) => {
+          // Highlight all destination rings
+          const calculateRingPoint = (radianAngle: number) => {
             const x = circleRadius * Math.cos(radianAngle);
             const y = circleRadius * Math.sin(radianAngle);
             return {x, y};
           };
-          const p1 = calculatePoint2(destEndpoint.startAngle + config.space);
-          const p2 = calculatePoint2(destEndpoint.endAngle - config.space);
+          const p1 = calculateRingPoint(destEndpoint.startAngle + config.space);
+          const p2 = calculateRingPoint(destEndpoint.endAngle - config.space);
 
           const destRing = new CurvedLineShape(
             CurveType.CircularCCW,
@@ -98,7 +99,6 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
 
           destRing.lineWidth = config.ringWidth;
           destRing.depth = depth;
-
           shapes.push(destRing);
 
           if (destEndpoint){
@@ -111,8 +111,9 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
             destEndpoint._inflowIdx++;
             curveData.push({p1, p2, controlPoint, color});
           }
-
         });
+
+        // Draw flows
         curveData.forEach(curve => {
           const curvedLine = new CurvedLineShape(
             CurveType.Bezier,
@@ -122,6 +123,7 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
           );
 
           curvedLine.depth = lineDepth;
+          curvedLine.lineWidth = lineWidth;
           shapes.push(curvedLine);
         });
       }

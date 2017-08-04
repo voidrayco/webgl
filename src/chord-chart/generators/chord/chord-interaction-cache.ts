@@ -7,9 +7,10 @@ import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
 import { IChordChartConfig } from '../types';
 
 const color = rgb(1, 1, 1);
-const depth = 10;
-const ringDepth = 21;
 const debug = require('debug')('chord-interaction-cache');
+const depth = 10;
+const lineWidth = 3;
+const ringDepth = 21;
 
 /**
  * Responsible for generating the static chords in the system
@@ -34,6 +35,8 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
         color,
       );
       curvedLine.depth = depth;
+      curvedLine.lineWidth = lineWidth;
+
       shapes.push(curvedLine);
 
       // Draw related outer rings
@@ -44,10 +47,11 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
           const y = config.radius * Math.sin(radianAngle);
           return {x, y};
         };
+
+        // Highlight outer rings
         curve.d.relations.forEach((point: any) => {
           const p1 = calculatePoint(point.startAngle + config.space);
           const p2 = calculatePoint(point.endAngle - config.space);
-
           const segment = {p1, p2, controlPoint, color: color};
 
           const rings = new CurvedLineShape(
@@ -59,8 +63,8 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
             200,
           );
 
-          rings.lineWidth = config.ringWidth;
           rings.depth = ringDepth;
+          rings.lineWidth = config.ringWidth;
           shapes.push(rings);
         });
       }
