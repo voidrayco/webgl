@@ -3,13 +3,13 @@
       {
          "id":"p3",
          "name": "SloppyJoe",
-         "weight": 23,
+         "weight": 1,
          "parent": "hemisphere1"
       },
       {
          "id":"TrustZone_6",
          "name": "TimTime",
-         "weight": 21,
+         "weight": 1,
          "parent": "hemisphere1"
       },
       {

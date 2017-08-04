@@ -81,12 +81,46 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
   constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[], color?: RGBColor, resolution: number = 20, cacheSegments: boolean = false) {
     // We pass our properties to the curve line but we do not let it cache it's version of the line segments
     // As we will be constructing our own segmentation requiring a new type of cache
-    super(type, p1, p2, controlPoints, resolution, false);
+    super(type, p1, p2, controlPoints, resolution);
+
+    this.encapsulatePoints(this.getTriangleStrip());
     this.cachesQuadSegments = cacheSegments;
 
     if (color) {
       this.color = color;
     }
+  }
+
+  /**
+   * Returns a new instance of this object that mimicks the properties of this Object
+   *
+   * @returns {CurvedLineShape<T>} The cloned object
+   */
+  clone() {
+    // Perform the clone
+    const clone: CurvedLineShape<T> = new CurvedLineShape<T>(
+      this.type,
+      this.p1,
+      this.p2,
+      this.controlPoints,
+      this.color,
+      this.resolution,
+      this.cachesSegments,
+    );
+
+    clone.lineWidth = this.lineWidth;
+    clone.depth = this.depth;
+    clone.d = this.d;
+
+    return clone;
+  }
+
+  /**
+   * @override
+   * See base definition
+   */
+  distanceTo(point: IPoint): number {
+    return Math.max(0, super.distanceTo(point) - (this.lineWidth / 2.0));
   }
 
   /**

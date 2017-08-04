@@ -1,19 +1,33 @@
 import * as React from 'react';
+import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
+import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
-import { IData as IChordData } from './generators/types';
+import { IData } from './generators/types';
 import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
+import { IChordData } from './shape-data-types/chord-data';
+import { IOuterRingData } from './shape-data-types/outer-ring-data';
 
 interface IChordChartProps {
-  data: IChordData;
+  data: IData;
 }
 
 interface IChordChartState {
   zoom: number
+}
+
+function isOuterRing(curve: any): curve is CurvedLineShape<IOuterRingData> {
+  if (curve.type === CurveType.CircularCCW) return true;
+  return false;
+}
+
+function isChord(curve: any): curve is CurvedLineShape<IChordData> {
+  if (curve.type === CurveType.Bezier) return true;
+  return false;
 }
 
 /**
@@ -67,21 +81,55 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     if (selections.length > 0) {
       let selection;
       // If has outer ring thing grab it instead
-      const filteredSelections = selections.filter(s => s.type === 1);
+      const filteredSelections = selections.filter(s => s.type === CurveType.CircularCCW);
+
       if (filteredSelections.length > 0) {
         selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-      } else {
+      }
+
+      else {
         selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
       }
 
-      // Types: 0 = chord, 1 = outer ring
-      let type;
-      if (selection.type === 0) {
-        type = SelectionType.MOUSEOVER_CHORD;
-      } else {
-        type = SelectionType.MOUSEOVER_OUTER_RING;
+      // Select the chord and it's related outer rings
+      if (isChord(selection)) {
+        this.selection.select(SelectionType.MOUSEOVER_CHORD, selection);
+
+        selection.d.outerRings.forEach((ring: CurvedLineShape<IOuterRingData>) => {
+          this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, ring);
+        });
       }
-      this.selection.select(type, selection);
+
+      // Select the outer ring and it's related chords
+      else if (isOuterRing(selection)) {
+        this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, selection);
+
+        selection.d.chords.forEach((chord: CurvedLineShape<IChordData>) => {
+          this.selection.select(SelectionType.MOUSEOVER_CHORD, chord);
+
+          // Make sure both ends of each chord are selected
+          chord.d.outerRings.forEach((ring: CurvedLineShape<IOuterRingData>) => {
+            this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, ring);
+          });
+        });
+      }
+
+      this.forceUpdate();
+    }
+  }
+
+  handleMouseLeave = (selections: any[], mouse: any, world: any, projection: any) => {
+    selections.forEach(curve => {
+      if (curve.type === CurveType.Bezier) {
+        this.selection.deselect(SelectionType.MOUSEOVER_CHORD, curve);
+      }
+
+      else if (curve.type === CurveType.CircularCCW) {
+        this.selection.deselect(SelectionType.MOUSEOVER_OUTER_RING, curve);
+      }
+    });
+
+    if (selections.length > 0) {
       this.forceUpdate();
     }
   }
@@ -97,18 +145,25 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       space: 0.005,
     };
 
-    this.chordGenerator.generate(this.props.data, config, this.selection);
     this.outerRingGenerator.generate(this.props.data, config, this.selection);
+    this.chordGenerator.generate(this.props.data, config, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.props.data, config, this.selection);
+
+    let staticCurves: CurvedLineShape<any>[] = this.chordGenerator.getBaseBuffer();
+    staticCurves = staticCurves.concat(this.outerRingGenerator.getBaseBuffer());
+
+    let interactiveCurves: CurvedLineShape<any>[] = this.chordGenerator.getInteractionBuffer();
+    interactiveCurves = interactiveCurves.concat(this.outerRingGenerator.getInteractionBuffer());
 
     return (
       <ChordChartGL
         height={this.viewport.height}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
-        staticCurvedLines={this.chordGenerator.getBaseBuffer().concat(this.outerRingGenerator.getBaseBuffer())}
-        interactiveCurvedLines={this.chordGenerator.getInteractionBuffer().concat(this.outerRingGenerator.getInteractionBuffer())}
-        onMouseHover={(selections, mouse, world, projection) => this.handleMouseHover(selections, mouse, world, projection)}
+        staticCurvedLines={staticCurves}
+        interactiveCurvedLines={interactiveCurves}
+        onMouseHover={this.handleMouseHover}
+        onMouseLeave={this.handleMouseLeave}
         viewport={this.viewport}
         width={this.viewport.width}
         zoom={this.state.zoom}
