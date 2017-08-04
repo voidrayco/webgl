@@ -9,7 +9,7 @@ import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 
 interface IChordChartProps {
-  testChordData: IChordData;
+  data: IChordData;
 }
 
 interface IChordChartState {
@@ -97,9 +97,9 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       space: 0.005,
     };
 
-    this.chordGenerator.generate(this.props.testChordData, config, this.selection);
-    this.outerRingGenerator.generate(this.props.testChordData, config, this.selection);
-    this.labelGenerator.generate(this.props.testChordData, config, this.selection);
+    this.chordGenerator.generate(this.props.data, config, this.selection);
+    this.outerRingGenerator.generate(this.props.data, config, this.selection);
+    this.labelGenerator.generate(this.props.data, config, this.selection);
 
     return (
       <ChordChartGL

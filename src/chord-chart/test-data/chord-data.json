@@ -1,1255 +1,1255 @@
 {
   "endpoints": [
-      {  
+      {
          "id":"p3",
          "weight": 23,
          "parent": "hemisphere1"
       },
-      {  
+      {
          "id":"TrustZone_6",
          "weight": 21,
          "parent": "hemisphere1"
       },
-      {  
+      {
          "id":"hemisphere1",
-         "weight": 60,
+         "weight": 1,
          "parent": ""
       },
-      {  
+      {
          "id":"hemisphere2",
-         "weight": 40,
+         "weight": 1,
          "parent": ""
       },
-      {  
+      {
          "id":"p4",
          "weight": 66,
          "parent": "p3"
       },
-      {  
+      {
          "id":"TrustZone_3",
          "weight": 43,
          "parent": "p3"
       },
-      {  
+      {
          "id":"TrustZone_Untrusted",
          "weight": 21,
          "parent": "hemisphere2"
       },
-      {  
+      {
          "id":"TrustZone_13",
          "weight": 27,
          "parent": "hemisphere2"
       },
-      {  
+      {
          "id":"TrustZone_10",
          "weight": 64,
          "parent": "hemisphere2"
       },
-      {  
+      {
          "id":"TrustZone_8",
          "weight": 27,
          "parent": "hemisphere2"
       },
-      {  
+      {
          "id":"TrustZone_14",
          "weight": 65,
          "parent": "hemisphere2"
       },
-      {  
+      {
          "id":"TrustZone_11",
          "weight": 23,
          "parent": "hemisphere2"
       },
-      {  
+      {
          "id":"NetworkObject_3",
          "weight": 25,
          "parent": "hemisphere2"
       }
    ],
-   "flows": [  
-   {  
+   "flows": [
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":202.72432320775297,
          "s":1,
          "l":0.3741369898036413
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":194.43552668983293,
          "s":1,
          "l":0.44624139177522903
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":203.54493696567192,
          "s":1,
          "l":0.3017873690469496
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":203.26365574023103,
          "s":1,
          "l":0.49212392801409105
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":199.80275075749816,
          "s":1,
          "l":0.4214531789852766
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":202.54949271687607,
          "s":1,
          "l":0.3714863134295353
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":204.8449465347346,
          "s":1,
          "l":0.3816747629030913
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":196.75837683424305,
          "s":1,
          "l":0.31631017088704383
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.27157535792568,
          "s":1,
          "l":0.4614892887370737
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":200.13989517481463,
          "s":1,
          "l":0.4614529318725497
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":205.59110559917522,
          "s":1,
          "l":0.4584424045290413
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":198.06730769148672,
          "s":1,
          "l":0.48263042929795996
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":197.0834953280606,
          "s":1,
          "l":0.40961580840341616
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":203.28208211744519,
          "s":1,
          "l":0.5251324614084463
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.01140516800558,
          "s":1,
          "l":0.3093158723059946
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":204.0479002098597,
          "s":1,
          "l":0.49318617049173336
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_14",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":194.56965998713858,
          "s":1,
          "l":0.4508060666941085
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":196.81380806154633,
          "s":1,
          "l":0.39508681177800836
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":194.38765193081267,
          "s":1,
          "l":0.3276728786692264
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.34473006535686,
          "s":1,
          "l":0.3223876092603933
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":205.2141555308211,
          "s":1,
          "l":0.42997873279293136
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":196.0542659154711,
          "s":1,
          "l":0.3079275274312788
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_14",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.8380604874212,
          "s":1,
          "l":0.5072522572650546
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_10",
-      "baseColor":{  
+      "baseColor":{
          "h":195.46201657777974,
          "s":1,
          "l":0.47441975524395064
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":203.96617685015016,
          "s":1,
          "l":0.3122815720063092
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.05863457076313,
          "s":1,
          "l":0.4047105381533745
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":203.33039856995293,
          "s":1,
          "l":0.4580843495395323
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":197.6554943115902,
          "s":1,
          "l":0.4917985574081698
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":204.1390503810722,
          "s":1,
          "l":0.3873363293076096
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":198.09159639883995,
          "s":1,
          "l":0.3470515494277257
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.28011731007706,
          "s":1,
          "l":0.37134584621611066
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.82357284822814,
          "s":1,
          "l":0.34015968388914963
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":193.90530524381577,
          "s":1,
          "l":0.2957450604265866
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_13",
-      "baseColor":{  
+      "baseColor":{
          "h":199.3770506329633,
          "s":1,
          "l":0.37309986999023764
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_11",
-      "baseColor":{  
+      "baseColor":{
          "h":195.3532432442266,
          "s":1,
          "l":0.48151420491794966
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":195.74141990721378,
          "s":1,
          "l":0.4562636336515509
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":202.37933618470285,
          "s":1,
          "l":0.4929242613928221
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"TrustZone_14",
-      "baseColor":{  
+      "baseColor":{
          "h":195.37712104533182,
          "s":1,
          "l":0.3956069156979488
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":198.8655747151656,
          "s":1,
          "l":0.40082485420535535
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":198.03601894857252,
          "s":1,
          "l":0.3067354858792193
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.644898289666,
          "s":1,
          "l":0.4566229687304698
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_14",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":205.00591732865934,
          "s":1,
          "l":0.35875334949641835
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":202.50005756249215,
          "s":1,
          "l":0.37868675406709446
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.65532451384223,
          "s":1,
          "l":0.44857091744474825
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":197.64404621505017,
          "s":1,
          "l":0.3235794998720924
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":197.14903333331165,
          "s":1,
          "l":0.3237253064742362
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":199.68351385570102,
          "s":1,
          "l":0.41769581134856076
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.63314683199383,
          "s":1,
          "l":0.36775677027539333
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":195.33443817756435,
          "s":1,
          "l":0.4190920108795764
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_14",
-      "baseColor":{  
+      "baseColor":{
          "h":197.05708082472393,
          "s":1,
          "l":0.4937015130280942
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":202.84148296800106,
          "s":1,
          "l":0.390475315151955
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":194.67122199065173,
          "s":1,
          "l":0.3886686577803164
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":200.42825014925722,
          "s":1,
          "l":0.4838172605404856
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":197.35150706300547,
          "s":1,
          "l":0.43575995431984466
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.35281696843765,
          "s":1,
          "l":0.4677903315158286
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_13",
-      "baseColor":{  
+      "baseColor":{
          "h":202.49218495142532,
          "s":1,
          "l":0.3809464615331448
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":203.36595165436376,
          "s":1,
          "l":0.4282744488248824
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.54869791458776,
          "s":1,
          "l":0.538471575787469
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":194.14225677787758,
          "s":1,
          "l":0.41911128983378876
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_10",
-      "baseColor":{  
+      "baseColor":{
          "h":204.65487990817508,
          "s":1,
          "l":0.36467207180551275
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.251277453851,
          "s":1,
          "l":0.40854168567683025
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":195.42159260452925,
          "s":1,
          "l":0.389997081309304
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.61202435290784,
          "s":1,
          "l":0.3481948018784495
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":193.8331206645169,
          "s":1,
          "l":0.4630357607266625
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":198.43893294073797,
          "s":1,
          "l":0.3695622452863722
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.75645930581612,
          "s":1,
          "l":0.30804851745256523
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.69905346333394,
          "s":1,
          "l":0.3394568495536174
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":198.0945230916282,
          "s":1,
          "l":0.5302514106670321
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":197.1102761141211,
          "s":1,
          "l":0.5290240017692118
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":203.43968529964818,
          "s":1,
          "l":0.3386868130687449
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":196.25444957420638,
          "s":1,
          "l":0.47595306272180204
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":199.29563385067704,
          "s":1,
          "l":0.31317735932885316
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":205.0896061563605,
          "s":1,
          "l":0.4320800903868932
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.53144252291997,
          "s":1,
          "l":0.3269060242450007
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":202.24270461733857,
          "s":1,
          "l":0.4169256530439117
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.7685848896114,
          "s":1,
          "l":0.4569996701104592
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":196.07315644840494,
          "s":1,
          "l":0.35306659459423234
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.1992514235901,
          "s":1,
          "l":0.4167214639815904
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":202.88540965648733,
          "s":1,
          "l":0.42944585016328324
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":196.9150502010415,
          "s":1,
          "l":0.49760395958409404
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":201.65232046183888,
          "s":1,
          "l":0.443614708528403
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.7709257474192,
          "s":1,
          "l":0.3033651844776989
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.4279424600943,
          "s":1,
          "l":0.4715667371050474
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":195.4815397011764,
          "s":1,
          "l":0.37236633149724935
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":205.02920624260437,
          "s":1,
          "l":0.4696673353330945
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.33272550860215,
          "s":1,
          "l":0.3198884315082238
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":205.35927513913143,
          "s":1,
          "l":0.42613211650117566
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_13",
-      "baseColor":{  
+      "baseColor":{
          "h":205.48042638575822,
          "s":1,
          "l":0.32307196082284567
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":197.27887415304562,
          "s":1,
          "l":0.500543283105001
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":204.3698573482327,
          "s":1,
          "l":0.3936312555110071
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":197.63283990023243,
          "s":1,
          "l":0.5102570916289285
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":203.91808797762874,
          "s":1,
          "l":0.4606797965651366
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.06200320117742,
          "s":1,
          "l":0.4694886211326504
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":202.54234015584552,
          "s":1,
          "l":0.5252005152728372
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":203.1297627392964,
          "s":1,
          "l":0.4426201906054281
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":204.79943242485308,
          "s":1,
          "l":0.4321167052454801
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":204.59799870772892,
          "s":1,
          "l":0.435926558599038
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":195.84098504256036,
          "s":1,
          "l":0.527504829858348
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"TrustZone_10",
-      "baseColor":{  
+      "baseColor":{
          "h":193.7350980625932,
          "s":1,
          "l":0.3030331097711358
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":204.60340801871376,
          "s":1,
          "l":0.5177555266521763
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":197.84346522358254,
          "s":1,
          "l":0.3601999696751388
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":197.8395090583196,
          "s":1,
          "l":0.5020446055098349
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":198.67862844480067,
          "s":1,
          "l":0.5163317216031091
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_10",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":200.32284143248907,
          "s":1,
          "l":0.4977288134640664
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":196.0040466742097,
          "s":1,
          "l":0.41944759196782244
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":201.01428849454084,
          "s":1,
          "l":0.512117926316649
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":195.69803171363168,
          "s":1,
          "l":0.3797443519696101
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"TrustZone_13",
-      "baseColor":{  
+      "baseColor":{
          "h":202.69642243837777,
          "s":1,
          "l":0.32205848729339415
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":204.72343728997015,
          "s":1,
          "l":0.44935030214979504
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.03223193297367,
          "s":1,
          "l":0.3723262000223919
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.3862377341463,
          "s":1,
          "l":0.5036820337381787
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":198.55698476881062,
          "s":1,
          "l":0.36871775056395345
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.66212859018157,
          "s":1,
          "l":0.3681625917457969
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":194.21384279258643,
          "s":1,
          "l":0.5060489086144226
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":203.52278375041675,
          "s":1,
          "l":0.3307088477136944
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":195.10830196208772,
          "s":1,
          "l":0.41899479292668235
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_14",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":201.19608934858348,
          "s":1,
          "l":0.3348204950473353
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":195.35831908464846,
          "s":1,
          "l":0.36825770691618054
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":195.7097792451875,
          "s":1,
          "l":0.5116839665146433
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":198.57252960386515,
          "s":1,
          "l":0.31542796675101387
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":201.11493529569594,
          "s":1,
          "l":0.3875018801556994
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":197.12672584068463,
          "s":1,
          "l":0.4100029695886889
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":199.51520700146153,
          "s":1,
          "l":0.31102072590488183
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":197.2726049674701,
          "s":1,
          "l":0.4492659067690745
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":196.95219285553003,
          "s":1,
          "l":0.37302692696191353
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":194.52345609230653,
          "s":1,
          "l":0.3563459321736289
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_Untrusted",
-      "baseColor":{  
+      "baseColor":{
          "h":196.37397070335774,
          "s":1,
          "l":0.4736259160571213
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":204.319165409635,
          "s":1,
          "l":0.3254313130162381
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":199.65464745063858,
          "s":1,
          "l":0.44899829022845944
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_Untrusted",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":202.93968811608391,
          "s":1,
          "l":0.3242220831017661
       }
    },
-   {  
+   {
       "dstTarget":"TrustZone_8",
       "srcTarget":"NetworkObject_3",
-      "baseColor":{  
+      "baseColor":{
          "h":195.18294941946937,
          "s":1,
          "l":0.33344599774461486
       }
    },
-   {  
+   {
       "dstTarget":"NetworkObject_3",
       "srcTarget":"TrustZone_8",
-      "baseColor":{  
+      "baseColor":{
          "h":201.66351751205391,
          "s":1,
          "l":0.2976357734254856

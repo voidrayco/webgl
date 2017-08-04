@@ -34,8 +34,9 @@ export class Main extends React.Component<any, IMainState> {
     const endpoints = this.convertJsonData(JSON.parse(JSON.stringify(testChordData.endpoints)), JSON.parse(JSON.stringify(testChordData.flows)));
     const tree: IEndpoint[] = generateTree(endpoints);
     // Const leafEndpoints = getTreeLeafNodes(tree);
+
     this.state = {
-      currentTab: 0,
+      currentTab: 1,
       // LeafEndpoints,
       // LeafFlows: this.buildInitialFlows(testChordData.flows, leafEndpoints),
       flows: testChordData.flows,
@@ -157,7 +158,7 @@ export class Main extends React.Component<any, IMainState> {
    */
   render() {
     let quadData: IQuadShapeData[] = [];
-    const chordData: IChordData = Object.assign([], testChordData);
+    const chordData: IChordData = Object.assign({}, testChordData);
     let component;
 
     if (this.state.currentTab === 0) {
@@ -178,21 +179,25 @@ export class Main extends React.Component<any, IMainState> {
       chordData.flows = this.state.flows;
       chordData.endpoints = getTreeLeafNodes(this.state.tree);
       component = (
-        <ChordChart testChordData={chordData} />
+        <ChordChart data={chordData} />
       );
     }
 
     return (
       <div>
-        <button onClick={this.handleClickTab(0)}>View Quads</button>
-        <button onClick={this.handleClickTab(1)}>View Chord Demo</button>
-        <span>Endpoint</span>
-        <button onClick={this.updateEndpoints('+')}>+</button>
-        <button onClick={this.updateEndpoints('-')}>-</button>
-        <span>Chord</span>
-        <button onClick={this.updateChords('+')}>+</button>
-        <button onClick={this.updateChords('-')}>-</button>
-        {component}
+        <div>
+          {component}
+        </div>
+        <div style={{marginTop: 4, padding: 4}}>
+          <button onClick={this.handleClickTab(0)}>View Quads</button>
+          <button onClick={this.handleClickTab(1)}>View Chord Demo</button>
+          <span>Endpoint</span>
+          <button onClick={this.updateEndpoints('+')}>+</button>
+          <button onClick={this.updateEndpoints('-')}>-</button>
+          <span>Chord</span>
+          <button onClick={this.updateChords('+')}>+</button>
+          <button onClick={this.updateChords('-')}>-</button>
+        </div>
       </div>
     );
   }

@@ -17,7 +17,7 @@ import { filterQuery } from 'webgl-surface/util/quad-tree';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
 
-const debug = require('debug')('chord-chart');
+const debug = require('debug')('chord-chart:gl');
 
 // Local component properties interface
 interface IChordChartGLProperties extends IWebGLSurfaceProperties {
@@ -92,7 +92,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       BufferUtil.beginUpdates();
 
       for (const curvedLine of staticCurvedLines) {
-        debug(curvedLine);
         const strip = curvedLine.getTriangleStrip();
         let TR;
         let BR;
@@ -103,7 +102,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           staticCurvedLines, this.staticCurvedBufferItems,
           numVerticesPerSegment, strip.length / 4.0,
           function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
-            debug(i, ppos, cpos);
             stripPos = i * 4;
             TR = strip[stripPos];
             BR = strip[stripPos + 1];

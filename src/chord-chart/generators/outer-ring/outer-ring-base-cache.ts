@@ -21,7 +21,9 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<ICurved
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, config: IChordChartConfig, selection: Selection){
+  buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
+    debug('Building outer rings for data: %o', data);
+
     const circleRadius = config.radius;
     const segmentSpace: number = config.space; // It used to seperate segments
 
