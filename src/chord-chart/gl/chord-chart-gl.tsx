@@ -362,8 +362,10 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       const verticesPerQuad = 6;
       const numQuads = 10000;
 
-      this.staticLabelBufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad,
-         this.staticLabelBufferItems.attributes);
+      this.staticLabelBufferItems.geometry = BufferUtil.makeBuffer(
+        numQuads * verticesPerQuad,
+        this.staticLabelBufferItems.attributes,
+      );
       this.staticLabelBufferItems.system = new Mesh(this.staticLabelBufferItems.geometry, textureMaterial);
       this.staticLabelBufferItems.system.frustumCulled = false;
       this.staticLabelBufferItems.system.drawMode = TriangleStripDrawMode;
