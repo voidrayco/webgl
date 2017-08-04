@@ -7,6 +7,8 @@ import { IChordChartConfig } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 
+const debug = require('debug')('chord_index');
+
 // DEBUG const debug = require('debug')('chord-index');
 const testChordData = require('./test-data/chord-data.json');
 
@@ -65,6 +67,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
     this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
     this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
+    this.componentWillMount();
 
     if (selections.length > 0) {
       let selection;
@@ -76,6 +79,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
       }
 
+      debug('world is %o', world);
+      debug('selection type is %o', selection.type);
       // Types: 0 = chord, 1 = outer ring
       let type;
       if (selection.type === 0) {
@@ -113,7 +118,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer()}
         staticRingLines={this.outerRingGenerator.getBaseBuffer()}
-        interactiveCurvedLines={this.chordGenerator.getInteractionBuffer().concat(this.outerRingGenerator.getInteractionBuffer())}
+        interactiveCurvedLines={this.chordGenerator.getInteractionBuffer()}
+        interactiveRingLines={this.outerRingGenerator.getInteractionBuffer()}
         onMouseHover={(selections, mouse, world, projection) => this.handleMouseHover(selections, mouse, world, projection)}
         viewport={this.viewport}
         width={this.viewport.width}

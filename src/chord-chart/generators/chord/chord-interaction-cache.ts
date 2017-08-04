@@ -30,7 +30,7 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICu
         color,
       );
 
-      curvedLine.depth = 10;
+      curvedLine.depth = 1;
       return curvedLine;
     });
   }
