@@ -1,10 +1,13 @@
-import { rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
-import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
-const debug = require('debug')('outer-ring-interaction-cache');
+import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
+import { IChordChartConfig, IData } from '../types';
+
+// Const debug = require('debug')('outer-ring-interaction-cache');
+const depth = 21;
+const ringWidth = 20;
+
 /**
  * Responsible for generating the static OuterRings in the system
  *
@@ -12,28 +15,25 @@ const debug = require('debug')('outer-ring-interaction-cache');
  * @class OuterRingBaseCache
  * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
-export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICurvedLineData>> {
-  generate(selection: Selection) {
+export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape<IOuterRingData>> {
+  generate(data: IData, config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(selection: Selection) {
-    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
-      // Duplicate the curves with active color
-      debug(selected);
-      const color = rgb(1, 1, 1);
-      const curvedLine = new CurvedLineShape(
-        CurveType.CircularCCW,
-        {x: selected.p1.x, y: selected.p1.y},
-        {x: selected.p2.x, y: selected.p2.y},
-        [{x: selected.controlPoints[0].x, y: selected.controlPoints[0].y}],
-        color,
-        200,
-      );
+  buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
+    const shapes = Array<any>();
 
-      curvedLine.lineWidth = 20;
-      curvedLine.depth = 21;
-      return curvedLine;
+    selection.getSelection<CurvedLineShape<IOuterRingData>>(SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
+      // Highlight hovered ring
+      const curvedLine = selected.clone();
+
+      curvedLine.a = 1.0;
+      curvedLine.lineWidth = ringWidth;
+      curvedLine.depth = depth;
+
+      shapes.push(curvedLine);
     });
+
+    this.buffer = shapes;
   }
 }

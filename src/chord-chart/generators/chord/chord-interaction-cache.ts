@@ -1,37 +1,32 @@
-import { rgb } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
-import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { IChordData } from '../../shape-data-types/chord-data';
+import { IChordChartConfig } from '../types';
 
-// Debug const debug = require('debug')('chord-interaction-cache');
+const DEPTH = 10;
 
 /**
  * Responsible for generating the static chords in the system
- *
- * @export
- * @class ChordBaseCache
- * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
-export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICurvedLineData>> {
-  generate(selection: Selection) {
+export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<IChordData>> {
+  generate(config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(selection: Selection) {
-    this.buffer = selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_CHORD).map(curve => {
-      // Duplicate the curves with active color
-      const color = rgb(1, 1, 1);
-      const curvedLine = new CurvedLineShape(
-        CurveType.Bezier,
-        {x: curve.p1.x, y: curve.p1.y}, {x: curve.p2.x, y: curve.p2.y},
-        [{x: curve.controlPoints[0].x, y: curve.controlPoints[0].y}],
-        color,
-      );
+  buildCache(config: IChordChartConfig, selection: Selection) {
+    const shapes = Array<any>();
 
-      curvedLine.depth = 10;
-      return curvedLine;
+    selection.getSelection<CurvedLineShape<any>>(SelectionType.MOUSEOVER_CHORD).forEach(curve => {
+      // Duplicate the curves with active color
+      const curvedLine = curve.clone();
+
+      curvedLine.a = 1.0;
+      curvedLine.depth = DEPTH;
+
+      shapes.push(curvedLine);
     });
+
+    this.buffer = shapes;
   }
 }

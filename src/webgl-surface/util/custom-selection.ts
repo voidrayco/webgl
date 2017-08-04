@@ -57,7 +57,7 @@ export class CustomSelection {
     const selectionMap: Map<T, boolean> = this.selections.get(category);
 
     // See if the item is selected already, if it is, clear the selection and bust caches
-    if (selectionMap.get(item)) {
+    if (selectionMap && selectionMap.get(item)) {
       // Clear the cache for the selection list
       this.cachedSelection.set(category, null);
       // Set the selection
