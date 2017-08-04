@@ -132,8 +132,12 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
  * @param {IEndpoint[]} endpoint - new endpoint to add
  */
 export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
-    const parent = getEndpointById(endpoint.parent, tree);
-    parent.children.push(endpoint);
+    if (_isRoot(endpoint)){
+        tree.push(endpoint);
+    }else{
+        const parent = getEndpointById(endpoint.parent, tree);
+        parent.children.push(endpoint);
+    }
     return tree;
 }
 
