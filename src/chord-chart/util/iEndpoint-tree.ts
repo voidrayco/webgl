@@ -187,7 +187,7 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {newEndpoint: IEndpoint[]} a newly generated random leaf endpoint, or null if no available space (no nodes > min endpoint size)
  */
-export function createLeafEndpoint(tree: IEndpoint[], flows: IFlow[]){
+export function createRandomLeafEndpoint(tree: IEndpoint[], flows: IFlow[]){
     // Find endpoint to break into two--------
     const leafEndpoints = getTreeLeafNodes(tree);
     const filteredEndpoints = filterEndpoints(leafEndpoints, MINIMUM_ENDPOINT_SIZE);

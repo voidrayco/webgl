@@ -43,7 +43,7 @@ export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function createFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
+export function createRandomFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
     const newFlows: IFlow[] = [];
     for (let a = 0; a < qty; a++){
       const flow: IFlow = createFlow(flows, tree);

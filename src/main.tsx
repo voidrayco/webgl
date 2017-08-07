@@ -5,8 +5,8 @@ import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
 import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
-import { addEndpointToTree, createLeafEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree, selectRandomLeafEndpoint } from './chord-chart/util/iEndpoint-tree';
-import { addFlows, createFlows, removeFlows, selectRandomFlows } from './chord-chart/util/iFlow';
+import { addEndpointToTree, createRandomLeafEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree, selectRandomLeafEndpoint } from './chord-chart/util/iEndpoint-tree';
+import { addFlows, createRandomFlows, removeFlows, selectRandomFlows } from './chord-chart/util/iFlow';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
 
@@ -48,7 +48,7 @@ export class Main extends React.Component<any, IMainState> {
   addEndpoint = () => {
     let tree = this.state.tree;
     const flows = this.state.flows;
-    const newEndpoint = createLeafEndpoint(tree, flows);  // Generate random tree endpoint
+    const newEndpoint = createRandomLeafEndpoint(tree, flows);  // Generate random tree endpoint
     if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree, flows);
     this.setState({
       tree,
@@ -69,7 +69,7 @@ export class Main extends React.Component<any, IMainState> {
   addChords = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const newFlows = createFlows(this.CHORD_CHANGE_QTY, flows, tree); // Generate random flows
+    const newFlows = createRandomFlows(this.CHORD_CHANGE_QTY, flows, tree); // Generate random flows
     const updated = addFlows(newFlows, flows, tree);  // Add new flows to chart
     this.setState({flows: updated.flows, tree: updated.tree});
   }
