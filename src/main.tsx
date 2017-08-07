@@ -5,8 +5,8 @@ import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
 import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
-import { addEndpointToTree, createTreeEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree } from './chord-chart/util/iEndpoint-tree';
-import { addFlows, createFlows, removeFlows } from './chord-chart/util/iFlow';
+import { addEndpointToTree, createTreeEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree, selectRandomLeafEndpoint } from './chord-chart/util/iEndpoint-tree';
+import { addFlows, createFlows, removeFlows, selectRandomFlows } from './chord-chart/util/iFlow';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
 
@@ -49,8 +49,6 @@ export class Main extends React.Component<any, IMainState> {
     let tree = this.state.tree;
     const flows = this.state.flows;
     const newEndpoint = createTreeEndpoint(tree, flows);
-    // BoundsEndpoint.endAngle = newEndpoint.startAngle;
-    // BoundsEndpoint.weight = boundsEndpoint.weight - newEndpoint.weight;
     if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree, flows);
     this.setState({
       tree,
@@ -63,7 +61,8 @@ export class Main extends React.Component<any, IMainState> {
   removeEndpoint = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const updated = removeEndpointFromTree(tree, flows);
+    const endpoint = selectRandomLeafEndpoint(tree);
+    const updated = removeEndpointFromTree(endpoint, tree, flows);
     this.setState({tree: updated.tree, flows: updated.flows});
   }
 
@@ -78,7 +77,8 @@ export class Main extends React.Component<any, IMainState> {
   removeChords = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const updated = removeFlows(this.CHORD_CHANGE_QTY, flows, tree);
+    const randomFlows = selectRandomFlows(this.CHORD_CHANGE_QTY, flows);
+    const updated = removeFlows(randomFlows, flows, tree);
     this.setState({flows: updated.flows, tree: updated.tree});
   }
 

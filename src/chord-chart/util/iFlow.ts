@@ -67,18 +67,28 @@ export function addFlows(newFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
 }
 
 /**
- * Remove flows to chart
+ * Select x random flows, where x = qty
  *
  * @param {IEndpoint[]} qty - number of flows to remove
- * @param {IEndpoint[]} tree - tree of endpoints
- * @param {IEndpoint[]} flows - total set of flows in graph
- * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
+ * @param {IEndpoint[]} flows - set of flows to randomly select from
+ * @returns {flows: IFlow[]} randomly selected flows
  */
-export function removeFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
+export function selectRandomFlows(qty: number, flows: IFlow[]){
     const removeQty = flows.length < qty ? flows.length : qty;
     const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
-    const removedFlows: IFlow[] = randomRemoveFlow();
-    const updatedFlows = difference(flows, removedFlows);
+    return randomRemoveFlow();
+}
+
+/**
+ * Remove flows to chart
+ *
+ * @param {IEndpoint[]} removeFlows - flows to remove
+ * @param {IEndpoint[]} flows - total set of flows in graph
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
+ */
+export function removeFlows(removeFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
+    const updatedFlows = difference(flows, removeFlows);
     // Recalculate tree properties after removal
     tree = recalculateTree(tree, updatedFlows);
     return {tree, flows: updatedFlows};

@@ -179,13 +179,13 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
 }
 
 /**
- * Create endpoint in tree
+ * Create randomly genereated leaf endpoint object
  *
  * @export
  * @param {IEndpoint[]} endpoint - new endpoint to add
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
- * @returns {newEndpoint: IEndpoint[]} a newly generated random endpoint, or null if no available space (no nodes > min endpoint size)
+ * @returns {newEndpoint: IEndpoint[]} a newly generated random leaf endpoint, or null if no available space (no nodes > min endpoint size)
  */
 export function createTreeEndpoint(tree: IEndpoint[], flows: IFlow[]){
     // Find endpoint to break into two--------
@@ -200,6 +200,13 @@ export function createTreeEndpoint(tree: IEndpoint[], flows: IFlow[]){
     const sibling = getRandomEndpoint();
     const newEndpoint = createEndpoint(sibling);
     return newEndpoint;
+}
+
+export function selectRandomLeafEndpoint(tree: IEndpoint[]){
+    // Identify random endpoint to remove-----------
+    const leafEndpoints = getTreeLeafNodes(tree);
+    const randomLeaf = RANDOM.item(leafEndpoints);
+    return randomLeaf();
 }
 
 /**
@@ -229,11 +236,7 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows:
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function removeEndpointFromTree(tree: IEndpoint[], flows: IFlow[]){
-    // Identify random endpoint to remove-----------
-    const leafEndpoints = getTreeLeafNodes(tree);
-    const randomRemoveEndpoint = RANDOM.item(leafEndpoints);
-    const endpoint: IEndpoint = randomRemoveEndpoint();
+export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
     // Remove node from tree-------
     if (_isRoot(endpoint) && tree.length > 2){
         tree = tree.filter((root) => root.id !== endpoint.id);
