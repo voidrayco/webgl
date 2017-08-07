@@ -1,4 +1,4 @@
-import { IEndpoint } from '../generators/types';
+import { IEndpoint, IFlow } from '../generators/types';
 
 /**
  * Recursively builds up a nested tree of IEndpoints from flat set of IEndpoints, adding a children[] to each endpoint
@@ -9,14 +9,14 @@ import { IEndpoint } from '../generators/types';
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
+export function generateTree(endpoints: IEndpoint[], flows: IFlow[]): IEndpoint[]{
     // Builds nested subtrees under each root level IEndpoint (ie hemispheres)
     const buildSubtree = ( endpoints: IEndpoint[], parent: IEndpoint, tree: IEndpoint[] ) => {
         tree = typeof tree !== 'undefined' ? tree : [];
         parent = typeof parent !== 'undefined' ? parent : null;
         let children = endpoints.filter((child) => child.parent === parent.id);
         if (children.length > 0){
-            children = _calculateSiblingAnglesAndWeight(children, parent.startAngle, parent.endAngle);
+            children = _recalculateEndpoint(children, flows, parent.startAngle, parent.endAngle);
             if (_isRoot(parent)){
                 tree = children;
             }else{
@@ -48,15 +48,38 @@ export function generateTree(endpoints: IEndpoint[]): IEndpoint[]{
     return tree;
 }
 
-function _calculateSiblingAnglesAndWeight(children: IEndpoint[], startAngle: number, endAngle: number){
+/**
+ * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
+ * Angles calculated in radians
+ *
+ * @export
+ * @param {IEndpoint[]} endpoints - graph endpoint set
+ * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
+ */
+function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle: number, endAngle: number){
     const totalChildrenWeight = _getTotalWeight(children);
     let currentAngle = startAngle;
     return children.map((child) => {
         const width = (child.weight / totalChildrenWeight) * (endAngle - startAngle);
-        const node = {...child, startAngle: currentAngle, endAngle: currentAngle + width};
+        let node = {...child, startAngle: currentAngle, endAngle: currentAngle + width};
         currentAngle += width;
+        node = _recalculateFlowCounts(node, flows);
         return node;
     });
+}
+
+// Recalculates outgoingCount, incomingCount, totalCount  for passed in tree node
+function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
+    let outgoingCount = 0, incomingCount = 0, totalCount = 0;
+    flows.forEach((flow) => {
+        if (flow.srcTarget === node.id) outgoingCount++;
+        if (flow.dstTarget === node.id) incomingCount++;
+        if (flow.srcTarget === node.id || flow.dstTarget === node.id) totalCount++;
+    });
+    node.outgoingCount = outgoingCount;
+    node.incomingCount = incomingCount;
+    node.totalCount = totalCount;
+    return node;
 }
 
 /**
@@ -67,24 +90,23 @@ function _calculateSiblingAnglesAndWeight(children: IEndpoint[], startAngle: num
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-export function recalculateTree(tree: IEndpoint[]){
+export function recalculateTree(tree: IEndpoint[], flows: IFlow[]){
+    // Recalculates subtree for passed in tree node -- modifies passed in object
+    const _recalculateSubtree = (parent: IEndpoint) => {
+        parent = typeof parent !== 'undefined' ? parent : null;
+        let children = parent.children;
+        if (children && children.length > 0){
+            children = _recalculateEndpoint(children, flows, parent.startAngle, parent.endAngle);
+            parent.children = children;
+            children.forEach(_recalculateSubtree);
+        }
+    };
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI;
-    tree = _calculateSiblingAnglesAndWeight(tree, 0, CIRCLE_CIRCUMFERENCE);
-    tree.map((root) => {
+    tree = _recalculateEndpoint(tree, flows, 0, CIRCLE_CIRCUMFERENCE);
+    tree.map((root: IEndpoint) => {
         _recalculateSubtree(root);
     });
     return tree;
-}
-
-// Recalculates subtree for passed in tree node -- modifies passed in object
-function _recalculateSubtree(parent: IEndpoint){
-    parent = typeof parent !== 'undefined' ? parent : null;
-    let children = parent.children;
-    if (children && children.length > 0){
-        children = _calculateSiblingAnglesAndWeight(children, parent.startAngle, parent.endAngle);
-        parent.children = children;
-        children.forEach(_recalculateSubtree);
-    }
 }
 
 // Function to calculate aggregated weight for set of endpoints
@@ -157,8 +179,10 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
  *
  * @export
  * @param {IEndpoint[]} endpoint - new endpoint to add
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @param {IEndpoint[]} flows - total set of flows in graph
  */
-export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
+export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
     if (_isRoot(endpoint)){
         tree.push(endpoint);
     }else{
@@ -173,8 +197,10 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
  *
  * @export
  * @param {IEndpoint[]} endpoint - endpoint to be removed
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @param {IEndpoint[]} flows - total set of flows in graph
  */
-export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
+export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
     // Remove node from tree
     if (_isRoot(endpoint) && tree.length > 2){
         tree = tree.filter((root) => root.id !== endpoint.id);
@@ -182,14 +208,10 @@ export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[]){
         const parent = getEndpointById(endpoint.parent, tree);
         if (parent){
             const newChildren = parent.children.filter((child) => child.id !== endpoint.id);
-            // If (newChildren.length > 0){
-            //     NewChildren = _calculateSiblingAnglesAndWeight(newChildren, parent.startAngle, parent.endAngle);
-            // }
             parent.children = newChildren;
         }
     }
-    // Recalculate tree properties after removal
-    return recalculateTree(tree);
+    return tree;
 }
 
 /**
