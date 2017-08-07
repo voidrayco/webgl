@@ -1,16 +1,20 @@
 import { hsl } from 'd3-color';
+import { difference, union } from 'ramda';
 import { IEndpoint, IFlow } from '../generators/types';
 import { getFlowsByEndpoint } from './iEndpoint';
+import { recalculateTree } from './iEndpoint-tree';
 import { getTreeLeafNodes } from './iEndpoint-tree';
 
 const RANDOM = require('random');
 const getHslRandomHVal = RANDOM.float(193, 206);
 const getHslRandomLVal = RANDOM.float(0.29, 0.54);
+const CHORD_CHANGE_QTY = 5;
 
 /**
  * Creates random flow
  *
- * @param {IEndpoint} boundsEndpoint - endpoint that is used as bounds for creating new endpoint
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @param {IEndpoint[]} flows - total set of flows in graph
  */
 export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
     const endpoints = getTreeLeafNodes(tree);
@@ -30,4 +34,40 @@ export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
         srcIndex: outgoingFlows.length ? outgoingFlows.length + 1 : 1,
         srcTarget: src.id,
     };
+}
+
+/**
+ * Add flows to chart
+ *
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @param {IEndpoint[]} flows - total set of flows in graph
+ * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
+ */
+export function addFlows(flows: IFlow[], tree: IEndpoint[]){
+    const newFlows: IFlow[] = [];
+    for (let a = 0; a < CHORD_CHANGE_QTY; a++){
+      const flow: IFlow = createFlow(flows, tree);
+      newFlows.push(flow);
+    }
+    const updatedFlows = union(flows, newFlows);
+    // Recalculate tree properties after removal
+    tree = recalculateTree(tree, updatedFlows);
+    return {flows: updatedFlows, tree};
+}
+
+/**
+ * Remove flows to chart
+ *
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @param {IEndpoint[]} flows - total set of flows in graph
+ * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
+ */
+export function removeFlows(flows: IFlow[], tree: IEndpoint[]){
+    const removeQty = flows.length < CHORD_CHANGE_QTY ? flows.length : CHORD_CHANGE_QTY;
+    const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
+    const removedFlows: IFlow[] = randomRemoveFlow();
+    const updatedFlows = difference(flows, removedFlows);
+    // Recalculate tree properties after removal
+    tree = recalculateTree(tree, updatedFlows);
+    return {tree, flows: updatedFlows};
 }

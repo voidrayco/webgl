@@ -189,7 +189,7 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows:
         const parent = getEndpointById(endpoint.parent, tree);
         parent.children.push(endpoint);
     }
-    return tree;
+    return recalculateTree(tree, flows);
 }
 
 /**
@@ -199,6 +199,7 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows:
  * @param {IEndpoint[]} endpoint - endpoint to be removed
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
+ * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
 export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
     // Remove node from tree
@@ -211,7 +212,12 @@ export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], f
             parent.children = newChildren;
         }
     }
-    return tree;
+    // Remove associated flows-------------
+    const newFlows = flows.filter((flow) =>
+      (endpoint.id !== flow.srcTarget && endpoint.id !== flow.dstTarget));
+    // Recalculate tree properties after removal
+    tree = recalculateTree(tree, newFlows);
+    return {tree, flows: newFlows};
 }
 
 /**
