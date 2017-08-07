@@ -8,7 +8,6 @@ import { getTreeLeafNodes } from './iEndpoint-tree';
 const RANDOM = require('random');
 const getHslRandomHVal = RANDOM.float(193, 206);
 const getHslRandomLVal = RANDOM.float(0.29, 0.54);
-const CHORD_CHANGE_QTY = 5;
 
 /**
  * Creates random flow
@@ -39,13 +38,14 @@ export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
 /**
  * Add flows to chart
  *
+ * @param {IEndpoint[]} qty - number of flows to add
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function addFlows(flows: IFlow[], tree: IEndpoint[]){
+export function addFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
     const newFlows: IFlow[] = [];
-    for (let a = 0; a < CHORD_CHANGE_QTY; a++){
+    for (let a = 0; a < qty; a++){
       const flow: IFlow = createFlow(flows, tree);
       newFlows.push(flow);
     }
@@ -58,12 +58,13 @@ export function addFlows(flows: IFlow[], tree: IEndpoint[]){
 /**
  * Remove flows to chart
  *
+ * @param {IEndpoint[]} qty - number of flows to remove
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function removeFlows(flows: IFlow[], tree: IEndpoint[]){
-    const removeQty = flows.length < CHORD_CHANGE_QTY ? flows.length : CHORD_CHANGE_QTY;
+export function removeFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
+    const removeQty = flows.length < qty ? flows.length : qty;
     const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
     const removedFlows: IFlow[] = randomRemoveFlow();
     const updatedFlows = difference(flows, removedFlows);

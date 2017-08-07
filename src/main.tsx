@@ -25,6 +25,7 @@ interface IMainState {
  */
 export class Main extends React.Component<any, IMainState> {
   MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
+  CHORD_CHANGE_QTY = 5;
 
   constructor(props: IMainState){
     super(props);
@@ -85,14 +86,14 @@ export class Main extends React.Component<any, IMainState> {
   addChords = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const updated = addFlows(flows, tree);
+    const updated = addFlows(this.CHORD_CHANGE_QTY, flows, tree);
     this.setState({flows: updated.flows, tree: updated.tree});
   }
 
   removeChords = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const updated = removeFlows(flows, tree);
+    const updated = removeFlows(this.CHORD_CHANGE_QTY, flows, tree);
     this.setState({flows: updated.flows, tree: updated.tree});
   }
 
