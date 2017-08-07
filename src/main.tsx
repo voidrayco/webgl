@@ -1,12 +1,13 @@
+import { difference, union } from 'ramda';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
-import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
-import { addEndpointToTree, createRandomLeafEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree, selectRandomLeafEndpoint } from './chord-chart/util/iEndpoint-tree';
-import { addFlows, createRandomFlows, removeFlows, selectRandomFlows } from './chord-chart/util/iFlow';
+import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './util/iEndpoint';
+import { addEndpointToTree, createRandomLeafEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
+import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
 
@@ -27,19 +28,20 @@ export class Main extends React.Component<any, IMainState> {
 
   constructor(props: IMainState){
     super(props);
-    const flows = testChordData.flows;
-    const endpoints = this.convertJsonData(JSON.parse(JSON.stringify(testChordData.endpoints)), JSON.parse(JSON.stringify(testChordData.flows)));
-    const tree: IEndpoint[] = generateTree(endpoints, flows);
-    this.state = {
+    const flows = JSON.parse(JSON.stringify(testChordData.flows));
+    const endpoints = JSON.parse(JSON.stringify(testChordData.endpoints));
+    const tree = this.buildTree(endpoints, flows);
+     this.state = {
       currentTab: 1,
       flows: flows,
       tree,
     };
   }
 
-  convertJsonData(endpoints: IEndpoint[], flows: IFlow[]){
-    const updatedEndpoints = addPropertiesToEndpoints( polarizeStartAndEndAngles( setEndpointFlowCounts(endpoints, flows)));
-    return updatedEndpoints;
+  buildTree(endpoints: IEndpoint[], flows: IFlow[]){
+    endpoints = addPropertiesToEndpoints( polarizeStartAndEndAngles( setEndpointFlowCounts(endpoints, flows)));
+    const tree: IEndpoint[] = generateTree(endpoints, flows);
+    return tree;
   }
 
   /**
@@ -47,9 +49,8 @@ export class Main extends React.Component<any, IMainState> {
    */
   addEndpoint = () => {
     let tree = this.state.tree;
-    const flows = this.state.flows;
-    const newEndpoint = createRandomLeafEndpoint(tree, flows);  // Generate random tree endpoint
-    if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree, flows);
+    const newEndpoint = createRandomLeafEndpoint(tree);  // Generate random tree endpoint
+    if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree);
     this.setState({
       tree,
     });
@@ -70,16 +71,15 @@ export class Main extends React.Component<any, IMainState> {
     const tree = this.state.tree;
     const flows = this.state.flows;
     const newFlows = createRandomFlows(this.CHORD_CHANGE_QTY, flows, tree); // Generate random flows
-    const updated = addFlows(newFlows, flows, tree);  // Add new flows to chart
-    this.setState({flows: updated.flows, tree: updated.tree});
+    const updatedFlows = union(flows, newFlows);
+    this.setState({flows: updatedFlows});
   }
 
   removeChords = () => {
-    const tree = this.state.tree;
     const flows = this.state.flows;
-    const randomFlows = selectRandomFlows(this.CHORD_CHANGE_QTY, flows);
-    const updated = removeFlows(randomFlows, flows, tree);
-    this.setState({flows: updated.flows, tree: updated.tree});
+    const removeFlows = selectRandomFlows(this.CHORD_CHANGE_QTY, flows);
+    const updatedFlows = difference(flows, removeFlows);
+    this.setState({flows: updatedFlows});
   }
 
   /**
@@ -95,7 +95,6 @@ export class Main extends React.Component<any, IMainState> {
    */
   render() {
     let quadData: IQuadShapeData[] = [];
-    const chordData: IChordData = Object.assign({}, testChordData);
     let component;
 
     if (this.state.currentTab === 0) {
@@ -113,8 +112,9 @@ export class Main extends React.Component<any, IMainState> {
     }
 
     if (this.state.currentTab === 1) {
+      const chordData: IChordData = Object.assign({}, testChordData);
       chordData.flows = this.state.flows;
-      chordData.endpoints = getTreeLeafNodes(this.state.tree);
+      chordData.tree = this.state.tree;
       component = (
         <ChordChart data={chordData} />
       );

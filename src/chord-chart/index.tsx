@@ -11,6 +11,7 @@ import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
+import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
 interface IChordChartProps {
   data: IData;
@@ -62,6 +63,16 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
+    const data = this.props.data;
+    const tree = recalculateTree(data.tree, data.flows);
+    data.endpoints = getTreeLeafNodes(tree);
+  }
+
+  componentWillReceiveProps(nextProps: any) {
+    if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
+      const tree = recalculateTree(nextProps.data.tree, nextProps.data.flows);
+      nextProps.data.endpoints = getTreeLeafNodes(tree);
+    }
   }
 
   componentDidMount() {

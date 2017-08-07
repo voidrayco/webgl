@@ -8,7 +8,8 @@ export interface IChordChartConfig {
 }
 
 export interface IData {
-  endpoints: IEndpoint[];
+  tree: IEndpoint[];
+  endpoints?: IEndpoint[];
   flows: IFlow[];
 }
 

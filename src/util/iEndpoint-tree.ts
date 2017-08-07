@@ -1,13 +1,11 @@
-import { IEndpoint, IFlow } from '../generators/types';
-import { createEndpoint, filterEndpoints } from './iEndpoint';
+import { IEndpoint, IFlow } from '../chord-chart/generators/types';
+import { createEndpoint } from './iEndpoint';
 
 const RANDOM = require('random');
-const MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
+// Const MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
 
 /**
  * Recursively builds up a nested tree of IEndpoints from flat set of IEndpoints, adding a children[] to each endpoint
- * and calculating startAngle and endAngle for each IEndpoint accounting for nested angles.
- * Angles calculated in radians
  * Immutable
  *
  * @export
@@ -19,9 +17,8 @@ export function generateTree(endpoints: IEndpoint[], flows: IFlow[]): IEndpoint[
     const buildSubtree = ( endpoints: IEndpoint[], parent: IEndpoint, tree: IEndpoint[] ) => {
         tree = typeof tree !== 'undefined' ? tree : [];
         parent = typeof parent !== 'undefined' ? parent : null;
-        let children = endpoints.filter((child) => child.parent === parent.id);
+        const children = endpoints.filter((child) => child.parent === parent.id);
         if (children.length > 0){
-            children = _recalculateEndpoint(children, flows, parent.startAngle, parent.endAngle);
             if (_isRoot(parent)){
                 tree = children;
             }else{
@@ -31,98 +28,17 @@ export function generateTree(endpoints: IEndpoint[], flows: IFlow[]): IEndpoint[
         }
         return tree;
     };
-
     // Prepare top level of IEndpoint tree (typically will be 2 hemispheres but will accept anything)
     const flatTree = endpoints.map((endpoint) => {
         const node: IEndpoint = {...endpoint, children: []};
         return node;
     });
-    let roots = flatTree.filter(_isRoot);
-    let currentAngle = 0;
-    const totalParentWeight = _getTotalWeight(roots);
-    roots = roots.map((root) => {
-        const width = (root.weight / totalParentWeight) * 2 * Math.PI;
-        const newRoot = {...root, startAngle: currentAngle, endAngle: currentAngle + width };
-        currentAngle += width;
-        return newRoot;
-    });
+    const roots = flatTree.filter(_isRoot);
     const tree = roots.map((root) => {
         const node = {...root, children: buildSubtree(flatTree, root, [])};
         return node;
     });
     return tree;
-}
-
-/**
- * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
- * Angles calculated in radians
- * Immutable
- *
- * @export
- * @param {IEndpoint[]} endpoints - graph endpoint set
- * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
- */
-function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle: number, endAngle: number){
-    const totalChildrenWeight = _getTotalWeight(children);
-    let currentAngle = startAngle;
-    return children.map((child) => {
-        const width = (child.weight / totalChildrenWeight) * (endAngle - startAngle);
-        let node = {...child, startAngle: currentAngle, endAngle: currentAngle + width};
-        currentAngle += width;
-        node = _recalculateFlowCounts(node, flows);
-        return node;
-    });
-}
-
-// Recalculates outgoingCount, incomingCount, totalCount for passed in tree node
-// Immutable
-function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
-    const nodeObj = Object.assign({}, node);    // Immutable
-    let outgoingCount = 0, incomingCount = 0, totalCount = 0;
-    flows.forEach((flow) => {
-        if (flow.srcTarget === nodeObj.id) outgoingCount++;
-        if (flow.dstTarget === nodeObj.id) incomingCount++;
-        if (flow.srcTarget === nodeObj.id || flow.dstTarget === nodeObj.id) totalCount++;
-    });
-    nodeObj.outgoingCount = outgoingCount;
-    nodeObj.incomingCount = incomingCount;
-    nodeObj.totalCount = totalCount;
-    return nodeObj;
-}
-
-/**
- * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
- * Angles calculated in radians
- * Not immutable - parents expected to pass in immutable tree object (flows object not modified)
- *
- * @export
- * @param {IEndpoint[]} endpoints - graph endpoint set
- * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
- */
-export function recalculateTree(tree: IEndpoint[], flows: IFlow[]){
-    // Recalculates subtree for passed in tree node -- modifies passed in object
-    const _recalculateSubtree = (parent: IEndpoint) => {
-        parent = typeof parent !== 'undefined' ? parent : null;
-        let children = parent.children;
-        if (children && children.length > 0){
-            children = _recalculateEndpoint(children, flows, parent.startAngle, parent.endAngle);
-            parent.children = children;
-            children.forEach(_recalculateSubtree);
-        }
-    };
-    const CIRCLE_CIRCUMFERENCE = 2 * Math.PI;
-    tree = _recalculateEndpoint(tree, flows, 0, CIRCLE_CIRCUMFERENCE);
-    tree.map((root: IEndpoint) => {
-        _recalculateSubtree(root);
-    });
-    return tree;
-}
-
-// Function to calculate aggregated weight for set of endpoints
-function _getTotalWeight(endpoints: IEndpoint[]){
-    return endpoints.reduce(function(accum: number, endpoint: IEndpoint){
-        return endpoint.id === '' ? accum : accum + endpoint.weight;
-    }, 0);
 }
 
 /**
@@ -192,19 +108,18 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
  * @export
  * @param {IEndpoint[]} endpoint - new endpoint to add
  * @param {IEndpoint[]} tree - tree of endpoints
- * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {newEndpoint: IEndpoint[]} a newly generated random leaf endpoint, or null if no available space (no nodes > min endpoint size)
  */
-export function createRandomLeafEndpoint(tree: IEndpoint[], flows: IFlow[]){
+export function createRandomLeafEndpoint(tree: IEndpoint[]){
     // Find endpoint to break into two--------
     const leafEndpoints = getTreeLeafNodes(tree);
-    const filteredEndpoints = filterEndpoints(leafEndpoints, MINIMUM_ENDPOINT_SIZE);
+    // Const filteredEndpoints = filterEndpoints(leafEndpoints, MINIMUM_ENDPOINT_SIZE);
     // If no end points to remove, just exit
-    if (filteredEndpoints.length < 1){
-      return null;
-    }
+    // If (filteredEndpoints.length < 1){
+    //   Return null;
+    // }
     // Break endpoint into two and inject new endpoint into one side (currently start side only)
-    const getRandomEndpoint = RANDOM.item(filteredEndpoints);
+    const getRandomEndpoint = RANDOM.item(leafEndpoints);
     const sibling = getRandomEndpoint();
     const newEndpoint = createEndpoint(sibling);
     return newEndpoint;
@@ -226,7 +141,7 @@ export function selectRandomLeafEndpoint(tree: IEndpoint[]){
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
  */
-export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
+export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
     const treeObj = tree.map(a => Object.assign({}, a));    // Deep clone for isomorphism
     if (_isRoot(endpoint)){
         treeObj.push(endpoint);
@@ -234,7 +149,7 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows:
         const parent = getEndpointById(endpoint.parent, treeObj);
         parent.children.push(endpoint);
     }
-    return recalculateTree(treeObj, flows);
+    return treeObj;
 }
 
 /**
@@ -263,8 +178,6 @@ export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], f
     // Remove associated flows-------------
     const newFlows = flows.filter((flow) =>
       (endpoint.id !== flow.srcTarget && endpoint.id !== flow.dstTarget));
-    // Recalculate tree properties after removal-------
-    treeObj = recalculateTree(treeObj, newFlows);
     return {tree: treeObj, flows: newFlows};
 }
 

@@ -1,8 +1,6 @@
 import { hsl } from 'd3-color';
-import { difference, union } from 'ramda';
-import { IEndpoint, IFlow } from '../generators/types';
+import { IEndpoint, IFlow } from '../chord-chart/generators/types';
 import { getFlowsByEndpoint } from './iEndpoint';
-import { recalculateTree } from './iEndpoint-tree';
 import { getTreeLeafNodes } from './iEndpoint-tree';
 
 const RANDOM = require('random');
@@ -53,22 +51,6 @@ export function createRandomFlows(qty: number, flows: IFlow[], tree: IEndpoint[]
 }
 
 /**
- * Add flows to chart
- * Immutable
- *
- * @param {IEndpoint[]} newFlows - new flows to add
- * @param {IEndpoint[]} flows - total set of flows in graph
- * @param {IEndpoint[]} tree - tree of endpoints
- * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
- */
-export function addFlows(newFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
-    const updatedFlows = union(flows, newFlows);
-    let treeObj = tree.map(a => Object.assign({}, a));
-    treeObj = recalculateTree(treeObj, updatedFlows);
-    return {flows: updatedFlows, tree: treeObj};
-}
-
-/**
  * Select x random flows, where x = qty
  *
  * @param {IEndpoint[]} qty - number of flows to remove
@@ -79,21 +61,4 @@ export function selectRandomFlows(qty: number, flows: IFlow[]){
     const removeQty = flows.length < qty ? flows.length : qty;
     const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
     return randomRemoveFlow();
-}
-
-/**
- * Remove flows to chart
- * Immutable
- *
- * @param {IEndpoint[]} removeFlows - flows to remove
- * @param {IEndpoint[]} flows - total set of flows in graph
- * @param {IEndpoint[]} tree - tree of endpoints
- * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
- */
-export function removeFlows(removeFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
-    const updatedFlows = difference(flows, removeFlows);
-    let treeObj = tree.map(a => Object.assign({}, a));
-    // Recalculate tree properties after removal
-    treeObj = recalculateTree(treeObj, updatedFlows);
-    return {tree: treeObj, flows: updatedFlows};
 }
