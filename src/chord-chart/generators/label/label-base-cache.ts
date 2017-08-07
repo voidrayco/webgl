@@ -3,7 +3,7 @@ import { Label } from 'webgl-surface/drawing/label';
 import { AnchorPosition } from 'webgl-surface/primitives/rotateable-quad';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
-import { ICurvedLineData } from '../../shape-data-types/curved-line-data';
+import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, IData } from '../types';
 const debug = require('debug')('label');
 /**
@@ -13,7 +13,7 @@ const debug = require('debug')('label');
  * @class LabelBaseCache
  * @extends {ShapeBufferCache<Label<ICurvedLineData>>}
  */
-export class LabelBaseCache extends ShapeBufferCache<Label<ICurvedLineData>> {
+export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
   generate(data: IData, config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
