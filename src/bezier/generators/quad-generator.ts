@@ -44,7 +44,6 @@ export class QuadGenerator {
   }
 
   /**
-   * YoYo changed here with new QuadShape constructor
    * This generates the buffers needed for rendering
    */
   generateBaseBuffer(data: IQuadShapeData[]) {

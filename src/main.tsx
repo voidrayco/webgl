@@ -280,7 +280,7 @@ export class Main extends React.Component<any, IMainState> {
    * @override
    * The React defined render method
    */
-  render(){
+  render() {
     let quadData: IQuadShapeData[] = [];
     const chordData: IChordData = Object.assign([], testChordData);
     let component;
