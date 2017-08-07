@@ -1,4 +1,8 @@
 import { IEndpoint, IFlow } from '../generators/types';
+import { createEndpoint, filterEndpoints } from './iEndpoint';
+
+const RANDOM = require('random');
+const MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
 
 /**
  * Recursively builds up a nested tree of IEndpoints from flat set of IEndpoints, adding a children[] to each endpoint
@@ -175,6 +179,30 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
 }
 
 /**
+ * Create endpoint in tree
+ *
+ * @export
+ * @param {IEndpoint[]} endpoint - new endpoint to add
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @param {IEndpoint[]} flows - total set of flows in graph
+ * @returns {newEndpoint: IEndpoint[]} a newly generated random endpoint, or null if no available space (no nodes > min endpoint size)
+ */
+export function createTreeEndpoint(tree: IEndpoint[], flows: IFlow[]){
+    // Find endpoint to break into two--------
+    const leafEndpoints = getTreeLeafNodes(tree);
+    const filteredEndpoints = filterEndpoints(leafEndpoints, MINIMUM_ENDPOINT_SIZE);
+    // If no end points to remove, just exit
+    if (filteredEndpoints.length < 1){
+      return null;
+    }
+    // Break endpoint into two and inject new endpoint into one side (currently start side only)
+    const getRandomEndpoint = RANDOM.item(filteredEndpoints);
+    const sibling = getRandomEndpoint();
+    const newEndpoint = createEndpoint(sibling);
+    return newEndpoint;
+}
+
+/**
  * Add endpoint to tree
  *
  * @export
@@ -201,8 +229,12 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows:
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
-    // Remove node from tree
+export function removeEndpointFromTree(tree: IEndpoint[], flows: IFlow[]){
+    // Identify random endpoint to remove-----------
+    const leafEndpoints = getTreeLeafNodes(tree);
+    const randomRemoveEndpoint = RANDOM.item(leafEndpoints);
+    const endpoint: IEndpoint = randomRemoveEndpoint();
+    // Remove node from tree-------
     if (_isRoot(endpoint) && tree.length > 2){
         tree = tree.filter((root) => root.id !== endpoint.id);
     }else{
@@ -215,7 +247,7 @@ export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], f
     // Remove associated flows-------------
     const newFlows = flows.filter((flow) =>
       (endpoint.id !== flow.srcTarget && endpoint.id !== flow.dstTarget));
-    // Recalculate tree properties after removal
+    // Recalculate tree properties after removal-------
     tree = recalculateTree(tree, newFlows);
     return {tree, flows: newFlows};
 }

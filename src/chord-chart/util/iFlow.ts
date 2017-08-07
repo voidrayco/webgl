@@ -36,21 +36,32 @@ export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
 }
 
 /**
- * Add flows to chart
+ * Creates x random flows, where x = qty
  *
  * @param {IEndpoint[]} qty - number of flows to add
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function addFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
+export function createFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
     const newFlows: IFlow[] = [];
     for (let a = 0; a < qty; a++){
       const flow: IFlow = createFlow(flows, tree);
       newFlows.push(flow);
     }
+    return newFlows;
+}
+
+/**
+ * Add flows to chart
+ *
+ * @param {IEndpoint[]} newFlows - new flows to add
+ * @param {IEndpoint[]} flows - total set of flows in graph
+ * @param {IEndpoint[]} tree - tree of endpoints
+ * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
+ */
+export function addFlows(newFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
     const updatedFlows = union(flows, newFlows);
-    // Recalculate tree properties after removal
     tree = recalculateTree(tree, updatedFlows);
     return {flows: updatedFlows, tree};
 }

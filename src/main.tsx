@@ -4,12 +4,11 @@ import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
-import { addPropertiesToEndpoints, createEndpoint, filterEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
-import { addEndpointToTree, generateTree, getTreeLeafNodes, removeEndpointFromTree } from './chord-chart/util/iEndpoint-tree';
-import { addFlows, removeFlows } from './chord-chart/util/iFlow';
+import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './chord-chart/util/iEndpoint';
+import { addEndpointToTree, createTreeEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree } from './chord-chart/util/iEndpoint-tree';
+import { addFlows, createFlows, removeFlows } from './chord-chart/util/iFlow';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
-const RANDOM = require('random');
 
 /**
  * The state of the application
@@ -24,7 +23,6 @@ interface IMainState {
  * Entry class for the Application
  */
 export class Main extends React.Component<any, IMainState> {
-  MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
   CHORD_CHANGE_QTY = 5;
 
   constructor(props: IMainState){
@@ -50,20 +48,10 @@ export class Main extends React.Component<any, IMainState> {
   addEndpoint = () => {
     let tree = this.state.tree;
     const flows = this.state.flows;
-    // Find endpoint to break into two--------
-    const leafEndpoints = getTreeLeafNodes(tree);
-    const filteredEndpoints = filterEndpoints(leafEndpoints, this.MINIMUM_ENDPOINT_SIZE);
-    // If no end points to remove, just exit
-    if (filteredEndpoints.length < 1){
-      return;
-    }
-    // Break endpoint into two and inject new endpoint into one side (currently start side only)
-    const getRandomEndpoint = RANDOM.item(filteredEndpoints);
-    const boundsEndpoint = getRandomEndpoint();
-    const newEndpoint = createEndpoint(boundsEndpoint);
-    boundsEndpoint.endAngle = newEndpoint.startAngle;
-    boundsEndpoint.weight = boundsEndpoint.weight - newEndpoint.weight;
-    tree = addEndpointToTree(newEndpoint, tree, flows);
+    const newEndpoint = createTreeEndpoint(tree, flows);
+    // BoundsEndpoint.endAngle = newEndpoint.startAngle;
+    // BoundsEndpoint.weight = boundsEndpoint.weight - newEndpoint.weight;
+    if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree, flows);
     this.setState({
       tree,
     });
@@ -75,18 +63,15 @@ export class Main extends React.Component<any, IMainState> {
   removeEndpoint = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    // Remove endpoint--------------
-    const leafEndpoints = getTreeLeafNodes(this.state.tree);
-    const randomRemoveEndpoint = RANDOM.item(leafEndpoints);
-    const removedEndpoint: IEndpoint = randomRemoveEndpoint();
-    const updated = removeEndpointFromTree(removedEndpoint, tree, flows);
+    const updated = removeEndpointFromTree(tree, flows);
     this.setState({tree: updated.tree, flows: updated.flows});
   }
 
   addChords = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const updated = addFlows(this.CHORD_CHANGE_QTY, flows, tree);
+    const newFlows = createFlows(this.CHORD_CHANGE_QTY, flows, tree);
+    const updated = addFlows(newFlows, flows, tree);  // Add new flows to chart
     this.setState({flows: updated.flows, tree: updated.tree});
   }
 
