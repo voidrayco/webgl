@@ -2,7 +2,7 @@ import { IEndpoint, IFlow } from '../chord-chart/generators/types';
 import { createEndpoint } from './iEndpoint';
 
 const RANDOM = require('random');
-const MINIMUM_WEIGHT = 0.1;
+// Const MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
 
 /**
  * Recursively builds up a nested tree of IEndpoints from flat set of IEndpoints, adding a children[] to each endpoint
@@ -102,37 +102,6 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
 }
 
 /**
- * Removes all endpoints from selection that are smaller than the specified weight
- * Immutable
- *
- * @param {IEndpoint[]} endpoints - flat list of endpoints
- * @param {number} minRange - minimum endAngle-startAngle size of endpoint
- */
-export function filterEndpoints(endpoints: IEndpoint[], tree: IEndpoint[], minWeight: number) {
-    const getTotalWeight = (endpoints: IEndpoint[]) => {
-        let weight = 0;
-        endpoints.forEach((endpoint) => {
-            weight += endpoint.weight;
-        });
-        return weight;
-    };
-    const calculateNodeWeight = (endpoint: IEndpoint): number => {
-        const weight = endpoint.weight;
-        if (_isRoot(endpoint)){
-            return weight;
-        }else{
-            const parent = getEndpointById(endpoint.parent, tree);
-            return calculateNodeWeight(parent) * weight;
-        }
-    };
-    const totalWeight = getTotalWeight(endpoints);
-    return endpoints.filter((endpoint) => {
-        const weight = calculateNodeWeight(endpoint);
-        return (weight / totalWeight) > minWeight;
-    });
-}
-
-/**
  * Create randomly generated leaf endpoint object
  * Immutable
  *
@@ -144,10 +113,11 @@ export function filterEndpoints(endpoints: IEndpoint[], tree: IEndpoint[], minWe
 export function createRandomLeafEndpoint(tree: IEndpoint[]){
     // Find endpoint to break into two--------
     const leafEndpoints = getTreeLeafNodes(tree);
-    const filteredEndpoints = filterEndpoints(leafEndpoints, tree, MINIMUM_WEIGHT);
-    if (filteredEndpoints.length < 1) {
-      return null;
-    }
+    // Const filteredEndpoints = filterEndpoints(leafEndpoints, MINIMUM_ENDPOINT_SIZE);
+    // If no end points to remove, just exit
+    // If (filteredEndpoints.length < 1){
+    //   Return null;
+    // }
     // Break endpoint into two and inject new endpoint into one side (currently start side only)
     const getRandomEndpoint = RANDOM.item(leafEndpoints);
     const sibling = getRandomEndpoint();
