@@ -78,18 +78,6 @@ export function getFlowsByEndpoint(endpoint: IEndpoint, flows: IFlow[], type ? :
 }
 
 /**
- * Removes all endpoints from selection that are smaller than the specified range
- * Immutable
- *
- * @param {IEndpoint[]} endpoints - flat list of endpoints
- * @param {number} minRange - minimum endAngle-startAngle size of endpoint
- */
-export function filterEndpoints(endpoints: IEndpoint[], minRange: number) {
-    return endpoints.filter((endpoint) =>
-        Math.abs(endpoint.endAngle - endpoint.startAngle) > minRange);
-}
-
-/**
  * Creates random endpoint that assumes subspace of passed in endpoint
  * Immutable
  *
