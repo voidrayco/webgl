@@ -1,6 +1,6 @@
-
+import { rgb } from 'd3-color';
 import { QuadShape } from 'webgl-surface/drawing/quad-shape';
-
+import { Bounds } from 'webgl-surface/primitives/bounds';
 import { IQuadShapeData } from '../shape-data-types/quad-shape-data';
 
 const debug = require('debug')('bezier');
@@ -49,7 +49,10 @@ export class QuadGenerator {
    */
   generateBaseBuffer(data: IQuadShapeData[]) {
     this.baseBuffer = data.map(d =>
-      new QuadShape<IQuadShapeData>(d.p1, d.p2, d.lineWidth, d.color),
+      new QuadShape<IQuadShapeData>(
+        new Bounds<IQuadShapeData>(d.position.x, d.position.x + d.size.width, d.position.y, d.position.y + d.size.height),
+        rgb(Math.random(), Math.random(), Math.random(), 1.0),
+      ),
     );
   }
 

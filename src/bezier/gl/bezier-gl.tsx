@@ -69,64 +69,59 @@ export class BezierGL extends WebGLSurface<IBezierGLProperties, {}> {
       this.quadSet = quads;
 
       const numVerticesPerQuad = 6;
+      const colorAttributeSize = 4;
 
       BufferUtil.updateBuffer(
-        quads, this.quadItems,
-        numVerticesPerQuad, quads.length,
+        quads, this.quadItems, numVerticesPerQuad, quads.length,
         function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
           quad = quads[i];
-          // YoYo changed here
-          // First triangle with p1, p3, p2
-          positions[ppos] = quad.p1.x;
-          positions[++ppos] = quad.p1.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
 
+          // Copy first vertex twice for intro degenerate tri
+          positions[ppos] = quad.right;
+          positions[++ppos] = quad.bottom;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+          // Skip over degenerate tris color
+          cpos += colorAttributeSize;
+
+          // TR
+          positions[++ppos] = quad.right;
+          positions[++ppos] = quad.bottom;
+          positions[++ppos] = BASE_QUAD_DEPTH;
           colors[cpos] = quad.r;
           colors[++cpos] = quad.g;
           colors[++cpos] = quad.b;
           colors[++cpos] = quad.a;
-
-          positions[++ppos] = quad.p3.x;
-          positions[++ppos] = quad.p3.y;
+          // BR
+          positions[++ppos] = quad.right;
+          positions[++ppos] = quad.y;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+          colors[++cpos] = quad.r;
+          colors[++cpos] = quad.g;
+          colors[++cpos] = quad.b;
+          colors[++cpos] = quad.a;
+          // TL
+          positions[++ppos] = quad.x;
+          positions[++ppos] = quad.bottom;
+          positions[++ppos] = BASE_QUAD_DEPTH;
+          colors[++cpos] = quad.r;
+          colors[++cpos] = quad.g;
+          colors[++cpos] = quad.b;
+          colors[++cpos] = quad.a;
+          // BL
+          positions[++ppos] = quad.x;
+          positions[++ppos] = quad.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
           colors[++cpos] = quad.r;
           colors[++cpos] = quad.g;
           colors[++cpos] = quad.b;
           colors[++cpos] = quad.a;
 
-          positions[++ppos] = quad.p2.x;
-          positions[++ppos] = quad.p2.y;
+          // Copy last vertex again for degenerate tri
+          positions[++ppos] = quad.x;
+          positions[++ppos] = quad.y;
           positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-
-          // Second triangle with p2, p3, p4
-          positions[++ppos] = quad.p2.x;
-          positions[++ppos] = quad.p2.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-
-          positions[++ppos] = quad.p3.x;
-          positions[++ppos] = quad.p3.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
-
-          positions[++ppos] = quad.p4.x;
-          positions[++ppos] = quad.p4.y;
-          positions[++ppos] = BASE_QUAD_DEPTH;
-
-          colors[++cpos] = quad.r;
-          colors[++cpos] = quad.g;
-          colors[++cpos] = quad.b;
-          colors[++cpos] = quad.a;
+          // Skip over degenerate tris for color
+          cpos += colorAttributeSize;
         },
       );
 

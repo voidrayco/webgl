@@ -1,4 +1,3 @@
-import { rgb } from 'd3-color';
 import { hsl } from 'd3-color';
 import { difference, union } from 'ramda';
 import * as React from 'react';
@@ -290,11 +289,9 @@ export class Main extends React.Component<any, IMainState> {
     if (this.state.currentTab === 0) {
       quadData = [...new Array(200)].map((_, i: number) =>
         ({
-          color: rgb(1, 1, 1, 1),
           id: i,
-          lineWidth: 1,
-          p1: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
-          p2: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          position: {x: Math.random() * 480 + 10, y: Math.random() * 480 + 10},
+          size: {width: Math.random() * 20 + 10, height: Math.random() * 20 + 10},
         }),
       );
 
