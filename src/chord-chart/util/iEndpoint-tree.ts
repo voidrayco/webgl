@@ -8,6 +8,7 @@ const MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
  * Recursively builds up a nested tree of IEndpoints from flat set of IEndpoints, adding a children[] to each endpoint
  * and calculating startAngle and endAngle for each IEndpoint accounting for nested angles.
  * Angles calculated in radians
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} endpoints - graph endpoint set
@@ -55,6 +56,7 @@ export function generateTree(endpoints: IEndpoint[], flows: IFlow[]): IEndpoint[
 /**
  * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
  * Angles calculated in radians
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} endpoints - graph endpoint set
@@ -72,23 +74,26 @@ function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle:
     });
 }
 
-// Recalculates outgoingCount, incomingCount, totalCount  for passed in tree node
+// Recalculates outgoingCount, incomingCount, totalCount for passed in tree node
+// Immutable
 function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
+    const nodeObj = Object.assign({}, node);    // Immutable
     let outgoingCount = 0, incomingCount = 0, totalCount = 0;
     flows.forEach((flow) => {
-        if (flow.srcTarget === node.id) outgoingCount++;
-        if (flow.dstTarget === node.id) incomingCount++;
-        if (flow.srcTarget === node.id || flow.dstTarget === node.id) totalCount++;
+        if (flow.srcTarget === nodeObj.id) outgoingCount++;
+        if (flow.dstTarget === nodeObj.id) incomingCount++;
+        if (flow.srcTarget === nodeObj.id || flow.dstTarget === nodeObj.id) totalCount++;
     });
-    node.outgoingCount = outgoingCount;
-    node.incomingCount = incomingCount;
-    node.totalCount = totalCount;
-    return node;
+    nodeObj.outgoingCount = outgoingCount;
+    nodeObj.incomingCount = incomingCount;
+    nodeObj.totalCount = totalCount;
+    return nodeObj;
 }
 
 /**
  * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
  * Angles calculated in radians
+ * Not immutable - parents expected to pass in immutable tree object (flows object not modified)
  *
  * @export
  * @param {IEndpoint[]} endpoints - graph endpoint set
@@ -140,6 +145,7 @@ export function traverseSubtree(startNode: IEndpoint, callback: Function, traver
 
 /**
  * Flatten tree to a list of endpoints
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} tree - tree of endpoints
@@ -169,6 +175,7 @@ function _isRoot(endpoint: IEndpoint){
 
 /**
  * Filters tree of endpoints down to leaf node set
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} tree - tree of endpoints
@@ -179,7 +186,8 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
 }
 
 /**
- * Create randomly genereated leaf endpoint object
+ * Create randomly generated leaf endpoint object
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} endpoint - new endpoint to add
@@ -211,6 +219,7 @@ export function selectRandomLeafEndpoint(tree: IEndpoint[]){
 
 /**
  * Add endpoint to tree
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} endpoint - new endpoint to add
@@ -218,17 +227,19 @@ export function selectRandomLeafEndpoint(tree: IEndpoint[]){
  * @param {IEndpoint[]} flows - total set of flows in graph
  */
 export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
+    const treeObj = tree.map(a => Object.assign({}, a));    // Deep clone for isomorphism
     if (_isRoot(endpoint)){
-        tree.push(endpoint);
+        treeObj.push(endpoint);
     }else{
-        const parent = getEndpointById(endpoint.parent, tree);
+        const parent = getEndpointById(endpoint.parent, treeObj);
         parent.children.push(endpoint);
     }
-    return recalculateTree(tree, flows);
+    return recalculateTree(treeObj, flows);
 }
 
 /**
  * Remove endpoint from tree
+ * Immutable
  *
  * @export
  * @param {IEndpoint[]} endpoint - endpoint to be removed
@@ -238,10 +249,12 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[], flows:
  */
 export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
     // Remove node from tree-------
+    let treeObj;
     if (_isRoot(endpoint) && tree.length > 2){
-        tree = tree.filter((root) => root.id !== endpoint.id);
+        treeObj = tree.filter((root) => root.id !== endpoint.id);
     }else{
-        const parent = getEndpointById(endpoint.parent, tree);
+        treeObj = tree.map(a => Object.assign({}, a));   // Immutable copy of tree for mods
+        const parent = getEndpointById(endpoint.parent, treeObj);
         if (parent){
             const newChildren = parent.children.filter((child) => child.id !== endpoint.id);
             parent.children = newChildren;
@@ -251,12 +264,13 @@ export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], f
     const newFlows = flows.filter((flow) =>
       (endpoint.id !== flow.srcTarget && endpoint.id !== flow.dstTarget));
     // Recalculate tree properties after removal-------
-    tree = recalculateTree(tree, newFlows);
-    return {tree, flows: newFlows};
+    treeObj = recalculateTree(treeObj, newFlows);
+    return {tree: treeObj, flows: newFlows};
 }
 
 /**
  * Finds endpoint by id in tree structure
+ * Not immutable by design
  *
  * @export
  * @param {IEndpoint[]} id - endpoint id

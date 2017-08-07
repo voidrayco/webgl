@@ -10,40 +10,46 @@ const nounGenerator = RANDOM.item(NOUNS);
 
 /**
  * Initializes endpoints from json data to have all properties of IEndpoint interface
+ * Immutable
  *
  * @param {IEndpoint[]} endpoints - flat list of endpoints
  */
 export function addPropertiesToEndpoints(endpoints: IEndpoint[]){
-    endpoints.forEach((endpoint) => {
+    const endpointObjs = endpoints.map(a => Object.assign({}, a));
+    endpointObjs.forEach((endpoint) => {
         endpoint.children = [];
     });
-    return endpoints;
+    return endpointObjs;
 }
 
 /**
  * Calculates the outgoingCount, incomingCount, and totalCount quantities for passed in endpoints based on the passed in IFlows
+ * Immutable
  *
  * @param {IEndpoint[]} endpoints - flat list of endpoints
  * @param {IEndpoint[]} flows - flat list of flows
  */
 export function setEndpointFlowCounts(endpoints: IEndpoint[], flows: IFlow[]){
-    endpoints.forEach((endpoint) => {
+    const endpointObjs = endpoints.map(a => Object.assign({}, a));
+    endpointObjs.forEach((endpoint) => {
         const outgoingFlows = this.getFlowsByEndpoint(endpoint, flows, 'outgoing');
         const incomingFlows = this.getFlowsByEndpoint(endpoint, flows, 'incoming');
         endpoint.outgoingCount = outgoingFlows.length;
         endpoint.incomingCount = incomingFlows.length;
         endpoint.totalCount = outgoingFlows.length + incomingFlows.length;
     });
-    return endpoints;
+    return endpointObjs;
 }
 
 /**
  * Sets start angle to always be smallest angle and end angle to be greatest angle for each endpoint
+ * Immutable
  *
  * @param {IEndpoint[]} endpoints - flat list of endpoints
  */
 export function polarizeStartAndEndAngles(endpoints: IEndpoint[]){
-    endpoints.forEach((endpoint) => {
+    const endpointObjs = endpoints.map(a => Object.assign({}, a));
+    endpointObjs.forEach((endpoint) => {
         const getTrueStartAngle = (startAngle: number, endAngle: number) => startAngle > endAngle ? endAngle : startAngle;
         const getTrueEndAngle = (startAngle: number, endAngle: number) => startAngle > endAngle ? startAngle : endAngle;
         const startAngle = getTrueStartAngle(endpoint.startAngle, endpoint.endAngle);
@@ -51,11 +57,12 @@ export function polarizeStartAndEndAngles(endpoints: IEndpoint[]){
         endpoint.startAngle = startAngle;
         endpoint.endAngle = endAngle;
     });
-    return endpoints;
+    return endpointObjs;
 }
 
 /**
  * Returns array of flows associated with the passed in endpoint
+ * Immutable
  *
  * @param {IEndpoint} endpoint
  * @param {IEndpoint[]} flows - flat list of flows
@@ -72,6 +79,7 @@ export function getFlowsByEndpoint(endpoint: IEndpoint, flows: IFlow[], type ? :
 
 /**
  * Removes all endpoints from selection that are smaller than the specified range
+ * Immutable
  *
  * @param {IEndpoint[]} endpoints - flat list of endpoints
  * @param {number} minRange - minimum endAngle-startAngle size of endpoint
@@ -83,6 +91,7 @@ export function filterEndpoints(endpoints: IEndpoint[], minRange: number) {
 
 /**
  * Creates random endpoint that assumes subspace of passed in endpoint
+ * Immutable
  *
  * @param {IEndpoint} boundsEndpoint - endpoint that is used as bounds for creating new endpoint
  */

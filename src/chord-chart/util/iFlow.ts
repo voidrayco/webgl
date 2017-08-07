@@ -54,6 +54,7 @@ export function createRandomFlows(qty: number, flows: IFlow[], tree: IEndpoint[]
 
 /**
  * Add flows to chart
+ * Immutable
  *
  * @param {IEndpoint[]} newFlows - new flows to add
  * @param {IEndpoint[]} flows - total set of flows in graph
@@ -62,8 +63,9 @@ export function createRandomFlows(qty: number, flows: IFlow[], tree: IEndpoint[]
  */
 export function addFlows(newFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
     const updatedFlows = union(flows, newFlows);
-    tree = recalculateTree(tree, updatedFlows);
-    return {flows: updatedFlows, tree};
+    let treeObj = tree.map(a => Object.assign({}, a));
+    treeObj = recalculateTree(treeObj, updatedFlows);
+    return {flows: updatedFlows, tree: treeObj};
 }
 
 /**
@@ -81,6 +83,7 @@ export function selectRandomFlows(qty: number, flows: IFlow[]){
 
 /**
  * Remove flows to chart
+ * Immutable
  *
  * @param {IEndpoint[]} removeFlows - flows to remove
  * @param {IEndpoint[]} flows - total set of flows in graph
@@ -89,7 +92,8 @@ export function selectRandomFlows(qty: number, flows: IFlow[]){
  */
 export function removeFlows(removeFlows: IFlow[], flows: IFlow[], tree: IEndpoint[]){
     const updatedFlows = difference(flows, removeFlows);
+    let treeObj = tree.map(a => Object.assign({}, a));
     // Recalculate tree properties after removal
-    tree = recalculateTree(tree, updatedFlows);
-    return {tree, flows: updatedFlows};
+    treeObj = recalculateTree(treeObj, updatedFlows);
+    return {tree: treeObj, flows: updatedFlows};
 }
