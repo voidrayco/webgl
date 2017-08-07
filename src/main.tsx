@@ -284,7 +284,6 @@ export class Main extends React.Component<any, IMainState> {
     let quadData: IQuadShapeData[] = [];
     const chordData: IChordData = Object.assign([], testChordData);
     let component;
-    let hasHemiSphere: boolean = false;
 
     if (this.state.currentTab === 0) {
       quadData = [...new Array(200)].map((_, i: number) =>
@@ -301,22 +300,20 @@ export class Main extends React.Component<any, IMainState> {
     }
 
     if (this.state.currentTab === 1) {
-      hasHemiSphere = false;
       chordData.flows = this.state.visibleFlows;
       chordData.endpoints = this.state.visibleEndpoints;
 
       component = (
-        <ChordChart hemiSphere={hasHemiSphere} testChordData={chordData}/>
+        <ChordChart hemiSphere={false} testChordData={chordData}/>
       );
     }
 
     if (this.state.currentTab === 2){
-      hasHemiSphere = true;
       chordData.flows = this.state.visibleFlows;
       chordData.endpoints = this.state.visibleEndpoints;
 
       component = (
-        <ChordChart hemiSphere={hasHemiSphere} testChordData={chordData} />
+        <ChordChart hemiSphere={true} testChordData={chordData} />
       );
     }
 

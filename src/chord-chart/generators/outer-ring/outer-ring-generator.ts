@@ -13,17 +13,26 @@ export class OuterRingGenerator {
 
   /** Tracks last data set that was rendered */
   lastData: IChordData;
+  lastHemisphere: boolean;
 
   /**
    * Flag which caches need busting
    */
   bustCaches(data: IChordData, config: IChordChartConfig, selection: Selection) {
-    if (data !== this.lastData || selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_OUTER_RING)) {
+    const didDataChange = data !== this.lastData;
+    const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_OUTER_RING);
+    const didHemisphereChange = this.lastHemisphere !== config.hemiSphere;
+
+    if (didDataChange || didSelectionChange || didHemisphereChange) {
       this.outerRingBase.bustCache = true;
+    }
+
+    if (didDataChange || didSelectionChange || didHemisphereChange) {
       this.outerRingInteraction.bustCache = true;
     }
 
-     this.lastData = data;
+    this.lastData = data;
+    this.lastHemisphere = config.hemiSphere;
   }
 
   /**
