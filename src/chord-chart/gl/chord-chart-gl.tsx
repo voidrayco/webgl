@@ -725,7 +725,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       depthTest: true,
       fragmentShader: fillFragmentShader,
       transparent: true,
-      uniforms: {halfLinewidth: {value: 1.0}},
+      uniforms: {halfLinewidth: {value: 1.5}},
       vertexShader: bezierVertexShader,
     });
 

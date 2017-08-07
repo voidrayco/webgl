@@ -78,8 +78,6 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
     this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
     this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
-    this.componentWillMount();
-
     if (selections.length > 0) {
       let selection;
       // If has outer ring thing grab it instead
@@ -148,7 +146,6 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       ringWidth: 20,
       space: 0.005,
     };
-    this.componentWillMount();
 
     this.outerRingGenerator.generate(this.props.testChordData, config, this.selection);
     this.chordGenerator.generate(this.props.testChordData, config, this.outerRingGenerator, this.selection);
