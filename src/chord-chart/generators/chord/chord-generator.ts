@@ -12,14 +12,27 @@ export class ChordGenerator {
   chordBase: ChordBaseCache = new ChordBaseCache();
   chordInteractions: ChordInteractionsCache = new ChordInteractionsCache();
 
+  lastHemisphere: boolean;
+  lastData: IData;
+
   /**
    * Flag which caches need busting
    */
-  bustCaches(selection: Selection) {
-    this.chordBase.bustCache = true;
-    if (selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD)) {
+  bustCaches(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
+    const didDataChange = data !== this.lastData;
+    const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD);
+    const didHemisphereChange = this.lastHemisphere !== config.hemiSphere;
+
+    if (didSelectionChange || didDataChange || didHemisphereChange) {
+      this.chordBase.bustCache = true;
+    }
+
+    if (didSelectionChange || didHemisphereChange) {
       this.chordInteractions.bustCache = true;
     }
+
+    this.lastHemisphere = config.hemiSphere;
+    this.lastData = data;
   }
 
   /**
@@ -27,7 +40,7 @@ export class ChordGenerator {
    */
   generate(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
     debug('Generating chords');
-    this.bustCaches(selection);
+    this.bustCaches(data, config, outerRings, selection);
     this.chordBase.generate(data, config, outerRings, selection);
     this.chordInteractions.generate(config, selection);
   }
