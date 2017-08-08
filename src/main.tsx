@@ -1,15 +1,18 @@
-import { difference, union } from 'ramda';
+import { clone, difference, union } from 'ramda';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
-import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
+import { IEndpoint, IFlow } from './chord-chart/generators/types';
 import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './util/iEndpoint';
 import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
 import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 
+const CHORD_CHANGE_QTY = 5;
 const testChordData = require('./chord-chart/test-data/chord-data.json');
+const flows = clone(testChordData.flows);
+const endpoints = clone(testChordData.endpoints);
 
 /**
  * The state of the application
@@ -24,19 +27,12 @@ interface IMainState {
  * Entry class for the Application
  */
 export class Main extends React.Component<any, IMainState> {
-  CHORD_CHANGE_QTY = 5;
-
-  constructor(props: IMainState){
-    super(props);
-    const flows = JSON.parse(JSON.stringify(testChordData.flows));
-    const endpoints = JSON.parse(JSON.stringify(testChordData.endpoints));
-    const tree = this.buildTree(endpoints, flows);
-     this.state = {
-      currentTab: 1,
-      flows: flows,
-      tree,
-    };
-  }
+  // Set default state values
+  state: IMainState = {
+    currentTab: 1,
+    flows: flows,
+    tree: this.buildTree(endpoints, flows),
+  };
 
   buildTree(endpoints: IEndpoint[], flows: IFlow[]){
     endpoints = addPropertiesToEndpoints( polarizeStartAndEndAngles( setEndpointFlowCounts(endpoints, flows)));
@@ -67,19 +63,28 @@ export class Main extends React.Component<any, IMainState> {
     this.setState({tree: updated.tree, flows: updated.flows});
   }
 
+  /**
+   * Adds random chords to existing end points
+   */
   addChords = () => {
     const tree = this.state.tree;
     const flows = this.state.flows;
-    const newFlows = createRandomFlows(this.CHORD_CHANGE_QTY, flows, tree); // Generate random flows
+    const newFlows = createRandomFlows(CHORD_CHANGE_QTY, flows, tree); // Generate random flows
     const updatedFlows = union(flows, newFlows);
     this.setState({flows: updatedFlows});
   }
 
+  /**
+   * Removes chords from existing end points
+   */
   removeChords = () => {
     const flows = this.state.flows;
-    const removeFlows = selectRandomFlows(this.CHORD_CHANGE_QTY, flows);
+    const removeFlows = selectRandomFlows(CHORD_CHANGE_QTY, flows);
     const updatedFlows = difference(flows, removeFlows);
-    this.setState({flows: updatedFlows});
+
+    this.setState({
+      flows: updatedFlows,
+    });
   }
 
   /**
