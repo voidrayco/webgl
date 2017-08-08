@@ -1,8 +1,5 @@
 import { IEndpoint, IFlow } from '../generators/types';
 
-const RANDOM = require('random');
-const MINIMUM_ENDPOINT_SIZE = 0.5; // Radians
-
 /**
  * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
  * Angles calculated in radians
@@ -117,10 +114,6 @@ function _isLeaf(endpoint: IEndpoint){
         return true;
     }
     return endpoint.children.length === 0;
-}
-
-function _isRoot(endpoint: IEndpoint){
-    return endpoint.parent === '';
 }
 
 /**

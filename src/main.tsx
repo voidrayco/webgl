@@ -6,7 +6,7 @@ import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
 import { IData as IChordData, IEndpoint, IFlow } from './chord-chart/generators/types';
 import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './util/iEndpoint';
-import { addEndpointToTree, createRandomLeafEndpoint, generateTree, getTreeLeafNodes, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
+import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
 import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 
 const testChordData = require('./chord-chart/test-data/chord-data.json');
