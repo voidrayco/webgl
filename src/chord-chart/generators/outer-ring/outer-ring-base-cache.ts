@@ -31,16 +31,11 @@ interface IEndPointMetrics {
  * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
 export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterRingData>> {
-  shapeById: Map<string, CurvedLineShape<IOuterRingData>>;
-
   generate(data: IData, config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
-    // CLear out our old mapping
-    this.shapeById = new Map<string, CurvedLineShape<IOuterRingData>>();
-
     const circleRadius = config.radius;
     const segmentSpace: number = config.space; // It used to seperate segments
     const hemiSphere: boolean = config.hemiSphere;
@@ -73,9 +68,6 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         chords: [],
         source: segment.source,
       };
-
-      // We map our shapes to the identifiers
-      this.shapeById.set(segment.source.id, curve);
 
       return curve;
     });

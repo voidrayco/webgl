@@ -10,27 +10,24 @@ export interface IChordChartConfig {
 }
 
 export interface IData {
-  endpoints: IEndpoint[];
+  tree: IEndpoint[];
+  endpoints?: IEndpoint[];
   flows: IFlow[];
 }
 
 export interface IEndpoint {
+  children?: IEndpoint[]
   id: string;
   name: string;
-  flowAngles: IFlowAngle;
   startAngle: number;
   endAngle: number;
   outgoingCount: number;
   incomingCount: number;
+  parent: string;
   totalCount: number;
-  placement: string;
-  _outflowIdx?: number;  // Default to 0
-  _inflowIdx?: number;
-}
-
-export interface IFlowAngle {
-  angleStep: number;
-  startAngle: number;
+  _outflowIdx?: number;  // Used for internal flow calculations
+  _inflowIdx?: number;  // Used for internal flow calculations
+  weight: number;
 }
 
 export interface IFlow {
@@ -40,7 +37,7 @@ export interface IFlow {
   dstTarget: string;
   srcIndex: number;
   dstIndex: number;
-  baseColor: HSLColor;  // Is this what the data stores?
+  baseColor: HSLColor;
 }
 
 export interface ICurveData {

@@ -17,7 +17,7 @@ import { filterQuery } from 'webgl-surface/util/quad-tree';
 import { QuadTree } from 'webgl-surface/util/quad-tree';
 import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surface';
 
-const debug = require('debug')('chord-chart');
+const debug = require('debug')('chord-chart:gl');
 
 // Local component properties interface
 interface IChordChartGLProperties extends IWebGLSurfaceProperties {
