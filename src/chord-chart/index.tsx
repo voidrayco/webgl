@@ -14,6 +14,7 @@ import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
 interface IChordChartProps {
+  hemiSphere: boolean;
   data: IData;
 }
 
@@ -97,7 +98,6 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
     this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
     this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
-
     if (selections.length > 0) {
       let selection;
       // If has outer ring thing grab it instead
@@ -160,6 +160,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   render() {
     const config: IChordChartConfig = {
+      hemiDistance: 50,
+      hemiSphere: this.props.hemiSphere,
       radius: 200,
       ringWidth: 20,
       space: 0.005,
@@ -169,19 +171,15 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.state.data, config, this.selection);
 
-    let staticCurves: CurvedLineShape<any>[] = this.chordGenerator.getBaseBuffer();
-    staticCurves = staticCurves.concat(this.outerRingGenerator.getBaseBuffer());
-
-    let interactiveCurves: CurvedLineShape<any>[] = this.chordGenerator.getInteractionBuffer();
-    interactiveCurves = interactiveCurves.concat(this.outerRingGenerator.getInteractionBuffer());
-
     return (
       <ChordChartGL
         height={this.viewport.height}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
-        staticCurvedLines={staticCurves}
-        interactiveCurvedLines={interactiveCurves}
+        staticCurvedLines={this.chordGenerator.getBaseBuffer()}
+        staticRingLines={this.outerRingGenerator.getBaseBuffer()}
+        interactiveCurvedLines={this.chordGenerator.getInteractionBuffer()}
+        interactiveRingLines={this.outerRingGenerator.getInteractionBuffer()}
         onMouseHover={this.handleMouseHover}
         onMouseLeave={this.handleMouseLeave}
         viewport={this.viewport}

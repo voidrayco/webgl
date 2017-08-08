@@ -119,8 +119,18 @@ export class Main extends React.Component<any, IMainState> {
     if (this.state.currentTab === 1) {
       testChordData.flows = this.state.flows;
       testChordData.tree = this.state.tree;
+
       component = (
-        <ChordChart data={testChordData} />
+        <ChordChart hemiSphere={false} data={testChordData}/>
+      );
+    }
+
+    if (this.state.currentTab === 2){
+      testChordData.flows = this.state.flows;
+      testChordData.tree = this.state.tree;
+
+      component = (
+        <ChordChart hemiSphere={true} data={testChordData} />
       );
     }
 
@@ -132,6 +142,7 @@ export class Main extends React.Component<any, IMainState> {
         <div style={{marginTop: 4, padding: 4}}>
           <button onClick={this.handleClickTab(0)}>View Quads</button>
           <button onClick={this.handleClickTab(1)}>View Chord Demo</button>
+          <button onClick={this.handleClickTab(2)}>HemiSphere</button>
           <span>Endpoint</span>
           <button onClick={this.addEndpoint}>+</button>
           <button onClick={this.removeEndpoint}>-</button>

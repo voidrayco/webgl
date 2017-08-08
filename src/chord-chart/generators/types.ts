@@ -2,6 +2,8 @@ import { HSLColor, RGBColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export interface IChordChartConfig {
+  hemiDistance: number;
+  hemiSphere: boolean;
   radius: number;
   ringWidth: number;
   space: number;

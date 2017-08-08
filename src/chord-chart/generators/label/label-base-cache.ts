@@ -23,8 +23,10 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
     const activeOpacity: number = 1;
     const circleRadius = config.radius;
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
+    const hemiSphere = config.hemiSphere;
+    const hemiDistance = config.hemiDistance;
 
-    const labelsData = this.preProcessData(data, circleRadius);
+    const labelsData = this.preProcessData(data, circleRadius, hemiSphere, hemiDistance);
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -38,20 +40,31 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         fontSize: 14,
         text: labelData.name,
       });
-      const width = label.getSize().width + 20;
+      const width = label.getSize().width + config.ringWidth;
       const height = label.fontSize;
       debug('height is %o', height);
       if (labelData.anchor === AnchorPosition.MiddleLeft){
-        point.x = point.x - width * Math.cos(labelData.angle)
+        if (!hemiSphere){
+          point.x = point.x - width * Math.cos(labelData.angle)
         - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-        point.y = point.y - width * Math.sin(labelData.angle)
+          point.y = point.y - width * Math.sin(labelData.angle)
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
+        }else{
+          labelData.angle -= Math.PI;
+          point.x = point.x + config.ringWidth * Math.cos(labelData.angle) - width ;
+          point.y = point.y + config.ringWidth * Math.sin(labelData.angle) - height / 2;
+        }
       }
       if (labelData.anchor === AnchorPosition.MiddleRight){
-        point.x = point.x + 20 * Math.cos(labelData.angle)
+        if (!hemiSphere){
+          point.x = point.x + 0.5 * (config.ringWidth + 15) * Math.cos(labelData.angle)
         - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-        point.y = point.y + 20 * Math.sin(labelData.angle)
+          point.y = point.y + 0.5 * (config.ringWidth + 15) * Math.sin(labelData.angle)
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
+        }else{
+          point.x = point.x + (config.ringWidth + 15) * Math.cos(labelData.angle);
+          point.y = point.y + (config.ringWidth + 15) * Math.sin(labelData.angle) - height / 2;
+        }
       }
 
       label.rasterizationOffset.y = 10.5;
@@ -60,6 +73,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       label.rasterizationPadding.width = 4;
       label.setLocation(point);
       label.setRotation(labelData.angle);
+      if (hemiSphere)label.setRotation(0);
       label.setAnchor(labelData.anchor);
       debug('label width after is %o', label.width);
       return label;
@@ -69,12 +83,27 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
   }
 
   // Data = d3chart.loadData();
-  preProcessData(data: IData, circleRadius: number) {
+  preProcessData(data: IData, circleRadius: number, hemiSphere: boolean, hemiDistance: number) {
     // Const controlPoint = {x: 0, y: 0};
 
+    function adjustAngle(angle: number){
+      if (angle < 0)angle += 2 * Math.PI;
+      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
+      return angle;
+    }
+
     const calculatePoint = (radianAngle: number) => {
-      const x = circleRadius * Math.cos(radianAngle);
+      radianAngle = adjustAngle(radianAngle);
+      let x = circleRadius * Math.cos(radianAngle);
       const y = circleRadius * Math.sin(radianAngle);
+      if (hemiSphere){
+        if ((radianAngle >= 0 && radianAngle < Math.PI / 2) ||
+           (radianAngle >= Math.PI * 3 / 2 && radianAngle < Math.PI * 2)){
+            x = circleRadius * Math.cos(radianAngle) + hemiDistance;
+        }else{
+            x = circleRadius * Math.cos(radianAngle) - hemiDistance;
+        }
+      }
       return {x, y};
     };
 
