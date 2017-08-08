@@ -41,6 +41,10 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     const hemiSphere: boolean = config.hemiSphere;
     const hemiDistance: number = config.hemiDistance;
 
+    debug('data tree angles are %o  %o', data.tree[0].endAngle, data.tree[1].endAngle);
+
+    debug('hemiSphere is %o', hemiSphere);
+
     const segments = this.preProcessData(data, circleRadius, segmentSpace, hemiSphere, hemiDistance);
 
     // Check if a selection exists such that the base needs to be faded
@@ -72,7 +76,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       return curve;
     });
 
-    debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
+    // Debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
     this.buffer = circleEdges;
   }
 
@@ -91,15 +95,17 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     const calculatePoint = (radianAngle: number) => {
       radianAngle = adjustAngle(radianAngle);
       let x = circleRadius * Math.cos(radianAngle);
-      const y = circleRadius * Math.sin(radianAngle);
+      let y = circleRadius * Math.sin(radianAngle);
       // Change the position in hemiSphere
       if (hemiSphere){
-        if ((radianAngle >= 0 && radianAngle < Math.PI / 2) ||
-           (radianAngle >= Math.PI * 3 / 2 && radianAngle < Math.PI * 2)){
-            x = circleRadius * Math.cos(radianAngle) + hemiDistance;
+        let halfAngle;
+        if ((radianAngle >= data.tree[0].startAngle && radianAngle <= data.tree[0].endAngle)){
+          halfAngle = data.tree[0].startAngle + 0.5 * (data.tree[0].endAngle - data.tree[0].startAngle);
         }else{
-            x = circleRadius * Math.cos(radianAngle) - hemiDistance;
+          halfAngle = data.tree[1].startAngle + 0.5 * (data.tree[1].endAngle - data.tree[1].startAngle);
         }
+          x = circleRadius * Math.cos(radianAngle) + hemiDistance * Math.cos(halfAngle);
+          y = circleRadius * Math.sin(radianAngle) + hemiDistance * Math.sin(halfAngle);
       }
       return {x, y};
     };
@@ -113,12 +119,14 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       // Change controlPoint in hemiSphere
       if (hemiSphere){
         const angle = adjustAngle(endpoint.startAngle + segmentSpace);
-        if ((angle >= 0 && angle < Math.PI / 2) ||
-           (angle >= (3 * Math.PI ) / 2 && angle < Math.PI * 2)){
-             controlPoint = {x: hemiDistance, y: 0};
+        let halfAngle;
+        if ((angle >= data.tree[0].startAngle && angle <= data.tree[0].endAngle)){
+           halfAngle = data.tree[0].startAngle + 0.5 * (data.tree[0].endAngle - data.tree[0].startAngle);
         }else{
-             controlPoint = {x: -hemiDistance, y: 0};
+           halfAngle = data.tree[1].startAngle + 0.5 * (data.tree[1].endAngle - data.tree[1].startAngle);
         }
+        controlPoint = {x: hemiDistance * Math.cos(halfAngle), y: hemiDistance * Math.sin(halfAngle)};
+
       }
       const colorVal = rgb(color(calculateColor(endpoint.id)));
       const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);

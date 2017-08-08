@@ -113,14 +113,16 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
     function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean) {
       flowAngle = adjustAngle(flowAngle);
       let x = radius * Math.cos(flowAngle);
-      const y = radius * Math.sin(flowAngle);
+      let y = radius * Math.sin(flowAngle);
       if (hemiSphere){
-        if ((flowAngle >= 0 && flowAngle < Math.PI / 2) ||
-           (flowAngle >= Math.PI * 3 / 2 && flowAngle < Math.PI * 2)){
-            x = radius * Math.cos(flowAngle) + hemiDistance;
+        let halfAngle;
+        if ((flowAngle >= data.tree[0].startAngle && flowAngle <= data.tree[0].endAngle)){
+            halfAngle = data.tree[0].startAngle + 0.5 * (data.tree[0].endAngle - data.tree[0].startAngle);
         }else{
-            x = radius * Math.cos(flowAngle) - hemiDistance;
+            halfAngle = data.tree[1].startAngle + 0.5 * (data.tree[1].endAngle - data.tree[1].startAngle);
         }
+        x = radius * Math.cos(flowAngle) + hemiDistance * Math.cos(halfAngle);
+        y = radius * Math.sin(flowAngle) + hemiDistance * Math.sin(halfAngle);
       }
       return {x, y};
     }
@@ -132,10 +134,10 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
           if (destEndpoint){
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
-            const p1 = calculatePoint(circleRadius - circleWidth / 2, p1FlowAngle, hemiSphere);
+            const p1 = calculatePoint(circleRadius - 0.5 * circleWidth , p1FlowAngle, hemiSphere);
             const p2FlowAngle = getFlowAngle(destEndpoint,
                destEndpoint.totalCount - 1 - destEndpoint._inflowIdx, segmentSpace);
-            const p2 = calculatePoint(circleRadius - circleWidth / 2, p2FlowAngle, hemiSphere);
+            const p2 = calculatePoint(circleRadius - 0.5 * circleWidth , p2FlowAngle, hemiSphere);
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;

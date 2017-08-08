@@ -13,6 +13,8 @@ import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
+const debug = require('debug')('chord_index');
+
 interface IChordChartProps {
   hemiSphere: boolean;
   data: IData;
@@ -73,14 +75,15 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     const data = Object.assign({}, this.props.data);
     data.tree = recalculateTree(data.tree, data.flows);
     data.endpoints = getTreeLeafNodes(data.tree);
+    debug('data are %o', data);
     this.setState({data});
   }
 
   componentWillReceiveProps(nextProps: any) {
     if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
       const data = Object.assign({}, nextProps.data);
-      const tree = recalculateTree(data.tree, data.flows);
-      data.endpoints = getTreeLeafNodes(tree);
+      data.tree = recalculateTree(data.tree, data.flows);
+      data.endpoints = getTreeLeafNodes(data.tree);
       this.setState({data});
     }
   }
@@ -166,6 +169,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       ringWidth: 20,
       space: 0.005,
     };
+
+    debug('this.data are %o', this.state.data);
 
     this.outerRingGenerator.generate(this.state.data, config, this.selection);
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
