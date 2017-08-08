@@ -57,13 +57,13 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       }
       if (labelData.anchor === AnchorPosition.MiddleRight){
         if (!hemiSphere){
-          point.x = point.x + 0.5 * config.ringWidth * Math.cos(labelData.angle)
+          point.x = point.x + 0.5 * (config.ringWidth + 15) * Math.cos(labelData.angle)
         - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-          point.y = point.y + 0.5 * config.ringWidth * Math.sin(labelData.angle)
+          point.y = point.y + 0.5 * (config.ringWidth + 15) * Math.sin(labelData.angle)
         - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
         }else{
-          point.x = point.x + config.ringWidth * Math.cos(labelData.angle);
-          point.y = point.y + config.ringWidth * Math.sin(labelData.angle) - height / 2;
+          point.x = point.x + (config.ringWidth + 15) * Math.cos(labelData.angle);
+          point.y = point.y + (config.ringWidth + 15) * Math.sin(labelData.angle) - height / 2;
         }
       }
 
