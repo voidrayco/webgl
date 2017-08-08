@@ -11,13 +11,15 @@ import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
+import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
 interface IChordChartProps {
-  testChordData: IData;
+  data: IData;
 }
 
 interface IChordChartState {
-  zoom: number
+  zoom: number,
+  data: IData
 }
 
 function isOuterRing(curve: any): curve is CurvedLineShape<IOuterRingData> {
@@ -51,6 +53,11 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
   // Sets the default state
   state: IChordChartState = {
+    data: {
+      endpoints: [],
+      flows: [],
+      tree: [],
+    },
     zoom: 1,
   };
 
@@ -62,6 +69,19 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
+    const data = Object.assign({}, this.props.data);
+    data.tree = recalculateTree(data.tree, data.flows);
+    data.endpoints = getTreeLeafNodes(data.tree);
+    this.setState({data});
+  }
+
+  componentWillReceiveProps(nextProps: any) {
+    if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
+      const data = Object.assign({}, nextProps.data);
+      const tree = recalculateTree(data.tree, data.flows);
+      data.endpoints = getTreeLeafNodes(tree);
+      this.setState({data});
+    }
   }
 
   componentDidMount() {
@@ -145,9 +165,9 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       space: 0.005,
     };
 
-    this.outerRingGenerator.generate(this.props.testChordData, config, this.selection);
-    this.chordGenerator.generate(this.props.testChordData, config, this.outerRingGenerator, this.selection);
-    this.labelGenerator.generate(this.props.testChordData, config, this.selection);
+    this.outerRingGenerator.generate(this.state.data, config, this.selection);
+    this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
+    this.labelGenerator.generate(this.state.data, config, this.selection);
 
     let staticCurves: CurvedLineShape<any>[] = this.chordGenerator.getBaseBuffer();
     staticCurves = staticCurves.concat(this.outerRingGenerator.getBaseBuffer());
