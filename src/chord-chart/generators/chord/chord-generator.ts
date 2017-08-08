@@ -12,14 +12,19 @@ export class ChordGenerator {
   chordBase: ChordBaseCache = new ChordBaseCache();
   chordInteractions: ChordInteractionsCache = new ChordInteractionsCache();
 
+  lastData: IData;
+
   /**
    * Flag which caches need busting
    */
-  bustCaches(selection: Selection) {
-    this.chordBase.bustCache = true;
+  bustCaches(data: IData, selection: Selection) {
+    if (data !== this.lastData) this.chordBase.bustCache = true;
+
     if (selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD)) {
       this.chordInteractions.bustCache = true;
     }
+
+    this.lastData = data;
   }
 
   /**
@@ -27,7 +32,7 @@ export class ChordGenerator {
    */
   generate(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
     debug('Generating chords');
-    this.bustCaches(selection);
+    this.bustCaches(data, selection);
     this.chordBase.generate(data, config, outerRings, selection);
     this.chordInteractions.generate(config, selection);
   }
