@@ -112,11 +112,10 @@ export class Main extends React.Component<any, IMainState> {
     }
 
     if (this.state.currentTab === 1) {
-      const chordData: IChordData = Object.assign({}, testChordData);
-      chordData.flows = this.state.flows;
-      chordData.tree = this.state.tree;
+      testChordData.flows = this.state.flows;
+      testChordData.tree = this.state.tree;
       component = (
-        <ChordChart data={chordData} />
+        <ChordChart data={testChordData} />
       );
     }
 
