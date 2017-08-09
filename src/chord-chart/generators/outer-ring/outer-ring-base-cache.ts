@@ -76,7 +76,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       return curve;
     });
 
-    // Debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
+    debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
     this.buffer = circleEdges;
   }
 
@@ -84,25 +84,24 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
   preProcessData(data: IData, circleRadius: number, segmentSpace: number, hemiSphere: boolean,
      hemiDistance: number) {
     let controlPoint = {x: 0, y: 0};
-
     debug('data is %o', data);
 
     // Keep the angle in the range from 0 to 2*Pi
-    function adjustAngle(angle: number){
+    function adjustAngle(angle: number) {
       if (angle < 0)angle += 2 * Math.PI;
       else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
       return angle;
     }
 
     // Decide the segments belong to left or right
-    function inLeftHemi(startAngle: number, endAngle: number){
+    function inLeftHemi(startAngle: number, endAngle: number) {
       const halfAngle = startAngle + 0.5 * (endAngle - startAngle);
-      if (halfAngle >= 0.5 * Math.PI && halfAngle <= 1.5 * Math.PI)return true;
+      if (halfAngle >= 0.5 * Math.PI && halfAngle <= 1.5 * Math.PI) return true;
       return false;
     }
 
     // Decide the moving direction of points based on segments they are in
-    function getDirection(angle: number, trees: IEndpoint[]){
+    function getDirection(angle: number, trees: IEndpoint[]) {
       const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
       return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
     }
@@ -112,12 +111,13 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       let x = circleRadius * Math.cos(radianAngle);
       let y = circleRadius * Math.sin(radianAngle);
       // Change the position in hemiSphere
-      if (hemiSphere){
+      if (hemiSphere) {
         let halfAngle;
-        if (data.tree.length === 2){
+        if (data.tree.length === 2) {
           if (inLeft)halfAngle = Math.PI;
           else halfAngle = 0;
-        }else if (data.tree.length > 2){
+        }
+        else if (data.tree.length > 2) {
           halfAngle = getDirection(radianAngle, data.tree);
         }
           x = circleRadius * Math.cos(radianAngle) + hemiDistance * Math.cos(halfAngle);
@@ -137,13 +137,14 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       const p1 = calculatePoint(startAngle, isInLeft);
       const p2 = calculatePoint(endAngle, isInLeft);
       // Change controlPoint in hemiSphere
-      if (hemiSphere){
+      if (hemiSphere) {
         const angle = adjustAngle(endpoint.startAngle + segmentSpace);
         let halfAngle;
-        if (data.tree.length === 2){
-          if (isInLeft)halfAngle = Math.PI;
+        if (data.tree.length === 2) {
+          if (isInLeft) halfAngle = Math.PI;
           else halfAngle = 0;
-        }else if (data.tree.length > 2){
+        }
+        else if (data.tree.length > 2) {
           halfAngle = getDirection(angle, data.tree);
         }
         controlPoint = {x: hemiDistance * Math.cos(halfAngle), y: hemiDistance * Math.sin(halfAngle)};
