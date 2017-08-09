@@ -10,7 +10,7 @@ import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpoi
 import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 
 const CHORD_CHANGE_QTY = 5;
-const testChordData = require('./chord-chart/test-data/chord-data.json');
+const testChordData = require('./chord-chart/test-data/seven.json');
 const flows = clone(testChordData.flows);
 const endpoints = clone(testChordData.endpoints);
 
