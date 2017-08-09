@@ -61,7 +61,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
-      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
+      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ?
+      rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
 
       const newCurve = new CurvedLineShape<IChordData>(
         CurveType.Bezier,
@@ -110,16 +111,31 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       return angle;
     }
 
-    function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean) {
+    // Decide the segments belong to left or right
+    function inLeftHemi(startAngle: number, endAngle: number){
+      const halfAngle = startAngle + 0.5 * (endAngle - startAngle);
+      if (halfAngle >= 0.5 * Math.PI && halfAngle <= 1.5 * Math.PI)return true;
+      return false;
+    }
+
+    // Decide the moving direction of points based on segments they are in
+    function getDirection(angle: number, trees: IEndpoint[]){
+      const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
+      return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
+    }
+
+    function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean,
+       inleft: boolean) {
       flowAngle = adjustAngle(flowAngle);
       let x = radius * Math.cos(flowAngle);
       let y = radius * Math.sin(flowAngle);
       if (hemiSphere){
         let halfAngle;
-        if ((flowAngle >= data.tree[0].startAngle && flowAngle <= data.tree[0].endAngle)){
-            halfAngle = data.tree[0].startAngle + 0.5 * (data.tree[0].endAngle - data.tree[0].startAngle);
-        }else{
-            halfAngle = data.tree[1].startAngle + 0.5 * (data.tree[1].endAngle - data.tree[1].startAngle);
+        if (data.tree.length === 2){
+          if (inleft)halfAngle = Math.PI;
+          else halfAngle = 0;
+        }else if (data.tree.length > 2){
+          halfAngle = getDirection(flowAngle, data.tree);
         }
         x = radius * Math.cos(flowAngle) + hemiDistance * Math.cos(halfAngle);
         y = radius * Math.sin(flowAngle) + hemiDistance * Math.sin(halfAngle);
@@ -134,10 +150,18 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
           if (destEndpoint){
             const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
-            const p1 = calculatePoint(circleRadius - 0.5 * circleWidth , p1FlowAngle, hemiSphere);
+            let isInLeft = inLeftHemi(endpoint.startAngle + segmentSpace,
+               endpoint.endAngle - segmentSpace);
+            const p1 = calculatePoint(circleRadius - 0.5 * circleWidth ,
+               p1FlowAngle, hemiSphere, isInLeft);
+
             const p2FlowAngle = getFlowAngle(destEndpoint,
                destEndpoint.totalCount - 1 - destEndpoint._inflowIdx, segmentSpace);
-            const p2 = calculatePoint(circleRadius - 0.5 * circleWidth , p2FlowAngle, hemiSphere);
+            isInLeft = inLeftHemi(destEndpoint.startAngle + segmentSpace,
+               destEndpoint.endAngle - segmentSpace);
+            const p2 = calculatePoint(circleRadius - 0.5 * circleWidth ,
+               p2FlowAngle, hemiSphere, isInLeft);
+
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
