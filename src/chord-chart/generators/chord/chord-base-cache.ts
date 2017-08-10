@@ -106,12 +106,6 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       end._outflowIdx = 0;
     });
 
-    function adjustAngle(angle: number) {
-      if (angle < 0)angle += 2 * Math.PI;
-      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
-      return angle;
-    }
-
     // Decide the segments belong to left or right
     function inLeftHemi(startAngle: number, endAngle: number) {
       const halfAngle = startAngle + 0.5 * (endAngle - startAngle);
@@ -127,18 +121,10 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
     function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean,
        inleft: boolean) {
-      flowAngle = adjustAngle(flowAngle);
       let x = radius * Math.cos(flowAngle);
       let y = radius * Math.sin(flowAngle);
       if (hemiSphere) {
-        let halfAngle;
-        if (data.tree.length === 2) {
-          if (inleft)halfAngle = Math.PI;
-          else halfAngle = 0;
-        }
-        else if (data.tree.length > 2) {
-          halfAngle = getDirection(flowAngle, data.tree);
-        }
+        const halfAngle = getDirection(flowAngle, data.tree);
         x = radius * Math.cos(flowAngle) + hemiDistance * Math.cos(halfAngle);
         y = radius * Math.sin(flowAngle) + hemiDistance * Math.sin(halfAngle);
       }

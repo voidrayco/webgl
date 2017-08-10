@@ -58,7 +58,7 @@ export function recalculateTree(tree: IEndpoint[], flows: IFlow[]){
         }
     };
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI;
-    tree = _recalculateEndpoint(tree, flows, 0, CIRCLE_CIRCUMFERENCE);
+    tree = _recalculateEndpoint(tree, flows, -0.5 * Math.PI, CIRCLE_CIRCUMFERENCE - 0.5 * Math.PI);
     tree.map((root: IEndpoint) => {
         _recalculateSubtree(root);
     });
