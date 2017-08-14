@@ -6,7 +6,7 @@ import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IData } from './generators/types';
-import { IChordChartConfig } from './generators/types';
+import { IChordChartConfig, IEndpoint, IFlow, LabelDirectionEnum } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
@@ -57,6 +57,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   // Sets the default state
   state: IChordChartState = {
     data: {
+      endpointById: new Map<string, IEndpoint>(),
       endpoints: [],
       flows: [],
       tree: [],
@@ -69,21 +70,35 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    * We initialize any needed state here
    */
   componentWillMount() {
+    console.log('DATA', this.props.data);
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
     const data = Object.assign({}, this.props.data);
     data.tree = recalculateTree(data.tree, data.flows);
     data.endpoints = getTreeLeafNodes(data.tree);
-    debug('trees are %o', data.tree);
+    data.endpointById = new Map<string, IEndpoint>();
+
+    data.endpoints.forEach(endpoint => {
+      data.endpointById.set(endpoint.id, endpoint);
+    });
+
     this.setState({data});
   }
 
   componentWillReceiveProps(nextProps: any) {
     if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
-      const data = Object.assign({}, nextProps.data);
+      console.log('DATA', nextProps.data);
+      const data = Object.assign({}, nextProps.data) as IData;
       data.tree = recalculateTree(data.tree, data.flows);
       data.endpoints = getTreeLeafNodes(data.tree);
+      data.endpointById = new Map<string, IEndpoint>();
+
+      data.endpoints.forEach(endpoint => {
+        data.endpointById.set(endpoint.id, endpoint);
+      });
+
+      console.log(data);
       this.setState({data});
     }
   }
@@ -184,8 +199,10 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   render() {
     const config: IChordChartConfig = {
+      center: {x: 0, y: 0},
       hemiDistance: 50,
       hemiSphere: this.props.hemiSphere,
+      labelDirection: this.props.hemiSphere ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
       radius: 200,
       ringWidth: 20,
       space: 0.005,

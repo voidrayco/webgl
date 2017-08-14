@@ -1,9 +1,16 @@
 import { HSLColor, RGBColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
+export enum LabelDirectionEnum {
+  LINEAR,
+  RADIAL,
+}
+
 export interface IChordChartConfig {
+  center: IPoint;
   hemiDistance: number;
   hemiSphere: boolean;
+  labelDirection: LabelDirectionEnum;
   radius: number;
   ringWidth: number;
   space: number;
@@ -13,6 +20,7 @@ export interface IData {
   tree: IEndpoint[];
   endpoints?: IEndpoint[];
   flows: IFlow[];
+  endpointById: Map<string, IEndpoint>;
 }
 
 export interface IEndpoint {

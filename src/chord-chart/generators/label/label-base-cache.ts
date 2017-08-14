@@ -1,13 +1,47 @@
 import { rgb, RGBColor } from 'd3-color';
 import { Label } from 'webgl-surface/drawing/label';
+import { IPoint, Point } from 'webgl-surface/primitives/point';
 import { AnchorPosition } from 'webgl-surface/primitives/rotateable-quad';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
-import { IChordChartConfig, IData } from '../types';
+import { IChordChartConfig, IData, IEndpoint, LabelDirectionEnum } from '../types';
 const debug = require('debug')('label');
+
 /**
- * Responsible for generating the static outer rings in the system
+ * This calculates the equivalent angle to where it is bounded between
+ * 0 and 2*pi
+ */
+function ordinaryCircularAngle(angle: number) {
+  while (angle > 2 * Math.PI) {
+    angle -= 2 * Math.PI;
+  }
+
+  while (angle < 0) {
+    angle += 2 * Math.PI;
+  }
+
+  return angle;
+}
+
+/**
+ * This takes in a ordinary circular angle and determines if the angle lies on
+ * the right side of a circle.
+ *
+ * @param {number} angle The angle to test which hemisphere it lies on.
+ *
+ * @returns {boolean} True if the angle lies within the right hemisphere
+ */
+function isRightHemisphere(angle: number) {
+  return (
+    (angle >= 0 && angle < Math.PI / 2) ||
+    (angle > (3 * Math.PI) / 2)
+  )
+  ;
+}
+
+/**
+ * Responsible for generating the static labels around the chart
  *
  * @export
  * @class LabelBaseCache
@@ -21,108 +55,124 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
   buildCache(data: IData, config: IChordChartConfig, selection: Selection){
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
-    const circleRadius = config.radius;
-    const defaultColor: RGBColor = rgb(1, 1, 1, 1);  // TODO: Need to calculate somehow
-    const hemiSphere = config.hemiSphere;
-    const hemiDistance = config.hemiDistance;
+    const defaultColor: RGBColor = rgb(1, 1, 1, 1);
+    const labelsData = this.preProcessData(data, config);
 
-    const labelsData = this.preProcessData(data, circleRadius, hemiSphere, hemiDistance);
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
         rgb(r, g, b, inactiveOpacity) :
         rgb(r, g, b, activeOpacity)
       ;
-      const point = {x: labelData.point.x, y: labelData.point.y};
 
       const label = new Label<any>({
         color: color,
         fontSize: 14,
         text: labelData.name,
       });
-      const width = label.getSize().width + config.ringWidth;
-      const height = label.fontSize;
-      debug('height is %o', height);
-      if (labelData.anchor === AnchorPosition.MiddleLeft){
-        if (!hemiSphere){
-          point.x = point.x - width * Math.cos(labelData.angle)
-        - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-          point.y = point.y - width * Math.sin(labelData.angle)
-        - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
-        }else{
-          labelData.angle -= Math.PI;
-          point.x = point.x + config.ringWidth * Math.cos(labelData.angle) - width ;
-          point.y = point.y + config.ringWidth * Math.sin(labelData.angle) - height / 2;
-        }
-      }
-      if (labelData.anchor === AnchorPosition.MiddleRight){
-        if (!hemiSphere){
-          point.x = point.x + 0.5 * (config.ringWidth + 15) * Math.cos(labelData.angle)
-        - 0.5 * height * Math.cos(labelData.angle + 0.5 * Math.PI);
-          point.y = point.y + 0.5 * (config.ringWidth + 15) * Math.sin(labelData.angle)
-        - 0.5 * height * Math.sin(labelData.angle + 0.5 * Math.PI);
-        }else{
-          point.x = point.x + (config.ringWidth + 15) * Math.cos(labelData.angle);
-          point.y = point.y + (config.ringWidth + 15) * Math.sin(labelData.angle) - height / 2;
-        }
+
+      // If we're anchored at the middle left, we need to push a bit more outward
+      // In order to account for the length of the text field
+      if (labelData.anchor === AnchorPosition.MiddleLeft) {
+        Point.add(
+          labelData.point,
+          Point.scale(
+            labelData.direction,
+            label.width,
+          ),
+          labelData.point,
+        );
       }
 
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
       label.rasterizationPadding.width = 4;
-      label.setLocation(point);
-      label.setRotation(labelData.angle);
-      if (hemiSphere)label.setRotation(0);
       label.setAnchor(labelData.anchor);
+      label.setLocation(labelData.point);
+      label.setRotation(labelData.angle);
+
+      if (config.labelDirection === LabelDirectionEnum.LINEAR) {
+        label.setRotation(0);
+      }
+
       debug('label width after is %o', label.width);
+
       return label;
     });
 
     this.buffer = labels;
   }
 
-  // Data = d3chart.loadData();
-  preProcessData(data: IData, circleRadius: number, hemiSphere: boolean, hemiDistance: number) {
-    // Const controlPoint = {x: 0, y: 0};
+  preProcessData(data: IData, config: IChordChartConfig) {
+    const {
+      center,
+      radius,
+      hemiDistance,
+      hemiSphere,
+      ringWidth,
+    } = config;
 
-    function adjustAngle(angle: number){
-      if (angle < 0)angle += 2 * Math.PI;
-      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
-      return angle;
-    }
+    const hemisphereSpread = hemiSphere ? hemiDistance : 0;
 
-    const calculatePoint = (radianAngle: number) => {
-      radianAngle = adjustAngle(radianAngle);
-      let x = circleRadius * Math.cos(radianAngle);
-      const y = circleRadius * Math.sin(radianAngle);
-      if (hemiSphere){
-        if ((radianAngle >= 0 && radianAngle < Math.PI / 2) ||
-           (radianAngle >= Math.PI * 3 / 2 && radianAngle < Math.PI * 2)){
-            x = circleRadius * Math.cos(radianAngle) + hemiDistance;
-        }else{
-            x = circleRadius * Math.cos(radianAngle) - hemiDistance;
-        }
+    // This method is used to calculate where the anchor point location will be
+    // For the label
+    const calculatePoint = (endpoint: IEndpoint, direction: IPoint) => {
+      // Start at negative one to account for the final ring not being rendered
+      let depth = 0;
+      // A holder to analyze the next endpoint parent
+      let next = endpoint;
+
+      // Find out how deep the given end point is
+      while (next && next.parent) {
+        depth++;
+        next = data.endpointById.get(endpoint.parent);
       }
-      return {x, y};
+
+      console.log(endpoint, depth, data);
+
+      // How much is the label pushed out to account for all of the ring levels rendered
+      const ringPadding = ringWidth * depth;
+      // Quick reference to the direction of the angle
+      const dx = direction.x;
+      const dy = direction.y;
+
+      return {
+        x: (radius * dx) + (ringPadding * dx) + (hemisphereSpread * dx) + center.x,
+        y: (radius * dy) + (ringPadding * dy) + (hemisphereSpread * dy) + center.y,
+      };
     };
 
     const labelData = data.endpoints.map((endpoint) => {
-        const startAngle = endpoint.startAngle;
-        debug('startAngle is %o', startAngle);
-        let angle = startAngle + (endpoint.endAngle - startAngle) / 2;
-        debug('angle is %o', angle);
-        let angleIntersection =  angle ;
-        // MiddleRight if angle in left hemisphere. else middleLeft
-        if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
-        if (angle < 0) angle += 2 * Math.PI;
-        const anchor = (angle >= 0 && angle < Math.PI / 2)
-          || (angle > (3 * Math.PI) / 2) && angle <= (2 * Math.PI) ?
-          AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
-        debug('anchor is %o', anchor);
-        if (anchor === AnchorPosition.MiddleLeft)angleIntersection += Math.PI;
-        const point = calculatePoint(angle);
-        return {point, angle: angleIntersection, anchor, name: endpoint.name};
+      // Calculate the middle of the end point's radians
+      const startAngle = endpoint.startAngle;
+      let angle = startAngle + (endpoint.endAngle - startAngle) / 2;
+      // Make sure the angle lies within an ordinary circular range
+      angle = ordinaryCircularAngle(angle);
+      // Determine the anchor position based on whether the angle is on the left or right hemisphere
+      const anchor = isRightHemisphere(angle) ? AnchorPosition.MiddleRight : AnchorPosition.MiddleLeft;
+
+      // Generate a direction vector toward where the label should be located
+      const direction = {
+        x: Math.cos(angle),
+        y: Math.sin(angle),
+      };
+
+      const point = calculatePoint(endpoint, direction);
+
+      // If the label is to appear on the right side of the area, then we must
+      // Rotate it by 180 degrees to have it render in the right location
+      if (anchor === AnchorPosition.MiddleLeft) {
+        angle += Math.PI;
+      }
+
+      return {
+        anchor,
+        angle,
+        direction,
+        name: endpoint.name,
+        point,
+      };
     });
 
     return labelData;

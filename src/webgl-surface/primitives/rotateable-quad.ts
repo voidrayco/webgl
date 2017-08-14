@@ -191,7 +191,7 @@ export class RotateableQuad<T> extends Bounds<T> {
    */
   update() {
     // Calculate the pieces of the transformation
-    // Const anchorMat: Matrix4 = new Matrix4().makeTranslation(-this.anchor.x, -this.anchor.y, 0);
+    const anchorMat: Matrix4 = new Matrix4().makeTranslation(this.anchor.x, -this.anchor.y, 0);
     const rotationMat: Matrix4 = new Matrix4().makeRotationZ(this.rotation);
     const locationMat: Matrix4 = new Matrix4().makeTranslation(this.location.x, this.location.y, 0);
 
@@ -200,7 +200,7 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.transform = new Matrix4()
       .multiply(locationMat)
       .multiply(rotationMat)
-      // .multiply(anchorMat)
+      .multiply(anchorMat)
     ;
 
     // Apply the transform to all of our base vertices
