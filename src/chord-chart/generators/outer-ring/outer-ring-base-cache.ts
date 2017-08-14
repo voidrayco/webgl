@@ -15,6 +15,7 @@ const FADED_ALPHA = 0.1;
 const UNFADED_ALPHA = 1.0;
 
 interface IEndPointMetrics {
+  id: string,
   p1: IPoint,
   p2: IPoint,
   controlPoint: IPoint,
@@ -108,7 +109,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
     // Get depth of tree in order to render layers
     function getDepthOfTree(tree: IEndpoint) {
-      if (tree.children.length === 0) return 1;
+      if (tree.children === undefined || tree.children.length === 0) return 1;
       let max = 0;
       tree.children.forEach((c) => {
         const temp = getDepthOfTree(c);
@@ -117,7 +118,8 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       return max + 1;
     }
 
-    function travelTree(tree: IEndpoint[]) {
+    // Travel the tree to render three layers of ring
+    function traverseTree(tree: IEndpoint[]) {
       let segments: IEndPointMetrics[] = [];
 
       tree.forEach((t) => {
@@ -139,15 +141,19 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
           const colorVal = rgb(color(calculateColor(t.id)));
           const flows: IFlow[] = [];
-          segments.push({
-            color: colorVal,
-            controlPoint,
-            flows,
-            p1,
-            p2,
-            source: t,
-          });
-          const childSegments = travelTree(t.children);
+          if (depth === 2) {
+            segments.push({
+              color: colorVal,
+              controlPoint,
+              flows,
+              id: t.id,
+              p1,
+              p2,
+              source: t,
+            });
+          }
+
+          const childSegments = traverseTree(t.children);
           debug('childsegment are %o, parents are %o', childSegments, t.id);
           segments = segments.concat(childSegments);
         }
@@ -179,6 +185,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       const p1 = calculatePoint(circleRadius, startAngle, isInLeft);
       const p2 = calculatePoint(circleRadius, endAngle, isInLeft);
       // Change controlPoint in hemiSphere
+      debug('id is %o', endpoint.id);
       if (hemiSphere) {
         const angle = endpoint.startAngle + segmentSpace;
         const halfAngle = getDirection(angle, data.tree);
@@ -191,13 +198,14 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         color: colorVal,
         controlPoint,
         flows,
+        id: endpoint.id,
         p1,
         p2,
         source: endpoint,
       };
     });
 
-    const segments2 = travelTree(data.tree);
+    const segments2 = traverseTree(data.tree);
 
     return segments.concat(segments2);
   }

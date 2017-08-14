@@ -1,5 +1,5 @@
 import { IEndpoint, IFlow } from '../generators/types';
-
+const debug = require('debug')('edp');
 /**
  * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
  * Angles calculated in radians
@@ -11,6 +11,7 @@ import { IEndpoint, IFlow } from '../generators/types';
  */
 function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle: number, endAngle: number){
     const totalChildrenWeight = _getTotalWeight(children);
+    debug('childrens are %o, weight is %o', children, totalChildrenWeight);
     let currentAngle = startAngle;
     return children.map((child) => {
         const width = (child.weight / totalChildrenWeight) * (endAngle - startAngle);

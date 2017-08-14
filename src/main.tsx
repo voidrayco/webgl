@@ -9,6 +9,8 @@ import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCou
 import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
 import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 
+const debug = require('debug')('main');
+
 const CHORD_CHANGE_QTY = 5;
 const testChordData = require('./chord-chart/test-data/two.json');
 const flows = clone(testChordData.flows);
@@ -21,7 +23,59 @@ interface IMainState {
   currentTab: number,
   flows: IFlow[];
   tree: IEndpoint[];
+  zoom: number,
 }
+
+function getNewTreeById(tree: IEndpoint[], id: string, childrenNumber: number) {
+    tree.forEach((t) => {
+      if (t.id === id && t.children.length === 0) {
+        for (let i = 0; i < childrenNumber; i++ ) {
+          t.children.push({
+            children: [],
+            endAngle: undefined,
+            id: t.id.concat(String(i)),
+            incomingCount: 0,
+            name: t.name.concat(String(i)),
+            outgoingCount: 0,
+            parent: t.id,
+            startAngle: undefined,
+            totalCount: 0,
+            weight: 1,
+          });
+        }
+      }else{
+        getNewTreeById(t.children, id, childrenNumber);
+      }
+    });
+    return tree;
+  }
+
+  function getNewFlowsById(flows: IFlow[], id: string, childrenNumber: number) {
+    const relatedFlows = flows.filter(f => f.srcTarget === id || f.dstTarget === id);
+    const flowLength = relatedFlows.length;
+    if (flowLength === 0) return flows;
+    const segmentSize = Math.ceil(flowLength / childrenNumber);
+    let count = 0;
+    flows.forEach((f) => {
+      if (f.srcTarget === id || f.dstTarget === id) {
+        let newId = id;
+        for (let i = 0; i < childrenNumber; i++){
+          if (i < childrenNumber - 1) {
+              if (count >= segmentSize * i && count < segmentSize * (i + 1)){
+                  newId = newId.concat(String(i));
+              }
+          }
+          else {
+            if (count >= segmentSize * i) newId = newId.concat(String(i));
+          }
+        }
+        f.srcTarget === id ? f.srcTarget = newId : f.dstTarget = newId;
+        count++;
+      }
+    });
+
+    return flows;
+  }
 
 /**
  * Entry class for the Application
@@ -32,6 +86,7 @@ export class Main extends React.Component<any, IMainState> {
     currentTab: 1,
     flows: flows,
     tree: this.buildTree(endpoints, flows),
+    zoom: 1,
   };
 
   buildTree(endpoints: IEndpoint[], flows: IFlow[]){
@@ -40,12 +95,27 @@ export class Main extends React.Component<any, IMainState> {
     return tree;
   }
 
+  handleEndPointClicked = (selection : any) => {
+    const selectedId = selection.d.source.id;
+    const childrenNumber = 2 + Math.floor(4 * Math.random());
+    const newTree = getNewTreeById(this.state.tree, selectedId, childrenNumber);
+    const newFlows = getNewFlowsById(this.state.flows, selectedId, childrenNumber);
+    this.setState({tree: newTree, flows: newFlows});
+  }
+
+  handleZoomRequest = (zoom: number) => {
+    this.setState({
+      zoom,
+    });
+  }
+
   /**
    * Splits an existing leaf-level endpoint (with minimum size criteria) into two endpoints
    */
   addEndpoint = () => {
     let tree = this.state.tree;
     const newEndpoint = createRandomLeafEndpoint(tree);  // Generate random tree endpoint
+
     if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree);
     this.setState({
       tree,
@@ -98,7 +168,7 @@ export class Main extends React.Component<any, IMainState> {
    * @override
    * The React defined render method
    */
-  render() {
+  render(){
     let quadData: IQuadShapeData[] = [];
     let component;
 
@@ -114,6 +184,7 @@ export class Main extends React.Component<any, IMainState> {
       component = (
         <Bezier quadData={quadData}/>
       );
+      debug('tree is %o', this.state.tree);
     }
 
     if (this.state.currentTab === 1) {
@@ -121,7 +192,11 @@ export class Main extends React.Component<any, IMainState> {
       testChordData.tree = this.state.tree;
 
       component = (
-        <ChordChart hemiSphere={false} data={testChordData}/>
+        <ChordChart
+          onEndPointClick={this.handleEndPointClicked}
+          hemiSphere={false}
+          data={testChordData}
+        />
       );
     }
 
@@ -130,7 +205,11 @@ export class Main extends React.Component<any, IMainState> {
       testChordData.tree = this.state.tree;
 
       component = (
-        <ChordChart hemiSphere={true} data={testChordData} />
+        <ChordChart
+          onEndPointClick={this.handleEndPointClicked}
+          hemiSphere={true}
+          data={testChordData}
+        />
       );
     }
 

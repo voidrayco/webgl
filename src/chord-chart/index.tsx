@@ -12,10 +12,10 @@ import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
-
 const debug = require('debug')('chord_index');
 
 interface IChordChartProps {
+  onEndPointClick?(curve: CurvedLineShape<any>): void,
   hemiSphere: boolean;
   data: IData;
 }
@@ -75,7 +75,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     const data = Object.assign({}, this.props.data);
     data.tree = recalculateTree(data.tree, data.flows);
     data.endpoints = getTreeLeafNodes(data.tree);
-    debug('data are %o', data);
+    debug('trees are %o', data.tree);
     this.setState({data});
   }
 
@@ -157,6 +157,27 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     }
   }
 
+  handleMouseUp = (selections: any[], mouse: any, world: any, projection: any) => {
+    this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
+    this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
+    if (selections.length > 0) {
+      let selection;
+      // If has outer ring thing grab it instead
+      const filteredSelections = selections.filter(s => s.type === CurveType.CircularCCW);
+
+      if (filteredSelections.length > 0) {
+        selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      }
+
+      else {
+        selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      }
+
+       this.props.onEndPointClick(selection);
+    }
+
+  }
+
   /**
    * @override
    * The react render method
@@ -169,8 +190,6 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       ringWidth: 20,
       space: 0.005,
     };
-
-    debug('this.data are %o', this.state.data);
 
     this.outerRingGenerator.generate(this.state.data, config, this.selection);
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
@@ -187,6 +206,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         interactiveRingLines={this.outerRingGenerator.getInteractionBuffer()}
         onMouseHover={this.handleMouseHover}
         onMouseLeave={this.handleMouseLeave}
+        onMouseUp={this.handleMouseUp}
         viewport={this.viewport}
         width={this.viewport.width}
         zoom={this.state.zoom}

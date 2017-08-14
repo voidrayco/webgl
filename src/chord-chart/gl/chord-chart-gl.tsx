@@ -1023,6 +1023,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
   onMouseUp(e: React.MouseEvent<HTMLDivElement>, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
     // Const selections: CurvedLineShape<any>[] = [];
+    debug('ccg mouse up');
     const clickedCurvedLines = filterQuery<CurvedLineShape<any>>([CurvedLineShape], hitInside);
     // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
     const screenDistance = projection.screenSizeToWorld(1, 1).width;
