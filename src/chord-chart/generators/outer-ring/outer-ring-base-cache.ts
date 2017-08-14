@@ -124,7 +124,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
       tree.forEach((t) => {
         const depth = getDepthOfTree(t);
-        debug('dept of %o is %o, start is %o, end is %o', t.id, depth, t.startAngle, t.endAngle);
+        debug('dept of %o is %o, start is %o, end is %o, parent is %o', t.id, depth, t.startAngle, t.endAngle, t.parent);
         if (depth > 1) {
           const startAngle = t.startAngle + segmentSpace;
           const endAngle = t.endAngle - segmentSpace;
@@ -141,7 +141,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
           const colorVal = rgb(color(calculateColor(t.id)));
           const flows: IFlow[] = [];
-          if (depth === 2) {
+          if (depth >= 2 && t.parent !== '') {
             segments.push({
               color: colorVal,
               controlPoint,

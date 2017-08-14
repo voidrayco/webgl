@@ -59,7 +59,7 @@ function getNewTreeById(tree: IEndpoint[], id: string, childrenNumber: number) {
     flows.forEach((f) => {
       if (f.srcTarget === id || f.dstTarget === id) {
         let newId = id;
-        for (let i = 0; i < childrenNumber; i++){
+        for (let i = 0; i < childrenNumber; i++) {
           if (i < childrenNumber - 1) {
               if (count >= segmentSize * i && count < segmentSize * (i + 1)){
                   newId = newId.concat(String(i));
