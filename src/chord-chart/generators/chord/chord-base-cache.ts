@@ -6,6 +6,7 @@ import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IChordData } from '../../shape-data-types/chord-data';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
+import { getAncestor } from '../../util/endpointDataProcessing';
 import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
 
 const FADED_ALPHA = 0.1;
@@ -42,6 +43,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
     const segmentSpace = config.space;
     const hemiSphere = config.hemiSphere;
     const hemiDistance = config.hemiDistance;
+    const padding = config.padding;
 
     const curves = this.preProcessData(
       data,
@@ -50,6 +52,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       segmentSpace,
       hemiSphere,
       hemiDistance,
+      padding,
     );
 
     // Map the outer rings by id
@@ -96,7 +99,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
   // Data comes from catbird-ui >> d3Chart.loadData()
   preProcessData(data: IData, circleRadius: number, circleWidth: number, segmentSpace: number,
-    hemiSphere: boolean, hemiDistance: number) {
+    hemiSphere: boolean, hemiDistance: number, padding: number) {
     const controlPoint = {x: 0, y: 0};
     const curveData: ICurveData[] = [];
 
@@ -106,21 +109,13 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       end._outflowIdx = 0;
     });
 
-    // Decide the segments belong to left or right
-    function inLeftHemi(startAngle: number, endAngle: number) {
-      const halfAngle = startAngle + 0.5 * (endAngle - startAngle);
-      if (halfAngle >= 0.5 * Math.PI && halfAngle <= 1.5 * Math.PI) return true;
-      return false;
-    }
-
     // Decide the moving direction of points based on segments they are in
     function getDirection(angle: number, trees: IEndpoint[]) {
       const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
       return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
     }
 
-    function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean,
-       inleft: boolean) {
+    function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean) {
       let x = radius * Math.cos(flowAngle);
       let y = radius * Math.sin(flowAngle);
       if (hemiSphere) {
@@ -137,30 +132,41 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
           const destEndpoint = getEndpoint(data, flow.dstTarget);
 
           if (destEndpoint) {
-            const p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
-            let isInLeft = inLeftHemi(
-              endpoint.startAngle + segmentSpace,
-              endpoint.endAngle - segmentSpace,
-              );
+            // P1, sourceEnd
+            let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
+            if (hemiSphere){
+              const ancestor1 = getAncestor(endpoint, data.tree);
+              const ancRange1 = ancestor1.endAngle - ancestor1.startAngle;
+              const scale1 = (ancRange1 - padding) / ancRange1;
+
+              p1FlowAngle =
+              ancestor1.startAngle + padding / 2 + (p1FlowAngle - ancestor1.startAngle) * scale1;
+            }
             const p1 = calculatePoint(
               circleRadius - 0.5 * circleWidth ,
               p1FlowAngle,
               hemiSphere,
-              isInLeft);
+              );
 
-            const p2FlowAngle = getFlowAngle(
+            // P2, destEnd
+            let p2FlowAngle = getFlowAngle(
               destEndpoint,
               destEndpoint.totalCount - 1 - destEndpoint._inflowIdx,
               segmentSpace,
             );
-            isInLeft = inLeftHemi(
-              destEndpoint.startAngle + segmentSpace,
-              destEndpoint.endAngle - segmentSpace,
-            );
+            if (hemiSphere){
+              const ancestor2 = getAncestor(destEndpoint, data.tree);
+              const ancRange2 = ancestor2.endAngle - ancestor2.startAngle;
+              const scale2 = (ancRange2 - padding) / ancRange2;
+
+              p2FlowAngle =
+              ancestor2.startAngle + padding / 2 + (p2FlowAngle - ancestor2.startAngle) * scale2;
+            }
+
             const p2 = calculatePoint(
               circleRadius - 0.5 * circleWidth ,
-              p2FlowAngle, hemiSphere,
-              isInLeft,
+              p2FlowAngle,
+              hemiSphere,
             );
 
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));

@@ -11,6 +11,7 @@ export interface IChordChartConfig {
   hemiDistance: number;
   hemiSphere: boolean;
   labelDirection: LabelDirectionEnum;
+  padding: number;
   radius: number;
   ringWidth: number;
   space: number;

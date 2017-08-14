@@ -128,3 +128,24 @@ export function getTreeLeafNodes(tree: IEndpoint[]){
     const flatTree = flattenTree(tree);
     return flatTree.filter(_isLeaf);
 }
+
+function isAncestor(node: IEndpoint, parent: IEndpoint) {
+      if (parent.id === node.parent)return true;
+      let rst: boolean = false;
+      parent.children.forEach((c) => {
+        if (isAncestor(node, c)){
+          rst = true;
+        }
+      });
+      return rst;
+    }
+
+export function getAncestor(node: IEndpoint, tree: IEndpoint[]) {
+    let index: number, i = 0;
+
+    tree.forEach((t) => {
+        if (isAncestor(node, t)) index = i;
+        i++;
+    });
+    return tree[index];
+}

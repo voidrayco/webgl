@@ -203,6 +203,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       hemiDistance: 50,
       hemiSphere: this.props.hemiSphere,
       labelDirection: this.props.hemiSphere ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
+      padding: Math.PI / 6,
       radius: 200,
       ringWidth: 20,
       space: 0.005,
