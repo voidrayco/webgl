@@ -4,6 +4,7 @@ import { IPoint } from 'webgl-surface/primitives/point';
 export interface IChordChartConfig {
   hemiDistance: number;
   hemiSphere: boolean;
+  padding: number;
   radius: number;
   ringWidth: number;
   space: number;

@@ -186,6 +186,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     const config: IChordChartConfig = {
       hemiDistance: 50,
       hemiSphere: this.props.hemiSphere,
+      padding: Math.PI / 6,
       radius: 200,
       ringWidth: 20,
       space: 0.005,

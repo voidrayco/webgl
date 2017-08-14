@@ -6,6 +6,7 @@ import { IPoint } from 'webgl-surface/primitives/point';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
+import { getAncestor } from '../../util/endpointDataProcessing';
 import { IChordChartConfig, IData, IEndpoint, IFlow } from '../types';
 
 const debug = require('debug')('outer-ring-base');
@@ -42,12 +43,17 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     const hemiSphere: boolean = config.hemiSphere;
     const hemiDistance: number = config.hemiDistance;
     const width: number = config.ringWidth;
+    const padding: number = config.padding;
 
-    debug('data tree angles are %o  %o', data.tree[0].endAngle, data.tree[1].endAngle);
-
-    debug('hemiSphere is %o', hemiSphere);
-
-    const segments = this.preProcessData(data, circleRadius, segmentSpace, hemiSphere, hemiDistance, width);
+    const segments = this.preProcessData(
+      data,
+      circleRadius,
+      segmentSpace,
+      hemiSphere,
+      hemiDistance,
+      width,
+      padding,
+    );
 
     // Check if a selection exists such that the base needs to be faded
     const hasSelection =
@@ -90,16 +96,10 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     hemiSphere: boolean,
     hemiDistance: number,
     width: number,
+    padding: number,
   ) {
     let controlPoint = {x: 0, y: 0};
     debug('data is %o', data);
-
-    // Decide the segments belong to left or right
-    function inLeftHemi(startAngle: number, endAngle: number) {
-      const halfAngle = startAngle + 0.5 * (endAngle - startAngle);
-      if (halfAngle >= 0.5 * Math.PI && halfAngle <= 1.5 * Math.PI) return true;
-      return false;
-    }
 
     // Decide the moving direction of points based on segments they are in
     function getDirection(angle: number, trees: IEndpoint[]) {
@@ -124,19 +124,45 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
       tree.forEach((t) => {
         const depth = getDepthOfTree(t);
-        debug('dept of %o is %o, start is %o, end is %o, parent is %o', t.id, depth, t.startAngle, t.endAngle, t.parent);
         if (depth > 1) {
           const startAngle = t.startAngle + segmentSpace;
           const endAngle = t.endAngle - segmentSpace;
-          const isInLeft = inLeftHemi(startAngle, endAngle);
 
-          const p1 = calculatePoint(circleRadius + (depth - 1) * (width + 2), startAngle, isInLeft);
-          const p2 = calculatePoint(circleRadius + (depth - 1) * (width + 2), endAngle, isInLeft);
+          let p1 = calculatePoint(circleRadius + (depth - 1) * (width + 2), startAngle);
+          let p2 = calculatePoint(circleRadius + (depth - 1) * (width + 2), endAngle);
 
           if (hemiSphere) {
+            const ancestor = getAncestor(t, data.tree);
+            debug('ancestor is %o,t is %o', ancestor, t);
+            if (ancestor !== undefined) {
+              const ancRange = ancestor.endAngle - ancestor.startAngle;
+              const scale = (ancRange - padding) / ancRange;
+
+              const newStartAngle =
+                ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
+              const newEndAngle  =
+                ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
+
+              p1 = calculatePoint(circleRadius + (depth - 1) * (width + 2), newStartAngle);
+              p2 = calculatePoint(circleRadius + (depth - 1) * (width + 2), newEndAngle);
+
+            }
+            else{
+              const ancRange = t.endAngle - t.startAngle;
+              const scale = (ancRange - padding) / ancRange;
+              const newStartAngle = t.startAngle + padding / 2 + (startAngle - t.startAngle) * scale;
+              const newEndAngle  = t.startAngle + padding / 2 + (endAngle - t.startAngle) * scale;
+
+              p1 = calculatePoint(circleRadius + (depth - 1) * (width + 2), newStartAngle);
+              p2 = calculatePoint(circleRadius + (depth - 1) * (width + 2), newEndAngle);
+            }
+
             const angle = t.startAngle + segmentSpace;
             const halfAngle = getDirection(angle, data.tree);
-            controlPoint = {x: hemiDistance * Math.cos(halfAngle), y: hemiDistance * Math.sin(halfAngle)};
+            controlPoint = {
+              x: hemiDistance * Math.cos(halfAngle),
+              y: hemiDistance * Math.sin(halfAngle),
+            };
           }
 
           const colorVal = rgb(color(calculateColor(t.id)));
@@ -154,7 +180,6 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
           }
 
           const childSegments = traverseTree(t.children);
-          debug('childsegment are %o, parents are %o', childSegments, t.id);
           segments = segments.concat(childSegments);
         }
       });
@@ -163,7 +188,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
     }
 
-    const calculatePoint = (radius: number, radianAngle: number, inLeft: boolean) => {
+    const calculatePoint = (radius: number, radianAngle: number) => {
       let x = radius * Math.cos(radianAngle);
       let y = radius * Math.sin(radianAngle);
       // Change the position in hemiSphere
@@ -181,12 +206,23 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     const segments = data.endpoints.map((endpoint) => {
       const startAngle = endpoint.startAngle + segmentSpace;
       const endAngle = endpoint.endAngle - segmentSpace;
-      const isInLeft = inLeftHemi(startAngle, endAngle);
-      const p1 = calculatePoint(circleRadius, startAngle, isInLeft);
-      const p2 = calculatePoint(circleRadius, endAngle, isInLeft);
+      let p1 = calculatePoint(circleRadius, startAngle);
+      let p2 = calculatePoint(circleRadius, endAngle);
       // Change controlPoint in hemiSphere
-      debug('id is %o', endpoint.id);
       if (hemiSphere) {
+        const ancestor = getAncestor(endpoint, data.tree);
+
+        const ancRange = ancestor.endAngle - ancestor.startAngle;
+        const scale = (ancRange - padding) / ancRange;
+
+        const newStartAngle =
+        ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
+        const newEndAngle  =
+        ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
+
+        p1 = calculatePoint(circleRadius, newStartAngle);
+        p2 = calculatePoint(circleRadius, newEndAngle);
+
         const angle = endpoint.startAngle + segmentSpace;
         const halfAngle = getDirection(angle, data.tree);
         controlPoint = {x: hemiDistance * Math.cos(halfAngle), y: hemiDistance * Math.sin(halfAngle)};
