@@ -6,13 +6,12 @@ import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IData } from './generators/types';
-import { IChordChartConfig, IEndpoint, IFlow, LabelDirectionEnum } from './generators/types';
+import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
-const debug = require('debug')('chord_index');
 
 interface IChordChartProps {
   onEndPointClick?(curve: CurvedLineShape<any>): void,
@@ -33,6 +32,45 @@ function isOuterRing(curve: any): curve is CurvedLineShape<IOuterRingData> {
 function isChord(curve: any): curve is CurvedLineShape<IChordData> {
   if (curve.type === CurveType.Bezier) return true;
   return false;
+}
+
+function recalculateTreeForData(data: IData) {
+  data.tree = recalculateTree(data.tree, data.flows);
+  data.endpoints = getTreeLeafNodes(data.tree);
+  data.endpointById = new Map<string, IEndpoint>();
+  data.topEndPointByEndPointId = new Map<string, IEndpoint>();
+  data.topEndPointMaxDepth = new Map<IEndpoint, number>();
+
+  // Get the top level rendered elements (The very top elements does not render
+  // They merely group into chunks that can be spread apart)
+  const topLevel: IEndpoint[] = [];
+  data.tree.forEach(top => topLevel.push(...top.children));
+
+  // Make a quick lookup to find the top endpoint for a given endpoint id
+  // Also make the maximum depth of the top endpoint available
+  topLevel.forEach(top => {
+    const toProcess = [...top.children];
+    let depth = 0;
+    let rowCount = top.children.length;
+
+    while (toProcess.length > 0) {
+      const current = toProcess.shift();
+      toProcess.push(...current.children);
+      data.topEndPointByEndPointId.set(current.id, top);
+
+      if (--rowCount <= 0) {
+        depth += 1;
+        rowCount = toProcess.length;
+      }
+    }
+
+    data.topEndPointByEndPointId.set(top.id, top);
+    data.topEndPointMaxDepth.set(top, depth);
+  });
+
+  data.endpoints.forEach(endpoint => {
+    data.endpointById.set(endpoint.id, endpoint);
+  });
 }
 
 /**
@@ -60,6 +98,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       endpointById: new Map<string, IEndpoint>(),
       endpoints: [],
       flows: [],
+      topEndPointByEndPointId: new Map<string, IEndpoint>(),
+      topEndPointMaxDepth: new Map<IEndpoint, number>(),
       tree: [],
     },
     zoom: 1,
@@ -70,35 +110,20 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    * We initialize any needed state here
    */
   componentWillMount() {
-    console.log('DATA', this.props.data);
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
     const data = Object.assign({}, this.props.data);
-    data.tree = recalculateTree(data.tree, data.flows);
-    data.endpoints = getTreeLeafNodes(data.tree);
-    data.endpointById = new Map<string, IEndpoint>();
-
-    data.endpoints.forEach(endpoint => {
-      data.endpointById.set(endpoint.id, endpoint);
-    });
+    recalculateTreeForData(data);
 
     this.setState({data});
   }
 
   componentWillReceiveProps(nextProps: any) {
     if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
-      console.log('DATA', nextProps.data);
       const data = Object.assign({}, nextProps.data) as IData;
-      data.tree = recalculateTree(data.tree, data.flows);
-      data.endpoints = getTreeLeafNodes(data.tree);
-      data.endpointById = new Map<string, IEndpoint>();
+      recalculateTreeForData(data);
 
-      data.endpoints.forEach(endpoint => {
-        data.endpointById.set(endpoint.id, endpoint);
-      });
-
-      console.log(data);
       this.setState({data});
     }
   }
@@ -190,7 +215,6 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
        this.props.onEndPointClick(selection);
     }
-
   }
 
   /**
@@ -203,7 +227,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       hemiDistance: 50,
       hemiSphere: this.props.hemiSphere,
       labelDirection: this.props.hemiSphere ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
-      padding: Math.PI / 6,
+      padding: Math.PI / 4,
       radius: 200,
       ringWidth: 20,
       space: 0.005,
@@ -211,7 +235,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
     this.outerRingGenerator.generate(this.state.data, config, this.selection);
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
-    this.labelGenerator.generate(this.state.data, config, this.selection);
+    this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
 
     return (
       <ChordChartGL

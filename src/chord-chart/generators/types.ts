@@ -21,7 +21,12 @@ export interface IData {
   tree: IEndpoint[];
   endpoints?: IEndpoint[];
   flows: IFlow[];
+  /** Quick look up for an end point by it's id */
   endpointById: Map<string, IEndpoint>;
+  /** Get the top level end point for a given child end point's id */
+  topEndPointByEndPointId: Map<string, IEndpoint>;
+  /** Stores the max depth of a given top level end point */
+  topEndPointMaxDepth: Map<IEndpoint, number>;
 }
 
 export interface IEndpoint {
