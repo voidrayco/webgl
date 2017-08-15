@@ -74,14 +74,38 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         text: labelData.name,
       });
 
+      label.width = label.text.length * label.fontSize;
+
       // If we're anchored at the middle left, we need to push a bit more outward
       // In order to account for the length of the text field
-      if (labelData.anchor === AnchorPosition.MiddleLeft) {
+      if (!config.hemiSphere) {
+        if (labelData.anchor === AnchorPosition.MiddleLeft) {
+          Point.add(
+            labelData.point,
+            Point.scale(
+              labelData.direction,
+              label.width / 2,
+            ),
+            labelData.point,
+          );
+        }
+        else {
+          Point.add(
+            labelData.point,
+            Point.scale(
+              labelData.direction,
+              - label.width / 2,
+            ),
+            labelData.point,
+          );
+        }
+      }
+      else {
         Point.add(
           labelData.point,
           Point.scale(
-            labelData.direction,
-            label.width,
+            Point.make(-1, 0),
+            label.width / 2,
           ),
           labelData.point,
         );
@@ -99,8 +123,6 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         label.setRotation(0);
       }
 
-      debug('label width after is %o', label.width);
-
       return label;
     });
 
@@ -111,6 +133,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
     const {
       radius,
       ringWidth,
+      hemiSphere,
+      padding,
     } = config;
 
     // This method is used to calculate where the anchor point location will be
@@ -141,8 +165,37 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       }
 
       const center = ring.controlPoints[1];
+
       // Make a line between the end points
-      const ringLine: Line<any> = new Line<any>(ring.p1, ring.p2);
+      let ringLine: Line<any> = new Line<any>(ring.p1, ring.p2);
+
+      if (hemiSphere){
+        let topEndPoint = data.topEndPointByEndPointId.get(ring.d.source.id);
+        while (data.topEndPointByEndPointId.get(topEndPoint.parent)){
+          topEndPoint = data.topEndPointByEndPointId.get(topEndPoint.parent);
+        }
+        const ancestor = data.tree.filter((t) => t.id === topEndPoint.parent)[0];
+
+        const ancRange = ancestor.endAngle - ancestor.startAngle;
+        const scale = (ancRange - padding) / ancRange;
+
+        const newStartAngle =
+        ancestor.startAngle + padding / 2 + (ring.d.source.startAngle - ancestor.startAngle) * scale;
+        const newEndAngle  =
+        ancestor.startAngle + padding / 2 + (ring.d.source.endAngle - ancestor.startAngle) * scale;
+
+        const p1 = {
+          x: center.x + radius * Math.cos(newStartAngle),
+          y: center.y + radius * Math.sin(newStartAngle),
+        };
+        const p2 = {
+          x: center.x + radius * Math.cos(newEndAngle),
+          y: center.y + radius * Math.sin(newEndAngle),
+        };
+        ringLine = new Line<any>(p1, p2);
+        debug('ringline is %o', ringLine);
+      }
+
       // Get the mid point and use the circle center to get the direction
       // Vector needed to find the point in the middle of the arc
       const direction = Point.getDirection(
