@@ -1,5 +1,5 @@
 import { hsl } from 'd3-color';
-import { IChord, IEndpoint } from '../chord-chart/generators/types';
+import { IChord, IEndpoint } from '../../src/chord-chart/generators/types';
 import { getFlowsByEndpoint } from './iEndpoint';
 import { getTreeLeafNodes } from './iEndpoint-tree';
 

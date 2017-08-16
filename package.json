@@ -1,13 +1,14 @@
 {
-  "name": "webgl",
+  "name": "voidgl",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "engines": {
     "node": "7.10.1"
   },
   "scripts": {
     "dev": "node scripts/dev",
+    "release-build": "node scripts/release",
     "start": "node scripts/dev",
     "build": "tslint src && webpack"
   },

@@ -1,4 +1,4 @@
-import { IChord, IEndpoint } from '../chord-chart/generators/types';
+import { IChord, IEndpoint } from '../../src/chord-chart/generators/types';
 import { createEndpoint } from './iEndpoint';
 
 const RANDOM = require('random');

@@ -7,8 +7,12 @@ const tslintLoader = {loader: 'tslint-loader', options: {
   // failOnHint: true,
 }};
 
+const isRelease = process.env.NODE_ENV === 'RELEASE';
+const isProduction = process.env.NODE_ENV === 'PRODUCTION' || isRelease;
+const isDevelopment = process.env.NODE_ENV === 'DEVELOP';
+
 module.exports = {
-  entry: './src',
+  entry: isProduction ? './src' : './test',
   module: {
     rules: [
       {test: /\.tsx?/, use: tslintLoader, enforce: 'pre'},
@@ -23,8 +27,8 @@ module.exports = {
     extensions: ['.ts', '.tsx', '.js'],
   },
   output: {
-    filename: 'app.js',
-    path: resolve('build'),
+    filename: isProduction ? 'index.js' : 'app.js',
+    path: isProduction ? resolve('dist') : resolve('build'),
     publicPath: '/',
   },
   plugins: [

@@ -1,3 +1,5 @@
-import './index.html';
-import './main';
-import './styles.less';
+import { ChordChart } from './chord-chart';
+
+export {
+  ChordChart,
+};

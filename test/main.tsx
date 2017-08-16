@@ -1,10 +1,10 @@
 import { clone, difference, union } from 'ramda';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Bezier } from './bezier';
-import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
-import { ChordChart } from './chord-chart';
-import { IChord, IEndpoint } from './chord-chart/generators/types';
+import { Bezier } from '../src/bezier';
+import { IQuadShapeData } from '../src/bezier/shape-data-types/quad-shape-data';
+import { ChordChart } from '../src/chord-chart';
+import { IChord, IEndpoint } from '../src/chord-chart/generators/types';
 import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './util/iEndpoint';
 import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
 import { createRandomFlows, selectRandomFlows } from './util/iFlow';
@@ -12,7 +12,7 @@ import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 const debug = require('debug')('main');
 
 const CHORD_CHANGE_QTY = 5;
-const testChordData = require('./chord-chart/test-data/two.json');
+const testChordData = require('./chord-test-data/two.json');
 const flows = clone(testChordData.flows);
 const endpoints = clone(testChordData.endpoints);
 
