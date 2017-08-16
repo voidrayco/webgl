@@ -22,6 +22,7 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
       const curvedLine = selected.clone();
 
       curvedLine.a = 1.0;
+      curvedLine.a2 = 1.0;
       curvedLine.depth = depth;
 
       shapes.push(curvedLine);

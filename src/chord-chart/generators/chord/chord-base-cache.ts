@@ -1,5 +1,5 @@
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
-import { hsl, rgb, RGBColor } from 'd3-color';
+import { Color } from 'three';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { IPoint } from 'webgl-surface/primitives/point';
@@ -14,7 +14,7 @@ const FADED_ALPHA = 0.1;
 const UNFADED_ALPHA = 0.5;
 
 export interface ICurveData {
-  color: RGBColor;
+  color: Color;
   controlPoint: IPoint;
   destEndpoint: {};
   endpoint: {};
@@ -49,7 +49,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
   }
 
   buildCache(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
-    const curves = this.preProcessData(data, config);
+    const curves = this.preProcessData(data, config, outerRings);
 
     // Map the outer rings by id
     const ringById = new Map<string, CurvedLineShape<IOuterRingData>>();
@@ -60,16 +60,21 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
     const curveShapes = curves.map((curve) => {
       const {r, g, b} = curve.color;
-      const color = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ?
-      rgb(r, g, b, FADED_ALPHA) :
-      rgb(r, g, b, UNFADED_ALPHA);
+      const color = new Color(r, g, b);
+      const opacity = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? FADED_ALPHA : UNFADED_ALPHA;
 
-      const newCurve = new CurvedLineShape<IChordData>(
-        CurveType.Bezier,
-        {x: curve.p1.x, y: curve.p1.y},
-        {x: curve.p2.x, y: curve.p2.y},
-        [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
-        color);
+      // Configure the newly made curved line
+      const newCurve = new CurvedLineShape<IChordData>({
+        controlPoints: [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
+        end: {x: curve.p2.x, y: curve.p2.y},
+        endColor: color,
+        endOpacity: opacity,
+        lineWidth: 3,
+        start: {x: curve.p1.x, y: curve.p1.y},
+        startColor: color,
+        startOpacity: opacity,
+        type: CurveType.Bezier,
+      });
 
       // Set the relational and domain information for the chord
       newCurve.d = {
@@ -85,8 +90,6 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
         ring.d.chords.push(newCurve);
       });
 
-      newCurve.lineWidth = 3;
-
       return newCurve;
     });
 
@@ -97,7 +100,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
    * This processes the data to calculate initial needed metrics to make generating
    * shapes simpler.
    */
-  preProcessData(data: IData, config: IChordChartConfig) {
+  preProcessData(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator) {
     const {
       groupSplitDistance,
       outerRingSegmentPadding: segmentSpace,
@@ -138,9 +141,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
     // Loop thrugh each endpoint and analyze the flows
     data.endpoints.forEach((endpoint) => {
-      data.flows.forEach((flow) => {
-        if (flow.srcTarget === endpoint.id) {
-          const destEndpoint = getEndpoint(data, flow.dstTarget);
+      data.flows.forEach((chord) => {
+        if (chord.srcTarget === endpoint.id) {
+          const destEndpoint = getEndpoint(data, chord.dstTarget);
 
           if (destEndpoint) {
             let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
@@ -182,7 +185,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               splitTopLevelGroups,
             );
 
-            const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
+            const color = outerRings.outerRingBase.shapeById.get(chord.srcTarget).color;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
 
@@ -193,7 +196,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               endpoint,
               p1,
               p2,
-              source: flow,
+              source: chord,
             });
           }
         }

@@ -6,6 +6,21 @@ import { IPoint, Point } from './point';
 
 const debug = require('debug')('bezier');
 
+export interface ICurvedLineOptions {
+  /** Flags whether or not the calculated geometry for the line is cached or not */
+  cacheSegments?: boolean;
+  /** Specifies the control points that modifies the amount of curve on the curved line */
+  controlPoints: IPoint[];
+  /** The end point of the line */
+  end: IPoint;
+  /** The smootheness of the curve. Higher number = better burve but heavier to calculate */
+  resolution?: number;
+  /** The start point of the line */
+  start: IPoint;
+  /** The style of curve to be rendered, whether that be straight, bezier or circular */
+  type: CurveType;
+}
+
 /**
  * This enum covers the type of curved lines that can be made. Making a specific curve
  *
@@ -380,27 +395,19 @@ export class CurvedLine<T> extends Bounds<T> {
   /**
    * Generates a primitive that describes a curved line, which is defined by the lines end points, type, and control points
    *
-   * @param {CurveType} type The type of curve. Determines how the control points are utilized
-   * @param {IPoint} p1 The start of the curve
-   * @param {IPoint} p2 The end of the curve
-   * @param {IPoint[]} controlPoints The control points that affects the curvature of the line
-   * @param {number} [resolution=20] The number of segments used to compose the line (more segments means prettier but more costly lines)
-   * @param {boolean} [cacheSegments=false] Speeds up line calculations for when the line does not change but takes more RAM
-   *
-   * @memberof CurvedLine
+   * @param {ICurvedLineOptions} options The configuration options of this curved line
    */
-  constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[],
-     resolution: number = 20, cacheSegments: boolean = false) {
+  constructor(options: ICurvedLineOptions) {
     super(0, 0, 0, 0);
 
     // Apply the relevant properties to the curve
-    this.cachesSegments = cacheSegments;
-    this.type = type;
-    this.resolution = resolution;
+    this.cachesSegments = options.cacheSegments || false;
+    this.type = options.type;
+    this.resolution = options.resolution || 20;
     // Set the metrics for this curved line
-    this.setPoints(p1, p2, controlPoints);
+    this.setPoints(options.start, options.end, options.controlPoints);
     // Set the method that will be used for calculating distance from a point
-    this.distanceMethod = pickDistanceMethod[type];
+    this.distanceMethod = pickDistanceMethod[options.type];
   }
 
   get values() {

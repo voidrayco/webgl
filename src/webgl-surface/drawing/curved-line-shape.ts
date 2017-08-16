@@ -1,7 +1,31 @@
 import { rgb, RGBColor } from 'd3-color';
-import { CurvedLine, CurveType } from '../primitives/curved-line';
+import { Color } from 'three';
+import { CurvedLine, ICurvedLineOptions } from '../primitives/curved-line';
 import { Line } from '../primitives/line';
 import { IPoint, Point } from '../primitives/point';
+
+export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
+  /** Flags whether or not the calculated geometry for the line is cached or not */
+  cacheSegments?: boolean;
+  /** The depth of line to be rendered */
+  depth?: number;
+  /**
+   * The color that will be at the end of the line. If this is differing from the
+   * start color, the line will be a gradient.
+   */
+  endColor?: Color;
+  /**
+   * The ending opacity of the line. If this differs from the start opacity, the line
+   * will be a gradient.
+   */
+  endOpacity?: number;
+  /** The desired thickness of the line */
+  lineWidth?: number;
+  /** The base color of the line. */
+  startColor: Color;
+  /** The base opacity of the line */
+  startOpacity?: number;
+}
 
 /**
  * This defines a drawable curved line shape. It contains the information necessary
@@ -23,18 +47,29 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
   /** Depeth of draw location */
   depth: number = 0;
 
-  // The color components of this line
+  // The starting color components of this line
   r: number = 0;
   g: number = 0;
   b: number = 0;
-  a: number = 0;
+  a: number = 1;
+  // The ending color components of this line
+  r2: number = 0;
+  g2: number = 0;
+  b2: number = 0;
+  a2: number = 1;
+
+  /**
+   * This indicates whether or not this line is rendered thin with a width of 1 or not
+   * thin lines perform much better than fat lines.
+   */
+  isThin: boolean = false;
 
   /**
    * Retrieves the color of this curve based on gl color values
-   * @return {RGBColor}
+   * @return {Color}
    */
-  get color(): RGBColor {
-    return rgb(this.r, this.g, this.b, this.a);
+  get color(): Color {
+    return new Color(this.r, this.g, this.b);
   }
 
   /**
@@ -48,46 +83,64 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
   /**
    * Applies an rgb color to this curve.
    */
-  set color(val: RGBColor) {
-    // See if this is a base 255 color system
-    // For which we normalize the color
-    if (val.r > 1.0 || val.g > 1.0 || val.b > 1.0) {
-      this.r = val.r / 255.0;
-      this.g = val.g / 255.0;
-      this.b = val.b / 255.0;
-    }
+  set color(val: Color) {
+    this.r = val.r;
+    this.g = val.g;
+    this.b = val.b;
+  }
 
-    // Otherwise, we just apply as a 0-1 system
-    else {
-      this.r = val.r;
-      this.g = val.g;
-      this.b = val.b;
-    }
+  /**
+   * Retrieves the end color of this curve based on gl color values
+   * @return {Color}
+   */
+  get endColor(): Color {
+    return new Color(this.r2, this.g2, this.b2);
+  }
 
-    // Set a, as it's always a 0-1 range
-    this.a = val.opacity;
+  /**
+   * Retrieves the end color of this curve based on 256 value colors
+   * @return {RGBColor}
+   */
+  get endColor256(): RGBColor {
+    return rgb(this.r2 * 255.0, this.g2 * 255.0, this.b2 * 255.0, this.a);
+  }
+
+  /**
+   * Applies an ending rgb color to this curve.
+   */
+  set endColor(val: Color) {
+    this.r2 = val.r;
+    this.g2 = val.g;
+    this.b2 = val.b;
   }
 
   /**
    * Creates an instance of CurvedLineShape.
    *
-   * @param {CurveType} type The curve type. Defines
-   * @param {IPoint} p1
-   * @param {IPoint} p2
-   * @param {IPoint[]} controlPoints
-   * @param {number} [resolution=20]
-   * @param {boolean} [cacheSegments=false]
+   * @param {ICurvedLineShapeOptions} options The options for creating this line
    */
-  constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[], color?: RGBColor, resolution: number = 20, cacheSegments: boolean = false) {
+  constructor(options: ICurvedLineShapeOptions) {
     // We pass our properties to the curve line but we do not let it cache it's version of the line segments
     // As we will be constructing our own segmentation requiring a new type of cache
-    super(type, p1, p2, controlPoints, resolution);
+    super(options);
 
     this.encapsulatePoints(this.getTriangleStrip());
-    this.cachesQuadSegments = cacheSegments;
+    this.cachesQuadSegments = options.cacheSegments;
+    this.depth = options.depth || 0;
+    this.a = options.startOpacity || 0;
+    this.a2 = options.endOpacity || 0;
+    this.lineWidth = options.lineWidth || 1;
 
-    if (color) {
-      this.color = color;
+    if (options.startColor) {
+      this.color = options.startColor;
+    }
+
+    if (options.endColor) {
+      this.endColor = options.endColor;
+    }
+
+    else if (options.startColor) {
+      this.endColor = options.startColor;
     }
   }
 
@@ -98,18 +151,19 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
    */
   clone() {
     // Perform the clone
-    const clone: CurvedLineShape<T> = new CurvedLineShape<T>(
-      this.type,
-      this.p1,
-      this.p2,
-      this.controlPoints,
-      this.color,
-      this.resolution,
-      this.cachesSegments,
-    );
+    const clone: CurvedLineShape<T> = new CurvedLineShape<T>({
+      cacheSegments: this.cachesSegments,
+      controlPoints: this.controlPoints,
+      end: this.p2,
+      endOpacity: this.a2,
+      lineWidth: this.lineWidth,
+      resolution: this.resolution,
+      start: this.p1,
+      startColor: this.color,
+      startOpacity: this.a,
+      type: this.type,
+    });
 
-    clone.lineWidth = this.lineWidth;
-    clone.depth = this.depth;
     clone.d = this.d;
 
     return clone;

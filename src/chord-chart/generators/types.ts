@@ -1,4 +1,3 @@
-import { HSLColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export enum LabelDirectionEnum {
@@ -74,5 +73,4 @@ export interface IChord {
   dstTarget: string;
   srcIndex: number;
   dstIndex: number;
-  baseColor: HSLColor;
 }
