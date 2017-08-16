@@ -1,4 +1,4 @@
-import { IEndpoint, IFlow } from '../chord-chart/generators/types';
+import { IChord, IEndpoint } from '../chord-chart/generators/types';
 import { createEndpoint } from './iEndpoint';
 
 const RANDOM = require('random');
@@ -12,7 +12,7 @@ const RANDOM = require('random');
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-export function generateTree(endpoints: IEndpoint[], flows: IFlow[]): IEndpoint[]{
+export function generateTree(endpoints: IEndpoint[], flows: IChord[]): IEndpoint[]{
     // Builds nested subtrees under each root level IEndpoint (ie hemispheres)
     const buildSubtree = ( endpoints: IEndpoint[], parent: IEndpoint, tree: IEndpoint[] ) => {
         tree = typeof tree !== 'undefined' ? tree : [];
@@ -162,7 +162,7 @@ export function addEndpointToTree(endpoint: IEndpoint, tree: IEndpoint[]){
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IFlow[]){
+export function removeEndpointFromTree(endpoint: IEndpoint, tree: IEndpoint[], flows: IChord[]){
     // Remove node from tree-------
     let treeObj;
     if (_isRoot(endpoint) && tree.length > 2){

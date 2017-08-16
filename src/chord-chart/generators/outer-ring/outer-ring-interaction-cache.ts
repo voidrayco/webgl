@@ -4,16 +4,10 @@ import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, IData } from '../types';
 
-// Const debug = require('debug')('outer-ring-interaction-cache');
 const depth = 21;
-const ringWidth = 20;
 
 /**
  * Responsible for generating the static OuterRings in the system
- *
- * @export
- * @class OuterRingBaseCache
- * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
 export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape<IOuterRingData>> {
   generate(data: IData, config: IChordChartConfig, selection: Selection) {
@@ -28,7 +22,6 @@ export class OuterRingInteractionsCache extends ShapeBufferCache<CurvedLineShape
       const curvedLine = selected.clone();
 
       curvedLine.a = 1.0;
-      curvedLine.lineWidth = ringWidth;
       curvedLine.depth = depth;
 
       shapes.push(curvedLine);

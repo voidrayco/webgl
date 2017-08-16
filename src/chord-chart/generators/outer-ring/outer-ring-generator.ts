@@ -21,7 +21,7 @@ export class OuterRingGenerator {
   bustCaches(data: IChordData, config: IChordChartConfig, selection: Selection) {
     const didDataChange = data !== this.lastData;
     const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_OUTER_RING);
-    const didHemisphereChange = this.lastHemisphere !== config.hemiSphere;
+    const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
 
     if (didDataChange || didSelectionChange || didHemisphereChange) {
       this.outerRingBase.bustCache = true;
@@ -32,7 +32,7 @@ export class OuterRingGenerator {
     }
 
     this.lastData = data;
-    this.lastHemisphere = config.hemiSphere;
+    this.lastHemisphere = config.splitTopLevelGroups;
   }
 
   /**

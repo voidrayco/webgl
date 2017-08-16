@@ -6,7 +6,8 @@ import { IPoint } from 'webgl-surface/primitives/point';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
-import { IChordChartConfig, IData, IEndpoint, IFlow } from '../types';
+import { getAncestor } from '../../util/endpointDataProcessing';
+import { IChord, IChordChartConfig, IData, IEndpoint } from '../types';
 
 const debug = require('debug')('outer-ring-base');
 
@@ -15,20 +16,17 @@ const FADED_ALPHA = 0.1;
 const UNFADED_ALPHA = 1.0;
 
 interface IEndPointMetrics {
+  id: string,
   p1: IPoint,
   p2: IPoint,
   controlPoint: IPoint,
   color: RGBColor,
-  flows: IFlow[],
+  flows: IChord[],
   source: IEndpoint,
 }
 
 /**
  * Responsible for generating the static outer rings in the system
- *
- * @export
- * @class OuterRingBaseCache
- * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
 export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterRingData>> {
   generate(data: IData, config: IChordChartConfig, selection: Selection) {
@@ -36,16 +34,9 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
   }
 
   buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
-    const circleRadius = config.radius;
-    const segmentSpace: number = config.space; // It used to seperate segments
-    const hemiSphere: boolean = config.hemiSphere;
-    const hemiDistance: number = config.hemiDistance;
+    const { ringWidth } = config;
 
-    debug('data tree angles are %o  %o', data.tree[0].endAngle, data.tree[1].endAngle);
-
-    debug('hemiSphere is %o', hemiSphere);
-
-    const segments = this.preProcessData(data, circleRadius, segmentSpace, hemiSphere, hemiDistance);
+    const segments = this.preProcessData(data, config);
 
     // Check if a selection exists such that the base needs to be faded
     const hasSelection =
@@ -54,7 +45,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     ;
 
     const circleEdges = segments.map((segment: IEndPointMetrics) => {
-      const {r, g, b} = segment.color;
+      const { r, g, b } = segment.color;
       const color = hasSelection ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
 
       const curve = new CurvedLineShape<IOuterRingData>(
@@ -66,7 +57,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         200,
       );
 
-      curve.lineWidth = config.ringWidth;
+      curve.lineWidth = ringWidth;
       curve.depth = DEPTH;
       curve.d = {
         chords: [],
@@ -80,25 +71,24 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     this.buffer = circleEdges;
   }
 
-  // Data = d3chart.loadData();
-  preProcessData(data: IData, circleRadius: number, segmentSpace: number, hemiSphere: boolean,
-     hemiDistance: number) {
+  /**
+   * This processes the data to calculate initial needed metrics to make generating
+   * shapes simpler.
+   */
+  preProcessData(data: IData, config: IChordChartConfig) {
+    const {
+      groupSplitDistance,
+      outerRingSegmentPadding: segmentPadding,
+      outerRingSegmentRowPadding: segmentRowPadding,
+      radius: circleRadius,
+      ringWidth,
+      splitTopLevelGroups: splitGroups,
+      topLevelGroupPadding: padding,
+    } = config;
+
+    const paddedRingWidth = ringWidth + segmentRowPadding;
     let controlPoint = {x: 0, y: 0};
     debug('data is %o', data);
-
-    // Keep the angle in the range from 0 to 2*Pi
-    function adjustAngle(angle: number) {
-      if (angle < 0)angle += 2 * Math.PI;
-      else if (angle > 2 * Math.PI)angle -= 2 * Math.PI;
-      return angle;
-    }
-
-    // Decide the segments belong to left or right
-    function inLeftHemi(startAngle: number, endAngle: number) {
-      const halfAngle = startAngle + 0.5 * (endAngle - startAngle);
-      if (halfAngle >= 0.5 * Math.PI && halfAngle <= 1.5 * Math.PI) return true;
-      return false;
-    }
 
     // Decide the moving direction of points based on segments they are in
     function getDirection(angle: number, trees: IEndpoint[]) {
@@ -106,22 +96,98 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
     }
 
-    const calculatePoint = (radianAngle: number, inLeft: boolean) => {
-      radianAngle = adjustAngle(radianAngle);
-      let x = circleRadius * Math.cos(radianAngle);
-      let y = circleRadius * Math.sin(radianAngle);
+    // Get depth of tree in order to render layers
+    function getDepthOfTree(tree: IEndpoint) {
+      if (tree.children === undefined || tree.children.length === 0) return 1;
+      let max = 0;
+      tree.children.forEach((c) => {
+        const temp = getDepthOfTree(c);
+        if (temp > max) max = temp;
+      });
+      return max + 1;
+    }
+
+    // Travel the tree to render three layers of ring
+    function traverseTree(tree: IEndpoint[]) {
+      let segments: IEndPointMetrics[] = [];
+
+      tree.forEach((t) => {
+        const depth = getDepthOfTree(t);
+
+        if (depth > 1) {
+          const startAngle = t.startAngle + segmentPadding;
+          const endAngle = t.endAngle - segmentPadding;
+          let p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, startAngle);
+          let p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, endAngle);
+
+          if (splitGroups) {
+            const ancestor = getAncestor(t, data.tree);
+            debug('ancestor is %o,t is %o', ancestor, t);
+
+            if (ancestor !== undefined) {
+              const ancRange = ancestor.endAngle - ancestor.startAngle;
+              const scale = (ancRange - padding) / ancRange;
+
+              const newStartAngle =
+                ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
+              const newEndAngle  =
+                ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
+
+              p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newStartAngle);
+              p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newEndAngle);
+
+            }
+
+            else {
+              const ancRange = t.endAngle - t.startAngle;
+              const scale = (ancRange - padding) / ancRange;
+              const newStartAngle = t.startAngle + padding / 2 + (startAngle - t.startAngle) * scale;
+              const newEndAngle  = t.startAngle + padding / 2 + (endAngle - t.startAngle) * scale;
+
+              p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newStartAngle);
+              p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newEndAngle);
+            }
+
+            const angle = t.startAngle + segmentPadding;
+            const halfAngle = getDirection(angle, data.tree);
+
+            controlPoint = {
+              x: groupSplitDistance * Math.cos(halfAngle),
+              y: groupSplitDistance * Math.sin(halfAngle),
+            };
+          }
+
+          const colorVal = rgb(color(calculateColor(t.id)));
+          const flows: IChord[] = [];
+
+          if (depth >= 2 && t.parent !== '') {
+            segments.push({
+              color: colorVal,
+              controlPoint,
+              flows,
+              id: t.id,
+              p1,
+              p2,
+              source: t,
+            });
+          }
+
+          const childSegments = traverseTree(t.children);
+          segments = segments.concat(childSegments);
+        }
+      });
+
+      return segments;
+    }
+
+    const calculatePoint = (radius: number, radianAngle: number) => {
+      let x = radius * Math.cos(radianAngle);
+      let y = radius * Math.sin(radianAngle);
       // Change the position in hemiSphere
-      if (hemiSphere) {
-        let halfAngle;
-        if (data.tree.length === 2) {
-          if (inLeft)halfAngle = Math.PI;
-          else halfAngle = 0;
-        }
-        else if (data.tree.length > 2) {
-          halfAngle = getDirection(radianAngle, data.tree);
-        }
-          x = circleRadius * Math.cos(radianAngle) + hemiDistance * Math.cos(halfAngle);
-          y = circleRadius * Math.sin(radianAngle) + hemiDistance * Math.sin(halfAngle);
+      if (splitGroups) {
+        const halfAngle = getDirection(radianAngle, data.tree);
+        x = radius * Math.cos(radianAngle) + groupSplitDistance * Math.cos(halfAngle);
+        y = radius * Math.sin(radianAngle) + groupSplitDistance * Math.sin(halfAngle);
       }
       return {x, y};
     };
@@ -130,26 +196,31 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
     const calculateColor = scaleOrdinal(schemeCategory20).domain(ids);
 
     const segments = data.endpoints.map((endpoint) => {
-      debug('endpoint is %o', endpoint);
-      const startAngle = endpoint.startAngle + segmentSpace;
-      const endAngle = endpoint.endAngle - segmentSpace;
-      const isInLeft = inLeftHemi(startAngle, endAngle);
-      const p1 = calculatePoint(startAngle, isInLeft);
-      const p2 = calculatePoint(endAngle, isInLeft);
-      // Change controlPoint in hemiSphere
-      if (hemiSphere) {
-        const angle = adjustAngle(endpoint.startAngle + segmentSpace);
-        let halfAngle;
-        if (data.tree.length === 2) {
-          if (isInLeft) halfAngle = Math.PI;
-          else halfAngle = 0;
-        }
-        else if (data.tree.length > 2) {
-          halfAngle = getDirection(angle, data.tree);
-        }
-        controlPoint = {x: hemiDistance * Math.cos(halfAngle), y: hemiDistance * Math.sin(halfAngle)};
+      const startAngle = endpoint.startAngle + segmentPadding;
+      const endAngle = endpoint.endAngle - segmentPadding;
+      let p1 = calculatePoint(circleRadius, startAngle);
+      let p2 = calculatePoint(circleRadius, endAngle);
 
+      // Change controlPoint in hemiSphere
+      if (splitGroups) {
+        const ancestor = getAncestor(endpoint, data.tree);
+
+        const ancRange = ancestor.endAngle - ancestor.startAngle;
+        const scale = (ancRange - padding) / ancRange;
+
+        const newStartAngle =
+        ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
+        const newEndAngle  =
+        ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
+
+        p1 = calculatePoint(circleRadius, newStartAngle);
+        p2 = calculatePoint(circleRadius, newEndAngle);
+
+        const angle = endpoint.startAngle + segmentPadding;
+        const halfAngle = getDirection(angle, data.tree);
+        controlPoint = {x: groupSplitDistance * Math.cos(halfAngle), y: groupSplitDistance * Math.sin(halfAngle)};
       }
+
       const colorVal = rgb(color(calculateColor(endpoint.id)));
       const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);
 
@@ -157,12 +228,15 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         color: colorVal,
         controlPoint,
         flows,
+        id: endpoint.id,
         p1,
         p2,
         source: endpoint,
       };
     });
 
-    return segments;
+    const segments2 = traverseTree(data.tree);
+
+    return segments.concat(segments2);
   }
 }

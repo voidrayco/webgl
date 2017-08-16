@@ -6,16 +6,15 @@ import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IData } from './generators/types';
-import { IChordChartConfig } from './generators/types';
+import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
-const debug = require('debug')('chord_index');
-
 interface IChordChartProps {
+  onEndPointClick?(curve: CurvedLineShape<any>): void,
   hemiSphere: boolean;
   data: IData;
 }
@@ -33,6 +32,45 @@ function isOuterRing(curve: any): curve is CurvedLineShape<IOuterRingData> {
 function isChord(curve: any): curve is CurvedLineShape<IChordData> {
   if (curve.type === CurveType.Bezier) return true;
   return false;
+}
+
+function recalculateTreeForData(data: IData) {
+  data.tree = recalculateTree(data.tree, data.flows);
+  data.endpoints = getTreeLeafNodes(data.tree);
+  data.endpointById = new Map<string, IEndpoint>();
+  data.topEndPointByEndPointId = new Map<string, IEndpoint>();
+  data.topEndPointMaxDepth = new Map<IEndpoint, number>();
+
+  // Get the top level rendered elements (The very top elements does not render
+  // They merely group into chunks that can be spread apart)
+  const topLevel: IEndpoint[] = [];
+  data.tree.forEach(top => topLevel.push(...top.children));
+
+  // Make a quick lookup to find the top endpoint for a given endpoint id
+  // Also make the maximum depth of the top endpoint available
+  topLevel.forEach(top => {
+    const toProcess = [...top.children];
+    let depth = 0;
+    let rowCount = top.children.length;
+
+    while (toProcess.length > 0) {
+      const current = toProcess.shift();
+      toProcess.push(...current.children);
+      data.topEndPointByEndPointId.set(current.id, top);
+
+      if (--rowCount <= 0) {
+        depth += 1;
+        rowCount = toProcess.length;
+      }
+    }
+
+    data.topEndPointByEndPointId.set(top.id, top);
+    data.topEndPointMaxDepth.set(top, depth);
+  });
+
+  data.endpoints.forEach(endpoint => {
+    data.endpointById.set(endpoint.id, endpoint);
+  });
 }
 
 /**
@@ -57,8 +95,11 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   // Sets the default state
   state: IChordChartState = {
     data: {
+      endpointById: new Map<string, IEndpoint>(),
       endpoints: [],
       flows: [],
+      topEndPointByEndPointId: new Map<string, IEndpoint>(),
+      topEndPointMaxDepth: new Map<IEndpoint, number>(),
       tree: [],
     },
     zoom: 1,
@@ -73,17 +114,16 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
     const data = Object.assign({}, this.props.data);
-    data.tree = recalculateTree(data.tree, data.flows);
-    data.endpoints = getTreeLeafNodes(data.tree);
-    debug('data are %o', data);
+    recalculateTreeForData(data);
+
     this.setState({data});
   }
 
   componentWillReceiveProps(nextProps: any) {
     if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
-      const data = Object.assign({}, nextProps.data);
-      data.tree = recalculateTree(data.tree, data.flows);
-      data.endpoints = getTreeLeafNodes(data.tree);
+      const data = Object.assign({}, nextProps.data) as IData;
+      recalculateTreeForData(data);
+
       this.setState({data});
     }
   }
@@ -157,24 +197,46 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     }
   }
 
+  handleMouseUp = (selections: any[], mouse: any, world: any, projection: any) => {
+    this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
+    this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
+    if (selections.length > 0) {
+      let selection;
+      // If has outer ring thing grab it instead
+      const filteredSelections = selections.filter(s => s.type === CurveType.CircularCCW);
+
+      if (filteredSelections.length > 0) {
+        selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      }
+
+      else {
+        selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+      }
+
+       this.props.onEndPointClick(selection);
+    }
+  }
+
   /**
    * @override
    * The react render method
    */
   render() {
     const config: IChordChartConfig = {
-      hemiDistance: 50,
-      hemiSphere: this.props.hemiSphere,
+      center: {x: 0, y: 0},
+      groupSplitDistance: 50,
+      labelDirection: this.props.hemiSphere ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
+      outerRingSegmentPadding: 0.005,
+      outerRingSegmentRowPadding: 2,
       radius: 200,
-      ringWidth: 20,
-      space: 0.005,
+      ringWidth: 10,
+      splitTopLevelGroups: this.props.hemiSphere,
+      topLevelGroupPadding: Math.PI / 4,
     };
-
-    debug('this.data are %o', this.state.data);
 
     this.outerRingGenerator.generate(this.state.data, config, this.selection);
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
-    this.labelGenerator.generate(this.state.data, config, this.selection);
+    this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
 
     return (
       <ChordChartGL
@@ -187,6 +249,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         interactiveRingLines={this.outerRingGenerator.getInteractionBuffer()}
         onMouseHover={this.handleMouseHover}
         onMouseLeave={this.handleMouseLeave}
+        onMouseUp={this.handleMouseUp}
         viewport={this.viewport}
         width={this.viewport.width}
         zoom={this.state.zoom}

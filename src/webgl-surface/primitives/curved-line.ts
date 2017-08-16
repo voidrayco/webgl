@@ -1,3 +1,4 @@
+import { clone } from 'ramda';
 import { bezier2, bezier3 } from '../util/interpolation';
 import { Bounds } from './bounds';
 import { Line } from './line';
@@ -203,6 +204,10 @@ function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
     x: perpendicular.x * distance + midPoint.x,
     y: perpendicular.y * distance + midPoint.y,
   };
+
+  // Store the circle center as an extra control point in case the value is needed
+  // (which it often is)
+  line.controlPoints[1] = circleCenter;
   debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
   // Get the direction vector from the circle center to the first end point
   const direction1 = Point.getDirection(circleCenter, line.p1);
@@ -264,6 +269,9 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
     y: -perpendicular.y * distance + midPoint.y,
   };
 
+  // Store the circle center as an extra control point in case the value is needed
+  // (which it often is)
+  line.controlPoints[1] = circleCenter;
   debug('p1 is %o, p2 is %o', line.p1, line.p2);
   debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
 
@@ -317,9 +325,11 @@ const pickSegmentMethod = {
   [CurveType.CircularCW]: [
     null,
     makeCircularCWSegments,
+    makeCircularCWSegments,
   ],
   [CurveType.CircularCCW]: [
     null,
+    makeCircularCCWSegments,
     makeCircularCCWSegments,
   ],
   [CurveType.Straight]: [
@@ -466,7 +476,7 @@ export class CurvedLine<T> extends Bounds<T> {
 
     // If we adjust the control points we need to re-evaluate the type of segment creation method we use
     if (controlPoints) {
-      this.controlPoints = controlPoints;
+      this.controlPoints = clone(controlPoints);
       // Get the number of control points we want to base the curve off of
       let numControlPoints = controlPoints.length;
 

@@ -1,5 +1,5 @@
-import { IEndpoint, IFlow } from '../generators/types';
-
+import { IChord, IEndpoint } from '../generators/types';
+const debug = require('debug')('edp');
 /**
  * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
  * Angles calculated in radians
@@ -9,8 +9,9 @@ import { IEndpoint, IFlow } from '../generators/types';
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle: number, endAngle: number){
+function _recalculateEndpoint(children: IEndpoint[], flows: IChord[], startAngle: number, endAngle: number){
     const totalChildrenWeight = _getTotalWeight(children);
+    debug('childrens are %o, weight is %o', children, totalChildrenWeight);
     let currentAngle = startAngle;
     return children.map((child) => {
         const width = (child.weight / totalChildrenWeight) * (endAngle - startAngle);
@@ -23,7 +24,7 @@ function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle:
 
 // Recalculates outgoingCount, incomingCount, totalCount for passed in tree node
 // Immutable
-function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
+function _recalculateFlowCounts(node: IEndpoint, flows: IChord[]){
     const nodeObj = Object.assign({}, node);    // Immutable
     let outgoingCount = 0, incomingCount = 0, totalCount = 0;
     flows.forEach((flow) => {
@@ -46,7 +47,7 @@ function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-export function recalculateTree(tree: IEndpoint[], flows: IFlow[]){
+export function recalculateTree(tree: IEndpoint[], flows: IChord[]){
     // Recalculates subtree for passed in tree node -- modifies passed in object
     const _recalculateSubtree = (parent: IEndpoint) => {
         parent = typeof parent !== 'undefined' ? parent : null;
@@ -58,7 +59,7 @@ export function recalculateTree(tree: IEndpoint[], flows: IFlow[]){
         }
     };
     const CIRCLE_CIRCUMFERENCE = 2 * Math.PI;
-    tree = _recalculateEndpoint(tree, flows, 0, CIRCLE_CIRCUMFERENCE);
+    tree = _recalculateEndpoint(tree, flows, -0.5 * Math.PI, CIRCLE_CIRCUMFERENCE - 0.5 * Math.PI);
     tree.map((root: IEndpoint) => {
         _recalculateSubtree(root);
     });
@@ -126,4 +127,25 @@ function _isLeaf(endpoint: IEndpoint){
 export function getTreeLeafNodes(tree: IEndpoint[]){
     const flatTree = flattenTree(tree);
     return flatTree.filter(_isLeaf);
+}
+
+function isAncestor(node: IEndpoint, parent: IEndpoint) {
+      if (parent.id === node.parent)return true;
+      let rst: boolean = false;
+      parent.children.forEach((c) => {
+        if (isAncestor(node, c)){
+          rst = true;
+        }
+      });
+      return rst;
+    }
+
+export function getAncestor(node: IEndpoint, tree: IEndpoint[]) {
+    let index: number, i = 0;
+
+    tree.forEach((t) => {
+        if (isAncestor(node, t)) index = i;
+        i++;
+    });
+    return tree[index];
 }
