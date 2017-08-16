@@ -1,4 +1,4 @@
-import { IEndpoint, IFlow } from '../chord-chart/generators/types';
+import { IChord, IEndpoint } from '../chord-chart/generators/types';
 
 const RANDOM = require('random');
 const ADJECTIVES = [ 'Good', 'New', 'First', 'Last', 'Long', 'Great', 'Little', 'Own', 'Other', 'Old', 'Right', 'Big', 'High', 'Different', 'Small', 'Large', 'Next', 'Early', 'Young', 'Important', 'Few', 'Public', 'Bad', 'Same', 'Able', 'Adorable', 'Beautiful', 'Clean', 'Drab', 'Elegant', 'Fancy', 'Glamorous', 'Handsome', 'Long', 'Magnificent', 'Old-fashioned', 'Plain', 'Quaint', 'Sparkling', 'Ugliest', 'Unsightly', 'Wide-eyed', 'Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Gray', 'Black', 'White', 'Alive', 'Better', 'Careful', 'Clever', 'Dead', 'Easy', 'Famous', 'Gifted', 'Helpful', 'Important', 'Inexpensive', 'Mushy', 'Odd', 'Powerful', 'Rich', 'Shy', 'Tender', 'Uninterested', 'Vast', 'Wrong', 'Agreeable', 'Brave', 'Calm', 'Delightful', 'Eager', 'Faithful', 'Gentle', 'Happy', 'Jolly', 'Kind', 'Lively', 'Nice', 'Obedient', 'Proud', 'Relieved', 'Silly', 'Thankful', 'Victorious', 'Witty', 'Zealous', 'Angry', 'Bewildered', 'Clumsy', 'Defeated', 'Embarrassed', 'Fierce', 'Grumpy', 'Helpless', 'Itchy', 'Jealous', 'Lazy', 'Mysterious', 'Nervous', 'Obnoxious', 'Panicky', 'Repulsive', 'Scary', 'Thoughtless', 'Uptight', 'Worried', 'Broad', 'Chubby', 'Crooked', 'Curved', 'Deep', 'Flat', 'High', 'Hollow', 'Low', 'Narrow', 'Round', 'Shallow', 'Skinny', 'Square', 'Steep', 'Straight', 'Wide', 'Big', 'Colossal', 'Fat', 'Gigantic', 'Great', 'Huge', 'Immense', 'Large', 'Little', 'Mammoth', 'Massive', 'Miniature', 'Petite', 'Puny', 'Scrawny', 'Short', 'Small', 'Tall', 'Teeny', 'Teeny-tiny', 'Tiny', 'Cooing', 'Deafening', 'Faint', 'Hissing', 'Loud', 'Melodic', 'Noisy', 'Purring', 'Quiet', 'Raspy', 'Screeching', 'Thundering', 'Voiceless', 'Whispering', 'Ancient', 'Brief', 'Early', 'Fast', 'Late', 'Long', 'Modern', 'Old', 'Old-fashioned', 'Quick', 'Rapid', 'Short', 'Slow', 'Swift', 'Young', 'Bitter', 'Delicious', 'Fresh', 'Greasy', 'Juicy', 'Hot', 'Icy', 'Loose', 'Melted', 'Nutritious', 'Prickly', 'Rainy', 'Rotten', 'Salty', 'Sticky', 'Strong', 'Sweet', 'Tart', 'Tasteless', 'Uneven', 'Weak', 'Wet', 'Wooden', 'Yummy', 'Boiling', 'Breeze', 'Broken', 'Bumpy', 'Chilly', 'Cold', 'Cool', 'Creepy', 'Crooked', 'Cuddly', 'Curly', 'Damaged', 'Damp', 'Dirty', 'Dry', 'Dusty', 'Filthy', 'Flaky', 'Fluffy', 'Freezing', 'Hot', 'Warm', 'Wet', 'Abundant', 'Empty', 'Few', 'Full', 'Heavy', 'Light', 'Many', 'Numerous', 'Sparse', 'Substantial' ];
@@ -29,7 +29,7 @@ export function addPropertiesToEndpoints(endpoints: IEndpoint[]){
  * @param {IEndpoint[]} endpoints - flat list of endpoints
  * @param {IEndpoint[]} flows - flat list of flows
  */
-export function setEndpointFlowCounts(endpoints: IEndpoint[], flows: IFlow[]){
+export function setEndpointFlowCounts(endpoints: IEndpoint[], flows: IChord[]){
     const endpointObjs = endpoints.map(a => Object.assign({}, a));
     endpointObjs.forEach((endpoint) => {
         const outgoingFlows = this.getFlowsByEndpoint(endpoint, flows, 'outgoing');
@@ -68,8 +68,8 @@ export function polarizeStartAndEndAngles(endpoints: IEndpoint[]){
  * @param {IEndpoint[]} flows - flat list of flows
  * @param {string} type - 'outgoing' or 'incoming', or empty (both)
  */
-export function getFlowsByEndpoint(endpoint: IEndpoint, flows: IFlow[], type ? : string){
-    return flows.filter((flow: IFlow) => {
+export function getFlowsByEndpoint(endpoint: IEndpoint, flows: IChord[], type ? : string){
+    return flows.filter((flow: IChord) => {
         if (type === 'outgoing' && flow.srcTarget === endpoint.id) return true;
         else if (type === 'incoming' && flow.dstTarget === endpoint.id) return true;
         else if (!type && (flow.srcTarget === endpoint.id || flow.dstTarget === endpoint.id)) return true;

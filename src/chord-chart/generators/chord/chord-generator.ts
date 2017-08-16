@@ -21,7 +21,7 @@ export class ChordGenerator {
   bustCaches(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
     const didDataChange = data !== this.lastData;
     const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD);
-    const didHemisphereChange = this.lastHemisphere !== config.hemiSphere;
+    const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
 
     if (didSelectionChange || didDataChange || didHemisphereChange) {
       this.chordBase.bustCache = true;
@@ -31,7 +31,7 @@ export class ChordGenerator {
       this.chordInteractions.bustCache = true;
     }
 
-    this.lastHemisphere = config.hemiSphere;
+    this.lastHemisphere = config.splitTopLevelGroups;
     this.lastData = data;
   }
 

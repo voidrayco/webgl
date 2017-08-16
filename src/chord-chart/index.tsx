@@ -224,13 +224,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   render() {
     const config: IChordChartConfig = {
       center: {x: 0, y: 0},
-      hemiDistance: 50,
-      hemiSphere: this.props.hemiSphere,
+      groupSplitDistance: 50,
       labelDirection: this.props.hemiSphere ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
-      padding: Math.PI / 4,
+      outerRingSegmentPadding: 0.005,
+      outerRingSegmentRowPadding: 2,
       radius: 200,
-      ringWidth: 20,
-      space: 0.005,
+      ringWidth: 10,
+      splitTopLevelGroups: this.props.hemiSphere,
+      topLevelGroupPadding: Math.PI / 4,
     };
 
     this.outerRingGenerator.generate(this.state.data, config, this.selection);

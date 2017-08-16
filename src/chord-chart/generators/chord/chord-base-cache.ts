@@ -1,16 +1,27 @@
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
-import { hsl, rgb } from 'd3-color';
+import { hsl, rgb, RGBColor } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
+import { IPoint } from 'webgl-surface/primitives/point';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IChordData } from '../../shape-data-types/chord-data';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { getAncestor } from '../../util/endpointDataProcessing';
-import { IChordChartConfig, ICurveData, IData, IEndpoint } from '../types';
+import { IChord, IChordChartConfig, IData, IEndpoint } from '../types';
 
 const FADED_ALPHA = 0.1;
 const UNFADED_ALPHA = 0.5;
+
+export interface ICurveData {
+  color: RGBColor;
+  controlPoint: IPoint;
+  destEndpoint: {};
+  endpoint: {};
+  p1: IPoint;
+  p2: IPoint;
+  source: IChord;
+}
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -38,22 +49,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
   }
 
   buildCache(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
-    const circleRadius = config.radius;
-    const circleWidth = config.ringWidth;
-    const segmentSpace = config.space;
-    const hemiSphere = config.hemiSphere;
-    const hemiDistance = config.hemiDistance;
-    const padding = config.padding;
-
-    const curves = this.preProcessData(
-      data,
-      circleRadius,
-      circleWidth,
-      segmentSpace,
-      hemiSphere,
-      hemiDistance,
-      padding,
-    );
+    const curves = this.preProcessData(data, config);
 
     // Map the outer rings by id
     const ringById = new Map<string, CurvedLineShape<IOuterRingData>>();
@@ -97,9 +93,21 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
     this.buffer = curveShapes;
   }
 
-  // Data comes from catbird-ui >> d3Chart.loadData()
-  preProcessData(data: IData, circleRadius: number, circleWidth: number, segmentSpace: number,
-    hemiSphere: boolean, hemiDistance: number, padding: number) {
+  /**
+   * This processes the data to calculate initial needed metrics to make generating
+   * shapes simpler.
+   */
+  preProcessData(data: IData, config: IChordChartConfig) {
+    const {
+      groupSplitDistance,
+      outerRingSegmentPadding: segmentSpace,
+      outerRingSegmentRowPadding: segmentRowPadding,
+      radius: circleRadius,
+      ringWidth,
+      splitTopLevelGroups,
+      topLevelGroupPadding: padding,
+    } = config;
+
     const controlPoint = {x: 0, y: 0};
     const curveData: ICurveData[] = [];
 
@@ -115,16 +123,19 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
     }
 
-    function calculatePoint(radius: number, flowAngle: number, hemiSphere: boolean) {
+    function calculatePoint(radius: number, flowAngle: number, split: boolean) {
       let x = radius * Math.cos(flowAngle);
       let y = radius * Math.sin(flowAngle);
-      if (hemiSphere) {
+
+      if (split) {
         const halfAngle = getDirection(flowAngle, data.tree);
-        x = radius * Math.cos(flowAngle) + hemiDistance * Math.cos(halfAngle);
-        y = radius * Math.sin(flowAngle) + hemiDistance * Math.sin(halfAngle);
+        x = radius * Math.cos(flowAngle) + groupSplitDistance * Math.cos(halfAngle);
+        y = radius * Math.sin(flowAngle) + groupSplitDistance * Math.sin(halfAngle);
       }
+
       return {x, y};
     }
+
     // Loop thrugh each endpoint and analyze the flows
     data.endpoints.forEach((endpoint) => {
       data.flows.forEach((flow) => {
@@ -132,9 +143,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
           const destEndpoint = getEndpoint(data, flow.dstTarget);
 
           if (destEndpoint) {
-            // P1, sourceEnd
             let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
-            if (hemiSphere){
+
+            if (splitTopLevelGroups){
               const ancestor1 = getAncestor(endpoint, data.tree);
               const ancRange1 = ancestor1.endAngle - ancestor1.startAngle;
               const scale1 = (ancRange1 - padding) / ancRange1;
@@ -142,11 +153,12 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               p1FlowAngle =
               ancestor1.startAngle + padding / 2 + (p1FlowAngle - ancestor1.startAngle) * scale1;
             }
+
             const p1 = calculatePoint(
-              circleRadius - 0.5 * circleWidth ,
+              circleRadius - 0.5 * ringWidth - segmentRowPadding,
               p1FlowAngle,
-              hemiSphere,
-              );
+              splitTopLevelGroups,
+            );
 
             // P2, destEnd
             let p2FlowAngle = getFlowAngle(
@@ -154,7 +166,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               destEndpoint.totalCount - 1 - destEndpoint._inflowIdx,
               segmentSpace,
             );
-            if (hemiSphere){
+
+            if (splitTopLevelGroups){
               const ancestor2 = getAncestor(destEndpoint, data.tree);
               const ancRange2 = ancestor2.endAngle - ancestor2.startAngle;
               const scale2 = (ancRange2 - padding) / ancRange2;
@@ -164,9 +177,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
             }
 
             const p2 = calculatePoint(
-              circleRadius - 0.5 * circleWidth ,
+              circleRadius - 0.5 * ringWidth - segmentRowPadding,
               p2FlowAngle,
-              hemiSphere,
+              splitTopLevelGroups,
             );
 
             const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));

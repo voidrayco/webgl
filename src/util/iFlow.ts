@@ -1,5 +1,5 @@
 import { hsl } from 'd3-color';
-import { IEndpoint, IFlow } from '../chord-chart/generators/types';
+import { IChord, IEndpoint } from '../chord-chart/generators/types';
 import { getFlowsByEndpoint } from './iEndpoint';
 import { getTreeLeafNodes } from './iEndpoint-tree';
 
@@ -13,7 +13,7 @@ const getHslRandomLVal = RANDOM.float(0.29, 0.54);
  * @param {IEndpoint[]} tree - tree of endpoints
  * @param {IEndpoint[]} flows - total set of flows in graph
  */
-export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
+export function createFlow(flows: IChord[], tree: IEndpoint[]) {
     const endpoints = getTreeLeafNodes(tree);
     const getRandomEndpoint = RANDOM.item(endpoints);
     const src: IEndpoint = getRandomEndpoint();
@@ -41,10 +41,10 @@ export function createFlow(flows: IFlow[], tree: IEndpoint[]) {
  * @param {IEndpoint[]} flows - total set of flows in graph
  * @returns {tree: IEndpoint[], flows: IFlow[]} recalculated endpoint tree and flows
  */
-export function createRandomFlows(qty: number, flows: IFlow[], tree: IEndpoint[]){
-    const newFlows: IFlow[] = [];
+export function createRandomFlows(qty: number, flows: IChord[], tree: IEndpoint[]){
+    const newFlows: IChord[] = [];
     for (let a = 0; a < qty; a++){
-      const flow: IFlow = createFlow(flows, tree);
+      const flow: IChord = createFlow(flows, tree);
       newFlows.push(flow);
     }
     return newFlows;
@@ -57,7 +57,7 @@ export function createRandomFlows(qty: number, flows: IFlow[], tree: IEndpoint[]
  * @param {IEndpoint[]} flows - set of flows to randomly select from
  * @returns {flows: IFlow[]} randomly selected flows
  */
-export function selectRandomFlows(qty: number, flows: IFlow[]){
+export function selectRandomFlows(qty: number, flows: IChord[]){
     const removeQty = flows.length < qty ? flows.length : qty;
     const randomRemoveFlow = RANDOM.array(removeQty, RANDOM.item(flows));
     return randomRemoveFlow();

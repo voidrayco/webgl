@@ -78,7 +78,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
       // If we're anchored at the middle left, we need to push a bit more outward
       // In order to account for the length of the text field
-      if (!config.hemiSphere) {
+      if (!config.splitTopLevelGroups) {
         if (labelData.anchor === AnchorPosition.MiddleLeft) {
           Point.add(
             labelData.point,
@@ -131,11 +131,14 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
   preProcessData(data: IData, outerRings: CurvedLineShape<IOuterRingData>[], config: IChordChartConfig) {
     const {
+      outerRingSegmentRowPadding: rowPadding,
       radius,
       ringWidth,
-      hemiSphere,
-      padding,
+      splitTopLevelGroups,
+      topLevelGroupPadding,
     } = config;
+
+    const paddedRingWidth = ringWidth + rowPadding;
 
     // This method is used to calculate where the anchor point location will be
     // For the label
@@ -145,7 +148,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         data.topEndPointByEndPointId.get(endpoint.id),
       ) + 1;
       // How much is the label pushed out to account for all of the ring levels rendered
-      const ringPadding = ringWidth * depth;
+      const ringPadding = paddedRingWidth * depth;
       // Quick reference to the direction of the angle
       const dx = direction.x;
       const dy = direction.y;
@@ -169,7 +172,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       // Make a line between the end points
       let ringLine: Line<any> = new Line<any>(ring.p1, ring.p2);
 
-      if (hemiSphere){
+      if (splitTopLevelGroups){
         let topEndPoint = data.topEndPointByEndPointId.get(ring.d.source.id);
         while (data.topEndPointByEndPointId.get(topEndPoint.parent)){
           topEndPoint = data.topEndPointByEndPointId.get(topEndPoint.parent);
@@ -177,12 +180,12 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         const ancestor = data.tree.filter((t) => t.id === topEndPoint.parent)[0];
 
         const ancRange = ancestor.endAngle - ancestor.startAngle;
-        const scale = (ancRange - padding) / ancRange;
+        const scale = (ancRange - topLevelGroupPadding) / ancRange;
 
         const newStartAngle =
-        ancestor.startAngle + padding / 2 + (ring.d.source.startAngle - ancestor.startAngle) * scale;
+        ancestor.startAngle + topLevelGroupPadding / 2 + (ring.d.source.startAngle - ancestor.startAngle) * scale;
         const newEndAngle  =
-        ancestor.startAngle + padding / 2 + (ring.d.source.endAngle - ancestor.startAngle) * scale;
+        ancestor.startAngle + topLevelGroupPadding / 2 + (ring.d.source.endAngle - ancestor.startAngle) * scale;
 
         const p1 = {
           x: center.x + radius * Math.cos(newStartAngle),

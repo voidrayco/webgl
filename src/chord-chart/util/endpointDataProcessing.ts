@@ -1,4 +1,4 @@
-import { IEndpoint, IFlow } from '../generators/types';
+import { IChord, IEndpoint } from '../generators/types';
 const debug = require('debug')('edp');
 /**
  * Recalculates tree properties startAngle and endAngle for each IEndpoint accounting for nested angles.
@@ -9,7 +9,7 @@ const debug = require('debug')('edp');
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle: number, endAngle: number){
+function _recalculateEndpoint(children: IEndpoint[], flows: IChord[], startAngle: number, endAngle: number){
     const totalChildrenWeight = _getTotalWeight(children);
     debug('childrens are %o, weight is %o', children, totalChildrenWeight);
     let currentAngle = startAngle;
@@ -24,7 +24,7 @@ function _recalculateEndpoint(children: IEndpoint[], flows: IFlow[], startAngle:
 
 // Recalculates outgoingCount, incomingCount, totalCount for passed in tree node
 // Immutable
-function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
+function _recalculateFlowCounts(node: IEndpoint, flows: IChord[]){
     const nodeObj = Object.assign({}, node);    // Immutable
     let outgoingCount = 0, incomingCount = 0, totalCount = 0;
     flows.forEach((flow) => {
@@ -47,7 +47,7 @@ function _recalculateFlowCounts(node: IEndpoint, flows: IFlow[]){
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-export function recalculateTree(tree: IEndpoint[], flows: IFlow[]){
+export function recalculateTree(tree: IEndpoint[], flows: IChord[]){
     // Recalculates subtree for passed in tree node -- modifies passed in object
     const _recalculateSubtree = (parent: IEndpoint) => {
         parent = typeof parent !== 'undefined' ? parent : null;

@@ -4,7 +4,7 @@ import * as ReactDOM from 'react-dom';
 import { Bezier } from './bezier';
 import { IQuadShapeData } from './bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from './chord-chart';
-import { IEndpoint, IFlow } from './chord-chart/generators/types';
+import { IChord, IEndpoint } from './chord-chart/generators/types';
 import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './util/iEndpoint';
 import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
 import { createRandomFlows, selectRandomFlows } from './util/iFlow';
@@ -21,7 +21,7 @@ const endpoints = clone(testChordData.endpoints);
  */
 interface IMainState {
   currentTab: number,
-  flows: IFlow[];
+  flows: IChord[];
   tree: IEndpoint[];
   zoom: number,
 }
@@ -50,7 +50,7 @@ function getNewTreeById(tree: IEndpoint[], id: string, childrenNumber: number) {
     return tree;
   }
 
-  function getNewFlowsById(flows: IFlow[], id: string, childrenNumber: number) {
+  function getNewFlowsById(flows: IChord[], id: string, childrenNumber: number) {
     const relatedFlows = flows.filter(f => f.srcTarget === id || f.dstTarget === id);
     const flowLength = relatedFlows.length;
     if (flowLength === 0) return flows;
@@ -89,7 +89,7 @@ export class Main extends React.Component<any, IMainState> {
     zoom: 1,
   };
 
-  buildTree(endpoints: IEndpoint[], flows: IFlow[]){
+  buildTree(endpoints: IEndpoint[], flows: IChord[]){
     endpoints = addPropertiesToEndpoints( polarizeStartAndEndAngles( setEndpointFlowCounts(endpoints, flows)));
     const tree: IEndpoint[] = generateTree(endpoints, flows);
     return tree;
