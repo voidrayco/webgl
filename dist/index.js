@@ -50588,7 +50588,7 @@ function _recalculateEndpoint(children, flows, startAngle, endAngle) {
 // Recalculates outgoingCount, incomingCount, totalCount for passed in tree node
 // Immutable
 function _recalculateFlowCounts(node, flows) {
-    const nodeObj = Object.assign({}, node); // Immutable
+    const nodeObj = node; // Immutable
     let outgoingCount = 0, incomingCount = 0, totalCount = 0;
     flows.forEach((flow) => {
         if (flow.srcTarget === nodeObj.id)

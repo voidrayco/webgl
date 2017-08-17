@@ -32,15 +32,15 @@ export interface IChordChartConfig {
  * This is the base raw data calculated for the chord chart
  */
 export interface IData {
-    tree: IEndpoint[];
-    endpoints?: IEndpoint[];
+    tree?: IEndpoint[];
+    endpoints: IEndpoint[];
     flows: IChord[];
     /** Quick look up for an end point by it's id */
-    endpointById: Map<string, IEndpoint>;
+    endpointById?: Map<string, IEndpoint>;
     /** Get the top level end point for a given child end point's id */
-    topEndPointByEndPointId: Map<string, IEndpoint>;
+    topEndPointByEndPointId?: Map<string, IEndpoint>;
     /** Stores the max depth of a given top level end point */
-    topEndPointMaxDepth: Map<IEndpoint, number>;
+    topEndPointMaxDepth?: Map<IEndpoint, number>;
 }
 /**
  * This defines the raw data needed for an end point in the chord chart
@@ -49,12 +49,12 @@ export interface IEndpoint {
     children?: IEndpoint[];
     id: string;
     name: string;
-    startAngle: number;
-    endAngle: number;
-    outgoingCount: number;
-    incomingCount: number;
+    startAngle?: number;
+    endAngle?: number;
+    outgoingCount?: number;
+    incomingCount?: number;
     parent: string;
-    totalCount: number;
+    totalCount?: number;
     _outflowIdx?: number;
     _inflowIdx?: number;
     weight: number;
@@ -63,11 +63,11 @@ export interface IEndpoint {
  * This defines the raw data needed to render a chord in the chord chart
  */
 export interface IChord {
-    srcExpandedTarget: string;
+    srcExpandedTarget?: string;
     srcTarget: string;
-    destExpandedTarget: string;
+    destExpandedTarget?: string;
     dstTarget: string;
-    srcIndex: number;
-    dstIndex: number;
-    baseColor: HSLColor;
+    srcIndex?: number;
+    dstIndex?: number;
+    baseColor?: HSLColor;
 }
