@@ -51140,6 +51140,7 @@ class Quadrants {
         this.BR = null;
     }
 }
+exports.Quadrants = Quadrants;
 /**
  * The quad tree node. This Node will take in a certain population before dividing itself into
  * 4 quadrants which it will attempt to inject it's population into. If a member of the population
@@ -56109,8 +56110,8 @@ var formatIso = Date.prototype.toISOString
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const chord_chart_1 = __webpack_require__(209);
-exports.ChordChart = chord_chart_1.ChordChart;
+var chord_chart_1 = __webpack_require__(209);
+exports.ChordChart = chord_chart_1.default;
 
 
 /***/ }),
@@ -56311,6 +56312,7 @@ class ChordChart extends React.Component {
     }
 }
 exports.ChordChart = ChordChart;
+exports.default = ChordChart;
 
 
 /***/ }),
