@@ -82,7 +82,6 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     // We pass our properties to the curve line but we do not let it cache it's version of the line segments
     // As we will be constructing our own segmentation requiring a new type of cache
     super(type, p1, p2, controlPoints, resolution);
-
     this.encapsulatePoints(this.getTriangleStrip());
     this.cachesQuadSegments = cacheSegments;
 

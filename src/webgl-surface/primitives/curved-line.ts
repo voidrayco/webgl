@@ -386,7 +386,9 @@ export class CurvedLine<T> extends Bounds<T> {
    */
   constructor(type: CurveType, p1: IPoint, p2: IPoint, controlPoints: IPoint[],
      resolution: number = 20, cacheSegments: boolean = false) {
-    super(0, 0, 0, 0);
+      const minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE,
+            minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
+      super(minX, maxX, maxY, minY);
 
     // Apply the relevant properties to the curve
     this.cachesSegments = cacheSegments;
