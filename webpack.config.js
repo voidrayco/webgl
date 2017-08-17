@@ -7,9 +7,9 @@ const tslintLoader = {loader: 'tslint-loader', options: {
   // failOnHint: true,
 }};
 
-const isRelease = process.env.NODE_ENV === 'RELEASE';
-const isProduction = process.env.NODE_ENV === 'PRODUCTION' || isRelease;
-const isDevelopment = process.env.NODE_ENV === 'DEVELOP';
+const isRelease = process.env.NODE_ENV === 'release';
+const isProduction = process.env.NODE_ENV === 'production' || isRelease;
+const isDevelopment = process.env.NODE_ENV === 'development';
 
 module.exports = {
   entry: isProduction ? './src' : './test',

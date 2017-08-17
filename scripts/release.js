@@ -10,8 +10,9 @@ const toPromise = require('./lib/toPromise');
 const webpack = require('webpack');
 
 const OUT_FOLDER = resolve('dist');
+const PACKAGE_JSON = resolve('package.json');
 
-process.env.NODE_ENV = 'RELEASE';
+process.env.NODE_ENV = 'release';
 
 let NO_BUILD = false;
 let VERSION = null;
@@ -78,11 +79,10 @@ async function bumpVersion() {
   //
   // Update package.json
   //
-  const PACKAGE_JSON = resolve('package.json');
   let json = require(PACKAGE_JSON);
   json.version = VERSION;
-  json = JSON.stringify(json, null, '  ');
-  await toPromise(c => writeFile('package.json', json, c));
+  json = `${JSON.stringify(json, null, '  ')}\n`;
+  await toPromise(c => writeFile(PACKAGE_JSON, json, c));
 
   //
   // Create git tag
