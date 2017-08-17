@@ -13,13 +13,13 @@ import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
-interface IChordChartProps {
+export interface IChordChartProps {
   onEndPointClick?(curve: CurvedLineShape<any>): void,
   hemiSphere: boolean;
   data: IData;
 }
 
-interface IChordChartState {
+export interface IChordChartState {
   zoom: number,
   data: IData
 }
@@ -257,3 +257,5 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     );
   }
 }
+
+export default ChordChart;

@@ -4,7 +4,6 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const tslintLoader = {loader: 'tslint-loader', options: {
   fix: true,
   emitErrors: true,
-  // failOnHint: true,
 }};
 
 const isRelease = process.env.NODE_ENV === 'release';
@@ -16,7 +15,7 @@ module.exports = {
   module: {
     rules: [
       {test: /\.tsx?/, use: tslintLoader, enforce: 'pre'},
-      {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: true}}},
+      {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: isDevelopment}}},
       {test: /\.less$/, use: ['style-loader', 'css-loader', 'less-loader']},
       {test: /index.html$/, use: {loader: 'file-loader', options: {name: 'index.html'}}},
       {test: /\.[fv]s$/, use: ['raw-loader']}, // Currently used to load shaders into javascript files
@@ -32,6 +31,6 @@ module.exports = {
     publicPath: '/',
   },
   plugins: [
-    new ForkTsCheckerWebpackPlugin()
+    new ForkTsCheckerWebpackPlugin(),
   ]
 };

@@ -5,11 +5,11 @@ import { BezierGL } from './gl/bezier-gl';
 import { IQuadShapeData } from './shape-data-types/quad-shape-data';
 const debug = require('debug')('bezier');
 
-interface IBezierProps {
+export interface IBezierProps {
   quadData: IQuadShapeData[]
 }
 
-interface IBezierState {
+export interface IBezierState {
   zoom: number
 }
 

@@ -19,7 +19,7 @@ const endpoints = clone(testChordData.endpoints);
 /**
  * The state of the application
  */
-interface IMainState {
+export interface IMainState {
   currentTab: number,
   flows: IChord[];
   tree: IEndpoint[];

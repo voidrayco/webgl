@@ -1,4 +1,4 @@
-import { hsl } from 'd3-color';
+import { hsl, HSLColor } from 'd3-color';
 import { IChord, IEndpoint } from '../../src/chord-chart/generators/types';
 import { getFlowsByEndpoint } from './iEndpoint';
 import { getTreeLeafNodes } from './iEndpoint-tree';
@@ -19,7 +19,7 @@ export function createFlow(flows: IChord[], tree: IEndpoint[]) {
     const src: IEndpoint = getRandomEndpoint();
     let dst: IEndpoint = getRandomEndpoint();
     while (dst.id === src.id) dst = getRandomEndpoint();
-    const color = hsl(getHslRandomHVal(), 1, getHslRandomLVal());
+    const color: HSLColor = hsl(getHslRandomHVal(), 1, getHslRandomLVal());
     const incomingFlows = getFlowsByEndpoint(dst, flows, 'incoming');
     const outgoingFlows = getFlowsByEndpoint(src, flows, 'outgoing');
     return {

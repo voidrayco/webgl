@@ -6,7 +6,7 @@
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@types/d3-color/-/d3-color-1.0.5.tgz#cad755f0fc6de7b70fa6e5e08afa81ef4c2248de"
 
-"@types/d3-scale@^1.0.10":
+"@types/d3-scale@1.0.10":
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/@types/d3-scale/-/d3-scale-1.0.10.tgz#8c5c1dca54a159eed042b46719dbb3bdb7e8c842"
   dependencies:
@@ -876,7 +876,7 @@ d3-interpolate@1:
   dependencies:
     d3-color "1"
 
-d3-scale@^1.0.6:
+d3-scale@1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/d3-scale/-/d3-scale-1.0.6.tgz#bce19da80d3a0cf422c9543ae3322086220b34ed"
   dependencies:
@@ -935,6 +935,10 @@ debug@~2.2.0:
 decamelize@^1.0.0, decamelize@^1.1.1, decamelize@^1.1.2:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/decamelize/-/decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290"
+
+declaration-bundler-webpack-plugin@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/declaration-bundler-webpack-plugin/-/declaration-bundler-webpack-plugin-1.0.3.tgz#9fb5ae393c63ed4175e7b6de4b58bafde34f097a"
 
 deep-equal@^1.0.1:
   version "1.0.1"
@@ -1041,6 +1045,10 @@ doctrine@^2.0.0:
 domain-browser@^1.1.1:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/domain-browser/-/domain-browser-1.1.7.tgz#867aa4b093faa05f1de08c06f4d7b21fdf8698bc"
+
+dtsbundler-webpack-plugin@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/dtsbundler-webpack-plugin/-/dtsbundler-webpack-plugin-1.0.0.tgz#c4c3b778aa5688ba4bf5b0b51e2a05649e13af93"
 
 ecc-jsbn@~0.1.1:
   version "0.1.1"

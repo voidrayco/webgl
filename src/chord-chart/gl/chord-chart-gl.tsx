@@ -20,7 +20,7 @@ import { IWebGLSurfaceProperties, WebGLSurface } from 'webgl-surface/webgl-surfa
 const debug = require('debug')('chord-chart:gl');
 
 // Local component properties interface
-interface IChordChartGLProperties extends IWebGLSurfaceProperties {
+export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   /** Special case lines that use specific processes to animate */
   animatedCurvedLines?: CurvedLineShape<any>[],
   /** Lines that change frequently due to interactions */
