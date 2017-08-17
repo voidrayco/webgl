@@ -22,7 +22,7 @@ export class PackNode {
   nodeImage: AtlasTexture = null;
 
   constructor(x: number, y: number, width: number, height: number) {
-    this.nodeDimensions = new Bounds<never>(x, x + width, y + height, y);
+    this.nodeDimensions = new Bounds<never>(x, x + width, y , y - height);
   }
 
   /**

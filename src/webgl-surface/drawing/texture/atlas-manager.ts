@@ -178,6 +178,7 @@ export class AtlasManager {
         const uy = insertedNode.nodeDimensions.y / this.textureHeight;
         const uw = insertedNode.nodeDimensions.width / this.textureWidth;
         const uh = insertedNode.nodeDimensions.height / this.textureHeight;
+        debugLabels('uy is %o', uy);
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,
           ux + uw,
@@ -186,10 +187,10 @@ export class AtlasManager {
         );
 
         image.atlasReferenceID = atlasName;
-        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y + atlasDimensions.height};
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y + atlasDimensions.height};
-        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y };
-        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
+        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
+        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
+        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
 
         // Now draw the image to the indicated canvas
         canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);

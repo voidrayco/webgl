@@ -63,6 +63,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         chords: [],
         source: segment.source,
       };
+
       debug('curve is %o x: %o y: %o width:%o height:%o  bottom:%o', segment.source.name, curve.x, curve.y, curve.width, curve.height, curve.bottom);
 
       return curve;
