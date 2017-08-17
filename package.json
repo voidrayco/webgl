@@ -2,7 +2,7 @@
   "name": "voidgl",
   "version": "0.1.0",
   "main": "dist/index.js",
-  "types": "dist/src/index",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "engines": {
     "node": "7.10.1"
@@ -23,6 +23,7 @@
     "d3-color": "1.0.3",
     "d3-scale": "1.0.6",
     "declaration-bundler-webpack-plugin": "^1.0.3",
+    "dts-bundle": "^0.7.3",
     "dtsbundler-webpack-plugin": "^1.0.0",
     "fork-ts-checker-webpack-plugin": "0.2.4",
     "ramda": "0.24.1",

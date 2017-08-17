@@ -1,4 +1,6 @@
+const {DtsBundlePlugin} = require('./scripts/lib/dts-bundle-plugin');
 const {resolve} = require('path');
+const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const tslintLoader = {loader: 'tslint-loader', options: {
@@ -9,6 +11,19 @@ const tslintLoader = {loader: 'tslint-loader', options: {
 const isRelease = process.env.NODE_ENV === 'release';
 const isProduction = process.env.NODE_ENV === 'production' || isRelease;
 const isDevelopment = process.env.NODE_ENV === 'development';
+
+const plugins = [
+  new ForkTsCheckerWebpackPlugin(),
+];
+
+if (isProduction) {
+  plugins.push(
+    new DtsBundlePlugin({
+      input: resolve('dist/src'),
+      out: path.join(resolve('dist'), 'index.d.ts'),
+    })
+  );
+}
 
 module.exports = {
   entry: isProduction ? './src' : './test',
@@ -30,7 +45,5 @@ module.exports = {
     path: isProduction ? resolve('dist') : resolve('build'),
     publicPath: '/',
   },
-  plugins: [
-    new ForkTsCheckerWebpackPlugin(),
-  ]
+  plugins
 };
