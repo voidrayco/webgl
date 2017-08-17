@@ -27,55 +27,55 @@ export interface IMainState {
 }
 
 function getNewTreeById(tree: IEndpoint[], id: string, childrenNumber: number) {
-    tree.forEach((t) => {
-      if (t.id === id && t.children.length === 0) {
-        for (let i = 0; i < childrenNumber; i++ ) {
-          t.children.push({
-            children: [],
-            endAngle: undefined,
-            id: t.id.concat(String(i)),
-            incomingCount: 0,
-            name: t.name.concat(String(i)),
-            outgoingCount: 0,
-            parent: t.id,
-            startAngle: undefined,
-            totalCount: 0,
-            weight: 1,
-          });
-        }
-      }else{
-        getNewTreeById(t.children, id, childrenNumber);
+  tree.forEach((t) => {
+    if (t.id === id && t.children.length === 0) {
+      for (let i = 0; i < childrenNumber; i++ ) {
+        t.children.push({
+          children: [],
+          endAngle: undefined,
+          id: t.id.concat(String(i)),
+          incomingCount: 0,
+          name: t.name.concat(String(i)),
+          outgoingCount: 0,
+          parent: t.id,
+          startAngle: undefined,
+          totalCount: 0,
+          weight: 1,
+        });
       }
-    });
-    return tree;
-  }
+    }else{
+      getNewTreeById(t.children, id, childrenNumber);
+    }
+  });
+  return tree;
+}
 
-  function getNewFlowsById(flows: IChord[], id: string, childrenNumber: number) {
-    const relatedFlows = flows.filter(f => f.srcTarget === id || f.dstTarget === id);
-    const flowLength = relatedFlows.length;
-    if (flowLength === 0) return flows;
-    const segmentSize = Math.ceil(flowLength / childrenNumber);
-    let count = 0;
-    flows.forEach((f) => {
-      if (f.srcTarget === id || f.dstTarget === id) {
-        let newId = id;
-        for (let i = 0; i < childrenNumber; i++) {
-          if (i < childrenNumber - 1) {
-              if (count >= segmentSize * i && count < segmentSize * (i + 1)){
-                  newId = newId.concat(String(i));
-              }
-          }
-          else {
-            if (count >= segmentSize * i) newId = newId.concat(String(i));
-          }
+function getNewFlowsById(flows: IChord[], id: string, childrenNumber: number) {
+  const relatedFlows = flows.filter(f => f.srcTarget === id || f.dstTarget === id);
+  const flowLength = relatedFlows.length;
+  if (flowLength === 0) return flows;
+  const segmentSize = Math.ceil(flowLength / childrenNumber);
+  let count = 0;
+  flows.forEach((f) => {
+    if (f.srcTarget === id || f.dstTarget === id) {
+      let newId = id;
+      for (let i = 0; i < childrenNumber; i++) {
+        if (i < childrenNumber - 1) {
+            if (count >= segmentSize * i && count < segmentSize * (i + 1)){
+                newId = newId.concat(String(i));
+            }
         }
-        f.srcTarget === id ? f.srcTarget = newId : f.dstTarget = newId;
-        count++;
+        else {
+          if (count >= segmentSize * i) newId = newId.concat(String(i));
+        }
       }
-    });
+      f.srcTarget === id ? f.srcTarget = newId : f.dstTarget = newId;
+      count++;
+    }
+  });
 
-    return flows;
-  }
+  return flows;
+}
 
 /**
  * Entry class for the Application
@@ -200,10 +200,7 @@ export class Main extends React.Component<any, IMainState> {
       );
     }
 
-    if (this.state.currentTab === 2){
-      testChordData.flows = this.state.flows;
-      testChordData.tree = this.state.tree;
-
+    if (this.state.currentTab === 2) {
       component = (
         <ChordChart
           onEndPointClick={this.handleEndPointClicked}
