@@ -568,6 +568,8 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       let label;
       let texture;
 
+      debug('labels are %o', labels);
+
       BufferUtil.updateBuffer(
         labels, this.staticLabelBufferItems,
         numVerticesPerQuad, labels.length,
@@ -578,41 +580,31 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           label.update();
 
           // Copy first vertex twice for intro degenerate tri
-          positions[ppos] = label.BR.x;
-          positions[++ppos] = label.BR.y;
+          positions[ppos] = label.TR.x;
+          positions[++ppos] = label.TR.y;
           positions[++ppos] = label.depth;
           // Skip over degenerate tris color and tex
           cpos += colorAttributeSize;
           tpos += texCoordAttributeSize;
 
-          // BR
-          positions[++ppos] = label.BR.x;
-          positions[++ppos] = label.BR.y;
-          positions[++ppos] = label.depth;
-          texCoords[tpos] = texture.atlasBR.x;
-          texCoords[++tpos] = texture.atlasBR.y;
-          texCoords[++tpos] = label.color.opacity;
-          colors[cpos] = label.color.r;
-          colors[++cpos] = label.color.g;
-          colors[++cpos] = label.color.b;
           // TR
           positions[++ppos] = label.TR.x;
           positions[++ppos] = label.TR.y;
           positions[++ppos] = label.depth;
-          texCoords[++tpos] = texture.atlasTR.x;
+          texCoords[tpos] = texture.atlasTR.x;
           texCoords[++tpos] = texture.atlasTR.y;
           texCoords[++tpos] = label.color.opacity;
           colors[cpos] = label.color.r;
           colors[++cpos] = label.color.g;
           colors[++cpos] = label.color.b;
-          // BL
-          positions[++ppos] = label.BL.x;
-          positions[++ppos] = label.BL.y;
+          // BR
+          positions[++ppos] = label.BR.x;
+          positions[++ppos] = label.BR.y;
           positions[++ppos] = label.depth;
-          texCoords[++tpos] = texture.atlasBL.x;
-          texCoords[++tpos] = texture.atlasBL.y;
+          texCoords[++tpos] = texture.atlasBR.x;
+          texCoords[++tpos] = texture.atlasBR.y;
           texCoords[++tpos] = label.color.opacity;
-          colors[++cpos] = label.color.r;
+          colors[cpos] = label.color.r;
           colors[++cpos] = label.color.g;
           colors[++cpos] = label.color.b;
           // TL
@@ -625,10 +617,20 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           colors[++cpos] = label.color.r;
           colors[++cpos] = label.color.g;
           colors[++cpos] = label.color.b;
+          // BL
+          positions[++ppos] = label.BL.x;
+          positions[++ppos] = label.BL.y;
+          positions[++ppos] = label.depth;
+          texCoords[++tpos] = texture.atlasBL.x;
+          texCoords[++tpos] = texture.atlasBL.y;
+          texCoords[++tpos] = label.color.opacity;
+          colors[++cpos] = label.color.r;
+          colors[++cpos] = label.color.g;
+          colors[++cpos] = label.color.b;
 
           // Copy last vertex again for degenerate tri
-          positions[++ppos] = label.TL.x;
-          positions[++ppos] = label.TL.y;
+          positions[++ppos] = label.BL.x;
+          positions[++ppos] = label.BL.y;
           positions[++ppos] = label.depth;
         },
       );
@@ -649,47 +651,37 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
         interactiveLabels, this.interactiveLabelBufferItems,
         numVerticesPerQuad, labels.length,
         function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number, texCoords: Float32Array, tpos: number) {
-          label = labels[i];
+         label = labels[i];
           texture = label.rasterizedLabel;
           // Make sure the label is updated with it's latest metrics
           label.update();
 
           // Copy first vertex twice for intro degenerate tri
-          positions[ppos] = label.BR.x;
-          positions[++ppos] = label.BR.y;
+          positions[ppos] = label.TR.x;
+          positions[++ppos] = label.TR.y;
           positions[++ppos] = label.depth;
           // Skip over degenerate tris color and tex
           cpos += colorAttributeSize;
           tpos += texCoordAttributeSize;
 
-          // BR
-          positions[++ppos] = label.BR.x;
-          positions[++ppos] = label.BR.y;
-          positions[++ppos] = label.depth;
-          texCoords[tpos] = texture.atlasBR.x;
-          texCoords[++tpos] = texture.atlasBR.y;
-          texCoords[++tpos] = label.color.opacity;
-          colors[cpos] = label.color.r;
-          colors[++cpos] = label.color.g;
-          colors[++cpos] = label.color.b;
           // TR
           positions[++ppos] = label.TR.x;
           positions[++ppos] = label.TR.y;
           positions[++ppos] = label.depth;
-          texCoords[++tpos] = texture.atlasTR.x;
+          texCoords[tpos] = texture.atlasTR.x;
           texCoords[++tpos] = texture.atlasTR.y;
           texCoords[++tpos] = label.color.opacity;
           colors[cpos] = label.color.r;
           colors[++cpos] = label.color.g;
           colors[++cpos] = label.color.b;
-          // BL
-          positions[++ppos] = label.BL.x;
-          positions[++ppos] = label.BL.y;
+          // BR
+          positions[++ppos] = label.BR.x;
+          positions[++ppos] = label.BR.y;
           positions[++ppos] = label.depth;
-          texCoords[++tpos] = texture.atlasBL.x;
-          texCoords[++tpos] = texture.atlasBL.y;
+          texCoords[++tpos] = texture.atlasBR.x;
+          texCoords[++tpos] = texture.atlasBR.y;
           texCoords[++tpos] = label.color.opacity;
-          colors[++cpos] = label.color.r;
+          colors[cpos] = label.color.r;
           colors[++cpos] = label.color.g;
           colors[++cpos] = label.color.b;
           // TL
@@ -702,10 +694,20 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
           colors[++cpos] = label.color.r;
           colors[++cpos] = label.color.g;
           colors[++cpos] = label.color.b;
+          // BL
+          positions[++ppos] = label.BL.x;
+          positions[++ppos] = label.BL.y;
+          positions[++ppos] = label.depth;
+          texCoords[++tpos] = texture.atlasBL.x;
+          texCoords[++tpos] = texture.atlasBL.y;
+          texCoords[++tpos] = label.color.opacity;
+          colors[++cpos] = label.color.r;
+          colors[++cpos] = label.color.g;
+          colors[++cpos] = label.color.b;
 
           // Copy last vertex again for degenerate tri
-          positions[++ppos] = label.TL.x;
-          positions[++ppos] = label.TL.y;
+          positions[++ppos] = label.BL.x;
+          positions[++ppos] = label.BL.y;
           positions[++ppos] = label.depth;
         },
       );

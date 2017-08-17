@@ -14,7 +14,7 @@ export class Bounds<T> {
 
   /** The bottom coordinate for this instance (y + height) */
   get bottom() {
-    return this.y + this.height;
+    return this.y - this.height;
   }
 
   height = 0;
@@ -25,7 +25,7 @@ export class Bounds<T> {
   get mid() {
     return {
       x: this.x + (this.width / 2),
-      y: this.y + (this.height / 2),
+      y: this.y - (this.height / 2),
     };
   }
 
@@ -52,7 +52,7 @@ export class Bounds<T> {
       this.x = left;
       this.width = right - left;
       this.y = top;
-      this.height = bottom - top;
+      this.height = top - bottom;
     }
   }
 
@@ -66,7 +66,7 @@ export class Bounds<T> {
       return false;
     }
 
-    if (point.y < this.y) {
+    if (point.y > this.y) {
       return false;
     }
 
@@ -74,7 +74,7 @@ export class Bounds<T> {
       return false;
     }
 
-    if (point.y > this.bottom) {
+    if (point.y < this.bottom) {
       return false;
     }
 
@@ -107,8 +107,8 @@ export class Bounds<T> {
       this.x = bounds.x;
     }
 
-    if (bounds.y < this.y) {
-      this.height += this.y - bounds.y;
+    if (bounds.y > this.y) {
+      this.height += bounds.y - this.y;
       this.y = bounds.y;
     }
 
@@ -116,8 +116,8 @@ export class Bounds<T> {
       this.width = bounds.right - this.x;
     }
 
-    if (bounds.bottom > this.bottom) {
-      this.height = bounds.bottom - this.y;
+    if (bounds.bottom < this.bottom) {
+      this.height = this.y - bounds.bottom;
     }
   }
 
@@ -151,17 +151,17 @@ export class Bounds<T> {
       else if (p.right > maxX) {
         maxX = p.right;
       }
-      if (p.y < minY) {
-        minY = p.y;
+      if (p.bottom < minY) {
+        minY = p.bottom;
       }
-      else if (p.bottom > maxY) {
-        maxY = p.bottom;
+      else if (p.y > maxY) {
+        maxY = p.y;
       }
     });
 
     // Make bounds that encompasses the bounds list, then we encapsulate
     // Those bounds
-    this.encapsulate(new Bounds<any>(minX, maxX, minY, maxY));
+    this.encapsulate(new Bounds<any>(minX, maxX, maxY, minY));
   }
 
   /**
@@ -178,8 +178,8 @@ export class Bounds<T> {
       this.x = point.x;
     }
 
-    if (point.y < this.y) {
-      this.height += this.y - point.y;
+    if (point.y > this.y) {
+      this.height += point.y - this.y;
       this.y = point.y;
     }
 
@@ -187,8 +187,8 @@ export class Bounds<T> {
       this.width = point.x - this.x;
     }
 
-    if (point.y > this.bottom) {
-      this.height = point.y - this.y;
+    if (point.y < this.bottom) {
+      this.height = this.y - point.y;
     }
   }
 
@@ -241,7 +241,7 @@ export class Bounds<T> {
 
     // Make bounds that encompasses the points, then we encapsulate
     // Those bounds
-    this.encapsulate(new Bounds<any>(minX, maxX, minY, maxY));
+    this.encapsulate(new Bounds<any>(minX, maxX, maxY, minY));
   }
 
   /**
@@ -277,8 +277,8 @@ export class Bounds<T> {
   hitBounds(bounds : Bounds<T>) {
     if (bounds.right < this.x) { return false; }
     if (bounds.x > this.right) { return false; }
-    if (bounds.bottom < this.y) { return false; }
-    if (bounds.y > this.bottom) { return false; }
+    if (bounds.bottom > this.y) { return false; }
+    if (bounds.y < this.bottom) { return false; }
 
     return true;
   }
@@ -294,13 +294,13 @@ export class Bounds<T> {
     if (p.x < this.x) {
       return false;
     }
-    if (p.y < this.y) {
+    if (p.y > this.y) {
       return false;
     }
     if (p.x > this.right) {
       return false;
     }
-    if (p.y > this.bottom) {
+    if (p.y < this.bottom) {
       return false;
     }
     return true;
@@ -336,8 +336,8 @@ export class Bounds<T> {
     return (
       bounds.x <= this.x &&
       bounds.right >= this.right &&
-      bounds.y <= this.y &&
-      bounds.bottom >= this.bottom
+      bounds.y >= this.y &&
+      bounds.bottom <= this.bottom
     );
   }
 

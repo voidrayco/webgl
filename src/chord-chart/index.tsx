@@ -90,7 +90,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   /** Selection manager */
   selection: Selection = new Selection();
   // Make sure we don't recreate the bound object
-  viewport: Bounds<never> = new Bounds<never>(-350, 350, -350, 350);
+  viewport: Bounds<never> = new Bounds<never>(-350, 350, 350, -350);
 
   // Sets the default state
   state: IChordChartState = {

@@ -48,7 +48,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       const { r, g, b } = segment.color;
       const color = hasSelection ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
 
-      const curve = new CurvedLineShape<IOuterRingData>(
+    const curve = new CurvedLineShape<IOuterRingData>(
         CurveType.CircularCCW,
         {x: segment.p1.x, y: segment.p1.y},
         {x: segment.p2.x, y: segment.p2.y},
@@ -63,6 +63,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         chords: [],
         source: segment.source,
       };
+      debug('curve is %o x: %o y: %o width:%o height:%o  bottom:%o', segment.source.name, curve.x, curve.y, curve.width, curve.height, curve.bottom);
 
       return curve;
     });

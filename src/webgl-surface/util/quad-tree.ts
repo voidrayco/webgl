@@ -136,7 +136,7 @@ export class Node<T extends Bounds<any>> {
 
     // Otherwise, make tiny start area
     else {
-      this.bounds = new Bounds(0, 1, 0, 1);
+      this.bounds = new Bounds(0, 1, 1, 0);
     }
 
     // Ensure the depth is set
@@ -194,14 +194,14 @@ export class Node<T extends Bounds<any>> {
 
     // Get the dimensions of the new bounds
     children.forEach(child => {
-      if (child.x < minX)      { minX = child.x; }
+      if (child.x < minX) { minX = child.x; }
       if (child.right > maxX)  { maxX = child.right; }
-      if (child.y < minY)      { minY = child.y; }
-      if (child.bottom > maxY) { maxY = child.bottom; }
+      if (child.bottom < minY) { minY = child.bottom; }
+      if (child.y > maxY) { maxY = child.y; }
     });
 
     // Make sure our bounds includes the specified bounds
-    this.cover(new Bounds(minX, maxX, minY, maxY));
+    this.cover(new Bounds(minX, maxX, maxY, minY));
     // Add all of the children into the tree
     children.forEach((child, index) => this.doAdd(child));
   }
