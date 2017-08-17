@@ -363,7 +363,6 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
             */
         render(): JSX.Element;
 }
-export default ChordChart;
 
 export enum SelectionType {
     MOUSEOVER_OUTER_RING = 0,
@@ -2208,50 +2207,3 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
             */
         render(): JSX.Element;
 }
-
-export interface IChordChartProps {
-        onEndPointClick?(curve: CurvedLineShape<any>): void;
-        hemiSphere: boolean;
-        data: IData;
-}
-export interface IChordChartState {
-        zoom: number;
-        data: IData;
-}
-/**
-    * This defines a component that will render some test results. The shapes
-    * rendered will be quads or bezier curves. The quads are for sanity and
-    * debugging purposes.
-    */
-export class ChordChart extends React.Component<IChordChartProps, IChordChartState> {
-        /** Indicates if this component has fully mounted already or not */
-        initialized: boolean;
-        /** This is the generator that produces the buffers for our quads */
-        chordGenerator: ChordGenerator;
-        /** This is the generator that produces the buffers for our labels */
-        labelGenerator: LabelGenerator;
-        /** This is the generator that produces the buffers for our outer rings */
-        outerRingGenerator: OuterRingGenerator;
-        /** Selection manager */
-        selection: Selection;
-        viewport: Bounds<never>;
-        state: IChordChartState;
-        /**
-            * @override
-            * We initialize any needed state here
-            */
-        componentWillMount(): void;
-        componentWillReceiveProps(nextProps: any): void;
-        componentDidMount(): void;
-        handleZoomRequest: (zoom: number) => void;
-        handleMouseHover: (selections: any[], mouse: any, world: any, projection: any) => void;
-        handleMouseLeave: (selections: any[], mouse: any, world: any, projection: any) => void;
-        handleMouseUp: (selections: any[], mouse: any, world: any, projection: any) => void;
-        /**
-            * @override
-            * The react render method
-            */
-        render(): JSX.Element;
-}
-export default ChordChart;
-

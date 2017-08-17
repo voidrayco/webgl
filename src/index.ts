@@ -1,1 +1,1 @@
-export { default as ChordChart } from './chord-chart';
+export { ChordChart } from './chord-chart';

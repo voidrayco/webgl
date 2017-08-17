@@ -257,5 +257,3 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     );
   }
 }
-
-export default ChordChart;

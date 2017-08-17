@@ -56111,7 +56111,7 @@ var formatIso = Date.prototype.toISOString
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var chord_chart_1 = __webpack_require__(209);
-exports.ChordChart = chord_chart_1.default;
+exports.ChordChart = chord_chart_1.ChordChart;
 
 
 /***/ }),
@@ -56312,7 +56312,6 @@ class ChordChart extends React.Component {
     }
 }
 exports.ChordChart = ChordChart;
-exports.default = ChordChart;
 
 
 /***/ }),
