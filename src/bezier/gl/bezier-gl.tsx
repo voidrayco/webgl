@@ -21,7 +21,7 @@ function isBufferAttributes(value: any): value is BufferAttribute {
 }
 
 // Local component properties interface
-interface IBezierGLProperties extends IWebGLSurfaceProperties {
+export interface IBezierGLProperties extends IWebGLSurfaceProperties {
   /** The base, infrequently redrawn */
   quads?: QuadShape<IQuadShapeData>[]
 }
