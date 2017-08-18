@@ -2,6 +2,10 @@ box: kkarczmarczyk/node-yarn
 build:
   steps:
     - script:
+      name: Clean up
+      code: |
+        rm -rf ./node_modules
+    - script:
       name: Yarn Install
       code: |
         yarn install
