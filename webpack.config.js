@@ -21,24 +21,30 @@ let library;
 let libraryTarget;
 
 if (isProduction) {
-  plugins.push(
-    new DtsBundlePlugin({
-      input: resolve('dist/src'),
-      out: path.join(resolve('dist'), 'index.d.ts'),
-    })
-  );
-
+  // List our external libs for the library generation so they do
+  // not get bundled into ours
   externals = [
-    'react',
-    'react-dom',
-    'threejs',
     'd3-color',
     'd3-scale',
     'ramda',
+    'react-dom',
+    'react',
+    'threejs',
   ];
 
+  // We are bundling a library so set the output targets correctly
   library = 'voidgl';
   libraryTarget = 'umd';
+
+  // Add our bundler as a plugin so we can perform the bundling AFTER webpack
+  // has generated the proper files
+  plugins.push(
+    new DtsBundlePlugin({
+      input: resolve('dist/src'),
+      moduleName: 'voidgl',
+      out: path.join(resolve('dist'), 'index.d.ts'),
+    })
+  );
 }
 
 module.exports = {

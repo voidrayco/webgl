@@ -39,7 +39,6 @@ import { BufferGeometry } from 'three';
 import { Vector2 } from 'three';
 import { OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
 
-
 export interface ICurveData {
     color: RGBColor;
     controlPoint: IPoint;
@@ -2209,5 +2208,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       */
     render(): JSX.Element;
 }
+
 
 }
