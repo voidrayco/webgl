@@ -7,7 +7,7 @@
 		exports["voidgl"] = factory(require("d3-color"), require("ramda"), require("react"), require("d3-scale"));
 	else
 		root["voidgl"] = factory(root["d3-color"], root["ramda"], root["react"], root["d3-scale"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_7__, __WEBPACK_EXTERNAL_MODULE_13__, __WEBPACK_EXTERNAL_MODULE_32__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_13__, __WEBPACK_EXTERNAL_MODULE_32__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -44770,12 +44770,18 @@ exports.ShapeBufferCache = ShapeBufferCache;
 
 /***/ }),
 /* 6 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
+
+/***/ }),
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const ramda_1 = __webpack_require__(7);
+const ramda_1 = __webpack_require__(6);
 const interpolation_1 = __webpack_require__(18);
 const bounds_1 = __webpack_require__(1);
 const line_1 = __webpack_require__(8);
@@ -45201,12 +45207,6 @@ exports.CurvedLine = CurvedLine;
 
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_7__;
-
-/***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -45531,7 +45531,7 @@ exports.Point = Point;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const d3_color_1 = __webpack_require__(3);
-const curved_line_1 = __webpack_require__(6);
+const curved_line_1 = __webpack_require__(7);
 const line_1 = __webpack_require__(8);
 const point_1 = __webpack_require__(9);
 /**
@@ -45759,7 +45759,30 @@ function _recalculateFlowCounts(node, flows) {
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-function recalculateTree(tree, flows) {
+function recalculateTree(endpoints, flows) {
+    let tree = [];
+    const endpointById = new Map();
+    endpoints.forEach(endpoint => endpointById.set(endpoint.id, endpoint));
+    endpoints.forEach(endpoint => {
+        // Ensure every endpoint has a child list
+        endpoint.children = endpoint.children || [];
+        // If the endpoint has a parent, then add it to that parent's list
+        if (endpoint.parent) {
+            const parent = endpointById.get(endpoint.parent);
+            if (parent) {
+                parent.children = parent.children || [];
+                parent.children.push(endpoint);
+            }
+            else {
+                // There is something wrong. Endpoint must have a valid parent id or no id
+                // At all
+                throw new Error('Endpoint specified a parent id that does not exist in the endpoint listing.');
+            }
+        }
+        else {
+            tree.push(endpoint);
+        }
+    });
     // Recalculates subtree for passed in tree node -- modifies passed in object
     const _recalculateSubtree = (parent) => {
         parent = typeof parent !== 'undefined' ? parent : null;
@@ -46508,9 +46531,10 @@ exports.ChordChart = chord_chart_1.ChordChart;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+const ramda_1 = __webpack_require__(6);
 const React = __webpack_require__(13);
 const bounds_1 = __webpack_require__(1);
-const curved_line_1 = __webpack_require__(6);
+const curved_line_1 = __webpack_require__(7);
 const chord_generator_1 = __webpack_require__(22);
 const label_generator_1 = __webpack_require__(26);
 const outer_ring_generator_1 = __webpack_require__(30);
@@ -46529,7 +46553,7 @@ function isChord(curve) {
     return false;
 }
 function recalculateTreeForData(data) {
-    data.tree = endpointDataProcessing_1.recalculateTree(data.tree, data.flows);
+    data.tree = endpointDataProcessing_1.recalculateTree(data.endpoints, data.flows);
     data.endpoints = endpointDataProcessing_1.getTreeLeafNodes(data.tree);
     data.endpointById = new Map();
     data.topEndPointByEndPointId = new Map();
@@ -46650,7 +46674,9 @@ class ChordChart extends React.Component {
                 else {
                     selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
                 }
-                this.props.onEndPointClick(selection);
+                if (this.props.onEndPointClick && selection.d.source.id) {
+                    this.props.onEndPointClick(selection.d.source.id);
+                }
             }
         };
     }
@@ -46662,13 +46688,13 @@ class ChordChart extends React.Component {
         this.chordGenerator = new chord_generator_1.ChordGenerator();
         this.labelGenerator = new label_generator_1.LabelGenerator();
         this.outerRingGenerator = new outer_ring_generator_1.OuterRingGenerator();
-        const data = Object.assign({}, this.props.data);
+        const data = ramda_1.clone(this.props.data);
         recalculateTreeForData(data);
         this.setState({ data });
     }
     componentWillReceiveProps(nextProps) {
-        if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
-            const data = Object.assign({}, nextProps.data);
+        if (nextProps.data) {
+            const data = ramda_1.clone(nextProps.data);
             recalculateTreeForData(data);
             this.setState({ data });
         }
@@ -47544,7 +47570,7 @@ exports.CustomSelection = CustomSelection;
 Object.defineProperty(exports, "__esModule", { value: true });
 const d3_color_1 = __webpack_require__(3);
 const curved_line_shape_1 = __webpack_require__(10);
-const curved_line_1 = __webpack_require__(6);
+const curved_line_1 = __webpack_require__(7);
 const shape_buffer_cache_1 = __webpack_require__(5);
 const selection_1 = __webpack_require__(2);
 const endpointDataProcessing_1 = __webpack_require__(11);
@@ -47655,7 +47681,7 @@ class ChordBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
                                 ancestor2.startAngle + padding / 2 + (p2FlowAngle - ancestor2.startAngle) * scale2;
                         }
                         const p2 = calculatePoint(circleRadius - 0.5 * ringWidth - segmentRowPadding, p2FlowAngle, splitTopLevelGroups);
-                        const color = d3_color_1.rgb(d3_color_1.hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
+                        const color = d3_color_1.rgb(0.2, 0.3, 1.0, 1.0);
                         endpoint._outflowIdx++;
                         destEndpoint._inflowIdx++;
                         curveData.push({
@@ -47921,7 +47947,7 @@ exports.LabelBaseCache = LabelBaseCache;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const d3_color_1 = __webpack_require__(3);
-const ramda_1 = __webpack_require__(7);
+const ramda_1 = __webpack_require__(6);
 const rotateable_quad_1 = __webpack_require__(14);
 const sprite_1 = __webpack_require__(29);
 const measurement = new sprite_1.Sprite(200, 200, 1, 1);
@@ -48171,7 +48197,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const d3_color_1 = __webpack_require__(3);
 const d3_scale_1 = __webpack_require__(32);
 const curved_line_shape_1 = __webpack_require__(10);
-const curved_line_1 = __webpack_require__(6);
+const curved_line_1 = __webpack_require__(7);
 const shape_buffer_cache_1 = __webpack_require__(5);
 const selection_1 = __webpack_require__(2);
 const endpointDataProcessing_1 = __webpack_require__(11);
@@ -49577,7 +49603,7 @@ exports.BufferUtil = BufferUtil;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const ramda_1 = __webpack_require__(7);
+const ramda_1 = __webpack_require__(6);
 const React = __webpack_require__(13);
 const three_1 = __webpack_require__(4);
 const atlas_manager_1 = __webpack_require__(37);

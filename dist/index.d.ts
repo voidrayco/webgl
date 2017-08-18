@@ -321,7 +321,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 }
 
 export interface IChordChartProps {
-    onEndPointClick?(curve: CurvedLineShape<any>): void;
+    onEndPointClick?(endpointId: string): void;
     hemiSphere: boolean;
     data: IData;
 }
@@ -393,7 +393,7 @@ export interface IOuterRingData {
   * @param {IEndpoint[]} endpoints - graph endpoint set
   * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
   */
-export function recalculateTree(tree: IEndpoint[], flows: IChord[]): IEndpoint[];
+export function recalculateTree(endpoints: IEndpoint[], flows: IChord[]): IEndpoint[];
 /**
   * Traverses tree structure with provided algorithm path, executing callback function at each node. If callback returns true, traversal is terminated.
   *
