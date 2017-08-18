@@ -641,7 +641,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         // Ensure we have our quad tree available even if it is empty
         if (!this.quadTree) {
-          this.quadTree = new QuadTree<Bounds<any>>(0, 1, 0, 1);
+          this.quadTree = new QuadTree<Bounds<any>>(0, 1, 1, 0);
         }
 
         return {};
@@ -902,8 +902,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       new Bounds(
         tl.x,
         br.x,
-        br.y,
         tl.y,
+        br.y,
       ),
     );
 

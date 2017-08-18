@@ -19,7 +19,7 @@ export class Line<T> extends Bounds<T> {
    * @param {IPoint} p2 The end point
    */
   constructor(p1: IPoint, p2: IPoint) {
-    super(0, 1, 0, 1);
+    super(0, 1, 1, 0);
     this.setPoints(p1, p2);
   }
 
