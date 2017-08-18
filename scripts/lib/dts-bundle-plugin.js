@@ -19,13 +19,14 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
 
     console.log('Bundling type declarations', input);
     dts.bundle({
-      baseDir: input + '  ',
+      // baseDir: input,
       indent: '  ',
       name: 'voidgl',
       main: path.join(input, '**/*.d.ts'),
+      // main: path.join(input, 'index.d.ts'),
       out: out,
       removeSource: true,
-      outputAsModuleFolder: false,
+      outputAsModuleFolder: true,
       module: 'commonjs',
       verbose: false,
 
