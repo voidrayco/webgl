@@ -52,7 +52,37 @@ function _recalculateFlowCounts(node: IEndpoint, flows: IChord[]) {
  * @param {IEndpoint[]} endpoints - graph endpoint set
  * @returns {IEndpoint[]} endpoint tree - with children[], startAngle, endAngle populated
  */
-export function recalculateTree(tree: IEndpoint[], flows: IChord[]) {
+export function recalculateTree(endpoints: IEndpoint[], flows: IChord[]) {
+  let tree: IEndpoint[] = [];
+  const endpointById = new Map<string, IEndpoint>();
+  endpoints.forEach(endpoint => endpointById.set(endpoint.id, endpoint));
+
+  endpoints.forEach(endpoint => {
+    // Ensure every endpoint has a child list
+    endpoint.children = endpoint.children || [];
+
+    // If the endpoint has a parent, then add it to that parent's list
+    if (endpoint.parent) {
+      const parent = endpointById.get(endpoint.parent);
+
+      if (parent) {
+        parent.children = parent.children || [];
+        parent.children.push(endpoint);
+      }
+
+      else {
+        // There is something wrong. Endpoint must have a valid parent id or no id
+        // At all
+        throw new Error('Endpoint specified a parent id that does not exist in the endpoint listing.');
+      }
+    }
+
+    // Otherwise, the endpoint is top level grouping
+    else {
+      tree.push(endpoint);
+    }
+  });
+
   // Recalculates subtree for passed in tree node -- modifies passed in object
   const _recalculateSubtree = (parent: IEndpoint) => {
     parent = typeof parent !== 'undefined' ? parent : null;

@@ -1,80 +1,21 @@
-import { clone, difference, union } from 'ramda';
+import { HSLColor } from 'd3-color';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from '../src/bezier';
 import { IQuadShapeData } from '../src/bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from '../src/chord-chart';
 import { IChord, IEndpoint } from '../src/chord-chart/generators/types';
-import { addPropertiesToEndpoints, polarizeStartAndEndAngles, setEndpointFlowCounts } from './util/iEndpoint';
-import { addEndpointToTree, createRandomLeafEndpoint, generateTree, removeEndpointFromTree, selectRandomLeafEndpoint } from './util/iEndpoint-tree';
-import { createRandomFlows, selectRandomFlows } from './util/iFlow';
 
-const debug = require('debug')('main');
-
-const CHORD_CHANGE_QTY = 5;
 const testChordData = require('./chord-test-data/two.json');
-const flows = clone(testChordData.flows);
-const endpoints = clone(testChordData.endpoints);
+const chords: IChord[] = testChordData.flows;
+const endpoints: IEndpoint[] = testChordData.endpoints;
 
 /**
  * The state of the application
  */
 export interface IMainState {
   currentTab: number,
-  flows: IChord[];
-  tree: IEndpoint[];
   zoom: number,
-}
-
-function getNewTreeById(tree: IEndpoint[], id: string, childrenNumber: number) {
-  tree.forEach((t) => {
-    if (t.id === id && t.children.length === 0) {
-      for (let i = 0; i < childrenNumber; i++ ) {
-        t.children.push({
-          children: [],
-          endAngle: undefined,
-          id: t.id.concat(String(i)),
-          incomingCount: 0,
-          name: t.name.concat(String(i)),
-          outgoingCount: 0,
-          parent: t.id,
-          startAngle: undefined,
-          totalCount: 0,
-          weight: 1,
-        });
-      }
-    }else{
-      getNewTreeById(t.children, id, childrenNumber);
-    }
-  });
-  return tree;
-}
-
-function getNewFlowsById(flows: IChord[], id: string, childrenNumber: number) {
-  const relatedFlows = flows.filter(f => f.srcTarget === id || f.dstTarget === id);
-  const flowLength = relatedFlows.length;
-  if (flowLength === 0) return flows;
-  const segmentSize = Math.ceil(flowLength / childrenNumber);
-  let count = 0;
-  flows.forEach((f) => {
-    if (f.srcTarget === id || f.dstTarget === id) {
-      let newId = id;
-      for (let i = 0; i < childrenNumber; i++) {
-        if (i < childrenNumber - 1) {
-            if (count >= segmentSize * i && count < segmentSize * (i + 1)){
-                newId = newId.concat(String(i));
-            }
-        }
-        else {
-          if (count >= segmentSize * i) newId = newId.concat(String(i));
-        }
-      }
-      f.srcTarget === id ? f.srcTarget = newId : f.dstTarget = newId;
-      count++;
-    }
-  });
-
-  return flows;
 }
 
 /**
@@ -84,23 +25,60 @@ export class Main extends React.Component<any, IMainState> {
   // Set default state values
   state: IMainState = {
     currentTab: 1,
-    flows: flows,
-    tree: this.buildTree(endpoints, flows),
     zoom: 1,
   };
 
-  buildTree(endpoints: IEndpoint[], flows: IChord[]){
-    endpoints = addPropertiesToEndpoints( polarizeStartAndEndAngles( setEndpointFlowCounts(endpoints, flows)));
-    const tree: IEndpoint[] = generateTree(endpoints, flows);
-    return tree;
-  }
-
-  handleEndPointClicked = (selection : any) => {
-    const selectedId = selection.d.source.id;
+  handleEndPointClicked = (selection : string) => {
+    const endpoint: IEndpoint = endpoints.find(end => end.id === selection);
+    const startChords: IChord[] = chords.filter(chord => chord.srcTarget === selection);
+    const endChords: IChord[] = chords.filter(chord => chord.dstTarget === selection);
     const childrenNumber = 2 + Math.floor(4 * Math.random());
-    const newTree = getNewTreeById(this.state.tree, selectedId, childrenNumber);
-    const newFlows = getNewFlowsById(this.state.flows, selectedId, childrenNumber);
-    this.setState({tree: newTree, flows: newFlows});
+    const shiftStartNumber = Math.floor(startChords.length / childrenNumber);
+    const shiftEndNumber = Math.floor(endChords.length / childrenNumber);
+
+    let newEndpoint: IEndpoint;
+
+    // Generate new child endpoints for the endpoint and shift any chords
+    // Pointing to it, to it's children (evenly dispersed)
+    for (let i = 0; i < childrenNumber; ++i) {
+      newEndpoint = {
+        id: `${endpoint.id}_${i}`,
+        name: `${endpoint.name}_${i}`,
+        parent: endpoint.id,
+        weight: endpoint.weight / childrenNumber,
+      };
+
+      if (startChords.length > 0) {
+        for (let k = 0; k < shiftStartNumber; ++k) {
+          const chord = startChords.pop();
+          chord.srcTarget = newEndpoint.id;
+        }
+      }
+
+      if (endChords.length > 0) {
+        for (let k = 0; k < shiftEndNumber; ++k) {
+          const chord = endChords.pop();
+          chord.dstTarget = newEndpoint.id;
+        }
+      }
+
+      endpoints.push(newEndpoint);
+    }
+
+    // Push any remaining chords to the last new endpoint
+    if (newEndpoint) {
+      while (startChords.length > 0) {
+        const chord = startChords.pop();
+        chord.srcTarget = newEndpoint.id;
+      }
+
+      while (endChords.length > 0) {
+        const chord = endChords.pop();
+        chord.dstTarget = newEndpoint.id;
+      }
+    }
+
+    this.forceUpdate();
   }
 
   handleZoomRequest = (zoom: number) => {
@@ -113,48 +91,65 @@ export class Main extends React.Component<any, IMainState> {
    * Splits an existing leaf-level endpoint (with minimum size criteria) into two endpoints
    */
   addEndpoint = () => {
-    let tree = this.state.tree;
-    const newEndpoint = createRandomLeafEndpoint(tree);  // Generate random tree endpoint
+    const endpoint: IEndpoint = {
+      id: `New Endpoint ${Math.floor((Math.random() * 1000000))}`,
+      name: `New Endpoint ${Math.floor((Math.random() * 1000000))}`,
+      parent: endpoints[Math.floor(Math.random() * endpoints.length)].id,
+      weight: Math.random() * 100 + 10,
+    };
 
-    if (newEndpoint) tree = addEndpointToTree(newEndpoint, tree);
-    this.setState({
-      tree,
-    });
+    endpoints.push(endpoint);
+
+    this.forceUpdate();
   }
 
   /**
    * Removes an existing leaf-level endpoint, adjusting other endpoints to fill in space
    */
   removeEndpoint = () => {
-    const tree = this.state.tree;
-    const flows = this.state.flows;
-    const endpoint = selectRandomLeafEndpoint(tree);
-    const updated = removeEndpointFromTree(endpoint, tree, flows);
-    this.setState({tree: updated.tree, flows: updated.flows});
+    if (endpoints.length > 1) {
+      endpoints.splice(
+        Math.floor(endpoints.length * Math.random()),
+        1,
+      );
+
+      this.forceUpdate();
+    }
   }
 
   /**
    * Adds random chords to existing end points
    */
   addChords = () => {
-    const tree = this.state.tree;
-    const flows = this.state.flows;
-    const newFlows = createRandomFlows(CHORD_CHANGE_QTY, flows, tree); // Generate random flows
-    const updatedFlows = union(flows, newFlows);
-    this.setState({flows: updatedFlows});
+    for (let i = 0; i < 10; ++i) {
+      const start = endpoints[Math.floor(Math.random() * endpoints.length)];
+      let end = start;
+
+      while (end.id === start.id) {
+        end = endpoints[Math.floor(Math.random() * endpoints.length)];
+      }
+
+      const chord: IChord = {
+        baseColor: {h: 1, s: 1, l: 1, opacity: 1} as HSLColor,
+        dstTarget: end.id,
+        srcTarget: start.id,
+      };
+
+      chords.push(chord);
+    }
+
+    this.forceUpdate();
   }
 
   /**
    * Removes chords from existing end points
    */
   removeChords = () => {
-    const flows = this.state.flows;
-    const removeFlows = selectRandomFlows(CHORD_CHANGE_QTY, flows);
-    const updatedFlows = difference(flows, removeFlows);
+    for (let i = 0; i < 10 && chords.length > 1; ++i) {
+      chords.splice(Math.floor(Math.random() * chords.length), 1);
+    }
 
-    this.setState({
-      flows: updatedFlows,
-    });
+    this.forceUpdate();
   }
 
   /**
@@ -184,13 +179,9 @@ export class Main extends React.Component<any, IMainState> {
       component = (
         <Bezier quadData={quadData}/>
       );
-      debug('tree is %o', this.state.tree);
     }
 
     if (this.state.currentTab === 1) {
-      testChordData.flows = this.state.flows;
-      testChordData.tree = this.state.tree;
-
       component = (
         <ChordChart
           onEndPointClick={this.handleEndPointClicked}

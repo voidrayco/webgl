@@ -41,7 +41,7 @@ if (isProduction) {
   plugins.push(
     new DtsBundlePlugin({
       input: resolve('dist/src'),
-      moduleName: 'voidgl',
+      moduleName: library,
       out: path.join(resolve('dist'), 'index.d.ts'),
     })
   );

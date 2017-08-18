@@ -1,5 +1,5 @@
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
-import { hsl, rgb, RGBColor } from 'd3-color';
+import { rgb, RGBColor } from 'd3-color';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { IPoint } from 'webgl-surface/primitives/point';
@@ -182,7 +182,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               splitTopLevelGroups,
             );
 
-            const color = rgb(hsl(flow.baseColor.h, flow.baseColor.s, flow.baseColor.l));
+            const color = rgb(0.2, 0.3, 1.0, 1.0);
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
 
