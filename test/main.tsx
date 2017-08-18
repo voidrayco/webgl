@@ -1,4 +1,3 @@
-import { HSLColor } from 'd3-color';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from '../src/bezier';
@@ -130,7 +129,6 @@ export class Main extends React.Component<any, IMainState> {
       }
 
       const chord: IChord = {
-        baseColor: {h: 1, s: 1, l: 1, opacity: 1} as HSLColor,
         dstTarget: end.id,
         srcTarget: start.id,
       };

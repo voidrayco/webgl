@@ -1,5 +1,6 @@
-import { color, rgb, RGBColor } from 'd3-color';
+import { color, rgb } from 'd3-color';
 import { scaleOrdinal, schemeCategory20 } from 'd3-scale';
+import { Color } from 'three';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { IPoint } from 'webgl-surface/primitives/point';
@@ -11,7 +12,7 @@ import { IChord, IChordChartConfig, IData, IEndpoint } from '../types';
 
 const debug = require('debug')('outer-ring-base');
 
-const DEPTH = 21;
+const DEPTH = 20;
 const FADED_ALPHA = 0.1;
 const UNFADED_ALPHA = 1.0;
 
@@ -20,7 +21,7 @@ interface IEndPointMetrics {
   p1: IPoint,
   p2: IPoint,
   controlPoint: IPoint,
-  color: RGBColor,
+  color: Color,
   flows: IChord[],
   source: IEndpoint,
 }
@@ -29,6 +30,8 @@ interface IEndPointMetrics {
  * Responsible for generating the static outer rings in the system
  */
 export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterRingData>> {
+  shapeById = new Map<string, CurvedLineShape<IOuterRingData>>();
+
   generate(data: IData, config: IChordChartConfig, selection: Selection) {
     super.generate.apply(this, arguments);
   }
@@ -36,6 +39,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
   buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
     const { ringWidth } = config;
 
+    this.shapeById = new Map<string, CurvedLineShape<IOuterRingData>>();
     const segments = this.preProcessData(data, config);
 
     // Check if a selection exists such that the base needs to be faded
@@ -46,16 +50,22 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
     const circleEdges = segments.map((segment: IEndPointMetrics) => {
       const { r, g, b } = segment.color;
-      const color = hasSelection ? rgb(r, g, b, FADED_ALPHA) : rgb(r, g, b, UNFADED_ALPHA);
+      const color = new Color(r, g, b);
+      const opacity = hasSelection ? FADED_ALPHA : UNFADED_ALPHA;
 
-    const curve = new CurvedLineShape<IOuterRingData>(
-        CurveType.CircularCCW,
-        {x: segment.p1.x, y: segment.p1.y},
-        {x: segment.p2.x, y: segment.p2.y},
-        [{x: segment.controlPoint.x, y: segment.controlPoint.y}],
-        rgb(color.r, color.g, color.b, color.opacity),
-        200,
-      );
+      const curve = new CurvedLineShape<IOuterRingData>({
+        controlPoints: [{x: segment.controlPoint.x, y: segment.controlPoint.y}],
+        depth: DEPTH,
+        end: {x: segment.p2.x, y: segment.p2.y},
+        endColor: color,
+        endOpacity: opacity,
+        lineWidth: ringWidth,
+        resolution: 200,
+        start: {x: segment.p1.x, y: segment.p1.y},
+        startColor: color,
+        startOpacity: opacity,
+        type: CurveType.CircularCCW,
+      });
 
       curve.lineWidth = ringWidth;
       curve.depth = DEPTH;
@@ -64,8 +74,8 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         source: segment.source,
       };
 
-      debug('segments are %o', curve.cachedSegments);
-      debug('curve is %o x: %o y: %o width:%o height:%o  bottom:%o', segment.source.name, curve.x, curve.y, curve.width, curve.height, curve.bottom);
+      // Keep a mapping of our shape by it's source identifier
+      this.shapeById.set(segment.source.id, curve);
 
       return curve;
     });
@@ -165,7 +175,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
           if (depth >= 2 && t.parent !== '') {
             segments.push({
-              color: colorVal,
+              color: new Color(colorVal.r / 255.0, colorVal.g / 255.0, colorVal.b / 255.0),
               controlPoint,
               flows,
               id: t.id,
@@ -228,7 +238,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);
 
       return {
-        color: colorVal,
+        color: new Color(colorVal.r / 255.0, colorVal.g / 255.0, colorVal.b / 255.0),
         controlPoint,
         flows,
         id: endpoint.id,

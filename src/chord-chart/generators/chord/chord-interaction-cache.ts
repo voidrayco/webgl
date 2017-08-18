@@ -22,6 +22,7 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICh
       const curvedLine = curve.clone();
 
       curvedLine.a = 1.0;
+      curvedLine.a2 = 1.0;
       curvedLine.depth = DEPTH;
 
       shapes.push(curvedLine);
