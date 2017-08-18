@@ -16,7 +16,6 @@
   "dependencies": {
     "@types/d3-color": "1.0.5",
     "@types/d3-scale": "1.0.10",
-    "@types/node": "8.0.7",
     "@types/ramda": "0.24.2",
     "@types/react": "15.0.22",
     "@types/react-dom": "15.5.1",
@@ -28,7 +27,7 @@
     "ramda": "0.24.1",
     "random": "github:tarwich/node-random#1.0.0",
     "raw-loader": "0.5.1",
-    "react": "15.6.1",
+    "react": "15.5.4",
     "react-dom": "15.6.1",
     "three": "0.86.0",
     "tslib": "1.7.1",
