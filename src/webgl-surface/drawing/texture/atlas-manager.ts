@@ -147,7 +147,7 @@ export class AtlasManager {
     if (loadedImage) {
       debug('Image loaded: %o', image.imagePath);
       // Now we create a Rectangle to store the image dimensions
-      const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, 0, image.pixelHeight);
+      const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, image.pixelHeight, 0);
       // Create ImageDimension to insert into our atlas mapper
       const dimensions: ImageDimensions = {
         first: image,
@@ -178,18 +178,19 @@ export class AtlasManager {
         const uy = insertedNode.nodeDimensions.y / this.textureHeight;
         const uw = insertedNode.nodeDimensions.width / this.textureWidth;
         const uh = insertedNode.nodeDimensions.height / this.textureHeight;
+        debugLabels('uy is %o', uy);
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,
           ux + uw,
-          1.0 - (uy + uh),
           1.0 - uy,
+          1.0 - (uy + uh),
         );
 
         image.atlasReferenceID = atlasName;
-        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y};
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y};
-        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y + atlasDimensions.height};
-        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y + atlasDimensions.height};
+        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
+        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
+        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
 
         // Now draw the image to the indicated canvas
         canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);

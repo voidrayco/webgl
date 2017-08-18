@@ -71,41 +71,31 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         label.update();
 
         // Copy first vertex twice for intro degenerate tri
-        positions[ppos] = label.BR.x;
-        positions[++ppos] = label.BR.y;
+        positions[ppos] = label.TR.x;
+        positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
         // Skip over degenerate tris color and tex
         cpos += colorAttributeSize;
         tpos += texCoordAttributeSize;
 
-        // BR
-        positions[++ppos] = label.BR.x;
-        positions[++ppos] = label.BR.y;
-        positions[++ppos] = label.depth;
-        texCoords[tpos] = texture.atlasBR.x;
-        texCoords[++tpos] = texture.atlasBR.y;
-        texCoords[++tpos] = label.color.opacity;
-        colors[cpos] = label.color.r;
-        colors[++cpos] = label.color.g;
-        colors[++cpos] = label.color.b;
         // TR
         positions[++ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
-        texCoords[++tpos] = texture.atlasTR.x;
+        texCoords[tpos] = texture.atlasTR.x;
         texCoords[++tpos] = texture.atlasTR.y;
         texCoords[++tpos] = label.color.opacity;
         colors[cpos] = label.color.r;
         colors[++cpos] = label.color.g;
         colors[++cpos] = label.color.b;
-        // BL
-        positions[++ppos] = label.BL.x;
-        positions[++ppos] = label.BL.y;
+        // BR
+        positions[++ppos] = label.BR.x;
+        positions[++ppos] = label.BR.y;
         positions[++ppos] = label.depth;
-        texCoords[++tpos] = texture.atlasBL.x;
-        texCoords[++tpos] = texture.atlasBL.y;
+        texCoords[++tpos] = texture.atlasBR.x;
+        texCoords[++tpos] = texture.atlasBR.y;
         texCoords[++tpos] = label.color.opacity;
-        colors[++cpos] = label.color.r;
+        colors[cpos] = label.color.r;
         colors[++cpos] = label.color.g;
         colors[++cpos] = label.color.b;
         // TL
@@ -118,10 +108,20 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = label.color.r;
         colors[++cpos] = label.color.g;
         colors[++cpos] = label.color.b;
+        // BL
+        positions[++ppos] = label.BL.x;
+        positions[++ppos] = label.BL.y;
+        positions[++ppos] = label.depth;
+        texCoords[++tpos] = texture.atlasBL.x;
+        texCoords[++tpos] = texture.atlasBL.y;
+        texCoords[++tpos] = label.color.opacity;
+        colors[++cpos] = label.color.r;
+        colors[++cpos] = label.color.g;
+        colors[++cpos] = label.color.b;
 
         // Copy last vertex again for degenerate tri
-        positions[++ppos] = label.TL.x;
-        positions[++ppos] = label.TL.y;
+        positions[++ppos] = label.BL.x;
+        positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
       },
     );

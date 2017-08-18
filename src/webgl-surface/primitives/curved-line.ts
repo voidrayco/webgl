@@ -263,7 +263,6 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
     return line.cachedSegments;
   }
 
-  debug('CCW');
   const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
   let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
 
@@ -274,10 +273,8 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
     radius = Point.getDistance(midPoint, line.p1);
   }
 
-  debug('radius is %o, minRadius is %o', radius, minRadius);
-
   const perpendicular: IPoint = straightLine.perpendicular;
-  debug('perpendicular is %o', perpendicular);
+
   const distance = Math.sqrt(radius * radius - minRadius * minRadius);
   const circleCenter: IPoint = {
     x: -perpendicular.x * distance + midPoint.x,
@@ -287,8 +284,6 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
   // Store the circle center as an extra control point in case the value is needed
   // (which it often is)
   line.controlPoints[1] = circleCenter;
-  debug('p1 is %o, p2 is %o', line.p1, line.p2);
-  debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
 
   const direction1 =  Point.getDirection(circleCenter, line.p1);
 
@@ -398,7 +393,9 @@ export class CurvedLine<T> extends Bounds<T> {
    * @param {ICurvedLineOptions} options The configuration options of this curved line
    */
   constructor(options: ICurvedLineOptions) {
-    super(0, 0, 0, 0);
+    const minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE,
+            minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
+    super(minX, maxX, maxY, minY);
 
     // Apply the relevant properties to the curve
     this.cachesSegments = options.cacheSegments || false;
@@ -495,7 +492,6 @@ export class CurvedLine<T> extends Bounds<T> {
 
       // Set the method that will be used for generating segments
       this.segmentMethod = segmentMethods[numControlPoints];
-      debug('sementMethod is %o', this.segmentMethod);
       // Make sure the input wasn't bad
       if (!this.segmentMethod) {
         throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point. Or 0 for a straight line');

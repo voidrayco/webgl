@@ -22,7 +22,7 @@ export class PackNode {
   nodeImage: AtlasTexture = null;
 
   constructor(x: number, y: number, width: number, height: number) {
-    this.nodeDimensions = new Bounds<never>(x, x + width, y, y + height);
+    this.nodeDimensions = new Bounds<never>(x, x + width, y , y - height);
   }
 
   /**
@@ -80,8 +80,8 @@ export class PackNode {
         this.child[0] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y, imgWidth, this.nodeDimensions.height);
         this.child[1] = new PackNode(this.nodeDimensions.x + imgWidth, this.nodeDimensions.y, dWidth, this.nodeDimensions.height);
       } else {
-        this.child[0] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y, this.nodeDimensions.width, imgHeight);
-        this.child[1] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y + imgHeight, this.nodeDimensions.width, dHeight);
+        this.child[0] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y  , this.nodeDimensions.width, imgHeight);
+        this.child[1] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y - imgHeight, this.nodeDimensions.width, dHeight);
       }
     }
 

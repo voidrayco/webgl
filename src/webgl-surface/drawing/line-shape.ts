@@ -1,5 +1,5 @@
-import {Line} from '../primitives/line';
-import {IPoint} from '../primitives/point';
+import { Line } from '../primitives/line';
+import { IPoint } from '../primitives/point';
 
 /**
  * Defines a line that can be drawn
