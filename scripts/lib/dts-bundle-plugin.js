@@ -17,32 +17,34 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
   compiler.plugin('after-emit', function(compilation, callback) {
     const dts = require('dts-bundle');
 
-    console.log('Bundling type declarations');
+    console.log('Bundling type declarations', input);
     dts.bundle({
+      baseDir: input + '  ',
+      indent: '  ',
       name: 'voidgl',
       main: path.join(input, '**/*.d.ts'),
       out: out,
       removeSource: true,
       outputAsModuleFolder: true,
+      module: 'commonjs',
+      verbose: false,
+
+      exclude: (filename, isExternal) => {
+        console.log(filename, isExternal);
+        return filename === 'index.d.ts';
+      },
     });
 
-    // Before doing a major removal of files, make a timeout so the system
-    // doesn't hang in limbo for eternity
-    const timeoutId = setTimeout(() => {
-      console.error('ERROR: Deleting type definition source files took too long!');
+    // Clear out any roots that may have been imported
+    setTimeout(() => {
+      let file = fs.readFileSync(out, 'utf8');
+      const files = fs.readdirSync(input);
+      files.forEach(filename => {
+        file = file.replace(new RegExp(`import.+${filename}.+`, 'g'), '');
+      });
+      fs.writeFileSync(out, file, 'utf8');
       callback();
-    }, 30000);
-
-    // Attempt the removal of the input source files
-    fs.remove(input, err => {
-      if (err) {
-        console.error('ERROR: Could NOT delete type definition source files!');
-        console.error(err.stack || err.message);
-      }
-
-      clearTimeout(timeoutId);
-      callback();
-    });
+    }, 2000);
   });
 };
 
