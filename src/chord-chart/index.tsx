@@ -1,3 +1,4 @@
+import { clone } from 'ramda';
 import * as React from 'react';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
@@ -13,13 +14,13 @@ import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
-interface IChordChartProps {
-  onEndPointClick?(curve: CurvedLineShape<any>): void,
+export interface IChordChartProps {
+  onEndPointClick?(endpointId: string): void,
   hemiSphere: boolean;
   data: IData;
 }
 
-interface IChordChartState {
+export interface IChordChartState {
   zoom: number,
   data: IData
 }
@@ -35,7 +36,7 @@ function isChord(curve: any): curve is CurvedLineShape<IChordData> {
 }
 
 function recalculateTreeForData(data: IData) {
-  data.tree = recalculateTree(data.tree, data.flows);
+  data.tree = recalculateTree(data.endpoints, data.flows);
   data.endpoints = getTreeLeafNodes(data.tree);
   data.endpointById = new Map<string, IEndpoint>();
   data.topEndPointByEndPointId = new Map<string, IEndpoint>();
@@ -113,15 +114,15 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
-    const data = Object.assign({}, this.props.data);
+    const data = clone(this.props.data);
     recalculateTreeForData(data);
 
     this.setState({data});
   }
 
   componentWillReceiveProps(nextProps: any) {
-    if (nextProps.data && nextProps.data.tree && nextProps.data.flows) {
-      const data = Object.assign({}, nextProps.data) as IData;
+    if (nextProps.data) {
+      const data = clone(nextProps.data);
       recalculateTreeForData(data);
 
       this.setState({data});
@@ -200,6 +201,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   handleMouseUp = (selections: any[], mouse: any, world: any, projection: any) => {
     this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
     this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
+
     if (selections.length > 0) {
       let selection;
       // If has outer ring thing grab it instead
@@ -213,7 +215,9 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
       }
 
-       this.props.onEndPointClick(selection);
+      if (this.props.onEndPointClick && selection.d.source.id) {
+        this.props.onEndPointClick(selection.d.source.id);
+      }
     }
   }
 

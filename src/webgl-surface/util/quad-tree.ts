@@ -28,7 +28,7 @@ export function filterQuery<T extends Bounds<any>>(type: Function[], queryValues
 /**
  * Allows typing of a callback argument
  */
-interface IVisitFunction<T extends Bounds<any>> {
+export interface IVisitFunction<T extends Bounds<any>> {
   /**
    * A callback to use during add or query
    *
@@ -47,7 +47,7 @@ interface IVisitFunction<T extends Bounds<any>> {
  *
  * @class Quadrants
  */
-class Quadrants<T extends Bounds<any>> {
+export class Quadrants<T extends Bounds<any>> {
   TL: Node<T> = null;
   TR: Node<T> = null;
   BL: Node<T> = null;

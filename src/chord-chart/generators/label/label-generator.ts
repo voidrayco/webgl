@@ -1,4 +1,5 @@
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
+import { IOuterRingData } from 'chord-chart/shape-data-types/outer-ring-data';
 import { Label } from 'webgl-surface/drawing/label';
 import { Selection } from '../../selections/selection';
 import { IChordChartConfig, IData } from '../types';
@@ -26,7 +27,7 @@ export class LabelGenerator {
     this.baseCache.generate(data, outerRingGenerator, config, selection);
   }
 
-  getBaseBuffer() {
+  getBaseBuffer(): Label<IOuterRingData>[] {
     return this.baseCache.getBuffer();
   }
 }
