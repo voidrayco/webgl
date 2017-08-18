@@ -25,7 +25,7 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
       main: path.join(input, '**/*.d.ts'),
       out: out,
       removeSource: true,
-      outputAsModuleFolder: true,
+      outputAsModuleFolder: false,
       module: 'commonjs',
       verbose: false,
 
