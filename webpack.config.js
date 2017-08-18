@@ -16,6 +16,10 @@ const plugins = [
   new ForkTsCheckerWebpackPlugin(),
 ];
 
+let externals = [];
+let library;
+let libraryTarget;
+
 if (isProduction) {
   plugins.push(
     new DtsBundlePlugin({
@@ -23,10 +27,24 @@ if (isProduction) {
       out: path.join(resolve('dist'), 'index.d.ts'),
     })
   );
+
+  externals = [
+    'react',
+    'react-dom',
+    'threejs',
+    'd3-color',
+    'd3-scale',
+    'ramda',
+  ];
+
+  library = 'voidgl';
+  libraryTarget = 'umd';
 }
 
 module.exports = {
   entry: isProduction ? './src' : './test',
+  externals,
+
   module: {
     rules: [
       {test: /\.tsx?/, use: tslintLoader, enforce: 'pre'},
@@ -36,14 +54,19 @@ module.exports = {
       {test: /\.[fv]s$/, use: ['raw-loader']}, // Currently used to load shaders into javascript files
     ],
   },
+
+  output: {
+    filename: isProduction ? 'index.js' : 'app.js',
+    library,
+    libraryTarget,
+    path: isProduction ? resolve('dist') : resolve('build'),
+    publicPath: '/',
+  },
+
+  plugins,
+
   resolve: {
     modules: ['./node_modules', './src'],
     extensions: ['.ts', '.tsx', '.js'],
   },
-  output: {
-    filename: isProduction ? 'index.js' : 'app.js',
-    path: isProduction ? resolve('dist') : resolve('build'),
-    publicPath: '/',
-  },
-  plugins
 };
