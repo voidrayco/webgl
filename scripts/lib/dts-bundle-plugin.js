@@ -29,6 +29,7 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
 
   compiler.plugin('after-emit', function(compilation, callback) {
     const dts = require('dts-bundle');
+    const filesIncluded = new Map();
 
     console.log('Bundling type declarations', input);
     dts.bundle({
@@ -50,7 +51,14 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
        * @return {boolean} Returns true if the file is to be excluded
        */
       exclude: filename => {
-        return filename === 'index.d.ts';
+        if (filename === 'index.d.ts')
+          return true;
+
+        if (filesIncluded.get(filename))
+          return true;
+
+        console.log(filename);
+        filesIncluded.set(filename, true);
       },
     });
 
@@ -61,6 +69,8 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
     setTimeout(() => {
       let file = fs.readFileSync(out, 'utf8');
       const files = fs.readdirSync(input);
+
+      // console.log(file.match(new RegExp('import.+from.+', 'g')));
 
       // Our system uses roots in the webpack configuration making statements
       // like 'webgl-surface/blah/blah' possible. Our bundler blindly adds all

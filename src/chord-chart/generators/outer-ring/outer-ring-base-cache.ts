@@ -222,7 +222,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       }
 
       const colorVal = rgb(color(calculateColor(endpoint.id)));
-      const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);
+      const flows = data.chords.filter((flow) => flow.source === endpoint.id);
 
       return {
         color: colorVal,

@@ -45738,11 +45738,11 @@ function _recalculateFlowCounts(node, flows) {
     const nodeObj = node; // Immutable
     let outgoingCount = 0, incomingCount = 0, totalCount = 0;
     flows.forEach((flow) => {
-        if (flow.srcTarget === nodeObj.id)
+        if (flow.source === nodeObj.id)
             outgoingCount++;
-        if (flow.dstTarget === nodeObj.id)
+        if (flow.target === nodeObj.id)
             incomingCount++;
-        if (flow.srcTarget === nodeObj.id || flow.dstTarget === nodeObj.id)
+        if (flow.source === nodeObj.id || flow.target === nodeObj.id)
             totalCount++;
     });
     nodeObj.outgoingCount = outgoingCount;
@@ -46553,7 +46553,7 @@ function isChord(curve) {
     return false;
 }
 function recalculateTreeForData(data) {
-    data.tree = endpointDataProcessing_1.recalculateTree(data.endpoints, data.flows);
+    data.tree = endpointDataProcessing_1.recalculateTree(data.endpoints, data.chords);
     data.endpoints = endpointDataProcessing_1.getTreeLeafNodes(data.tree);
     data.endpointById = new Map();
     data.topEndPointByEndPointId = new Map();
@@ -46601,9 +46601,9 @@ class ChordChart extends React.Component {
         // Sets the default state
         this.state = {
             data: {
+                chords: [],
                 endpointById: new Map(),
                 endpoints: [],
-                flows: [],
                 topEndPointByEndPointId: new Map(),
                 topEndPointMaxDepth: new Map(),
                 tree: [],
@@ -46675,7 +46675,7 @@ class ChordChart extends React.Component {
                     selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
                 }
                 if (this.props.onEndPointClick && selection.d.source.id) {
-                    this.props.onEndPointClick(selection.d.source.id);
+                    this.props.onEndPointClick(selection.d.source.id, selection.d.source.metadata, {}, {});
                 }
             }
         };
@@ -46710,12 +46710,12 @@ class ChordChart extends React.Component {
         const config = {
             center: { x: 0, y: 0 },
             groupSplitDistance: 50,
-            labelDirection: this.props.hemiSphere ? types_1.LabelDirectionEnum.LINEAR : types_1.LabelDirectionEnum.RADIAL,
+            labelDirection: this.props.split ? types_1.LabelDirectionEnum.LINEAR : types_1.LabelDirectionEnum.RADIAL,
             outerRingSegmentPadding: 0.005,
             outerRingSegmentRowPadding: 2,
             radius: 200,
             ringWidth: 10,
-            splitTopLevelGroups: this.props.hemiSphere,
+            splitTopLevelGroups: this.props.split,
             topLevelGroupPadding: Math.PI / 4,
         };
         this.outerRingGenerator.generate(this.state.data, config, this.selection);
@@ -47614,8 +47614,8 @@ class ChordBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
             // Set the relational and domain information for the chord
             newCurve.d = {
                 outerRings: [
-                    ringById.get(curve.source.srcTarget),
-                    ringById.get(curve.source.dstTarget),
+                    ringById.get(curve.source.source),
+                    ringById.get(curve.source.target),
                 ],
                 source: curve.source,
             };
@@ -47658,9 +47658,9 @@ class ChordBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
         }
         // Loop thrugh each endpoint and analyze the flows
         data.endpoints.forEach((endpoint) => {
-            data.flows.forEach((flow) => {
-                if (flow.srcTarget === endpoint.id) {
-                    const destEndpoint = getEndpoint(data, flow.dstTarget);
+            data.chords.forEach((flow) => {
+                if (flow.source === endpoint.id) {
+                    const destEndpoint = getEndpoint(data, flow.target);
                     if (destEndpoint) {
                         let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
                         if (splitTopLevelGroups) {
@@ -48346,7 +48346,7 @@ class OuterRingBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
                 controlPoint = { x: groupSplitDistance * Math.cos(halfAngle), y: groupSplitDistance * Math.sin(halfAngle) };
             }
             const colorVal = d3_color_1.rgb(d3_color_1.color(calculateColor(endpoint.id)));
-            const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);
+            const flows = data.chords.filter((flow) => flow.source === endpoint.id);
             return {
                 color: colorVal,
                 controlPoint,

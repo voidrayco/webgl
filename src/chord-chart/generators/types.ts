@@ -1,4 +1,3 @@
-import { HSLColor } from 'd3-color';
 import { IPoint } from 'webgl-surface/primitives/point';
 
 export enum LabelDirectionEnum {
@@ -37,7 +36,7 @@ export interface IChordChartConfig {
 export interface IData {
   tree?: IEndpoint[];
   endpoints: IEndpoint[];
-  flows: IChord[];
+  chords: IChord[];
   /** Quick look up for an end point by it's id */
   endpointById?: Map<string, IEndpoint>;
   /** Get the top level end point for a given child end point's id */
@@ -50,17 +49,18 @@ export interface IData {
  * This defines the raw data needed for an end point in the chord chart
  */
 export interface IEndpoint {
-  children?: IEndpoint[]
-  id: string;
-  name: string;
-  startAngle?: number;
-  endAngle?: number;
-  outgoingCount?: number;
-  incomingCount?: number;
-  parent: string;
-  totalCount?: number;
-  _outflowIdx?: number;  // Used for internal flow calculations
   _inflowIdx?: number;  // Used for internal flow calculations
+  _outflowIdx?: number;  // Used for internal flow calculations
+  children?: IEndpoint[]
+  endAngle?: number;
+  id: string;
+  incomingCount?: number;
+  metadata?: any;
+  name: string;
+  outgoingCount?: number;
+  parent: string;
+  startAngle?: number;
+  totalCount?: number;
   weight: number;
 }
 
@@ -68,11 +68,11 @@ export interface IEndpoint {
  * This defines the raw data needed to render a chord in the chord chart
  */
 export interface IChord {
-  srcExpandedTarget?: string;
-  srcTarget: string;
-  destExpandedTarget?: string;
-  dstTarget: string;
-  srcIndex?: number;
   dstIndex?: number;
-  baseColor?: HSLColor;
+  id: string;
+  metadata?: any;
+  source: string;
+  srcExpandedTarget?: string;
+  srcIndex?: number;
+  target: string;
 }

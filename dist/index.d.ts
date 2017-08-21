@@ -25,7 +25,6 @@ import { RGBColor } from 'd3-color';
 
 
 
-import { HSLColor } from 'd3-color';
 import { Mesh } from 'three';
 
 
@@ -218,7 +217,7 @@ export interface IChordChartConfig {
 export interface IData {
     tree?: IEndpoint[];
     endpoints: IEndpoint[];
-    flows: IChord[];
+    chords: IChord[];
     /** Quick look up for an end point by it's id */
     endpointById?: Map<string, IEndpoint>;
     /** Get the top level end point for a given child end point's id */
@@ -230,30 +229,31 @@ export interface IData {
   * This defines the raw data needed for an end point in the chord chart
   */
 export interface IEndpoint {
-    children?: IEndpoint[];
-    id: string;
-    name: string;
-    startAngle?: number;
-    endAngle?: number;
-    outgoingCount?: number;
-    incomingCount?: number;
-    parent: string;
-    totalCount?: number;
-    _outflowIdx?: number;
     _inflowIdx?: number;
+    _outflowIdx?: number;
+    children?: IEndpoint[];
+    endAngle?: number;
+    id: string;
+    incomingCount?: number;
+    metadata?: any;
+    name: string;
+    outgoingCount?: number;
+    parent: string;
+    startAngle?: number;
+    totalCount?: number;
     weight: number;
 }
 /**
   * This defines the raw data needed to render a chord in the chord chart
   */
 export interface IChord {
-    srcExpandedTarget?: string;
-    srcTarget: string;
-    destExpandedTarget?: string;
-    dstTarget: string;
-    srcIndex?: number;
     dstIndex?: number;
-    baseColor?: HSLColor;
+    id: string;
+    metadata?: any;
+    source: string;
+    srcExpandedTarget?: string;
+    srcIndex?: number;
+    target: string;
 }
 
 export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
@@ -321,9 +321,40 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 }
 
 export interface IChordChartProps {
-    onEndPointClick?(endpointId: string): void;
-    hemiSphere: boolean;
+    /** Enables the ability for the user to pan via click and drag */
+    allowPan?: boolean;
+    /** The data for the chart to render */
     data: IData;
+    /** The space in pixels from the renderings edge to where the chart begins to appear */
+    margin?: {
+        top: number;
+        left: number;
+        bottom: number;
+        right: number;
+    };
+    /** Styling config object that adjusts visuals of the chart */
+    styling?: {
+        /** Total center radius area where chords appear */
+        chartRadius?: number;
+        /** Padding between each endpoint segment in radians */
+        endpointPadding?: number;
+        /** Padding between each row of endpoints */
+        endpointRowPadding?: number;
+        /** The width of an endpoint */
+        endpointWidth?: number;
+        /** The padding between main groups in radians */
+        groupPadding?: number;
+        /** The distance each group appeas from the initial circle center */
+        groupSplitDistance?: number;
+    };
+    /** If true, this component renders each main group a distance away from the center */
+    split?: boolean;
+    /** Callback for when a chord is clicked */
+    onChordClick?(chordId: string, chordData: any, screen: object, world: object): void;
+    /** Callback for when an endpoint is clicked */
+    onEndPointClick?(endpointId: string, endpointData: any, screen: object, world: object): void;
+    /** Callback for when nothing is clicked */
+    onClickNothing?(screen: object, world: object): void;
 }
 export interface IChordChartState {
     zoom: number;

@@ -1,4 +1,3 @@
-import { HSLColor } from 'd3-color';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Bezier } from '../src/bezier';
@@ -7,8 +6,11 @@ import { ChordChart } from '../src/chord-chart';
 import { IChord, IEndpoint } from '../src/chord-chart/generators/types';
 
 const testChordData = require('./chord-test-data/two.json');
-const chords: IChord[] = testChordData.flows;
+const chords: IChord[] = testChordData.chords;
 const endpoints: IEndpoint[] = testChordData.endpoints;
+
+// Make sure our test data has the chords with ids
+chords.forEach((chord: IChord, index: number) => chord.id = `TestChord_${index}`);
 
 /**
  * The state of the application
@@ -28,10 +30,10 @@ export class Main extends React.Component<any, IMainState> {
     zoom: 1,
   };
 
-  handleEndPointClicked = (selection : string) => {
-    const endpoint: IEndpoint = endpoints.find(end => end.id === selection);
-    const startChords: IChord[] = chords.filter(chord => chord.srcTarget === selection);
-    const endChords: IChord[] = chords.filter(chord => chord.dstTarget === selection);
+  handleEndPointClicked = (endpointId : string, endpointData: any, screen: any, world: any) => {
+    const endpoint: IEndpoint = endpoints.find(end => end.id === endpointId);
+    const startChords: IChord[] = chords.filter(chord => chord.source === endpointId);
+    const endChords: IChord[] = chords.filter(chord => chord.target === endpointId);
     const childrenNumber = 2 + Math.floor(4 * Math.random());
     const shiftStartNumber = Math.floor(startChords.length / childrenNumber);
     const shiftEndNumber = Math.floor(endChords.length / childrenNumber);
@@ -51,14 +53,14 @@ export class Main extends React.Component<any, IMainState> {
       if (startChords.length > 0) {
         for (let k = 0; k < shiftStartNumber; ++k) {
           const chord = startChords.pop();
-          chord.srcTarget = newEndpoint.id;
+          chord.source = newEndpoint.id;
         }
       }
 
       if (endChords.length > 0) {
         for (let k = 0; k < shiftEndNumber; ++k) {
           const chord = endChords.pop();
-          chord.dstTarget = newEndpoint.id;
+          chord.target = newEndpoint.id;
         }
       }
 
@@ -69,12 +71,12 @@ export class Main extends React.Component<any, IMainState> {
     if (newEndpoint) {
       while (startChords.length > 0) {
         const chord = startChords.pop();
-        chord.srcTarget = newEndpoint.id;
+        chord.source = newEndpoint.id;
       }
 
       while (endChords.length > 0) {
         const chord = endChords.pop();
-        chord.dstTarget = newEndpoint.id;
+        chord.target = newEndpoint.id;
       }
     }
 
@@ -130,9 +132,9 @@ export class Main extends React.Component<any, IMainState> {
       }
 
       const chord: IChord = {
-        baseColor: {h: 1, s: 1, l: 1, opacity: 1} as HSLColor,
-        dstTarget: end.id,
-        srcTarget: start.id,
+        id: `Chord_${Math.floor(Math.random() * 1000000)}`,
+        source: start.id,
+        target: end.id,
       };
 
       chords.push(chord);
@@ -185,7 +187,7 @@ export class Main extends React.Component<any, IMainState> {
       component = (
         <ChordChart
           onEndPointClick={this.handleEndPointClicked}
-          hemiSphere={false}
+          split={false}
           data={testChordData}
         />
       );
@@ -195,7 +197,7 @@ export class Main extends React.Component<any, IMainState> {
       component = (
         <ChordChart
           onEndPointClick={this.handleEndPointClicked}
-          hemiSphere={true}
+          split={true}
           data={testChordData}
         />
       );
