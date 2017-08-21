@@ -57,7 +57,6 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
         if (filesIncluded.get(filename))
           return true;
 
-        console.log(filename);
         filesIncluded.set(filename, true);
       },
     });

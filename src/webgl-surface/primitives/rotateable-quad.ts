@@ -19,17 +19,17 @@ export enum AnchorPosition {
 const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint} = {
   [AnchorPosition.BottomLeft]: (quad: RotateableQuad<any>) => ({
     x: 0,
-    y: quad.getSize().height,
+    y: 0,
   }),
 
   [AnchorPosition.BottomRight]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width,
-    y: quad.getSize().height,
+    y: 0,
   }),
 
   [AnchorPosition.Custom]: (quad: RotateableQuad<any>) => ({
     x: 0,
-    y: 0,
+    y: quad.getSize().height,
   }),
 
   [AnchorPosition.Middle]: (quad: RotateableQuad<any>) => ({
@@ -39,7 +39,7 @@ const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint}
 
   [AnchorPosition.MiddleBottom]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width / 2,
-    y: quad.getSize().height,
+    y: 0,
   }),
 
   [AnchorPosition.MiddleLeft]: (quad: RotateableQuad<any>) => ({
@@ -54,17 +54,17 @@ const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint}
 
   [AnchorPosition.MiddleTop]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width / 2,
-    y: 0,
+    y: quad.getSize().height,
   }),
 
   [AnchorPosition.TopLeft]: (quad: RotateableQuad<any>) => ({
     x: 0,
-    y: 0,
+    y: quad.getSize().height,
   }),
 
   [AnchorPosition.TopRight]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width,
-    y: 0,
+    y: quad.getSize().height,
   }),
 };
 
@@ -103,10 +103,10 @@ export class RotateableQuad<T> extends Bounds<T> {
     super(0, 0, 0, 0);
 
     // Apply our properties
+    this.setSize(size);
     this.setAnchor(anchor);
     this.setLocation(location);
     this.setRotation(rotation);
-    this.setSize(size);
     // Update the transform and the corner vertices
     this.update();
   }
@@ -178,10 +178,10 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.size = size;
 
     this.base = [
-      new Vector4(0, 0, 0, 1),
-      new Vector4(size.width, 0, 0, 1),
       new Vector4(0, size.height, 0, 1),
       new Vector4(size.width, size.height, 0, 1),
+      new Vector4(0, 0, 0, 1),
+      new Vector4(size.width, 0, 0, 1),
     ];
   }
 

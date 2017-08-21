@@ -61,6 +61,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);
     const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
 
+    debug('labesData is %o', labelsData);
+
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
       const color = selection.getSelection('chord or ring mouse over').length > 0 ?
@@ -125,6 +127,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
       return label;
     });
+
+    debug('labels are %o', labels);
 
     this.buffer = labels;
   }
@@ -196,7 +200,6 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
           y: center.y + radius * Math.sin(newEndAngle),
         };
         ringLine = new Line<any>(p1, p2);
-        debug('ringline is %o', ringLine);
       }
 
       // Get the mid point and use the circle center to get the direction

@@ -7,7 +7,7 @@
 		exports["voidgl"] = factory(require("d3-color"), require("ramda"), require("react"), require("d3-scale"));
 	else
 		root["voidgl"] = factory(root["d3-color"], root["ramda"], root["react"], root["d3-scale"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_3__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_13__, __WEBPACK_EXTERNAL_MODULE_32__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_4__, __WEBPACK_EXTERNAL_MODULE_6__, __WEBPACK_EXTERNAL_MODULE_15__, __WEBPACK_EXTERNAL_MODULE_34__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -83,7 +83,7 @@ return /******/ (function(modules) { // webpackBootstrap
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = __webpack_require__(20);
+exports = module.exports = __webpack_require__(22);
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -263,361 +263,10 @@ function localstorage() {
   } catch (e) {}
 }
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(21)))
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Class to manage the x, y, width, and height of an object
- *
- * @template T This specifies the data type associated with this shape and is accessible
- *             via the property 'd'
- */
-class Bounds {
-    /**
-     * Create a new instance
-     *
-     * @param left  The left side (x coordinate) of the instance
-     * @param right The right side of the instance
-     * @param top The top (y coordinate) of the instance
-     * @param bottom The bottom of the instance
-     */
-    constructor(left, right, top, bottom) {
-        this.height = 0;
-        this.width = 0;
-        this.x = 0;
-        this.y = 0;
-        if (arguments.length === 4) {
-            this.x = left;
-            this.width = right - left;
-            this.y = top;
-            this.height = bottom - top;
-        }
-    }
-    /** The total rectangular surface area of this instance */
-    get area() {
-        return this.width * this.height;
-    }
-    /** The bottom coordinate for this instance (y + height) */
-    get bottom() {
-        return this.y + this.height;
-    }
-    /** An x, y coordinate pair representing the center of this object */
-    get mid() {
-        return {
-            x: this.x + (this.width / 2),
-            y: this.y + (this.height / 2),
-        };
-    }
-    get right() {
-        return this.x + this.width;
-    }
-    /**
-     * Check to see if a given point lies within the bounds of this instance
-     *
-     * @param point The point to check
-     */
-    containsPoint(point) {
-        if (point.x < this.x) {
-            return false;
-        }
-        if (point.y < this.y) {
-            return false;
-        }
-        if (point.x > this.right) {
-            return false;
-        }
-        if (point.y > this.bottom) {
-            return false;
-        }
-        return true;
-    }
-    /**
-     * Copies the properties of the bounds specified
-     *
-     * @param b The bounds whose dimensions we wish to copy
-     */
-    copyBounds(b) {
-        this.height = b.height;
-        this.width = b.width;
-        this.x = b.x;
-        this.y = b.y;
-    }
-    /**
-     * Ensure that this object contains the smaller bounds
-     *
-     * This method will not shrink this class, but only grow it as necessary to
-     * fit the destination object
-     *
-     * @param bounds The bounds to encapsulate
-     */
-    encapsulate(bounds) {
-        if (bounds.x < this.x) {
-            this.width += this.x - bounds.x;
-            this.x = bounds.x;
-        }
-        if (bounds.y < this.y) {
-            this.height += this.y - bounds.y;
-            this.y = bounds.y;
-        }
-        if (bounds.right > this.right) {
-            this.width = bounds.right - this.x;
-        }
-        if (bounds.bottom > this.bottom) {
-            this.height = bounds.bottom - this.y;
-        }
-    }
-    /**
-     * Ensure that this object contains the provided list of bounds
-     *
-     * This will never shrink or modify the original area covered by this bounds
-     * but will instead stay the same or include the original area plus the specified
-     * list of bounds.
-     *
-     * @param {Bounds<any>[]} bounds The list of bounds objects to encapsulate
-     * @param {boolean} sizeToFirst If this is set, the procedure will start by making this bounds
-     *                              be a clone of the first bounds object in the list
-     */
-    encapsulateBounds(bounds, sizeToFirst) {
-        if (sizeToFirst && bounds.length) {
-            this.copyBounds(bounds[0]);
-        }
-        if (bounds.length === 0) {
-            return;
-        }
-        let minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE, minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
-        bounds.forEach(p => {
-            if (p.x < minX) {
-                minX = p.x;
-            }
-            else if (p.right > maxX) {
-                maxX = p.right;
-            }
-            if (p.y < minY) {
-                minY = p.y;
-            }
-            else if (p.bottom > maxY) {
-                maxY = p.bottom;
-            }
-        });
-        // Make bounds that encompasses the bounds list, then we encapsulate
-        // Those bounds
-        this.encapsulate(new Bounds(minX, maxX, minY, maxY));
-    }
-    /**
-     * Grow this class to contain the specified point
-     *
-     * This method will not shrink this instance. It will only grow it as
-     * necessary.
-     *
-     * @param point The point to encapsulate
-     */
-    encapsulatePoint(point) {
-        if (point.x < this.x) {
-            this.width += this.x - point.x;
-            this.x = point.x;
-        }
-        if (point.y < this.y) {
-            this.height += this.y - point.y;
-            this.y = point.y;
-        }
-        if (point.x > this.right) {
-            this.width = point.x - this.x;
-        }
-        if (point.y > this.bottom) {
-            this.height = point.y - this.y;
-        }
-    }
-    /**
-     * Efficiently encapsulates a set of points by growing the current dimensions
-     * of the bounds until the points are enclosed. This will perform faster than
-     * running encapsulatePoint for a list of points.
-     *
-     * @param points An array of points that Can be of format {x, y} or [x, y]
-     *
-     * @memberOf Bounds
-     */
-    encapsulatePoints(points) {
-        let minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE, minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
-        if (points[0] !== undefined && points[0].x) {
-            points.forEach(p => {
-                if (p.x < minX) {
-                    minX = p.x;
-                }
-                else if (p.x > maxX) {
-                    maxX = p.x;
-                }
-                if (p.y < minY) {
-                    minY = p.y;
-                }
-                else if (p.y > maxY) {
-                    maxY = p.y;
-                }
-            });
-        }
-        else {
-            points.forEach(p => {
-                if (p[0] < minX) {
-                    minX = p[0];
-                }
-                else if (p[0] > maxX) {
-                    maxX = p[0];
-                }
-                if (p[1] < minY) {
-                    minY = p[1];
-                }
-                else if (p[1] > maxY) {
-                    maxY = p[1];
-                }
-            });
-        }
-        // Make bounds that encompasses the points, then we encapsulate
-        // Those bounds
-        this.encapsulate(new Bounds(minX, maxX, minY, maxY));
-    }
-    /**
-     * Checks to see if another bounds fits in itself.
-     *
-     * @param {Bounds} inner The bounds to test against
-     *
-     * @return {number} int 1 is an exact fit, 2 it fits with space, 0 it doesn't fit
-     */
-    fits(inner) {
-        if (this.width === inner.width) {
-            if (this.height === inner.height) {
-                return 1;
-            }
-        }
-        if (this.width >= inner.width) {
-            if (this.height >= inner.height) {
-                return 2;
-            }
-        }
-        return 0;
-    }
-    /**
-     * Check to see if the provided bounds intersects with this instance
-     *
-     * @param bounds The bounds to test against this instance
-     *
-     * @return True if the other object intersects with this instance
-     */
-    hitBounds(bounds) {
-        if (bounds.right < this.x) {
-            return false;
-        }
-        if (bounds.x > this.right) {
-            return false;
-        }
-        if (bounds.bottom < this.y) {
-            return false;
-        }
-        if (bounds.y > this.bottom) {
-            return false;
-        }
-        return true;
-    }
-    /**
-     * Tests if a point is inside this bounds
-     *
-     * @param p The point to test
-     *
-     * @return boolean The point to test
-     */
-    pointInside(p) {
-        if (p.x < this.x) {
-            return false;
-        }
-        if (p.y < this.y) {
-            return false;
-        }
-        if (p.x > this.right) {
-            return false;
-        }
-        if (p.y > this.bottom) {
-            return false;
-        }
-        return true;
-    }
-    /**
-     * Test function to type check the provided value
-     *
-     * @return True if value is a bounds object
-     */
-    static isBounds(value) {
-        // Falsy values aren't bounds objects
-        if (!value) {
-            return false;
-        }
-        // Direct test for bounds objects
-        if (value instanceof this) {
-            return true;
-        }
-        // Duck-typing check
-        return value &&
-            'containsPoint' in value &&
-            'encapsulate' in value &&
-            'hitTest' in value;
-    }
-    /**
-     * Check if the provided bounds is completely contained within this instance
-     *
-     * @param bounds The bounds to test against this instance
-     *
-     * @return True if the provided bounds is completely contained within this
-     * instance
-     */
-    isInside(bounds) {
-        return (bounds.x <= this.x &&
-            bounds.right >= this.right &&
-            bounds.y <= this.y &&
-            bounds.bottom >= this.bottom);
-    }
-    /**
-     * Generates a Bounds object covering max extents
-     *
-     * @return {Bounds} bounds covering as wide of a range as possible
-     */
-    static maxBounds() {
-        return new Bounds(Number.MIN_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MAX_VALUE);
-    }
-}
-exports.Bounds = Bounds;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const custom_selection_1 = __webpack_require__(23);
-var SelectionType;
-(function (SelectionType) {
-    SelectionType[SelectionType["MOUSEOVER_OUTER_RING"] = 0] = "MOUSEOVER_OUTER_RING";
-    SelectionType[SelectionType["MOUSEOVER_CHORD"] = 1] = "MOUSEOVER_CHORD";
-    SelectionType[SelectionType["SELECTED_CHORD"] = 2] = "SELECTED_CHORD";
-    SelectionType[SelectionType["RELATED_SELECTED_OUTER_SECTIONS"] = 3] = "RELATED_SELECTED_OUTER_SECTIONS";
-})(SelectionType = exports.SelectionType || (exports.SelectionType = {}));
-class Selection extends custom_selection_1.CustomSelection {
-}
-exports.Selection = Selection;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_3__;
-
-/***/ }),
-/* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -44726,6 +44375,357 @@ function CanvasRenderer() {
 
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Class to manage the x, y, width, and height of an object
+ *
+ * @template T This specifies the data type associated with this shape and is accessible
+ *             via the property 'd'
+ */
+class Bounds {
+    /**
+     * Create a new instance
+     *
+     * @param left  The left side (x coordinate) of the instance
+     * @param right The right side of the instance
+     * @param top The top (y coordinate) of the instance
+     * @param bottom The bottom of the instance
+     */
+    constructor(left, right, top, bottom) {
+        this.height = 0;
+        this.width = 0;
+        this.x = 0;
+        this.y = 0;
+        if (arguments.length === 4) {
+            this.x = left;
+            this.width = right - left;
+            this.y = top;
+            this.height = top - bottom;
+        }
+    }
+    /** The total rectangular surface area of this instance */
+    get area() {
+        return this.width * this.height;
+    }
+    /** The bottom coordinate for this instance (y + height) */
+    get bottom() {
+        return this.y - this.height;
+    }
+    /** An x, y coordinate pair representing the center of this object */
+    get mid() {
+        return {
+            x: this.x + (this.width / 2),
+            y: this.y - (this.height / 2),
+        };
+    }
+    get right() {
+        return this.x + this.width;
+    }
+    /**
+     * Check to see if a given point lies within the bounds of this instance
+     *
+     * @param point The point to check
+     */
+    containsPoint(point) {
+        if (point.x < this.x) {
+            return false;
+        }
+        if (point.y > this.y) {
+            return false;
+        }
+        if (point.x > this.right) {
+            return false;
+        }
+        if (point.y < this.bottom) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Copies the properties of the bounds specified
+     *
+     * @param b The bounds whose dimensions we wish to copy
+     */
+    copyBounds(b) {
+        this.height = b.height;
+        this.width = b.width;
+        this.x = b.x;
+        this.y = b.y;
+    }
+    /**
+     * Ensure that this object contains the smaller bounds
+     *
+     * This method will not shrink this class, but only grow it as necessary to
+     * fit the destination object
+     *
+     * @param bounds The bounds to encapsulate
+     */
+    encapsulate(bounds) {
+        if (bounds.x < this.x) {
+            this.width += this.x - bounds.x;
+            this.x = bounds.x;
+        }
+        if (bounds.y > this.y) {
+            this.height += bounds.y - this.y;
+            this.y = bounds.y;
+        }
+        if (bounds.right > this.right) {
+            this.width = bounds.right - this.x;
+        }
+        if (bounds.bottom < this.bottom) {
+            this.height = this.y - bounds.bottom;
+        }
+    }
+    /**
+     * Ensure that this object contains the provided list of bounds
+     *
+     * This will never shrink or modify the original area covered by this bounds
+     * but will instead stay the same or include the original area plus the specified
+     * list of bounds.
+     *
+     * @param {Bounds<any>[]} bounds The list of bounds objects to encapsulate
+     * @param {boolean} sizeToFirst If this is set, the procedure will start by making this bounds
+     *                              be a clone of the first bounds object in the list
+     */
+    encapsulateBounds(bounds, sizeToFirst) {
+        if (sizeToFirst && bounds.length) {
+            this.copyBounds(bounds[0]);
+        }
+        if (bounds.length === 0) {
+            return;
+        }
+        let minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE, minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
+        bounds.forEach(p => {
+            if (p.x < minX) {
+                minX = p.x;
+            }
+            else if (p.right > maxX) {
+                maxX = p.right;
+            }
+            if (p.bottom < minY) {
+                minY = p.bottom;
+            }
+            else if (p.y > maxY) {
+                maxY = p.y;
+            }
+        });
+        // Make bounds that encompasses the bounds list, then we encapsulate
+        // Those bounds
+        this.encapsulate(new Bounds(minX, maxX, maxY, minY));
+    }
+    /**
+     * Grow this class to contain the specified point
+     *
+     * This method will not shrink this instance. It will only grow it as
+     * necessary.
+     *
+     * @param point The point to encapsulate
+     */
+    encapsulatePoint(point) {
+        if (point.x < this.x) {
+            this.width += this.x - point.x;
+            this.x = point.x;
+        }
+        if (point.y > this.y) {
+            this.height += point.y - this.y;
+            this.y = point.y;
+        }
+        if (point.x > this.right) {
+            this.width = point.x - this.x;
+        }
+        if (point.y < this.bottom) {
+            this.height = this.y - point.y;
+        }
+    }
+    /**
+     * Efficiently encapsulates a set of points by growing the current dimensions
+     * of the bounds until the points are enclosed. This will perform faster than
+     * running encapsulatePoint for a list of points.
+     *
+     * @param points An array of points that Can be of format {x, y} or [x, y]
+     *
+     * @memberOf Bounds
+     */
+    encapsulatePoints(points) {
+        let minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE, minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
+        if (points[0] !== undefined && points[0].x) {
+            points.forEach(p => {
+                if (p.x < minX) {
+                    minX = p.x;
+                }
+                else if (p.x > maxX) {
+                    maxX = p.x;
+                }
+                if (p.y < minY) {
+                    minY = p.y;
+                }
+                else if (p.y > maxY) {
+                    maxY = p.y;
+                }
+            });
+        }
+        else {
+            points.forEach(p => {
+                if (p[0] < minX) {
+                    minX = p[0];
+                }
+                else if (p[0] > maxX) {
+                    maxX = p[0];
+                }
+                if (p[1] < minY) {
+                    minY = p[1];
+                }
+                else if (p[1] > maxY) {
+                    maxY = p[1];
+                }
+            });
+        }
+        // Make bounds that encompasses the points, then we encapsulate
+        // Those bounds
+        this.encapsulate(new Bounds(minX, maxX, maxY, minY));
+    }
+    /**
+     * Checks to see if another bounds fits in itself.
+     *
+     * @param {Bounds} inner The bounds to test against
+     *
+     * @return {number} int 1 is an exact fit, 2 it fits with space, 0 it doesn't fit
+     */
+    fits(inner) {
+        if (this.width === inner.width) {
+            if (this.height === inner.height) {
+                return 1;
+            }
+        }
+        if (this.width >= inner.width) {
+            if (this.height >= inner.height) {
+                return 2;
+            }
+        }
+        return 0;
+    }
+    /**
+     * Check to see if the provided bounds intersects with this instance
+     *
+     * @param bounds The bounds to test against this instance
+     *
+     * @return True if the other object intersects with this instance
+     */
+    hitBounds(bounds) {
+        if (bounds.right < this.x) {
+            return false;
+        }
+        if (bounds.x > this.right) {
+            return false;
+        }
+        if (bounds.bottom > this.y) {
+            return false;
+        }
+        if (bounds.y < this.bottom) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Tests if a point is inside this bounds
+     *
+     * @param p The point to test
+     *
+     * @return boolean The point to test
+     */
+    pointInside(p) {
+        if (p.x < this.x) {
+            return false;
+        }
+        if (p.y > this.y) {
+            return false;
+        }
+        if (p.x > this.right) {
+            return false;
+        }
+        if (p.y < this.bottom) {
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Test function to type check the provided value
+     *
+     * @return True if value is a bounds object
+     */
+    static isBounds(value) {
+        // Falsy values aren't bounds objects
+        if (!value) {
+            return false;
+        }
+        // Direct test for bounds objects
+        if (value instanceof this) {
+            return true;
+        }
+        // Duck-typing check
+        return value &&
+            'containsPoint' in value &&
+            'encapsulate' in value &&
+            'hitTest' in value;
+    }
+    /**
+     * Check if the provided bounds is completely contained within this instance
+     *
+     * @param bounds The bounds to test against this instance
+     *
+     * @return True if the provided bounds is completely contained within this
+     * instance
+     */
+    isInside(bounds) {
+        return (bounds.x <= this.x &&
+            bounds.right >= this.right &&
+            bounds.y >= this.y &&
+            bounds.bottom <= this.bottom);
+    }
+    /**
+     * Generates a Bounds object covering max extents
+     *
+     * @return {Bounds} bounds covering as wide of a range as possible
+     */
+    static maxBounds() {
+        return new Bounds(Number.MIN_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MAX_VALUE);
+    }
+}
+exports.Bounds = Bounds;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const custom_selection_1 = __webpack_require__(25);
+var SelectionType;
+(function (SelectionType) {
+    SelectionType[SelectionType["MOUSEOVER_OUTER_RING"] = 0] = "MOUSEOVER_OUTER_RING";
+    SelectionType[SelectionType["MOUSEOVER_CHORD"] = 1] = "MOUSEOVER_CHORD";
+    SelectionType[SelectionType["SELECTED_CHORD"] = 2] = "SELECTED_CHORD";
+    SelectionType[SelectionType["RELATED_SELECTED_OUTER_SECTIONS"] = 3] = "RELATED_SELECTED_OUTER_SECTIONS";
+})(SelectionType = exports.SelectionType || (exports.SelectionType = {}));
+class Selection extends custom_selection_1.CustomSelection {
+}
+exports.Selection = Selection;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_4__;
+
+/***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -44782,8 +44782,8 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const ramda_1 = __webpack_require__(6);
-const interpolation_1 = __webpack_require__(18);
-const bounds_1 = __webpack_require__(1);
+const interpolation_1 = __webpack_require__(20);
+const bounds_1 = __webpack_require__(2);
 const line_1 = __webpack_require__(8);
 const point_1 = __webpack_require__(9);
 const debug = __webpack_require__(0)('bezier');
@@ -44998,7 +44998,6 @@ function makeCircularCCWSegments(line) {
     if (line.cachesSegments && line.cachedSegments) {
         return line.cachedSegments;
     }
-    debug('CCW');
     const straightLine = new line_1.Line(line.p1, line.p2);
     let radius = point_1.Point.getDistance(line.p1, line.controlPoints[0]);
     const midPoint = point_1.Point.getMidpoint(line.p1, line.p2);
@@ -45006,9 +45005,7 @@ function makeCircularCCWSegments(line) {
     if (radius < minRadius) {
         radius = point_1.Point.getDistance(midPoint, line.p1);
     }
-    debug('radius is %o, minRadius is %o', radius, minRadius);
     const perpendicular = straightLine.perpendicular;
-    debug('perpendicular is %o', perpendicular);
     const distance = Math.sqrt(radius * radius - minRadius * minRadius);
     const circleCenter = {
         x: -perpendicular.x * distance + midPoint.x,
@@ -45017,8 +45014,6 @@ function makeCircularCCWSegments(line) {
     // Store the circle center as an extra control point in case the value is needed
     // (which it often is)
     line.controlPoints[1] = circleCenter;
-    debug('p1 is %o, p2 is %o', line.p1, line.p2);
-    debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
     const direction1 = point_1.Point.getDirection(circleCenter, line.p1);
     const theta1 = Math.atan2(direction1.y, direction1.x);
     const direction2 = point_1.Point.getDirection(circleCenter, line.p2);
@@ -45090,25 +45085,19 @@ class CurvedLine extends bounds_1.Bounds {
     /**
      * Generates a primitive that describes a curved line, which is defined by the lines end points, type, and control points
      *
-     * @param {CurveType} type The type of curve. Determines how the control points are utilized
-     * @param {IPoint} p1 The start of the curve
-     * @param {IPoint} p2 The end of the curve
-     * @param {IPoint[]} controlPoints The control points that affects the curvature of the line
-     * @param {number} [resolution=20] The number of segments used to compose the line (more segments means prettier but more costly lines)
-     * @param {boolean} [cacheSegments=false] Speeds up line calculations for when the line does not change but takes more RAM
-     *
-     * @memberof CurvedLine
+     * @param {ICurvedLineOptions} options The configuration options of this curved line
      */
-    constructor(type, p1, p2, controlPoints, resolution = 20, cacheSegments = false) {
-        super(0, 0, 0, 0);
+    constructor(options) {
+        const minX = Number.MAX_VALUE, maxX = -Number.MAX_VALUE, minY = Number.MAX_VALUE, maxY = -Number.MAX_VALUE;
+        super(minX, maxX, maxY, minY);
         // Apply the relevant properties to the curve
-        this.cachesSegments = cacheSegments;
-        this.type = type;
-        this.resolution = resolution;
+        this.cachesSegments = options.cacheSegments || false;
+        this.type = options.type;
+        this.resolution = options.resolution || 20;
         // Set the metrics for this curved line
-        this.setPoints(p1, p2, controlPoints);
+        this.setPoints(options.start, options.end, options.controlPoints);
         // Set the method that will be used for calculating distance from a point
-        this.distanceMethod = pickDistanceMethod[type];
+        this.distanceMethod = pickDistanceMethod[options.type];
     }
     get values() {
         return {
@@ -45185,7 +45174,6 @@ class CurvedLine extends bounds_1.Bounds {
             }
             // Set the method that will be used for generating segments
             this.segmentMethod = segmentMethods[numControlPoints];
-            debug('sementMethod is %o', this.segmentMethod);
             // Make sure the input wasn't bad
             if (!this.segmentMethod) {
                 throw new Error('An Invalid number of control points was provided to a curved line. You must have at LEAST 1 control point. Or 0 for a straight line');
@@ -45213,7 +45201,7 @@ exports.CurvedLine = CurvedLine;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const bounds_1 = __webpack_require__(1);
+const bounds_1 = __webpack_require__(2);
 /**
  * Represents a line with a given slope
  */
@@ -45225,7 +45213,7 @@ class Line extends bounds_1.Bounds {
      * @param {IPoint} p2 The end point
      */
     constructor(p1, p2) {
-        super(0, 1, 0, 1);
+        super(0, 1, 1, 0);
         this.setPoints(p1, p2);
     }
     /**
@@ -45530,7 +45518,8 @@ exports.Point = Point;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const d3_color_1 = __webpack_require__(3);
+const d3_color_1 = __webpack_require__(4);
+const three_1 = __webpack_require__(1);
 const curved_line_1 = __webpack_require__(7);
 const line_1 = __webpack_require__(8);
 const point_1 = __webpack_require__(9);
@@ -45548,38 +45537,53 @@ class CurvedLineShape extends curved_line_1.CurvedLine {
     /**
      * Creates an instance of CurvedLineShape.
      *
-     * @param {CurveType} type The curve type. Defines
-     * @param {IPoint} p1
-     * @param {IPoint} p2
-     * @param {IPoint[]} controlPoints
-     * @param {number} [resolution=20]
-     * @param {boolean} [cacheSegments=false]
+     * @param {ICurvedLineShapeOptions} options The options for creating this line
      */
-    constructor(type, p1, p2, controlPoints, color, resolution = 20, cacheSegments = false) {
+    constructor(options) {
         // We pass our properties to the curve line but we do not let it cache it's version of the line segments
         // As we will be constructing our own segmentation requiring a new type of cache
-        super(type, p1, p2, controlPoints, resolution);
+        super(options);
         /** How thick the line should be */
         this.lineWidth = 1;
         /** Depeth of draw location */
         this.depth = 0;
-        // The color components of this line
+        // The starting color components of this line
         this.r = 0;
         this.g = 0;
         this.b = 0;
-        this.a = 0;
+        this.a = 1;
+        // The ending color components of this line
+        this.r2 = 0;
+        this.g2 = 0;
+        this.b2 = 0;
+        this.a2 = 1;
+        /**
+         * This indicates whether or not this line is rendered thin with a width of 1 or not
+         * thin lines perform much better than fat lines.
+         */
+        this.isThin = false;
         this.encapsulatePoints(this.getTriangleStrip());
-        this.cachesQuadSegments = cacheSegments;
-        if (color) {
-            this.color = color;
+        this.cachesQuadSegments = options.cacheSegments;
+        this.depth = options.depth || 0;
+        this.a = options.startOpacity || 0;
+        this.a2 = options.endOpacity || 0;
+        this.lineWidth = options.lineWidth || 1;
+        if (options.startColor) {
+            this.color = options.startColor;
+        }
+        if (options.endColor) {
+            this.endColor = options.endColor;
+        }
+        else if (options.startColor) {
+            this.endColor = options.startColor;
         }
     }
     /**
      * Retrieves the color of this curve based on gl color values
-     * @return {RGBColor}
+     * @return {Color}
      */
     get color() {
-        return d3_color_1.rgb(this.r, this.g, this.b, this.a);
+        return new three_1.Color(this.r, this.g, this.b);
     }
     /**
      * Retrieves the color of this curve based on 256 value colors
@@ -45592,20 +45596,31 @@ class CurvedLineShape extends curved_line_1.CurvedLine {
      * Applies an rgb color to this curve.
      */
     set color(val) {
-        // See if this is a base 255 color system
-        // For which we normalize the color
-        if (val.r > 1.0 || val.g > 1.0 || val.b > 1.0) {
-            this.r = val.r / 255.0;
-            this.g = val.g / 255.0;
-            this.b = val.b / 255.0;
-        }
-        else {
-            this.r = val.r;
-            this.g = val.g;
-            this.b = val.b;
-        }
-        // Set a, as it's always a 0-1 range
-        this.a = val.opacity;
+        this.r = val.r;
+        this.g = val.g;
+        this.b = val.b;
+    }
+    /**
+     * Retrieves the end color of this curve based on gl color values
+     * @return {Color}
+     */
+    get endColor() {
+        return new three_1.Color(this.r2, this.g2, this.b2);
+    }
+    /**
+     * Retrieves the end color of this curve based on 256 value colors
+     * @return {RGBColor}
+     */
+    get endColor256() {
+        return d3_color_1.rgb(this.r2 * 255.0, this.g2 * 255.0, this.b2 * 255.0, this.a);
+    }
+    /**
+     * Applies an ending rgb color to this curve.
+     */
+    set endColor(val) {
+        this.r2 = val.r;
+        this.g2 = val.g;
+        this.b2 = val.b;
     }
     /**
      * Returns a new instance of this object that mimicks the properties of this Object
@@ -45614,9 +45629,18 @@ class CurvedLineShape extends curved_line_1.CurvedLine {
      */
     clone() {
         // Perform the clone
-        const clone = new CurvedLineShape(this.type, this.p1, this.p2, this.controlPoints, this.color, this.resolution, this.cachesSegments);
-        clone.lineWidth = this.lineWidth;
-        clone.depth = this.depth;
+        const clone = new CurvedLineShape({
+            cacheSegments: this.cachesSegments,
+            controlPoints: this.controlPoints,
+            end: this.p2,
+            endOpacity: this.a2,
+            lineWidth: this.lineWidth,
+            resolution: this.resolution,
+            start: this.p1,
+            startColor: this.color,
+            startOpacity: this.a,
+            type: this.type,
+        });
         clone.d = this.d;
         return clone;
     }
@@ -45893,3384 +45917,7 @@ exports.getAncestor = getAncestor;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const bounds_1 = __webpack_require__(1);
-// A configuration that controls how readily a quadtree will split to another level
-// Adjusting this number can improve or degrade your performance significantly and
-// Must be tested for specific use cases
-const maxPopulation = 5;
-const maxDepth = 10;
-/**
- * This filters a quad tree query by type
- *
- * @export
- * @template T
- */
-function filterQuery(type, queryValues) {
-    const filtered = [];
-    queryValues.forEach((obj) => {
-        if (type.find(t => obj instanceof t)) {
-            filtered.push(obj);
-        }
-    });
-    return filtered;
-}
-exports.filterQuery = filterQuery;
-/**
- * This is a class used specifically by the quad tree nodes to indicate split space
- * within the quad tree.
- *
- * @class Quadrants
- */
-class Quadrants {
-    /**
-     * Creates an instance of Quadrants.
-     *
-     * @param bounds The bounds this will create quandrants for
-     * @param depth  The child depth of this element
-     *
-     * @memberOf Quadrants
-     */
-    constructor(bounds, depth) {
-        this.TL = null;
-        this.TR = null;
-        this.BL = null;
-        this.BR = null;
-        const mid = bounds.mid;
-        this.TL = new Node(bounds.x, mid.x, bounds.y, mid.y, depth);
-        this.TR = new Node(mid.x, bounds.right, bounds.y, mid.y, depth);
-        this.BL = new Node(bounds.x, mid.x, mid.y, bounds.bottom, depth);
-        this.BR = new Node(mid.x, bounds.right, mid.y, bounds.bottom, depth);
-    }
-    /**
-     * Ensures all memory is released for all nodes and all references are removed
-     * to potentially high memory consumption items
-     *
-     * @memberOf Quadrants
-     */
-    destroy() {
-        this.TL.destroy();
-        this.TR.destroy();
-        this.BL.destroy();
-        this.BR.destroy();
-        this.TL = null;
-        this.TR = null;
-        this.BL = null;
-        this.BR = null;
-    }
-}
-exports.Quadrants = Quadrants;
-/**
- * The quad tree node. This Node will take in a certain population before dividing itself into
- * 4 quadrants which it will attempt to inject it's population into. If a member of the population
- * does not completely get injected into one of the quadrants it remains as a member of this node.
- *
- * @export
- * @class Node
- */
-class Node {
-    /**
-     * Creates an instance of Node.
-     *
-     * @param l     The bounding left wall of the space this node covers
-     * @param r     The bounding right wall of the space this node covers
-     * @param t     The bounding top wall of the space this node covers
-     * @param b     The bounding bottom wall of the space this node covers
-     * @param depth The depth within the quad tree this node resides
-     *
-     * @memberOf Node
-     */
-    constructor(left, right, top, bottom, depth) {
-        this.bounds = null;
-        this.children = [];
-        this.childrenProps = [];
-        this.depth = 0;
-        this.nodes = null;
-        // If params insertted
-        if (arguments.length >= 4) {
-            this.bounds = new bounds_1.Bounds(left, right, top, bottom);
-        }
-        else {
-            this.bounds = new bounds_1.Bounds(0, 1, 0, 1);
-        }
-        // Ensure the depth is set
-        this.depth = depth || 0;
-    }
-    /**
-     * Destroys this node and ensures all child nodes are destroyed as well.
-     *
-     * @memberOf Node
-     */
-    destroy() {
-        this.children = null;
-        this.bounds = null;
-        if (this.nodes) {
-            this.nodes.destroy();
-            this.nodes = null;
-        }
-    }
-    /**
-     * Adds an object that extends Bounds (or is Bounds) and properly injects it into this node
-     * or into a sub quadrant if this node is split already. If the child is outside the boundaries
-     * this quad tree spans (and this is the root node), the quad tree will expand to include
-     * the new child.
-     *
-     * @param child The Bounds type object to inject
-     * @param props Properties that can be retrieved with the child object if applicable
-     *
-     * @returns True if the insertion was successful
-     *
-     * @memberOf Node
-     */
-    add(child, props) {
-        // This is the entry function for adding children, so we must first expand our top node
-        // To cover the area that the child is located.
-        // If we're in bounds, then let's just add the child
-        if (child.isInside(this.bounds)) {
-            return this.doAdd(child);
-        }
-        else {
-            this.cover(child);
-            return this.add(child, props);
-        }
-    }
-    /**
-     * Adds a list of new children to this quad tree. It performs the same operations as
-     * addChild for each child in the list, however, it more efficiently recalculates the
-     * bounds necessary to cover the area the children cover.
-     *
-     * @param children      List of Bounds objects to inject
-     * @param childrenProps List of props to associate with each element
-     *
-     * @memberOf Node
-     */
-    addAll(children, childrenProps) {
-        // Ensure the properties are at least defined
-        childrenProps = childrenProps || [];
-        // Make sure we cover the entire area of all the children.
-        // We can speed this up a lot if we first calculate the total bounds the new children covers
-        let minX = Number.MAX_VALUE;
-        let minY = Number.MAX_VALUE;
-        let maxX = -Number.MAX_VALUE;
-        let maxY = -Number.MAX_VALUE;
-        // Get the dimensions of the new bounds
-        children.forEach(child => {
-            if (child.x < minX) {
-                minX = child.x;
-            }
-            if (child.right > maxX) {
-                maxX = child.right;
-            }
-            if (child.y < minY) {
-                minY = child.y;
-            }
-            if (child.bottom > maxY) {
-                maxY = child.bottom;
-            }
-        });
-        // Make sure our bounds includes the specified bounds
-        this.cover(new bounds_1.Bounds(minX, maxX, minY, maxY));
-        // Add all of the children into the tree
-        children.forEach((child, index) => this.doAdd(child));
-    }
-    /**
-     * Ensures this quad tree includes the bounds specified in it's spatial coverage.
-     * This will cause all children to be re-injected into the tree.
-     *
-     * @param bounds The bounds to include in the tree's coverage
-     *
-     * @memberOf Node
-     */
-    cover(bounds) {
-        // If we are already covering the area: abort
-        if (bounds.isInside(this.bounds)) {
-            return;
-        }
-        // Make our bounds cover the new area
-        this.bounds.encapsulate(bounds);
-        this.bounds.x -= 1;
-        this.bounds.y -= 1;
-        this.bounds.width += 2;
-        this.bounds.height += 2;
-        // Get all of the children underneath this node
-        const allChildren = this.gatherChildren([]);
-        // Destroy the split nodes
-        if (this.nodes) {
-            // Completely...destroy...
-            this.nodes.destroy();
-            this.nodes = null;
-        }
-        // Reinsert all children with the new dimensions in place
-        allChildren.forEach((child, index) => this.doAdd(child));
-    }
-    /**
-     * When adding children, this performs the actual action of injecting the child into the tree
-     * without the process of seeing if the tree needs a spatial adjustment to account for the child.
-     *
-     * @param child The Bounds item to inject into the tree
-     * @param props The props to remain associated with the child
-     *
-     * @returns True if the injection was successful
-     *
-     * @memberOf Node
-     */
-    doAdd(child) {
-        // If nodes are present, then we have already exceeded the population of this node
-        if (this.nodes) {
-            if (child.isInside(this.nodes.TL.bounds)) {
-                return this.nodes.TL.doAdd(child);
-            }
-            if (child.isInside(this.nodes.TR.bounds)) {
-                return this.nodes.TR.doAdd(child);
-            }
-            if (child.isInside(this.nodes.BL.bounds)) {
-                return this.nodes.BL.doAdd(child);
-            }
-            if (child.isInside(this.nodes.BR.bounds)) {
-                return this.nodes.BR.doAdd(child);
-            }
-            // Otherwise, this is a child overlapping this border
-            this.children.push(child);
-            return true;
-        }
-        else if (child.isInside(this.bounds)) {
-            this.children.push(child);
-            // If we exceeded our population for this quadrant, it is time to split up
-            if (this.children.length > maxPopulation && this.depth < maxDepth) {
-                this.split();
-            }
-            return true;
-        }
-        // Otherwise, this quad tree needs to be resized to include the child
-        // But we will consider adds outside of the bounds an error
-        throw new Error('Child does not fit in node.');
-    }
-    /**
-     * Collects all children of all the current and sub nodes into a single list.
-     *
-     * @param list The list we must aggregate children into
-     *
-     * @return The list specified as the list parameter
-     */
-    gatherChildren(list) {
-        list = list.concat(this.children);
-        if (this.nodes) {
-            this.nodes.TL.gatherChildren(list);
-            this.nodes.TR.gatherChildren(list);
-            this.nodes.BL.gatherChildren(list);
-            this.nodes.BR.gatherChildren(list);
-        }
-        return list;
-    }
-    /**
-     * Collects all props associated with the children. This array of props will
-     * mirror the list retrieved with gatherChildren.
-     *
-     * @param list
-     *
-     * @returns The list specified as the list paramter
-     *
-     * @memberOf Node
-     */
-    gatherProps(list) {
-        this.children.forEach((c, index) => {
-            list.push(this.childrenProps[index]);
-        });
-        if (this.nodes) {
-            this.nodes.TL.gatherProps(list);
-            this.nodes.TR.gatherProps(list);
-            this.nodes.BL.gatherProps(list);
-            this.nodes.BR.gatherProps(list);
-        }
-        return list;
-    }
-    /**
-     * Entry query for determining query type based on input object
-     *
-     * @param bounds Can be a Bounds or a Point object
-     * @param visit  A callback function that will receive the Node as it is analyzed. This gives
-     *               information on a spatial scale, how a query reaches it's target intersections.
-     *
-     * @return An array of children that intersects with the query
-     */
-    query(bounds, visit) {
-        // Query a rectangle
-        if (bounds instanceof bounds_1.Bounds) {
-            if (bounds.hitBounds(this.bounds)) {
-                return this.queryBounds(bounds, [], visit);
-            }
-            // Return an empty array when nothing is collided with
-            return [];
-        }
-        // Query a point
-        if (this.bounds.containsPoint(bounds)) {
-            return this.queryPoint(bounds, [], visit);
-        }
-        // Return an empty array when nothing is collided with
-        return [];
-    }
-    /**
-     * Queries children for intersection with a bounds object
-     *
-     * @param b     The Bounds to test children against
-     * @param list  The list of children to aggregate into the query
-     * @param visit A callback function that will receive the Node as it is analyzed. This gives
-     *              information on a spatial scale, how a query reaches it's target intersections.
-     *
-     * @return     Returns the exact same list that was input as the list param
-     */
-    queryBounds(b, list, visit) {
-        this.children.forEach((c, index) => {
-            if (c.hitBounds(b)) {
-                list.push(c);
-            }
-        });
-        if (visit) {
-            visit(this);
-        }
-        if (this.nodes) {
-            if (b.hitBounds(this.nodes.TL.bounds)) {
-                this.nodes.TL.queryBounds(b, list, visit);
-            }
-            if (b.hitBounds(this.nodes.TR.bounds)) {
-                this.nodes.TR.queryBounds(b, list, visit);
-            }
-            if (b.hitBounds(this.nodes.BL.bounds)) {
-                this.nodes.BL.queryBounds(b, list, visit);
-            }
-            if (b.hitBounds(this.nodes.BR.bounds)) {
-                this.nodes.BR.queryBounds(b, list, visit);
-            }
-        }
-        return list;
-    }
-    /**
-     * Queries children for intersection with a point
-     *
-     * @param p     The Point to test children against
-     * @param list  The list of children to aggregate into the query
-     * @param visit A callback function that will receive the Node as it is analyzed. This gives
-     *              information on a spatial scale, how a query reaches it's target intersections.
-     *
-     * @return      Returns the exact same list that was input as the list param
-     */
-    queryPoint(p, list, visit) {
-        this.children.forEach((c, index) => {
-            if (c.containsPoint(p)) {
-                list.push(c);
-            }
-        });
-        if (visit) {
-            visit(this);
-        }
-        if (this.nodes) {
-            if (this.nodes.TL.bounds.containsPoint(p)) {
-                this.nodes.TL.queryPoint(p, list, visit);
-            }
-            if (this.nodes.TR.bounds.containsPoint(p)) {
-                this.nodes.TR.queryPoint(p, list, visit);
-            }
-            if (this.nodes.BL.bounds.containsPoint(p)) {
-                this.nodes.BL.queryPoint(p, list, visit);
-            }
-            if (this.nodes.BR.bounds.containsPoint(p)) {
-                this.nodes.BR.queryPoint(p, list, visit);
-            }
-        }
-        return list;
-    }
-    /**
-     * Creates four sub quadrants for this node.
-     */
-    split() {
-        // Gather all items to be handed down
-        const allChildren = this.gatherChildren([]);
-        // Gather all props for the children to be handed down as well
-        this.nodes = new Quadrants(this.bounds, this.depth + 1);
-        this.children = [];
-        this.childrenProps = [];
-        while (allChildren.length > 0) {
-            this.doAdd(allChildren.pop());
-        }
-    }
-    /**
-     * Traverses the quad tree returning every quadrant encountered
-     *
-     * @param cb A callback that has the parameter (node) which is a quadrant in the tree
-     */
-    visit(cb) {
-        const finished = Boolean(cb(this));
-        if (this.nodes && !finished) {
-            this.nodes.TL.visit(cb);
-            this.nodes.TR.visit(cb);
-            this.nodes.BL.visit(cb);
-            this.nodes.BR.visit(cb);
-        }
-    }
-}
-exports.Node = Node;
-class QuadTree extends Node {
-}
-exports.QuadTree = QuadTree;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_13__;
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(4);
-const bounds_1 = __webpack_require__(1);
-var AnchorPosition;
-(function (AnchorPosition) {
-    AnchorPosition[AnchorPosition["BottomLeft"] = 0] = "BottomLeft";
-    AnchorPosition[AnchorPosition["BottomRight"] = 1] = "BottomRight";
-    AnchorPosition[AnchorPosition["Custom"] = 2] = "Custom";
-    AnchorPosition[AnchorPosition["Middle"] = 3] = "Middle";
-    AnchorPosition[AnchorPosition["MiddleBottom"] = 4] = "MiddleBottom";
-    AnchorPosition[AnchorPosition["MiddleLeft"] = 5] = "MiddleLeft";
-    AnchorPosition[AnchorPosition["MiddleRight"] = 6] = "MiddleRight";
-    AnchorPosition[AnchorPosition["MiddleTop"] = 7] = "MiddleTop";
-    AnchorPosition[AnchorPosition["TopLeft"] = 8] = "TopLeft";
-    AnchorPosition[AnchorPosition["TopRight"] = 9] = "TopRight";
-})(AnchorPosition = exports.AnchorPosition || (exports.AnchorPosition = {}));
-const anchorCalculations = {
-    [AnchorPosition.BottomLeft]: (quad) => ({
-        x: 0,
-        y: quad.getSize().height,
-    }),
-    [AnchorPosition.BottomRight]: (quad) => ({
-        x: quad.getSize().width,
-        y: quad.getSize().height,
-    }),
-    [AnchorPosition.Custom]: (quad) => ({
-        x: 0,
-        y: 0,
-    }),
-    [AnchorPosition.Middle]: (quad) => ({
-        x: quad.getSize().width / 2,
-        y: quad.getSize().height / 2,
-    }),
-    [AnchorPosition.MiddleBottom]: (quad) => ({
-        x: quad.getSize().width / 2,
-        y: quad.getSize().height,
-    }),
-    [AnchorPosition.MiddleLeft]: (quad) => ({
-        x: 0,
-        y: quad.getSize().height / 2,
-    }),
-    [AnchorPosition.MiddleRight]: (quad) => ({
-        x: quad.getSize().width,
-        y: quad.getSize().height / 2,
-    }),
-    [AnchorPosition.MiddleTop]: (quad) => ({
-        x: quad.getSize().width / 2,
-        y: 0,
-    }),
-    [AnchorPosition.TopLeft]: (quad) => ({
-        x: 0,
-        y: 0,
-    }),
-    [AnchorPosition.TopRight]: (quad) => ({
-        x: quad.getSize().width,
-        y: 0,
-    }),
-};
-class RotateableQuad extends bounds_1.Bounds {
-    /**
-     * Generates a quad
-     *
-     * @param {IPoint} location The location of the quad (it's anchorpoint will be placed here)
-     * @param {number} width The width of the quad
-     * @param {number} height The height of the quad
-     * @param {AnchorPosition} anchor The anchor location of the quad.
-     *                                Location and rotation will be relative to this.
-     */
-    constructor(location, size, rotation, anchor = AnchorPosition.Middle) {
-        super(0, 0, 0, 0);
-        // Apply our properties
-        this.setAnchor(anchor);
-        this.setLocation(location);
-        this.setRotation(rotation);
-        this.setSize(size);
-        // Update the transform and the corner vertices
-        this.update();
-    }
-    /**
-     * @private
-     * Recalculates this anchor position based on the anchor type
-     *
-     * @param {AnchorPosition} anchor
-     */
-    calculateAnchor(anchor) {
-        this.anchor = anchorCalculations[anchor](this);
-    }
-    /**
-     * Get the base size of the quad
-     *
-     * @returns {ISize} The base size of this quad
-     */
-    getSize() {
-        return this.size;
-    }
-    /**
-     * Sets the specified anchor position on the quad
-     *
-     * @param {AnchorPosition} anchor This specifies an auto calculated position for the anchor
-     * @param {IPoint} custom If specified, will set a custom anchor location rather
-     *                        than the calculated version.
-     */
-    setAnchor(anchor = AnchorPosition.Middle, custom) {
-        this.anchorType = anchor;
-        // Apply the custom position if present
-        if (custom) {
-            this.anchorType = AnchorPosition.Custom;
-            this.anchor = custom;
-            return;
-        }
-        this.calculateAnchor(anchor);
-    }
-    /**
-     * This sets the location of this quad to a given position where the anchor
-     * point will be located on top of the location provided.
-     *
-     * @param {IPoint} location The location to place the quad
-     */
-    setLocation(location) {
-        this.location = location;
-    }
-    /**
-     * Sets the rotation of this quad, in radians, rotated around the anchor point.
-     *
-     * @param {number} rotation The rotation of the quad
-     */
-    setRotation(rotation) {
-        this.rotation = rotation;
-    }
-    /**
-     * Applies the size to the base
-     *
-     * @param {ISize} size The size of the base quad
-     */
-    setSize(size) {
-        this.size = size;
-        this.base = [
-            new three_1.Vector4(0, 0, 0, 1),
-            new three_1.Vector4(size.width, 0, 0, 1),
-            new three_1.Vector4(0, size.height, 0, 1),
-            new three_1.Vector4(size.width, size.height, 0, 1),
-        ];
-    }
-    /**
-     * This re-calculates the transform for this quad and applies the transform to
-     * the corners.
-     */
-    update() {
-        // Calculate the pieces of the transformation
-        const anchorMat = new three_1.Matrix4().makeTranslation(this.anchor.x, -this.anchor.y, 0);
-        const rotationMat = new three_1.Matrix4().makeRotationZ(this.rotation);
-        const locationMat = new three_1.Matrix4().makeTranslation(this.location.x, this.location.y, 0);
-        // Compose the transform based on the pieces and apply them
-        // In the proper compositing order
-        this.transform = new three_1.Matrix4()
-            .multiply(locationMat)
-            .multiply(rotationMat)
-            .multiply(anchorMat);
-        // Apply the transform to all of our base vertices
-        this.TL = this.base[0].clone().applyMatrix4(this.transform);
-        this.TR = this.base[1].clone().applyMatrix4(this.transform);
-        this.BL = this.base[2].clone().applyMatrix4(this.transform);
-        this.BR = this.base[3].clone().applyMatrix4(this.transform);
-        // Update the bounds of this object
-        this.x = this.TL.x;
-        this.y = this.TL.y;
-        this.width = 1;
-        this.height = 1;
-        this.encapsulatePoints([this.TR, this.BL, this.BR]);
-    }
-}
-exports.RotateableQuad = RotateableQuad;
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var LabelDirectionEnum;
-(function (LabelDirectionEnum) {
-    LabelDirectionEnum[LabelDirectionEnum["LINEAR"] = 0] = "LINEAR";
-    LabelDirectionEnum[LabelDirectionEnum["RADIAL"] = 1] = "RADIAL";
-})(LabelDirectionEnum = exports.LabelDirectionEnum || (exports.LabelDirectionEnum = {}));
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var chord_chart_1 = __webpack_require__(17);
-exports.ChordChart = chord_chart_1.ChordChart;
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const ramda_1 = __webpack_require__(6);
-const React = __webpack_require__(13);
-const bounds_1 = __webpack_require__(1);
-const curved_line_1 = __webpack_require__(7);
-const chord_generator_1 = __webpack_require__(22);
-const label_generator_1 = __webpack_require__(26);
-const outer_ring_generator_1 = __webpack_require__(30);
-const types_1 = __webpack_require__(15);
-const chord_chart_gl_1 = __webpack_require__(34);
-const selection_1 = __webpack_require__(2);
-const endpointDataProcessing_1 = __webpack_require__(11);
-function isOuterRing(curve) {
-    if (curve.type === curved_line_1.CurveType.CircularCCW)
-        return true;
-    return false;
-}
-function isChord(curve) {
-    if (curve.type === curved_line_1.CurveType.Bezier)
-        return true;
-    return false;
-}
-function recalculateTreeForData(data) {
-    data.tree = endpointDataProcessing_1.recalculateTree(data.endpoints, data.chords);
-    data.endpoints = endpointDataProcessing_1.getTreeLeafNodes(data.tree);
-    data.endpointById = new Map();
-    data.topEndPointByEndPointId = new Map();
-    data.topEndPointMaxDepth = new Map();
-    // Get the top level rendered elements (The very top elements does not render
-    // They merely group into chunks that can be spread apart)
-    const topLevel = [];
-    data.tree.forEach(top => topLevel.push(...top.children));
-    // Make a quick lookup to find the top endpoint for a given endpoint id
-    // Also make the maximum depth of the top endpoint available
-    topLevel.forEach(top => {
-        const toProcess = [...top.children];
-        let depth = 0;
-        let rowCount = top.children.length;
-        while (toProcess.length > 0) {
-            const current = toProcess.shift();
-            toProcess.push(...current.children);
-            data.topEndPointByEndPointId.set(current.id, top);
-            if (--rowCount <= 0) {
-                depth += 1;
-                rowCount = toProcess.length;
-            }
-        }
-        data.topEndPointByEndPointId.set(top.id, top);
-        data.topEndPointMaxDepth.set(top, depth);
-    });
-    data.endpoints.forEach(endpoint => {
-        data.endpointById.set(endpoint.id, endpoint);
-    });
-}
-/**
- * This defines a component that will render some test results. The shapes
- * rendered will be quads or bezier curves. The quads are for sanity and
- * debugging purposes.
- */
-class ChordChart extends React.Component {
-    constructor() {
-        super(...arguments);
-        /** Indicates if this component has fully mounted already or not */
-        this.initialized = false;
-        /** Selection manager */
-        this.selection = new selection_1.Selection();
-        // Make sure we don't recreate the bound object
-        this.viewport = new bounds_1.Bounds(-350, 350, -350, 350);
-        // Sets the default state
-        this.state = {
-            data: {
-                chords: [],
-                endpointById: new Map(),
-                endpoints: [],
-                topEndPointByEndPointId: new Map(),
-                topEndPointMaxDepth: new Map(),
-                tree: [],
-            },
-            zoom: 1,
-        };
-        this.handleZoomRequest = (zoom) => {
-            this.setState({
-                zoom,
-            });
-        };
-        this.handleMouseHover = (selections, mouse, world, projection) => {
-            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_CHORD);
-            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING);
-            if (selections.length > 0) {
-                let selection;
-                // If has outer ring thing grab it instead
-                const filteredSelections = selections.filter(s => s.type === curved_line_1.CurveType.CircularCCW);
-                if (filteredSelections.length > 0) {
-                    selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-                }
-                else {
-                    selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-                }
-                // Select the chord and it's related outer rings
-                if (isChord(selection)) {
-                    this.selection.select(selection_1.SelectionType.MOUSEOVER_CHORD, selection);
-                    selection.d.outerRings.forEach((ring) => {
-                        this.selection.select(selection_1.SelectionType.MOUSEOVER_OUTER_RING, ring);
-                    });
-                }
-                else if (isOuterRing(selection)) {
-                    this.selection.select(selection_1.SelectionType.MOUSEOVER_OUTER_RING, selection);
-                    selection.d.chords.forEach((chord) => {
-                        this.selection.select(selection_1.SelectionType.MOUSEOVER_CHORD, chord);
-                        // Make sure both ends of each chord are selected
-                        chord.d.outerRings.forEach((ring) => {
-                            this.selection.select(selection_1.SelectionType.MOUSEOVER_OUTER_RING, ring);
-                        });
-                    });
-                }
-                this.forceUpdate();
-            }
-        };
-        this.handleMouseLeave = (selections, mouse, world, projection) => {
-            selections.forEach(curve => {
-                if (curve.type === curved_line_1.CurveType.Bezier) {
-                    this.selection.deselect(selection_1.SelectionType.MOUSEOVER_CHORD, curve);
-                }
-                else if (curve.type === curved_line_1.CurveType.CircularCCW) {
-                    this.selection.deselect(selection_1.SelectionType.MOUSEOVER_OUTER_RING, curve);
-                }
-            });
-            if (selections.length > 0) {
-                this.forceUpdate();
-            }
-        };
-        this.handleMouseUp = (selections, mouse, world, projection) => {
-            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_CHORD);
-            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING);
-            if (selections.length > 0) {
-                let selection;
-                // If has outer ring thing grab it instead
-                const filteredSelections = selections.filter(s => s.type === curved_line_1.CurveType.CircularCCW);
-                if (filteredSelections.length > 0) {
-                    selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-                }
-                else {
-                    selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
-                }
-                if (this.props.onEndPointClick && selection.d.source.id) {
-                    this.props.onEndPointClick(selection.d.source.id, selection.d.source.metadata, {}, {});
-                }
-            }
-        };
-    }
-    /**
-     * @override
-     * We initialize any needed state here
-     */
-    componentWillMount() {
-        this.chordGenerator = new chord_generator_1.ChordGenerator();
-        this.labelGenerator = new label_generator_1.LabelGenerator();
-        this.outerRingGenerator = new outer_ring_generator_1.OuterRingGenerator();
-        const data = ramda_1.clone(this.props.data);
-        recalculateTreeForData(data);
-        this.setState({ data });
-    }
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.data) {
-            const data = ramda_1.clone(nextProps.data);
-            recalculateTreeForData(data);
-            this.setState({ data });
-        }
-    }
-    componentDidMount() {
-        this.initialized = true;
-    }
-    /**
-     * @override
-     * The react render method
-     */
-    render() {
-        const config = {
-            center: { x: 0, y: 0 },
-            groupSplitDistance: 50,
-            labelDirection: this.props.split ? types_1.LabelDirectionEnum.LINEAR : types_1.LabelDirectionEnum.RADIAL,
-            outerRingSegmentPadding: 0.005,
-            outerRingSegmentRowPadding: 2,
-            radius: 200,
-            ringWidth: 10,
-            splitTopLevelGroups: this.props.split,
-            topLevelGroupPadding: Math.PI / 4,
-        };
-        this.outerRingGenerator.generate(this.state.data, config, this.selection);
-        this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
-        this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
-        return (React.createElement(chord_chart_gl_1.ChordChartGL, { height: this.viewport.height, labels: this.labelGenerator.getBaseBuffer(), onZoomRequest: (zoom) => this.handleZoomRequest, staticCurvedLines: this.chordGenerator.getBaseBuffer(), staticRingLines: this.outerRingGenerator.getBaseBuffer(), interactiveCurvedLines: this.chordGenerator.getInteractionBuffer(), interactiveRingLines: this.outerRingGenerator.getInteractionBuffer(), onMouseHover: this.handleMouseHover, onMouseLeave: this.handleMouseLeave, onMouseUp: this.handleMouseUp, viewport: this.viewport, width: this.viewport.width, zoom: this.state.zoom }));
-    }
-}
-exports.ChordChart = ChordChart;
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * This calculates a quadratic bezier curve.
- *
- * We use specific bezier curve implementations for low degree curves as it is
- * much much faster to calculate.
- *
- * @param {number} t The 0 - 1 time interval for the part of the curve we desire
- * @param {IPoint} p1 The First end point of the curve
- * @param {IPoint} p2 The second end point of the curve
- * @param {IPoint} c1 The control point of the curve
- *
- * @returns {IPoint} The calculated point on the curve for the provided time interval
- */
-function bezier2(t, p1, p2, c1) {
-    const t2 = t * t;
-    const mt = 1 - t;
-    const mt2 = mt * mt;
-    return {
-        x: p1.x * mt2 + c1.x * 2 * mt * t + p2.x * t2,
-        y: p1.y * mt2 + c1.y * 2 * mt * t + p2.y * t2,
-    };
-}
-exports.bezier2 = bezier2;
-/**
- * This calculates a cubic bezier curve.
- *
- * We use specific bezier curve implementations for low degree curves as it is
- * much much faster to calculate.
- *
- * @param {number} t The 0 - 1 time interval for the part of the curve we desire
- * @param {IPoint} p1 The First end point of the curve
- * @param {IPoint} p2 The second end point of the curve
- * @param {IPoint} c1 The first control point of the curve
- * @param {IPoint} c2 The second control point of the curve
- *
- * @returns {IPoint} The calculated point on the curve for the provided time interval
- */
-function bezier3(t, p1, p2, c1, c2) {
-    const t2 = t * t;
-    const t3 = t2 * t;
-    const mt = 1 - t;
-    const mt2 = mt * mt;
-    const mt3 = mt2 * mt;
-    return {
-        x: p1.x * mt3 + 3 * c1.x * mt2 * t + 3 * c2.x * mt * t2 + p2.x * t3,
-        y: p1.y * mt3 + 3 * c1.y * mt2 * t + 3 * c2.y * mt * t2 + p2.y * t3,
-    };
-}
-exports.bezier3 = bezier3;
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ }),
-/* 20 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-/**
- * This is the common logic for both the Node.js and web browser
- * implementations of `debug()`.
- *
- * Expose `debug()` as the module.
- */
-
-exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
-exports.coerce = coerce;
-exports.disable = disable;
-exports.enable = enable;
-exports.enabled = enabled;
-exports.humanize = __webpack_require__(21);
-
-/**
- * The currently active debug mode names, and names to skip.
- */
-
-exports.names = [];
-exports.skips = [];
-
-/**
- * Map of special "%n" handling functions, for the debug "format" argument.
- *
- * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
- */
-
-exports.formatters = {};
-
-/**
- * Previous log timestamp.
- */
-
-var prevTime;
-
-/**
- * Select a color.
- * @param {String} namespace
- * @return {Number}
- * @api private
- */
-
-function selectColor(namespace) {
-  var hash = 0, i;
-
-  for (i in namespace) {
-    hash  = ((hash << 5) - hash) + namespace.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
-  }
-
-  return exports.colors[Math.abs(hash) % exports.colors.length];
-}
-
-/**
- * Create a debugger with the given `namespace`.
- *
- * @param {String} namespace
- * @return {Function}
- * @api public
- */
-
-function createDebug(namespace) {
-
-  function debug() {
-    // disabled?
-    if (!debug.enabled) return;
-
-    var self = debug;
-
-    // set `diff` timestamp
-    var curr = +new Date();
-    var ms = curr - (prevTime || curr);
-    self.diff = ms;
-    self.prev = prevTime;
-    self.curr = curr;
-    prevTime = curr;
-
-    // turn the `arguments` into a proper Array
-    var args = new Array(arguments.length);
-    for (var i = 0; i < args.length; i++) {
-      args[i] = arguments[i];
-    }
-
-    args[0] = exports.coerce(args[0]);
-
-    if ('string' !== typeof args[0]) {
-      // anything else let's inspect with %O
-      args.unshift('%O');
-    }
-
-    // apply any `formatters` transformations
-    var index = 0;
-    args[0] = args[0].replace(/%([a-zA-Z%])/g, function(match, format) {
-      // if we encounter an escaped % then don't increase the array index
-      if (match === '%%') return match;
-      index++;
-      var formatter = exports.formatters[format];
-      if ('function' === typeof formatter) {
-        var val = args[index];
-        match = formatter.call(self, val);
-
-        // now we need to remove `args[index]` since it's inlined in the `format`
-        args.splice(index, 1);
-        index--;
-      }
-      return match;
-    });
-
-    // apply env-specific formatting (colors, etc.)
-    exports.formatArgs.call(self, args);
-
-    var logFn = debug.log || exports.log || console.log.bind(console);
-    logFn.apply(self, args);
-  }
-
-  debug.namespace = namespace;
-  debug.enabled = exports.enabled(namespace);
-  debug.useColors = exports.useColors();
-  debug.color = selectColor(namespace);
-
-  // env-specific initialization logic for debug instances
-  if ('function' === typeof exports.init) {
-    exports.init(debug);
-  }
-
-  return debug;
-}
-
-/**
- * Enables a debug mode by namespaces. This can include modes
- * separated by a colon and wildcards.
- *
- * @param {String} namespaces
- * @api public
- */
-
-function enable(namespaces) {
-  exports.save(namespaces);
-
-  exports.names = [];
-  exports.skips = [];
-
-  var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-  var len = split.length;
-
-  for (var i = 0; i < len; i++) {
-    if (!split[i]) continue; // ignore empty strings
-    namespaces = split[i].replace(/\*/g, '.*?');
-    if (namespaces[0] === '-') {
-      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-    } else {
-      exports.names.push(new RegExp('^' + namespaces + '$'));
-    }
-  }
-}
-
-/**
- * Disable debug output.
- *
- * @api public
- */
-
-function disable() {
-  exports.enable('');
-}
-
-/**
- * Returns true if the given mode name is enabled, false otherwise.
- *
- * @param {String} name
- * @return {Boolean}
- * @api public
- */
-
-function enabled(name) {
-  var i, len;
-  for (i = 0, len = exports.skips.length; i < len; i++) {
-    if (exports.skips[i].test(name)) {
-      return false;
-    }
-  }
-  for (i = 0, len = exports.names.length; i < len; i++) {
-    if (exports.names[i].test(name)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Coerce `val`.
- *
- * @param {Mixed} val
- * @return {Mixed}
- * @api private
- */
-
-function coerce(val) {
-  if (val instanceof Error) return val.stack || val.message;
-  return val;
-}
-
-
-/***/ }),
-/* 21 */
-/***/ (function(module, exports) {
-
-/**
- * Helpers.
- */
-
-var s = 1000;
-var m = s * 60;
-var h = m * 60;
-var d = h * 24;
-var y = d * 365.25;
-
-/**
- * Parse or format the given `val`.
- *
- * Options:
- *
- *  - `long` verbose formatting [false]
- *
- * @param {String|Number} val
- * @param {Object} [options]
- * @throws {Error} throw an error if val is not a non-empty string or a number
- * @return {String|Number}
- * @api public
- */
-
-module.exports = function(val, options) {
-  options = options || {};
-  var type = typeof val;
-  if (type === 'string' && val.length > 0) {
-    return parse(val);
-  } else if (type === 'number' && isNaN(val) === false) {
-    return options.long ? fmtLong(val) : fmtShort(val);
-  }
-  throw new Error(
-    'val is not a non-empty string or a valid number. val=' +
-      JSON.stringify(val)
-  );
-};
-
-/**
- * Parse the given `str` and return milliseconds.
- *
- * @param {String} str
- * @return {Number}
- * @api private
- */
-
-function parse(str) {
-  str = String(str);
-  if (str.length > 100) {
-    return;
-  }
-  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(
-    str
-  );
-  if (!match) {
-    return;
-  }
-  var n = parseFloat(match[1]);
-  var type = (match[2] || 'ms').toLowerCase();
-  switch (type) {
-    case 'years':
-    case 'year':
-    case 'yrs':
-    case 'yr':
-    case 'y':
-      return n * y;
-    case 'days':
-    case 'day':
-    case 'd':
-      return n * d;
-    case 'hours':
-    case 'hour':
-    case 'hrs':
-    case 'hr':
-    case 'h':
-      return n * h;
-    case 'minutes':
-    case 'minute':
-    case 'mins':
-    case 'min':
-    case 'm':
-      return n * m;
-    case 'seconds':
-    case 'second':
-    case 'secs':
-    case 'sec':
-    case 's':
-      return n * s;
-    case 'milliseconds':
-    case 'millisecond':
-    case 'msecs':
-    case 'msec':
-    case 'ms':
-      return n;
-    default:
-      return undefined;
-  }
-}
-
-/**
- * Short format for `ms`.
- *
- * @param {Number} ms
- * @return {String}
- * @api private
- */
-
-function fmtShort(ms) {
-  if (ms >= d) {
-    return Math.round(ms / d) + 'd';
-  }
-  if (ms >= h) {
-    return Math.round(ms / h) + 'h';
-  }
-  if (ms >= m) {
-    return Math.round(ms / m) + 'm';
-  }
-  if (ms >= s) {
-    return Math.round(ms / s) + 's';
-  }
-  return ms + 'ms';
-}
-
-/**
- * Long format for `ms`.
- *
- * @param {Number} ms
- * @return {String}
- * @api private
- */
-
-function fmtLong(ms) {
-  return plural(ms, d, 'day') ||
-    plural(ms, h, 'hour') ||
-    plural(ms, m, 'minute') ||
-    plural(ms, s, 'second') ||
-    ms + ' ms';
-}
-
-/**
- * Pluralization helper.
- */
-
-function plural(ms, n, name) {
-  if (ms < n) {
-    return;
-  }
-  if (ms < n * 1.5) {
-    return Math.floor(ms / n) + ' ' + name;
-  }
-  return Math.ceil(ms / n) + ' ' + name + 's';
-}
-
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const selection_1 = __webpack_require__(2);
-const chord_base_cache_1 = __webpack_require__(24);
-const chord_interaction_cache_1 = __webpack_require__(25);
-const debug = __webpack_require__(0)('chord-generator');
-class ChordGenerator {
-    constructor() {
-        this.chordBase = new chord_base_cache_1.ChordBaseCache();
-        this.chordInteractions = new chord_interaction_cache_1.ChordInteractionsCache();
-    }
-    /**
-     * Flag which caches need busting
-     */
-    bustCaches(data, config, outerRings, selection) {
-        const didDataChange = data !== this.lastData;
-        const didSelectionChange = selection.didSelectionCategoryChange(selection_1.SelectionType.MOUSEOVER_CHORD);
-        const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
-        if (didSelectionChange || didDataChange || didHemisphereChange) {
-            this.chordBase.bustCache = true;
-        }
-        if (didSelectionChange || didHemisphereChange) {
-            this.chordInteractions.bustCache = true;
-        }
-        this.lastHemisphere = config.splitTopLevelGroups;
-        this.lastData = data;
-    }
-    /**
-     * Generates the buffers for static chords in the charts
-     */
-    generate(data, config, outerRings, selection) {
-        debug('Generating chords');
-        this.bustCaches(data, config, outerRings, selection);
-        this.chordBase.generate(data, config, outerRings, selection);
-        this.chordInteractions.generate(config, selection);
-    }
-    /**
-     * Get the base buffer
-     */
-    getBaseBuffer() {
-        return this.chordBase.getBuffer();
-    }
-    getInteractionBuffer() {
-        return this.chordInteractions.getBuffer();
-    }
-}
-exports.ChordGenerator = ChordGenerator;
-
-
-/***/ }),
-/* 23 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Takes a map of the form <T, boolean> and returns an array of the keys,
- * excluding entries who's mapped value is false.
- *
- * @param map The map to convert to a list
- *
- * @return T[] A list of the keys, exluding false mappings
- */
-function boolMapToArray(map) {
-    return Array
-        .from(map)
-        .filter((item) => item[1])
-        .map((item) => item[0]);
-}
-exports.boolMapToArray = boolMapToArray;
-/**
- * Defines a selection control for custom types and categories
- */
-class CustomSelection {
-    constructor() {
-        /** This caches the list generation of a selection */
-        this.cachedSelection = new Map();
-        /** Map of the custom categories to the selection state */
-        this.selections = new Map();
-        /** Keeps flags indicating if a selection for a given category has changed or not */
-        this._didSelectionChange = new Map();
-    }
-    /**
-     * Clears out all custom selections for every category
-     */
-    clearAllSelections() {
-        for (const key of this.selections.keys()) {
-            this.clearSelection(key);
-        }
-    }
-    /**
-     * Clears the selection for the category specified
-     *
-     * @param {string} category Name of the category of selection
-     */
-    clearSelection(category) {
-        // We must have selected items to clear the selection
-        if (this.getSelection(category).length) {
-            this.selections.set(category, null);
-            this.cachedSelection.set(category, null);
-            this._didSelectionChange.set(category, true);
-        }
-    }
-    /**
-     * Makes an item no longer flaged as selected within the given category
-     *
-     * @param category The custom category of the selection
-     * @param item The item to remove from being selected
-     */
-    deselect(category, item) {
-        const selectionMap = this.selections.get(category);
-        // See if the item is selected already, if it is, clear the selection and bust caches
-        if (selectionMap && selectionMap.get(item)) {
-            // Clear the cache for the selection list
-            this.cachedSelection.set(category, null);
-            // Set the selection
-            selectionMap.set(item, false);
-            // Flag the category of selections as changed
-            this._didSelectionChange.set(category, true);
-        }
-    }
-    /**
-     * Checks if a selection from a category has been modified
-     *
-     * @param {string} category The selection category to check
-     */
-    didSelectionCategoryChange(category) {
-        return this._didSelectionChange.get(category);
-    }
-    /**
-     * Checks if ANY selection has changed
-     *
-     * @return {boolean} True if any selection has changed
-     */
-    didSelectionChange() {
-        return boolMapToArray(this._didSelectionChange).length > 0;
-    }
-    /**
-     * This indicates that updates have taken place to account for selection
-     * changes.
-     */
-    finalizeUpdate() {
-        for (const key of this._didSelectionChange.keys()) {
-            this._didSelectionChange.set(key, false);
-        }
-    }
-    /**
-     * This retrieves a list of the items that are selected
-     *
-     * @param category The selection category to check on
-     *
-     * @return {T} Returns a list of items that are currently selected
-     */
-    getSelection(category) {
-        if (!this.cachedSelection.get(category)) {
-            const theSelection = this.selections.get(category);
-            if (theSelection) {
-                this.cachedSelection.set(category, boolMapToArray(theSelection));
-            }
-            else {
-                this.cachedSelection.set(category, []);
-            }
-        }
-        return this.cachedSelection.get(category);
-    }
-    /**
-     * Specifies an item to flag as selected for the given category
-     *
-     * @param category The custom category of the selection
-     * @param item The item to flag as selected
-     */
-    select(category, item) {
-        let selectionMap = this.selections.get(category);
-        if (!selectionMap) {
-            selectionMap = new Map();
-            this.selections.set(category, selectionMap);
-        }
-        if (!selectionMap.get(item)) {
-            // Clear the cache for the selection list
-            this.cachedSelection.set(category, null);
-            // Set the selection
-            selectionMap.set(item, true);
-            // Flag the category of selections as changed
-            this._didSelectionChange.set(category, true);
-        }
-    }
-    /**
-     * Specifies an item to toggle it's selection status for the provided category
-     *
-     * @param category The custom category of the selection
-     * @param item The item to flag as selected
-     */
-    toggleSelect(category, item) {
-        let selectionMap = this.selections.get(category);
-        if (!selectionMap) {
-            selectionMap = new Map();
-            this.selections.set(category, selectionMap);
-        }
-        // Clear the cache for the selection list
-        this.cachedSelection.set(category, null);
-        // Toggle the selection off if already selected
-        if (selectionMap.get(item)) {
-            this.deselect(category, item);
-        }
-        else {
-            this.select(category, item);
-        }
-        // Flag the category of selections as changed
-        this._didSelectionChange.set(category, true);
-    }
-}
-exports.CustomSelection = CustomSelection;
-
-
-/***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const d3_color_1 = __webpack_require__(3);
-const curved_line_shape_1 = __webpack_require__(10);
-const curved_line_1 = __webpack_require__(7);
-const shape_buffer_cache_1 = __webpack_require__(5);
-const selection_1 = __webpack_require__(2);
-const endpointDataProcessing_1 = __webpack_require__(11);
-const FADED_ALPHA = 0.1;
-const UNFADED_ALPHA = 0.5;
-function getEndpoint(data, targetName) {
-    function isTarget(endpoint) {
-        return endpoint.id === targetName;
-    }
-    return data.endpoints.find(isTarget);
-}
-function getFlowAngle(endpoint, flowIndex, segmentSpace) {
-    const angleStep = (endpoint.endAngle - endpoint.startAngle
-        - 2 * segmentSpace) / endpoint.totalCount;
-    return endpoint.startAngle + 2 * segmentSpace + (angleStep * flowIndex);
-}
-/**
- * Responsible for generating the static chords in the system
- *
- * @export
- * @class ChordBaseCache
- * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
- */
-class ChordBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
-    generate(data, config, outerRings, selection) {
-        super.generate.apply(this, arguments);
-    }
-    buildCache(data, config, outerRings, selection) {
-        const curves = this.preProcessData(data, config);
-        // Map the outer rings by id
-        const ringById = new Map();
-        outerRings.getBaseBuffer().forEach(ring => {
-            ringById.set(ring.d.source.id, ring);
-        });
-        const curveShapes = curves.map((curve) => {
-            const { r, g, b } = curve.color;
-            const color = selection.getSelection(selection_1.SelectionType.MOUSEOVER_CHORD).length > 0 ?
-                d3_color_1.rgb(r, g, b, FADED_ALPHA) :
-                d3_color_1.rgb(r, g, b, UNFADED_ALPHA);
-            const newCurve = new curved_line_shape_1.CurvedLineShape(curved_line_1.CurveType.Bezier, { x: curve.p1.x, y: curve.p1.y }, { x: curve.p2.x, y: curve.p2.y }, [{ x: curve.controlPoint.x, y: curve.controlPoint.y }], color);
-            // Set the relational and domain information for the chord
-            newCurve.d = {
-                outerRings: [
-                    ringById.get(curve.source.source),
-                    ringById.get(curve.source.target),
-                ],
-                source: curve.source,
-            };
-            // Apply the relational information to the outer rings as well
-            newCurve.d.outerRings.forEach(ring => {
-                ring.d.chords.push(newCurve);
-            });
-            newCurve.lineWidth = 3;
-            return newCurve;
-        });
-        this.buffer = curveShapes;
-    }
-    /**
-     * This processes the data to calculate initial needed metrics to make generating
-     * shapes simpler.
-     */
-    preProcessData(data, config) {
-        const { groupSplitDistance, outerRingSegmentPadding: segmentSpace, outerRingSegmentRowPadding: segmentRowPadding, radius: circleRadius, ringWidth, splitTopLevelGroups, topLevelGroupPadding: padding, } = config;
-        const controlPoint = { x: 0, y: 0 };
-        const curveData = [];
-        // First initialize any details not set in the endpoint
-        data.endpoints.forEach(end => {
-            end._inflowIdx = 0;
-            end._outflowIdx = 0;
-        });
-        // Decide the moving direction of points based on segments they are in
-        function getDirection(angle, trees) {
-            const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
-            return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
-        }
-        function calculatePoint(radius, flowAngle, split) {
-            let x = radius * Math.cos(flowAngle);
-            let y = radius * Math.sin(flowAngle);
-            if (split) {
-                const halfAngle = getDirection(flowAngle, data.tree);
-                x = radius * Math.cos(flowAngle) + groupSplitDistance * Math.cos(halfAngle);
-                y = radius * Math.sin(flowAngle) + groupSplitDistance * Math.sin(halfAngle);
-            }
-            return { x, y };
-        }
-        // Loop thrugh each endpoint and analyze the flows
-        data.endpoints.forEach((endpoint) => {
-            data.chords.forEach((flow) => {
-                if (flow.source === endpoint.id) {
-                    const destEndpoint = getEndpoint(data, flow.target);
-                    if (destEndpoint) {
-                        let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
-                        if (splitTopLevelGroups) {
-                            const ancestor1 = endpointDataProcessing_1.getAncestor(endpoint, data.tree);
-                            const ancRange1 = ancestor1.endAngle - ancestor1.startAngle;
-                            const scale1 = (ancRange1 - padding) / ancRange1;
-                            p1FlowAngle =
-                                ancestor1.startAngle + padding / 2 + (p1FlowAngle - ancestor1.startAngle) * scale1;
-                        }
-                        const p1 = calculatePoint(circleRadius - 0.5 * ringWidth - segmentRowPadding, p1FlowAngle, splitTopLevelGroups);
-                        // P2, destEnd
-                        let p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.totalCount - 1 - destEndpoint._inflowIdx, segmentSpace);
-                        if (splitTopLevelGroups) {
-                            const ancestor2 = endpointDataProcessing_1.getAncestor(destEndpoint, data.tree);
-                            const ancRange2 = ancestor2.endAngle - ancestor2.startAngle;
-                            const scale2 = (ancRange2 - padding) / ancRange2;
-                            p2FlowAngle =
-                                ancestor2.startAngle + padding / 2 + (p2FlowAngle - ancestor2.startAngle) * scale2;
-                        }
-                        const p2 = calculatePoint(circleRadius - 0.5 * ringWidth - segmentRowPadding, p2FlowAngle, splitTopLevelGroups);
-                        const color = d3_color_1.rgb(0.2, 0.3, 1.0, 1.0);
-                        endpoint._outflowIdx++;
-                        destEndpoint._inflowIdx++;
-                        curveData.push({
-                            color,
-                            controlPoint,
-                            destEndpoint,
-                            endpoint,
-                            p1,
-                            p2,
-                            source: flow,
-                        });
-                    }
-                }
-            });
-        });
-        return curveData;
-    }
-}
-exports.ChordBaseCache = ChordBaseCache;
-
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const shape_buffer_cache_1 = __webpack_require__(5);
-const selection_1 = __webpack_require__(2);
-const DEPTH = 10;
-/**
- * Responsible for generating the static chords in the system
- */
-class ChordInteractionsCache extends shape_buffer_cache_1.ShapeBufferCache {
-    generate(config, selection) {
-        super.generate.apply(this, arguments);
-    }
-    buildCache(config, selection) {
-        const shapes = Array();
-        selection.getSelection(selection_1.SelectionType.MOUSEOVER_CHORD).forEach(curve => {
-            // Duplicate the curves with active color
-            const curvedLine = curve.clone();
-            curvedLine.a = 1.0;
-            curvedLine.depth = DEPTH;
-            shapes.push(curvedLine);
-        });
-        this.buffer = shapes;
-    }
-}
-exports.ChordInteractionsCache = ChordInteractionsCache;
-
-
-/***/ }),
-/* 26 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const label_base_cache_1 = __webpack_require__(27);
-const debug = __webpack_require__(0)('label-generator');
-class LabelGenerator {
-    constructor() {
-        this.baseCache = new label_base_cache_1.LabelBaseCache();
-    }
-    bustCaches(data, config, selection) {
-        if (data !== this.currentData) {
-            this.baseCache.bustCache = true;
-        }
-        this.currentData = data;
-    }
-    /** */
-    generate(data, config, outerRingGenerator, selection) {
-        debug('Generating Labels');
-        this.bustCaches(data, config, selection);
-        this.baseCache.generate(data, outerRingGenerator, config, selection);
-    }
-    getBaseBuffer() {
-        return this.baseCache.getBuffer();
-    }
-}
-exports.LabelGenerator = LabelGenerator;
-
-
-/***/ }),
-/* 27 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const d3_color_1 = __webpack_require__(3);
-const label_1 = __webpack_require__(28);
-const line_1 = __webpack_require__(8);
-const point_1 = __webpack_require__(9);
-const rotateable_quad_1 = __webpack_require__(14);
-const shape_buffer_cache_1 = __webpack_require__(5);
-const types_1 = __webpack_require__(15);
-const debug = __webpack_require__(0)('label');
-/**
- * This calculates the equivalent angle to where it is bounded between
- * 0 and 2*pi
- */
-function ordinaryCircularAngle(angle) {
-    while (angle > 2 * Math.PI) {
-        angle -= 2 * Math.PI;
-    }
-    while (angle < 0) {
-        angle += 2 * Math.PI;
-    }
-    return angle;
-}
-/**
- * This takes in a ordinary circular angle and determines if the angle lies on
- * the right side of a circle.
- *
- * @param {number} angle The angle to test which hemisphere it lies on.
- *
- * @returns {boolean} True if the angle lies within the right hemisphere
- */
-function isRightHemisphere(angle) {
-    return ((angle >= 0 && angle < Math.PI / 2) ||
-        (angle > (3 * Math.PI) / 2));
-}
-/**
- * Responsible for generating the static labels around the chart
- *
- * @export
- * @class LabelBaseCache
- * @extends {ShapeBufferCache<Label<ICurvedLineData>>}
- */
-class LabelBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
-    generate(data, outerRingGenerator, config, selection) {
-        super.generate.apply(this, arguments);
-    }
-    buildCache(data, outerRingGenerator, config, selection) {
-        const inactiveOpacity = 0.3;
-        const activeOpacity = 1;
-        const defaultColor = d3_color_1.rgb(1, 1, 1, 1);
-        const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
-        const labels = labelsData.map((labelData) => {
-            const { r, g, b } = defaultColor;
-            const color = selection.getSelection('chord or ring mouse over').length > 0 ?
-                d3_color_1.rgb(r, g, b, inactiveOpacity) :
-                d3_color_1.rgb(r, g, b, activeOpacity);
-            const label = new label_1.Label({
-                color: color,
-                fontSize: 14,
-                text: labelData.name,
-            });
-            label.width = label.text.length * label.fontSize;
-            // If we're anchored at the middle left, we need to push a bit more outward
-            // In order to account for the length of the text field
-            if (!config.splitTopLevelGroups) {
-                if (labelData.anchor === rotateable_quad_1.AnchorPosition.MiddleLeft) {
-                    point_1.Point.add(labelData.point, point_1.Point.scale(labelData.direction, label.width / 2), labelData.point);
-                }
-                else {
-                    point_1.Point.add(labelData.point, point_1.Point.scale(labelData.direction, -label.width / 2), labelData.point);
-                }
-            }
-            else {
-                point_1.Point.add(labelData.point, point_1.Point.scale(point_1.Point.make(-1, 0), label.width / 2), labelData.point);
-            }
-            label.rasterizationOffset.y = 10.5;
-            label.rasterizationOffset.x = 0.5;
-            label.rasterizationPadding.height = -10;
-            label.rasterizationPadding.width = 4;
-            label.setAnchor(labelData.anchor);
-            label.setLocation(labelData.point);
-            label.setRotation(labelData.angle);
-            if (config.labelDirection === types_1.LabelDirectionEnum.LINEAR) {
-                label.setRotation(0);
-            }
-            return label;
-        });
-        this.buffer = labels;
-    }
-    preProcessData(data, outerRings, config) {
-        const { outerRingSegmentRowPadding: rowPadding, radius, ringWidth, splitTopLevelGroups, topLevelGroupPadding, } = config;
-        const paddedRingWidth = ringWidth + rowPadding;
-        // This method is used to calculate where the anchor point location will be
-        // For the label
-        const calculatePoint = (endpoint, direction, center) => {
-            // Get the depth of the ring's top level end point
-            const depth = data.topEndPointMaxDepth.get(data.topEndPointByEndPointId.get(endpoint.id)) + 1;
-            // How much is the label pushed out to account for all of the ring levels rendered
-            const ringPadding = paddedRingWidth * depth;
-            // Quick reference to the direction of the angle
-            const dx = direction.x;
-            const dy = direction.y;
-            // The distance from the center we should be
-            const distance = radius + ringPadding;
-            return {
-                x: (distance * dx) + center.x,
-                y: (distance * dy) + center.y,
-            };
-        };
-        const labelData = outerRings.map((ring) => {
-            // Do not render children that have children
-            if (ring.d.source.children.length > 0) {
-                return null;
-            }
-            const center = ring.controlPoints[1];
-            // Make a line between the end points
-            let ringLine = new line_1.Line(ring.p1, ring.p2);
-            if (splitTopLevelGroups) {
-                let topEndPoint = data.topEndPointByEndPointId.get(ring.d.source.id);
-                while (data.topEndPointByEndPointId.get(topEndPoint.parent)) {
-                    topEndPoint = data.topEndPointByEndPointId.get(topEndPoint.parent);
-                }
-                const ancestor = data.tree.filter((t) => t.id === topEndPoint.parent)[0];
-                const ancRange = ancestor.endAngle - ancestor.startAngle;
-                const scale = (ancRange - topLevelGroupPadding) / ancRange;
-                const newStartAngle = ancestor.startAngle + topLevelGroupPadding / 2 + (ring.d.source.startAngle - ancestor.startAngle) * scale;
-                const newEndAngle = ancestor.startAngle + topLevelGroupPadding / 2 + (ring.d.source.endAngle - ancestor.startAngle) * scale;
-                const p1 = {
-                    x: center.x + radius * Math.cos(newStartAngle),
-                    y: center.y + radius * Math.sin(newStartAngle),
-                };
-                const p2 = {
-                    x: center.x + radius * Math.cos(newEndAngle),
-                    y: center.y + radius * Math.sin(newEndAngle),
-                };
-                ringLine = new line_1.Line(p1, p2);
-                debug('ringline is %o', ringLine);
-            }
-            // Get the mid point and use the circle center to get the direction
-            // Vector needed to find the point in the middle of the arc
-            const direction = point_1.Point.getDirection(center, ringLine.mid, true);
-            // Get the angle derived from the direction we figured
-            let angle = ordinaryCircularAngle(Math.atan2(direction.y, direction.x));
-            // Determine the anchor position based on whether the angle is on the left or right hemisphere
-            const anchor = isRightHemisphere(angle) ? rotateable_quad_1.AnchorPosition.MiddleRight : rotateable_quad_1.AnchorPosition.MiddleLeft;
-            // Calculate the point the anchor of the label should be located
-            const point = calculatePoint(ring.d.source, direction, center);
-            // If the label is to appear on the right side of the area, then we must
-            // Rotate it by 180 degrees to have it render in the right location
-            if (anchor === rotateable_quad_1.AnchorPosition.MiddleLeft) {
-                angle += Math.PI;
-            }
-            return {
-                anchor,
-                angle,
-                direction,
-                name: ring.d.source.name,
-                point,
-            };
-        })
-            .filter(Boolean);
-        return labelData;
-    }
-}
-exports.LabelBaseCache = LabelBaseCache;
-
-
-/***/ }),
-/* 28 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const d3_color_1 = __webpack_require__(3);
-const ramda_1 = __webpack_require__(6);
-const rotateable_quad_1 = __webpack_require__(14);
-const sprite_1 = __webpack_require__(29);
-const measurement = new sprite_1.Sprite(200, 200, 1, 1);
-const defaultColor = d3_color_1.rgb(255, 255, 255, 1);
-class Label extends rotateable_quad_1.RotateableQuad {
-    /**
-     * Creates an instance of Label.
-     *
-     * @param {Partial<Label<T>>} [options={}]
-     */
-    constructor(options = {}) {
-        super({ x: 0, y: 0 }, { width: 1, height: 1 }, 0, rotateable_quad_1.AnchorPosition.TopLeft);
-        this.color = defaultColor;
-        this.depth = 0;
-        this.direction = 'inherit';
-        this.font = 'serif';
-        this.fontSize = 10;
-        this.fontWeight = 400;
-        this.maxWidth = undefined;
-        this.text = '';
-        this.textAlign = 'start';
-        this.textBaseline = 'alphabetic';
-        this.zoomable = false;
-        /**
-         * This contains an adjustment to aid in the rasterization process. Getting
-         * reliable dimensions for fonts and text can be incredibly challenging,
-         * thus, this allows you to offset the rasterization if you get pieces of
-         * the label cut off.
-         */
-        this.rasterizationOffset = { x: 0, y: 12 };
-        /**
-         * This contains an adjustment to aid in the rasterization process. Getting
-         * reliable dimensions for fonts and text can be incredibly challenging,
-         * thus, this allows you to pad the rasterization space if you get pieces of
-         * the label cut off.
-         */
-        this.rasterizationPadding = { width: 0, height: 0 };
-        // Set props
-        Object.assign(this, options);
-        // Make sure the color is a copy
-        this.color = d3_color_1.rgb(this.color);
-        // Calculate the text's measurements
-        measurement.context.font = this.makeCSSFont();
-        const measuredSize = measurement.context.measureText(this.text);
-        // Adjust the dimensions to the measurement
-        this.setSize({
-            height: this.fontSize + 10,
-            width: measuredSize.width,
-        });
-    }
-    /**
-     * Copies all of the properties of a label and makes this label use them
-     *
-     * @param {Label} label The labels whose properties we wish to copy
-     */
-    copyLabel(label) {
-        // Assign the properties of the other label to this
-        // Specifically, ONLY label properties
-        Object.assign(this, ramda_1.omit(['x', 'y', 'width', 'height'], label));
-        // Use this to set the text to make sure all of the metrics are re-calculated
-        this.setText(label.text);
-    }
-    /**
-     * Takes all of the current settings and makes a CSS font string
-     */
-    makeCSSFont(fontSize) {
-        return `${this.fontWeight} ${fontSize || this.fontSize}px ${this.font}`;
-    }
-    /**
-     * Change the position this text is rendered to
-     *
-     * @param x X world coordinate
-     * @param y Y world coordinate
-     */
-    position(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-    /**
-     * Change the text and the calculated bounding box for this label
-     */
-    setText(lbl) {
-        // Recalculate text size
-        measurement.context.font = this.makeCSSFont();
-        const size = measurement.context.measureText(lbl);
-        // Set our properties based on the calculated size
-        this.height = this.fontSize;
-        this.text = lbl;
-        this.width = size.width;
-    }
-}
-exports.Label = Label;
-
-
-/***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * A canvas element wrapper that aids in tracking a canvas element along with
- * content scaling properties.
- *
- * @class Sprite
- */
-class Sprite {
-    //
-    // Ctor at the top below props
-    //
-    /**
-     * Creates an instance of Sprite.
-     *
-     * @param w             The width of the context to create
-     * @param h             The height of the context to create
-     * @param contentScaleX The content scaling of the content
-     * @param contentScaleY The content scaling of the content
-     *
-     * @memberOf Sprite
-     */
-    constructor(w, h, contentScaleX, contentScaleY) {
-        this.scaleX = 1;
-        this.scaleY = 1;
-        const canvas = document.createElement('canvas');
-        if (canvas) {
-            this.scaleX = contentScaleX || this.scaleX;
-            this.scaleY = contentScaleY || this.scaleY;
-            canvas.width = w * this.scaleX;
-            canvas.height = h * this.scaleY;
-            this.context = canvas.getContext('2d');
-            this.canvas = canvas;
-        }
-    }
-    /**
-     * Retrieves the content scaling of this object
-     *
-     * @readonly
-     *
-     * @memberOf Sprite
-     */
-    getContentScale() {
-        return {
-            x: this.scaleX,
-            y: this.scaleY,
-        };
-    }
-    /**
-     * Retrieves the size of the content ignoring scaling
-     *
-     * @readonly
-     *
-     * @memberOf Sprite
-     */
-    getContentSize() {
-        return {
-            height: this.canvas.height,
-            width: this.canvas.width,
-        };
-    }
-    /**
-     * Retrieves the dimensional width of the content applying scaling
-     *
-     * @readonly
-     *
-     * @memberOf Sprite
-     */
-    getWidth() {
-        return this.canvas.width / this.scaleX;
-    }
-    /**
-     * Retrieves the dimensional height of the content applying scaling
-     *
-     * @readonly
-     *
-     * @memberOf Sprite
-     */
-    getHeight() {
-        return this.canvas.height / this.scaleY;
-    }
-}
-exports.Sprite = Sprite;
-
-
-/***/ }),
-/* 30 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const selection_1 = __webpack_require__(2);
-const outer_ring_base_cache_1 = __webpack_require__(31);
-const outer_ring_interaction_cache_1 = __webpack_require__(33);
-const debug = __webpack_require__(0)('outer-ring-chart');
-class OuterRingGenerator {
-    constructor() {
-        this.outerRingBase = new outer_ring_base_cache_1.OuterRingBaseCache();
-        this.outerRingInteraction = new outer_ring_interaction_cache_1.OuterRingInteractionsCache();
-    }
-    /**
-     * Flag which caches need busting
-     */
-    bustCaches(data, config, selection) {
-        const didDataChange = data !== this.lastData;
-        const didSelectionChange = selection.didSelectionCategoryChange(selection_1.SelectionType.MOUSEOVER_OUTER_RING);
-        const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
-        if (didDataChange || didSelectionChange || didHemisphereChange) {
-            this.outerRingBase.bustCache = true;
-        }
-        if (didDataChange || didSelectionChange || didHemisphereChange) {
-            this.outerRingInteraction.bustCache = true;
-        }
-        this.lastData = data;
-        this.lastHemisphere = config.splitTopLevelGroups;
-    }
-    /**
-     * Generates the buffers for static outer rings in the charts
-     */
-    generate(data, config, selection) {
-        debug('Generating outer rings');
-        this.bustCaches(data, config, selection);
-        debug(data);
-        this.outerRingBase.generate(data, config, selection);
-        this.outerRingInteraction.generate(data, config, selection);
-    }
-    /**
-     * Get the base buffer
-     */
-    getBaseBuffer() {
-        return this.outerRingBase.getBuffer();
-    }
-    getInteractionBuffer() {
-        return this.outerRingInteraction.getBuffer();
-    }
-}
-exports.OuterRingGenerator = OuterRingGenerator;
-
-
-/***/ }),
-/* 31 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const d3_color_1 = __webpack_require__(3);
-const d3_scale_1 = __webpack_require__(32);
-const curved_line_shape_1 = __webpack_require__(10);
-const curved_line_1 = __webpack_require__(7);
-const shape_buffer_cache_1 = __webpack_require__(5);
-const selection_1 = __webpack_require__(2);
-const endpointDataProcessing_1 = __webpack_require__(11);
-const debug = __webpack_require__(0)('outer-ring-base');
-const DEPTH = 21;
-const FADED_ALPHA = 0.1;
-const UNFADED_ALPHA = 1.0;
-/**
- * Responsible for generating the static outer rings in the system
- */
-class OuterRingBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
-    generate(data, config, selection) {
-        super.generate.apply(this, arguments);
-    }
-    buildCache(data, config, selection) {
-        const { ringWidth } = config;
-        const segments = this.preProcessData(data, config);
-        // Check if a selection exists such that the base needs to be faded
-        const hasSelection = selection.getSelection(selection_1.SelectionType.MOUSEOVER_CHORD).length > 0 ||
-            selection.getSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING).length > 0;
-        const circleEdges = segments.map((segment) => {
-            const { r, g, b } = segment.color;
-            const color = hasSelection ? d3_color_1.rgb(r, g, b, FADED_ALPHA) : d3_color_1.rgb(r, g, b, UNFADED_ALPHA);
-            const curve = new curved_line_shape_1.CurvedLineShape(curved_line_1.CurveType.CircularCCW, { x: segment.p1.x, y: segment.p1.y }, { x: segment.p2.x, y: segment.p2.y }, [{ x: segment.controlPoint.x, y: segment.controlPoint.y }], d3_color_1.rgb(color.r, color.g, color.b, color.opacity), 200);
-            curve.lineWidth = ringWidth;
-            curve.depth = DEPTH;
-            curve.d = {
-                chords: [],
-                source: segment.source,
-            };
-            return curve;
-        });
-        debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
-        this.buffer = circleEdges;
-    }
-    /**
-     * This processes the data to calculate initial needed metrics to make generating
-     * shapes simpler.
-     */
-    preProcessData(data, config) {
-        const { groupSplitDistance, outerRingSegmentPadding: segmentPadding, outerRingSegmentRowPadding: segmentRowPadding, radius: circleRadius, ringWidth, splitTopLevelGroups: splitGroups, topLevelGroupPadding: padding, } = config;
-        const paddedRingWidth = ringWidth + segmentRowPadding;
-        let controlPoint = { x: 0, y: 0 };
-        debug('data is %o', data);
-        // Decide the moving direction of points based on segments they are in
-        function getDirection(angle, trees) {
-            const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
-            return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
-        }
-        // Get depth of tree in order to render layers
-        function getDepthOfTree(tree) {
-            if (tree.children === undefined || tree.children.length === 0)
-                return 1;
-            let max = 0;
-            tree.children.forEach((c) => {
-                const temp = getDepthOfTree(c);
-                if (temp > max)
-                    max = temp;
-            });
-            return max + 1;
-        }
-        // Travel the tree to render three layers of ring
-        function traverseTree(tree) {
-            let segments = [];
-            tree.forEach((t) => {
-                const depth = getDepthOfTree(t);
-                if (depth > 1) {
-                    const startAngle = t.startAngle + segmentPadding;
-                    const endAngle = t.endAngle - segmentPadding;
-                    let p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, startAngle);
-                    let p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, endAngle);
-                    if (splitGroups) {
-                        const ancestor = endpointDataProcessing_1.getAncestor(t, data.tree);
-                        debug('ancestor is %o,t is %o', ancestor, t);
-                        if (ancestor !== undefined) {
-                            const ancRange = ancestor.endAngle - ancestor.startAngle;
-                            const scale = (ancRange - padding) / ancRange;
-                            const newStartAngle = ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
-                            const newEndAngle = ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
-                            p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newStartAngle);
-                            p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newEndAngle);
-                        }
-                        else {
-                            const ancRange = t.endAngle - t.startAngle;
-                            const scale = (ancRange - padding) / ancRange;
-                            const newStartAngle = t.startAngle + padding / 2 + (startAngle - t.startAngle) * scale;
-                            const newEndAngle = t.startAngle + padding / 2 + (endAngle - t.startAngle) * scale;
-                            p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newStartAngle);
-                            p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newEndAngle);
-                        }
-                        const angle = t.startAngle + segmentPadding;
-                        const halfAngle = getDirection(angle, data.tree);
-                        controlPoint = {
-                            x: groupSplitDistance * Math.cos(halfAngle),
-                            y: groupSplitDistance * Math.sin(halfAngle),
-                        };
-                    }
-                    const colorVal = d3_color_1.rgb(d3_color_1.color(calculateColor(t.id)));
-                    const flows = [];
-                    if (depth >= 2 && t.parent !== '') {
-                        segments.push({
-                            color: colorVal,
-                            controlPoint,
-                            flows,
-                            id: t.id,
-                            p1,
-                            p2,
-                            source: t,
-                        });
-                    }
-                    const childSegments = traverseTree(t.children);
-                    segments = segments.concat(childSegments);
-                }
-            });
-            return segments;
-        }
-        const calculatePoint = (radius, radianAngle) => {
-            let x = radius * Math.cos(radianAngle);
-            let y = radius * Math.sin(radianAngle);
-            // Change the position in hemiSphere
-            if (splitGroups) {
-                const halfAngle = getDirection(radianAngle, data.tree);
-                x = radius * Math.cos(radianAngle) + groupSplitDistance * Math.cos(halfAngle);
-                y = radius * Math.sin(radianAngle) + groupSplitDistance * Math.sin(halfAngle);
-            }
-            return { x, y };
-        };
-        const ids = data.endpoints.map((endpoint) => endpoint.id);
-        const calculateColor = d3_scale_1.scaleOrdinal(d3_scale_1.schemeCategory20).domain(ids);
-        const segments = data.endpoints.map((endpoint) => {
-            const startAngle = endpoint.startAngle + segmentPadding;
-            const endAngle = endpoint.endAngle - segmentPadding;
-            let p1 = calculatePoint(circleRadius, startAngle);
-            let p2 = calculatePoint(circleRadius, endAngle);
-            // Change controlPoint in hemiSphere
-            if (splitGroups) {
-                const ancestor = endpointDataProcessing_1.getAncestor(endpoint, data.tree);
-                const ancRange = ancestor.endAngle - ancestor.startAngle;
-                const scale = (ancRange - padding) / ancRange;
-                const newStartAngle = ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
-                const newEndAngle = ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
-                p1 = calculatePoint(circleRadius, newStartAngle);
-                p2 = calculatePoint(circleRadius, newEndAngle);
-                const angle = endpoint.startAngle + segmentPadding;
-                const halfAngle = getDirection(angle, data.tree);
-                controlPoint = { x: groupSplitDistance * Math.cos(halfAngle), y: groupSplitDistance * Math.sin(halfAngle) };
-            }
-            const colorVal = d3_color_1.rgb(d3_color_1.color(calculateColor(endpoint.id)));
-            const flows = data.chords.filter((flow) => flow.source === endpoint.id);
-            return {
-                color: colorVal,
-                controlPoint,
-                flows,
-                id: endpoint.id,
-                p1,
-                p2,
-                source: endpoint,
-            };
-        });
-        const segments2 = traverseTree(data.tree);
-        return segments.concat(segments2);
-    }
-}
-exports.OuterRingBaseCache = OuterRingBaseCache;
-
-
-/***/ }),
-/* 32 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_32__;
-
-/***/ }),
-/* 33 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const shape_buffer_cache_1 = __webpack_require__(5);
-const selection_1 = __webpack_require__(2);
-const depth = 21;
-/**
- * Responsible for generating the static OuterRings in the system
- */
-class OuterRingInteractionsCache extends shape_buffer_cache_1.ShapeBufferCache {
-    generate(data, config, selection) {
-        super.generate.apply(this, arguments);
-    }
-    buildCache(data, config, selection) {
-        const shapes = Array();
-        selection.getSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
-            // Highlight hovered ring
-            const curvedLine = selected.clone();
-            curvedLine.a = 1.0;
-            curvedLine.depth = depth;
-            shapes.push(curvedLine);
-        });
-        this.buffer = shapes;
-    }
-}
-exports.OuterRingInteractionsCache = OuterRingInteractionsCache;
-
-
-/***/ }),
-/* 34 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(4);
-const curved_line_shape_1 = __webpack_require__(10);
-const buffer_util_1 = __webpack_require__(35);
-const quad_tree_1 = __webpack_require__(12);
-const quad_tree_2 = __webpack_require__(12);
-const webgl_surface_1 = __webpack_require__(36);
-const debug = __webpack_require__(0)('chord-chart:gl');
-// --[ CONSTANTS ]-------------------------------------------
-// Indicate how big our buffers for vertices can be
-const BASE_QUAD_DEPTH = 0;
-// --[ SHADERS ]-------------------------------------------
-const bezierVertexShader = __webpack_require__(43);
-const fillVertexShader = __webpack_require__(44);
-const fillFragmentShader = __webpack_require__(45);
-const textureVertexShader = __webpack_require__(46);
-const textureFragmentShader = __webpack_require__(47);
-/**
- * The base component for the communications view
- */
-class ChordChartGL extends webgl_surface_1.WebGLSurface {
-    constructor() {
-        super(...arguments);
-        // CURVED LINE BUFFER ITEMS
-        this.animatedCurvedBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        this.interactiveCurvedBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        this.interactiveRingBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        this.staticCurvedBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        this.staticRingBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        // LABELS BUFFER ITEMS
-        this.staticLabelBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        this.interactiveLabelBufferItems = buffer_util_1.BufferUtil.makeBufferItems();
-        /** The current dataset that is being rendered by this component */
-        this.animatedCurvedLines = [];
-        /** The current dataset that is being rendered by this component */
-        this.interactiveCurvedLines = [];
-        this.interactiveRingLines = [];
-        /** The current dataset that is being rendered by this component */
-        this.staticCurvedLineSet = [];
-        // Keeps track of some maouse interaction states
-        this.mouseHovered = new Map();
-    }
-    /**
-     * Applies new props injected into this component.
-     *
-     * @param  props The new properties for this component
-     */
-    applyBufferChanges(props) {
-        const { staticCurvedLines, staticRingLines, interactiveCurvedLines, interactiveRingLines, } = props;
-        // Set to true when the quad tree needs to be updated
-        let needsTreeUpdate = false;
-        // Commit static curved lines
-        {
-            const numVerticesPerSegment = 6;
-            const colorAttributeSize = 4;
-            const length = 20;
-            buffer_util_1.BufferUtil.beginUpdates();
-            for (const curvedLine of staticCurvedLines) {
-                needsTreeUpdate = buffer_util_1.BufferUtil.updateBuffer(staticCurvedLines, this.staticCurvedBufferItems, numVerticesPerSegment, length, function (i, positions, ppos, colors, cpos, normals, npos, endPoints, epos, controlPoints, copos) {
-                    // Copy first vertex twice for intro degenerate tri
-                    positions[ppos] = (i + 1) / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    // Skip over degenerate tris color
-                    cpos += colorAttributeSize;
-                    normals[npos] = 1;
-                    endPoints[epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // TR
-                    positions[++ppos] = (i + 1) / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = 1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // BR
-                    positions[++ppos] = (i + 1) / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = -1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // TL
-                    positions[++ppos] = i / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = 1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // BL
-                    positions[++ppos] = i / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = -1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // Copy last vertex again for degenerate tri
-                    positions[++ppos] = i / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    // Skip over degenerate tris for color
-                    cpos += colorAttributeSize;
-                    normals[++npos] = -1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                });
-                // If no updating is happening, just quit the loop
-                if (!needsTreeUpdate) {
-                    break;
-                }
-            }
-            const numBatches = buffer_util_1.BufferUtil.endUpdates();
-            // Only if updates happened, should this change
-            if (needsTreeUpdate) {
-                this.staticCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-            }
-        }
-        // Commit ring curved lines using old methods
-        {
-            const numVerticesPerSegment = 6;
-            const colorAttributeSize = 4;
-            let stripPos = 0;
-            buffer_util_1.BufferUtil.beginUpdates();
-            for (const curvedLine of staticRingLines) {
-                const strip = curvedLine.getTriangleStrip();
-                let TR;
-                let BR;
-                let TL;
-                let BL;
-                needsTreeUpdate = buffer_util_1.BufferUtil.updateBuffer(staticRingLines, this.staticRingBufferItems, numVerticesPerSegment, strip.length / 4, function (i, positions, ppos, colors, cpos) {
-                    stripPos = i * 4;
-                    TR = strip[stripPos];
-                    BR = strip[stripPos + 1];
-                    TL = strip[stripPos + 2];
-                    BL = strip[stripPos + 3];
-                    // 1
-                    positions[ppos] = TR.x;
-                    positions[++ppos] = TR.y;
-                    positions[++ppos] = curvedLine.depth;
-                    cpos += colorAttributeSize;
-                    // 2
-                    positions[++ppos] = TR.x;
-                    positions[++ppos] = TR.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 3
-                    positions[++ppos] = BR.x;
-                    positions[++ppos] = BR.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 4
-                    positions[++ppos] = TL.x;
-                    positions[++ppos] = TL.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 5
-                    positions[++ppos] = BL.x;
-                    positions[++ppos] = BL.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 6
-                    positions[++ppos] = BL.x;
-                    positions[++ppos] = BL.y;
-                    positions[++ppos] = curvedLine.depth;
-                    cpos += colorAttributeSize;
-                });
-                if (!needsTreeUpdate) {
-                    break;
-                }
-            }
-            const numBatches = buffer_util_1.BufferUtil.endUpdates();
-            if (needsTreeUpdate) {
-                this.staticRingBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-            }
-        }
-        // Commit interactive curved lines
-        {
-            const numVerticesPerSegment = 6;
-            const colorAttributeSize = 4;
-            let willUpdate = false;
-            const length = 20;
-            buffer_util_1.BufferUtil.beginUpdates();
-            for (const curvedLine of interactiveCurvedLines) {
-                willUpdate = buffer_util_1.BufferUtil.updateBuffer(interactiveCurvedLines, this.interactiveCurvedBufferItems, numVerticesPerSegment, length, function (i, positions, ppos, colors, cpos, normals, npos, endPoints, epos, controlPoints, copos) {
-                    // Copy first vertex twice for intro degenerate tri
-                    positions[ppos] = (i + 1) / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    // Skip over degenerate tris color
-                    cpos += colorAttributeSize;
-                    normals[npos] = 1;
-                    endPoints[epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // TR
-                    positions[++ppos] = (i + 1) / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = 1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // BR
-                    positions[++ppos] = (i + 1) / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = -1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // TL
-                    positions[++ppos] = i / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = 1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // BL
-                    positions[++ppos] = i / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    normals[++npos] = -1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                    // Copy last vertex again for degenerate tri
-                    positions[++ppos] = i / length;
-                    positions[++ppos] = length;
-                    positions[++ppos] = curvedLine.depth;
-                    // Skip over degenerate tris for color
-                    cpos += colorAttributeSize;
-                    normals[++npos] = -1;
-                    endPoints[++epos] = curvedLine.p1.x;
-                    endPoints[++epos] = curvedLine.p1.y;
-                    endPoints[++epos] = curvedLine.p2.x;
-                    endPoints[++epos] = curvedLine.p2.y;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].x;
-                    controlPoints[++copos] = curvedLine.controlPoints[0].y;
-                });
-                // If no updating is happening, just quit the loop
-                if (!willUpdate) {
-                    break;
-                }
-            }
-            const numBatches = buffer_util_1.BufferUtil.endUpdates();
-            // Only if updates happened, should this change
-            if (willUpdate) {
-                this.interactiveCurvedBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-            }
-            this.forceDraw = true;
-        }
-        // Commit interactive ring curves
-        {
-            const numVerticesPerSegment = 6;
-            const colorAttributeSize = 4;
-            let stripPos = 0;
-            let willUpdate = false;
-            buffer_util_1.BufferUtil.beginUpdates();
-            for (const curvedLine of interactiveRingLines) {
-                const strip = curvedLine.getTriangleStrip();
-                let TR;
-                let BR;
-                let TL;
-                let BL;
-                willUpdate = buffer_util_1.BufferUtil.updateBuffer(interactiveRingLines, this.interactiveRingBufferItems, numVerticesPerSegment, strip.length / 4.0, function (i, positions, ppos, colors, cpos) {
-                    stripPos = i * 4;
-                    TR = strip[stripPos];
-                    BR = strip[stripPos + 1];
-                    TL = strip[stripPos + 2];
-                    BL = strip[stripPos + 3];
-                    // 1
-                    positions[ppos] = TR.x;
-                    positions[++ppos] = TR.y;
-                    positions[++ppos] = curvedLine.depth;
-                    cpos += colorAttributeSize;
-                    // 2
-                    positions[++ppos] = TR.x;
-                    positions[++ppos] = TR.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 3
-                    positions[++ppos] = BR.x;
-                    positions[++ppos] = BR.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 4
-                    positions[++ppos] = TL.x;
-                    positions[++ppos] = TL.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 5
-                    positions[++ppos] = BL.x;
-                    positions[++ppos] = BL.y;
-                    positions[++ppos] = curvedLine.depth;
-                    colors[++cpos] = curvedLine.r;
-                    colors[++cpos] = curvedLine.g;
-                    colors[++cpos] = curvedLine.b;
-                    colors[++cpos] = curvedLine.a;
-                    // 6
-                    positions[++ppos] = BL.x;
-                    positions[++ppos] = BL.y;
-                    positions[++ppos] = curvedLine.depth;
-                    cpos += colorAttributeSize;
-                });
-                if (!willUpdate) {
-                    break;
-                }
-            }
-            const numBatches = buffer_util_1.BufferUtil.endUpdates();
-            if (willUpdate) {
-                this.interactiveRingBufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-            }
-            this.forceDraw = true;
-        }
-        if (needsTreeUpdate) {
-            if (this.quadTree) {
-                this.quadTree.destroy();
-                this.quadTree = null;
-            }
-            // Gather the items to place in the quad tree
-            const toAdd = staticCurvedLines.concat(staticRingLines);
-            // Make the new quad tree and insert the new items
-            this.quadTree = new quad_tree_2.QuadTree(0, 0, 0, 0);
-            this.quadTree.bounds.copyBounds(toAdd[0]);
-            this.quadTree.addAll(toAdd);
-        }
-        debug('CAMERA %o', this.camera);
-    }
-    /**
-     * @override
-     *
-     * This special hook is called when the labels are ready for rendering
-     *
-     * @param props The newly applied props being applied to this component
-     */
-    applyLabelBufferChanges(props) {
-        const { labels, interactiveLabels, } = props;
-        // Set up any materials that needs the labels.
-        {
-            // Make sure the uniforms for anything using the label's atlas texture is updated
-            const material = this.staticLabelBufferItems.system.material;
-            const uniforms = material.uniforms;
-            uniforms.atlasTexture.value = this.atlasManager.getAtlasTexture(this.atlasNames.labels);
-            this.atlasManager.getAtlasTexture(this.atlasNames.labels).needsUpdate = true;
-            this.atlasManager.getAtlasTexture(this.atlasNames.labels).anisotropy = 2;
-        }
-        // Apply static labels
-        {
-            // Make some constants and props for our buffer update loop
-            const numVerticesPerQuad = 6;
-            const colorAttributeSize = 3;
-            const texCoordAttributeSize = 3;
-            let label;
-            let texture;
-            buffer_util_1.BufferUtil.updateBuffer(labels, this.staticLabelBufferItems, numVerticesPerQuad, labels.length, function (i, positions, ppos, colors, cpos, texCoords, tpos) {
-                label = labels[i];
-                texture = label.rasterizedLabel;
-                // Make sure the label is updated with it's latest metrics
-                label.update();
-                // Copy first vertex twice for intro degenerate tri
-                positions[ppos] = label.BR.x;
-                positions[++ppos] = label.BR.y;
-                positions[++ppos] = label.depth;
-                // Skip over degenerate tris color and tex
-                cpos += colorAttributeSize;
-                tpos += texCoordAttributeSize;
-                // BR
-                positions[++ppos] = label.BR.x;
-                positions[++ppos] = label.BR.y;
-                positions[++ppos] = label.depth;
-                texCoords[tpos] = texture.atlasBR.x;
-                texCoords[++tpos] = texture.atlasBR.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // TR
-                positions[++ppos] = label.TR.x;
-                positions[++ppos] = label.TR.y;
-                positions[++ppos] = label.depth;
-                texCoords[++tpos] = texture.atlasTR.x;
-                texCoords[++tpos] = texture.atlasTR.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // BL
-                positions[++ppos] = label.BL.x;
-                positions[++ppos] = label.BL.y;
-                positions[++ppos] = label.depth;
-                texCoords[++tpos] = texture.atlasBL.x;
-                texCoords[++tpos] = texture.atlasBL.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[++cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // TL
-                positions[++ppos] = label.TL.x;
-                positions[++ppos] = label.TL.y;
-                positions[++ppos] = label.depth;
-                texCoords[++tpos] = texture.atlasTL.x;
-                texCoords[++tpos] = texture.atlasTL.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[++cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // Copy last vertex again for degenerate tri
-                positions[++ppos] = label.TL.x;
-                positions[++ppos] = label.TL.y;
-                positions[++ppos] = label.depth;
-            });
-            this.staticLabelBufferItems.geometry.setDrawRange(0, numVerticesPerQuad * labels.length);
-        }
-        // Apply interactive labels
-        {
-            // Make some constants and props for our buffer update loop
-            const numVerticesPerQuad = 6;
-            const colorAttributeSize = 3;
-            const texCoordAttributeSize = 3;
-            let label;
-            let texture;
-            buffer_util_1.BufferUtil.updateBuffer(interactiveLabels, this.interactiveLabelBufferItems, numVerticesPerQuad, labels.length, function (i, positions, ppos, colors, cpos, texCoords, tpos) {
-                label = labels[i];
-                texture = label.rasterizedLabel;
-                // Make sure the label is updated with it's latest metrics
-                label.update();
-                // Copy first vertex twice for intro degenerate tri
-                positions[ppos] = label.BR.x;
-                positions[++ppos] = label.BR.y;
-                positions[++ppos] = label.depth;
-                // Skip over degenerate tris color and tex
-                cpos += colorAttributeSize;
-                tpos += texCoordAttributeSize;
-                // BR
-                positions[++ppos] = label.BR.x;
-                positions[++ppos] = label.BR.y;
-                positions[++ppos] = label.depth;
-                texCoords[tpos] = texture.atlasBR.x;
-                texCoords[++tpos] = texture.atlasBR.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // TR
-                positions[++ppos] = label.TR.x;
-                positions[++ppos] = label.TR.y;
-                positions[++ppos] = label.depth;
-                texCoords[++tpos] = texture.atlasTR.x;
-                texCoords[++tpos] = texture.atlasTR.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // BL
-                positions[++ppos] = label.BL.x;
-                positions[++ppos] = label.BL.y;
-                positions[++ppos] = label.depth;
-                texCoords[++tpos] = texture.atlasBL.x;
-                texCoords[++tpos] = texture.atlasBL.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[++cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // TL
-                positions[++ppos] = label.TL.x;
-                positions[++ppos] = label.TL.y;
-                positions[++ppos] = label.depth;
-                texCoords[++tpos] = texture.atlasTL.x;
-                texCoords[++tpos] = texture.atlasTL.y;
-                texCoords[++tpos] = label.color.opacity;
-                colors[++cpos] = label.color.r;
-                colors[++cpos] = label.color.g;
-                colors[++cpos] = label.color.b;
-                // Copy last vertex again for degenerate tri
-                positions[++ppos] = label.TL.x;
-                positions[++ppos] = label.TL.y;
-                positions[++ppos] = label.depth;
-            });
-            this.interactiveLabelBufferItems.geometry.setDrawRange(0, numVerticesPerQuad * labels.length);
-        }
-    }
-    /**
-     * This is a hook allowing sub classes to have a place to initialize their buffers
-     * and materials etc.
-     */
-    initBuffers() {
-        // SET UP MATERIALS AND UNIFORMS
-        const quadMaterial = new three_1.ShaderMaterial({
-            blending: three_1.NormalBlending,
-            depthTest: true,
-            fragmentShader: fillFragmentShader,
-            transparent: true,
-            uniforms: { halfLinewidth: { value: 1.5 } },
-            vertexShader: bezierVertexShader,
-        });
-        const ringMaterial = new three_1.ShaderMaterial({
-            blending: three_1.NormalBlending,
-            depthTest: true,
-            fragmentShader: fillFragmentShader,
-            transparent: true,
-            vertexShader: fillVertexShader,
-        });
-        const texUniforms = {
-            atlasTexture: { type: 't', value: this.atlasManager.getAtlasTexture(this.atlasNames.labels) },
-        };
-        const textureMaterial = new three_1.ShaderMaterial({
-            blending: three_1.CustomBlending,
-            depthTest: true,
-            fragmentShader: textureFragmentShader,
-            transparent: true,
-            uniforms: texUniforms,
-            vertexShader: textureVertexShader,
-        });
-        textureMaterial.blendSrc = three_1.OneFactor;
-        // GENERATE THE QUAD BUFFER
-        {
-            this.staticCurvedBufferItems.attributes = [
-                {
-                    defaults: [0, 0, BASE_QUAD_DEPTH],
-                    name: 'position',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 0, 1],
-                    name: 'customColor',
-                    size: buffer_util_1.AttributeSize.FOUR,
-                },
-                {
-                    defaults: [1],
-                    name: 'normalDirection',
-                    size: buffer_util_1.AttributeSize.ONE,
-                },
-                {
-                    defaults: [0, 0, 0, 0],
-                    name: 'endPoints',
-                    size: buffer_util_1.AttributeSize.FOUR,
-                },
-                {
-                    defaults: [0, 0],
-                    name: 'controlPoint',
-                    size: buffer_util_1.AttributeSize.TWO,
-                },
-            ];
-            const verticesPerQuad = 6;
-            const numQuads = 100000;
-            this.staticCurvedBufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticCurvedBufferItems.attributes);
-            this.staticCurvedBufferItems.system = new three_1.Mesh(this.staticCurvedBufferItems.geometry, quadMaterial);
-            this.staticCurvedBufferItems.system.frustumCulled = false;
-            this.staticCurvedBufferItems.system.drawMode = three_1.TriangleStripDrawMode;
-            // Place the mesh in the scene
-            this.scene.add(this.staticCurvedBufferItems.system);
-        }
-        // GENERATE RING QUAD BUFFER
-        {
-            this.staticRingBufferItems.attributes = [
-                {
-                    defaults: [0, 0, BASE_QUAD_DEPTH],
-                    name: 'position',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 0, 1],
-                    name: 'customColor',
-                    size: buffer_util_1.AttributeSize.FOUR,
-                },
-            ];
-            const verticesPerQuad = 6;
-            const numQuads = 100000;
-            this.staticRingBufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticRingBufferItems.attributes);
-            this.staticRingBufferItems.system = new three_1.Mesh(this.staticRingBufferItems.geometry, ringMaterial);
-            this.staticRingBufferItems.system.frustumCulled = false;
-            this.staticRingBufferItems.system.drawMode = three_1.TriangleStripDrawMode;
-            this.scene.add(this.staticRingBufferItems.system);
-        }
-        // GENERATE THE INTERACTION QUAD BUFFER
-        {
-            this.interactiveCurvedBufferItems.attributes = [
-                {
-                    defaults: [0, 0, BASE_QUAD_DEPTH],
-                    name: 'position',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 0, 1],
-                    name: 'customColor',
-                    size: buffer_util_1.AttributeSize.FOUR,
-                },
-                {
-                    defaults: [1],
-                    name: 'normalDirection',
-                    size: buffer_util_1.AttributeSize.ONE,
-                },
-                {
-                    defaults: [0, 0, 0, 0],
-                    name: 'endPoints',
-                    size: buffer_util_1.AttributeSize.FOUR,
-                },
-                {
-                    defaults: [0, 0],
-                    name: 'controlPoint',
-                    size: buffer_util_1.AttributeSize.TWO,
-                },
-            ];
-            const verticesPerQuad = 6;
-            const numQuads = 100000;
-            this.interactiveCurvedBufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.interactiveCurvedBufferItems.attributes);
-            this.interactiveCurvedBufferItems.system = new three_1.Mesh(this.interactiveCurvedBufferItems.geometry, quadMaterial);
-            this.interactiveCurvedBufferItems.system.frustumCulled = false;
-            this.interactiveCurvedBufferItems.system.drawMode = three_1.TriangleStripDrawMode;
-            // Place the mesh in the scene
-            this.scene.add(this.interactiveCurvedBufferItems.system);
-        }
-        // GENERATE THE INTERACTIVE RING BUFFER
-        {
-            this.interactiveRingBufferItems.attributes = [
-                {
-                    defaults: [0, 0, BASE_QUAD_DEPTH],
-                    name: 'position',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 0, 1],
-                    name: 'customColor',
-                    size: buffer_util_1.AttributeSize.FOUR,
-                },
-            ];
-            const verticesPerQuad = 6;
-            const numQuads = 100000;
-            this.interactiveRingBufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.interactiveRingBufferItems.attributes);
-            this.interactiveRingBufferItems.system = new three_1.Mesh(this.interactiveRingBufferItems.geometry, ringMaterial);
-            this.interactiveRingBufferItems.system.frustumCulled = false;
-            this.interactiveRingBufferItems.system.drawMode = three_1.TriangleStripDrawMode;
-            // Place the mesh in the scene
-            this.scene.add(this.interactiveRingBufferItems.system);
-        }
-        // GENERATE THE LABEL BUFFER
-        {
-            this.staticLabelBufferItems.attributes = [
-                {
-                    defaults: [0, 0, BASE_QUAD_DEPTH],
-                    name: 'position',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 0],
-                    name: 'customColor',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 1],
-                    name: 'texCoord',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-            ];
-            const verticesPerQuad = 6;
-            const numQuads = 10000;
-            this.staticLabelBufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.staticLabelBufferItems.attributes);
-            this.staticLabelBufferItems.system = new three_1.Mesh(this.staticLabelBufferItems.geometry, textureMaterial);
-            this.staticLabelBufferItems.system.frustumCulled = false;
-            this.staticLabelBufferItems.system.drawMode = three_1.TriangleStripDrawMode;
-            // Place the mesh in the scene
-            this.scene.add(this.staticLabelBufferItems.system);
-        }
-        // GENERATE THE INTERACTIVE LABEL BUFFER
-        {
-            this.interactiveLabelBufferItems.attributes = [
-                {
-                    defaults: [0, 0, BASE_QUAD_DEPTH],
-                    name: 'position',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 0],
-                    name: 'customColor',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-                {
-                    defaults: [0, 0, 1],
-                    name: 'texCoord',
-                    size: buffer_util_1.AttributeSize.THREE,
-                },
-            ];
-            const verticesPerQuad = 6;
-            const numQuads = 10000;
-            this.interactiveLabelBufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.interactiveLabelBufferItems.attributes);
-            this.interactiveLabelBufferItems.system = new three_1.Mesh(this.interactiveLabelBufferItems.geometry, textureMaterial);
-            this.interactiveLabelBufferItems.system.frustumCulled = false;
-            this.interactiveLabelBufferItems.system.drawMode = three_1.TriangleStripDrawMode;
-            // Place the mesh in the scene
-            this.scene.add(this.interactiveLabelBufferItems.system);
-        }
-    }
-    onMouseHover(hitInside, mouse, world, projection) {
-        // Filter out curves that presently exist in interactiveCurvedLines
-        // Includes outerRings and chords
-        const hitCurvedLines = quad_tree_1.filterQuery([curved_line_shape_1.CurvedLineShape], hitInside);
-        // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
-        const screenDistance = projection.screenSizeToWorld(1, 1).width;
-        // This will keep track of all items that were hovered but are no longer hovered
-        const leftItems = [];
-        const selections = hitCurvedLines.filter((curve, idx) => {
-            if (curve.distanceTo(world) < screenDistance) {
-                this.mouseHovered.set(curve, true);
-                return true;
-            }
-            else if (this.mouseHovered.get(curve)) {
-                this.mouseHovered.delete(curve);
-                leftItems.push(curve);
-            }
-            return false;
-        });
-        if (this.props.onMouseHover) {
-            this.props.onMouseHover(selections, mouse, world, projection);
-        }
-        if (this.props.onMouseLeave) {
-            this.props.onMouseLeave(leftItems, mouse, world, projection);
-        }
-    }
-    onMouseLeave(left, mouse, world, projection) {
-        // Const selections: CurvedLineShape<any>[] = [];
-        const leftCurvedLines = quad_tree_1.filterQuery([curved_line_shape_1.CurvedLineShape], left);
-        // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
-        const screenDistance = projection.screenSizeToWorld(1, 1).width;
-        const selections = leftCurvedLines.filter((curve, idx) => {
-            if (curve.distanceTo(world) > screenDistance) {
-                if (this.mouseHovered.get(curve)) {
-                    this.mouseHovered.delete(curve);
-                    return true;
-                }
-            }
-            return false;
-        });
-        if (this.props.onMouseLeave) {
-            this.props.onMouseLeave(selections, mouse, world, projection);
-        }
-    }
-    onMouseUp(e, hitInside, mouse, world, projection) {
-        // Const selections: CurvedLineShape<any>[] = [];
-        debug('ccg mouse up');
-        const clickedCurvedLines = quad_tree_1.filterQuery([curved_line_shape_1.CurvedLineShape], hitInside);
-        // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
-        const screenDistance = projection.screenSizeToWorld(1, 1).width;
-        const selections = clickedCurvedLines.filter((curve, idx) => {
-            if (curve.distanceTo(world) < screenDistance) {
-                return true;
-            }
-            return false;
-        });
-        if (this.props.onMouseUp) {
-            this.props.onMouseUp(selections, mouse, world, projection);
-        }
-    }
-    /**
-     * Any uniforms tied to changes in the camera are updated here
-     */
-    updateCameraUniforms() {
-        // NOTE: Implement if required. Leave empty to prevent any default behavior
-    }
-}
-exports.ChordChartGL = ChordChartGL;
-
-
-/***/ }),
-/* 35 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const three_1 = __webpack_require__(4);
+const three_1 = __webpack_require__(1);
 const debug = __webpack_require__(0)('WebGLSurface:BufferUtil');
 var AttributeSize;
 (function (AttributeSize) {
@@ -49597,20 +46244,3264 @@ exports.BufferUtil = BufferUtil;
 
 
 /***/ }),
-/* 36 */
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * This deinfes the minimal set of methods that should be implemented to create
+ * a reusable buffer object that can be initialized and populated.
+ */
+class BaseBuffer {
+    /**
+     * This initializes the buffer and generates the buffer items object.
+     */
+    init(material, unitCount) {
+        // To be implemented by a subclass
+    }
+    /**
+     * This updates the buffer by providing the shape buffer needed to update
+     * the internal buffer items
+     *
+     * @param {T[]} shapeBuffer The shape buffer containing all of the shape data
+     *                          to be placed into the buffer.
+     *
+     * @return {boolean} Retrusn true if this pushed up any updates
+     */
+    update(shapeBuffer) {
+        // To be implemented by a subclass
+        return false;
+    }
+}
+exports.BaseBuffer = BaseBuffer;
+
+
+/***/ }),
+/* 14 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const bounds_1 = __webpack_require__(2);
+// A configuration that controls how readily a quadtree will split to another level
+// Adjusting this number can improve or degrade your performance significantly and
+// Must be tested for specific use cases
+const maxPopulation = 5;
+const maxDepth = 10;
+/**
+ * This filters a quad tree query by type
+ *
+ * @export
+ * @template T
+ */
+function filterQuery(type, queryValues) {
+    const filtered = [];
+    queryValues.forEach((obj) => {
+        if (type.find(t => obj instanceof t)) {
+            filtered.push(obj);
+        }
+    });
+    return filtered;
+}
+exports.filterQuery = filterQuery;
+/**
+ * This is a class used specifically by the quad tree nodes to indicate split space
+ * within the quad tree.
+ *
+ * @class Quadrants
+ */
+class Quadrants {
+    /**
+     * Creates an instance of Quadrants.
+     *
+     * @param bounds The bounds this will create quandrants for
+     * @param depth  The child depth of this element
+     *
+     * @memberOf Quadrants
+     */
+    constructor(bounds, depth) {
+        this.TL = null;
+        this.TR = null;
+        this.BL = null;
+        this.BR = null;
+        const mid = bounds.mid;
+        this.TL = new Node(bounds.x, mid.x, bounds.y, mid.y, depth);
+        this.TR = new Node(mid.x, bounds.right, bounds.y, mid.y, depth);
+        this.BL = new Node(bounds.x, mid.x, mid.y, bounds.bottom, depth);
+        this.BR = new Node(mid.x, bounds.right, mid.y, bounds.bottom, depth);
+    }
+    /**
+     * Ensures all memory is released for all nodes and all references are removed
+     * to potentially high memory consumption items
+     *
+     * @memberOf Quadrants
+     */
+    destroy() {
+        this.TL.destroy();
+        this.TR.destroy();
+        this.BL.destroy();
+        this.BR.destroy();
+        this.TL = null;
+        this.TR = null;
+        this.BL = null;
+        this.BR = null;
+    }
+}
+exports.Quadrants = Quadrants;
+/**
+ * The quad tree node. This Node will take in a certain population before dividing itself into
+ * 4 quadrants which it will attempt to inject it's population into. If a member of the population
+ * does not completely get injected into one of the quadrants it remains as a member of this node.
+ *
+ * @export
+ * @class Node
+ */
+class Node {
+    /**
+     * Creates an instance of Node.
+     *
+     * @param l     The bounding left wall of the space this node covers
+     * @param r     The bounding right wall of the space this node covers
+     * @param t     The bounding top wall of the space this node covers
+     * @param b     The bounding bottom wall of the space this node covers
+     * @param depth The depth within the quad tree this node resides
+     *
+     * @memberOf Node
+     */
+    constructor(left, right, top, bottom, depth) {
+        this.bounds = null;
+        this.children = [];
+        this.childrenProps = [];
+        this.depth = 0;
+        this.nodes = null;
+        // If params insertted
+        if (arguments.length >= 4) {
+            this.bounds = new bounds_1.Bounds(left, right, top, bottom);
+        }
+        else {
+            this.bounds = new bounds_1.Bounds(0, 1, 1, 0);
+        }
+        // Ensure the depth is set
+        this.depth = depth || 0;
+    }
+    /**
+     * Destroys this node and ensures all child nodes are destroyed as well.
+     *
+     * @memberOf Node
+     */
+    destroy() {
+        this.children = null;
+        this.bounds = null;
+        if (this.nodes) {
+            this.nodes.destroy();
+            this.nodes = null;
+        }
+    }
+    /**
+     * Adds an object that extends Bounds (or is Bounds) and properly injects it into this node
+     * or into a sub quadrant if this node is split already. If the child is outside the boundaries
+     * this quad tree spans (and this is the root node), the quad tree will expand to include
+     * the new child.
+     *
+     * @param child The Bounds type object to inject
+     * @param props Properties that can be retrieved with the child object if applicable
+     *
+     * @returns True if the insertion was successful
+     *
+     * @memberOf Node
+     */
+    add(child, props) {
+        // This is the entry function for adding children, so we must first expand our top node
+        // To cover the area that the child is located.
+        // If we're in bounds, then let's just add the child
+        if (child.isInside(this.bounds)) {
+            return this.doAdd(child);
+        }
+        else {
+            this.cover(child);
+            return this.add(child, props);
+        }
+    }
+    /**
+     * Adds a list of new children to this quad tree. It performs the same operations as
+     * addChild for each child in the list, however, it more efficiently recalculates the
+     * bounds necessary to cover the area the children cover.
+     *
+     * @param children      List of Bounds objects to inject
+     * @param childrenProps List of props to associate with each element
+     *
+     * @memberOf Node
+     */
+    addAll(children, childrenProps) {
+        // Ensure the properties are at least defined
+        childrenProps = childrenProps || [];
+        // Make sure we cover the entire area of all the children.
+        // We can speed this up a lot if we first calculate the total bounds the new children covers
+        let minX = Number.MAX_VALUE;
+        let minY = Number.MAX_VALUE;
+        let maxX = -Number.MAX_VALUE;
+        let maxY = -Number.MAX_VALUE;
+        // Get the dimensions of the new bounds
+        children.forEach(child => {
+            if (child.x < minX) {
+                minX = child.x;
+            }
+            if (child.right > maxX) {
+                maxX = child.right;
+            }
+            if (child.bottom < minY) {
+                minY = child.bottom;
+            }
+            if (child.y > maxY) {
+                maxY = child.y;
+            }
+        });
+        // Make sure our bounds includes the specified bounds
+        this.cover(new bounds_1.Bounds(minX, maxX, maxY, minY));
+        // Add all of the children into the tree
+        children.forEach((child, index) => this.doAdd(child));
+    }
+    /**
+     * Ensures this quad tree includes the bounds specified in it's spatial coverage.
+     * This will cause all children to be re-injected into the tree.
+     *
+     * @param bounds The bounds to include in the tree's coverage
+     *
+     * @memberOf Node
+     */
+    cover(bounds) {
+        // If we are already covering the area: abort
+        if (bounds.isInside(this.bounds)) {
+            return;
+        }
+        // Make our bounds cover the new area
+        this.bounds.encapsulate(bounds);
+        this.bounds.x -= 1;
+        this.bounds.y -= 1;
+        this.bounds.width += 2;
+        this.bounds.height += 2;
+        // Get all of the children underneath this node
+        const allChildren = this.gatherChildren([]);
+        // Destroy the split nodes
+        if (this.nodes) {
+            // Completely...destroy...
+            this.nodes.destroy();
+            this.nodes = null;
+        }
+        // Reinsert all children with the new dimensions in place
+        allChildren.forEach((child, index) => this.doAdd(child));
+    }
+    /**
+     * When adding children, this performs the actual action of injecting the child into the tree
+     * without the process of seeing if the tree needs a spatial adjustment to account for the child.
+     *
+     * @param child The Bounds item to inject into the tree
+     * @param props The props to remain associated with the child
+     *
+     * @returns True if the injection was successful
+     *
+     * @memberOf Node
+     */
+    doAdd(child) {
+        // If nodes are present, then we have already exceeded the population of this node
+        if (this.nodes) {
+            if (child.isInside(this.nodes.TL.bounds)) {
+                return this.nodes.TL.doAdd(child);
+            }
+            if (child.isInside(this.nodes.TR.bounds)) {
+                return this.nodes.TR.doAdd(child);
+            }
+            if (child.isInside(this.nodes.BL.bounds)) {
+                return this.nodes.BL.doAdd(child);
+            }
+            if (child.isInside(this.nodes.BR.bounds)) {
+                return this.nodes.BR.doAdd(child);
+            }
+            // Otherwise, this is a child overlapping this border
+            this.children.push(child);
+            return true;
+        }
+        else if (child.isInside(this.bounds)) {
+            this.children.push(child);
+            // If we exceeded our population for this quadrant, it is time to split up
+            if (this.children.length > maxPopulation && this.depth < maxDepth) {
+                this.split();
+            }
+            return true;
+        }
+        // Otherwise, this quad tree needs to be resized to include the child
+        // But we will consider adds outside of the bounds an error
+        throw new Error('Child does not fit in node.');
+    }
+    /**
+     * Collects all children of all the current and sub nodes into a single list.
+     *
+     * @param list The list we must aggregate children into
+     *
+     * @return The list specified as the list parameter
+     */
+    gatherChildren(list) {
+        list = list.concat(this.children);
+        if (this.nodes) {
+            this.nodes.TL.gatherChildren(list);
+            this.nodes.TR.gatherChildren(list);
+            this.nodes.BL.gatherChildren(list);
+            this.nodes.BR.gatherChildren(list);
+        }
+        return list;
+    }
+    /**
+     * Collects all props associated with the children. This array of props will
+     * mirror the list retrieved with gatherChildren.
+     *
+     * @param list
+     *
+     * @returns The list specified as the list paramter
+     *
+     * @memberOf Node
+     */
+    gatherProps(list) {
+        this.children.forEach((c, index) => {
+            list.push(this.childrenProps[index]);
+        });
+        if (this.nodes) {
+            this.nodes.TL.gatherProps(list);
+            this.nodes.TR.gatherProps(list);
+            this.nodes.BL.gatherProps(list);
+            this.nodes.BR.gatherProps(list);
+        }
+        return list;
+    }
+    /**
+     * Entry query for determining query type based on input object
+     *
+     * @param bounds Can be a Bounds or a Point object
+     * @param visit  A callback function that will receive the Node as it is analyzed. This gives
+     *               information on a spatial scale, how a query reaches it's target intersections.
+     *
+     * @return An array of children that intersects with the query
+     */
+    query(bounds, visit) {
+        // Query a rectangle
+        if (bounds instanceof bounds_1.Bounds) {
+            if (bounds.hitBounds(this.bounds)) {
+                return this.queryBounds(bounds, [], visit);
+            }
+            // Return an empty array when nothing is collided with
+            return [];
+        }
+        // Query a point
+        if (this.bounds.containsPoint(bounds)) {
+            return this.queryPoint(bounds, [], visit);
+        }
+        // Return an empty array when nothing is collided with
+        return [];
+    }
+    /**
+     * Queries children for intersection with a bounds object
+     *
+     * @param b     The Bounds to test children against
+     * @param list  The list of children to aggregate into the query
+     * @param visit A callback function that will receive the Node as it is analyzed. This gives
+     *              information on a spatial scale, how a query reaches it's target intersections.
+     *
+     * @return     Returns the exact same list that was input as the list param
+     */
+    queryBounds(b, list, visit) {
+        this.children.forEach((c, index) => {
+            if (c.hitBounds(b)) {
+                list.push(c);
+            }
+        });
+        if (visit) {
+            visit(this);
+        }
+        if (this.nodes) {
+            if (b.hitBounds(this.nodes.TL.bounds)) {
+                this.nodes.TL.queryBounds(b, list, visit);
+            }
+            if (b.hitBounds(this.nodes.TR.bounds)) {
+                this.nodes.TR.queryBounds(b, list, visit);
+            }
+            if (b.hitBounds(this.nodes.BL.bounds)) {
+                this.nodes.BL.queryBounds(b, list, visit);
+            }
+            if (b.hitBounds(this.nodes.BR.bounds)) {
+                this.nodes.BR.queryBounds(b, list, visit);
+            }
+        }
+        return list;
+    }
+    /**
+     * Queries children for intersection with a point
+     *
+     * @param p     The Point to test children against
+     * @param list  The list of children to aggregate into the query
+     * @param visit A callback function that will receive the Node as it is analyzed. This gives
+     *              information on a spatial scale, how a query reaches it's target intersections.
+     *
+     * @return      Returns the exact same list that was input as the list param
+     */
+    queryPoint(p, list, visit) {
+        this.children.forEach((c, index) => {
+            if (c.containsPoint(p)) {
+                list.push(c);
+            }
+        });
+        if (visit) {
+            visit(this);
+        }
+        if (this.nodes) {
+            if (this.nodes.TL.bounds.containsPoint(p)) {
+                this.nodes.TL.queryPoint(p, list, visit);
+            }
+            if (this.nodes.TR.bounds.containsPoint(p)) {
+                this.nodes.TR.queryPoint(p, list, visit);
+            }
+            if (this.nodes.BL.bounds.containsPoint(p)) {
+                this.nodes.BL.queryPoint(p, list, visit);
+            }
+            if (this.nodes.BR.bounds.containsPoint(p)) {
+                this.nodes.BR.queryPoint(p, list, visit);
+            }
+        }
+        return list;
+    }
+    /**
+     * Creates four sub quadrants for this node.
+     */
+    split() {
+        // Gather all items to be handed down
+        const allChildren = this.gatherChildren([]);
+        // Gather all props for the children to be handed down as well
+        this.nodes = new Quadrants(this.bounds, this.depth + 1);
+        this.children = [];
+        this.childrenProps = [];
+        while (allChildren.length > 0) {
+            this.doAdd(allChildren.pop());
+        }
+    }
+    /**
+     * Traverses the quad tree returning every quadrant encountered
+     *
+     * @param cb A callback that has the parameter (node) which is a quadrant in the tree
+     */
+    visit(cb) {
+        const finished = Boolean(cb(this));
+        if (this.nodes && !finished) {
+            this.nodes.TL.visit(cb);
+            this.nodes.TR.visit(cb);
+            this.nodes.BL.visit(cb);
+            this.nodes.BR.visit(cb);
+        }
+    }
+}
+exports.Node = Node;
+class QuadTree extends Node {
+}
+exports.QuadTree = QuadTree;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_15__;
+
+/***/ }),
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(1);
+const bounds_1 = __webpack_require__(2);
+var AnchorPosition;
+(function (AnchorPosition) {
+    AnchorPosition[AnchorPosition["BottomLeft"] = 0] = "BottomLeft";
+    AnchorPosition[AnchorPosition["BottomRight"] = 1] = "BottomRight";
+    AnchorPosition[AnchorPosition["Custom"] = 2] = "Custom";
+    AnchorPosition[AnchorPosition["Middle"] = 3] = "Middle";
+    AnchorPosition[AnchorPosition["MiddleBottom"] = 4] = "MiddleBottom";
+    AnchorPosition[AnchorPosition["MiddleLeft"] = 5] = "MiddleLeft";
+    AnchorPosition[AnchorPosition["MiddleRight"] = 6] = "MiddleRight";
+    AnchorPosition[AnchorPosition["MiddleTop"] = 7] = "MiddleTop";
+    AnchorPosition[AnchorPosition["TopLeft"] = 8] = "TopLeft";
+    AnchorPosition[AnchorPosition["TopRight"] = 9] = "TopRight";
+})(AnchorPosition = exports.AnchorPosition || (exports.AnchorPosition = {}));
+const anchorCalculations = {
+    [AnchorPosition.BottomLeft]: (quad) => ({
+        x: 0,
+        y: 0,
+    }),
+    [AnchorPosition.BottomRight]: (quad) => ({
+        x: quad.getSize().width,
+        y: 0,
+    }),
+    [AnchorPosition.Custom]: (quad) => ({
+        x: 0,
+        y: quad.getSize().height,
+    }),
+    [AnchorPosition.Middle]: (quad) => ({
+        x: quad.getSize().width / 2,
+        y: quad.getSize().height / 2,
+    }),
+    [AnchorPosition.MiddleBottom]: (quad) => ({
+        x: quad.getSize().width / 2,
+        y: 0,
+    }),
+    [AnchorPosition.MiddleLeft]: (quad) => ({
+        x: 0,
+        y: quad.getSize().height / 2,
+    }),
+    [AnchorPosition.MiddleRight]: (quad) => ({
+        x: quad.getSize().width,
+        y: quad.getSize().height / 2,
+    }),
+    [AnchorPosition.MiddleTop]: (quad) => ({
+        x: quad.getSize().width / 2,
+        y: quad.getSize().height,
+    }),
+    [AnchorPosition.TopLeft]: (quad) => ({
+        x: 0,
+        y: quad.getSize().height,
+    }),
+    [AnchorPosition.TopRight]: (quad) => ({
+        x: quad.getSize().width,
+        y: quad.getSize().height,
+    }),
+};
+class RotateableQuad extends bounds_1.Bounds {
+    /**
+     * Generates a quad
+     *
+     * @param {IPoint} location The location of the quad (it's anchorpoint will be placed here)
+     * @param {number} width The width of the quad
+     * @param {number} height The height of the quad
+     * @param {AnchorPosition} anchor The anchor location of the quad.
+     *                                Location and rotation will be relative to this.
+     */
+    constructor(location, size, rotation, anchor = AnchorPosition.Middle) {
+        super(0, 0, 0, 0);
+        // Apply our properties
+        this.setSize(size);
+        this.setAnchor(anchor);
+        this.setLocation(location);
+        this.setRotation(rotation);
+        // Update the transform and the corner vertices
+        this.update();
+    }
+    /**
+     * @private
+     * Recalculates this anchor position based on the anchor type
+     *
+     * @param {AnchorPosition} anchor
+     */
+    calculateAnchor(anchor) {
+        this.anchor = anchorCalculations[anchor](this);
+    }
+    /**
+     * Get the base size of the quad
+     *
+     * @returns {ISize} The base size of this quad
+     */
+    getSize() {
+        return this.size;
+    }
+    /**
+     * Sets the specified anchor position on the quad
+     *
+     * @param {AnchorPosition} anchor This specifies an auto calculated position for the anchor
+     * @param {IPoint} custom If specified, will set a custom anchor location rather
+     *                        than the calculated version.
+     */
+    setAnchor(anchor = AnchorPosition.Middle, custom) {
+        this.anchorType = anchor;
+        // Apply the custom position if present
+        if (custom) {
+            this.anchorType = AnchorPosition.Custom;
+            this.anchor = custom;
+            return;
+        }
+        this.calculateAnchor(anchor);
+    }
+    /**
+     * This sets the location of this quad to a given position where the anchor
+     * point will be located on top of the location provided.
+     *
+     * @param {IPoint} location The location to place the quad
+     */
+    setLocation(location) {
+        this.location = location;
+    }
+    /**
+     * Sets the rotation of this quad, in radians, rotated around the anchor point.
+     *
+     * @param {number} rotation The rotation of the quad
+     */
+    setRotation(rotation) {
+        this.rotation = rotation;
+    }
+    /**
+     * Applies the size to the base
+     *
+     * @param {ISize} size The size of the base quad
+     */
+    setSize(size) {
+        this.size = size;
+        this.base = [
+            new three_1.Vector4(0, size.height, 0, 1),
+            new three_1.Vector4(size.width, size.height, 0, 1),
+            new three_1.Vector4(0, 0, 0, 1),
+            new three_1.Vector4(size.width, 0, 0, 1),
+        ];
+    }
+    /**
+     * This re-calculates the transform for this quad and applies the transform to
+     * the corners.
+     */
+    update() {
+        // Calculate the pieces of the transformation
+        const anchorMat = new three_1.Matrix4().makeTranslation(this.anchor.x, -this.anchor.y, 0);
+        const rotationMat = new three_1.Matrix4().makeRotationZ(this.rotation);
+        const locationMat = new three_1.Matrix4().makeTranslation(this.location.x, this.location.y, 0);
+        // Compose the transform based on the pieces and apply them
+        // In the proper compositing order
+        this.transform = new three_1.Matrix4()
+            .multiply(locationMat)
+            .multiply(rotationMat)
+            .multiply(anchorMat);
+        // Apply the transform to all of our base vertices
+        this.TL = this.base[0].clone().applyMatrix4(this.transform);
+        this.TR = this.base[1].clone().applyMatrix4(this.transform);
+        this.BL = this.base[2].clone().applyMatrix4(this.transform);
+        this.BR = this.base[3].clone().applyMatrix4(this.transform);
+        // Update the bounds of this object
+        this.x = this.TL.x;
+        this.y = this.TL.y;
+        this.width = 1;
+        this.height = 1;
+        this.encapsulatePoints([this.TR, this.BL, this.BR]);
+    }
+}
+exports.RotateableQuad = RotateableQuad;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var LabelDirectionEnum;
+(function (LabelDirectionEnum) {
+    LabelDirectionEnum[LabelDirectionEnum["LINEAR"] = 0] = "LINEAR";
+    LabelDirectionEnum[LabelDirectionEnum["RADIAL"] = 1] = "RADIAL";
+})(LabelDirectionEnum = exports.LabelDirectionEnum || (exports.LabelDirectionEnum = {}));
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var chord_chart_1 = __webpack_require__(19);
+exports.ChordChart = chord_chart_1.ChordChart;
+
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const ramda_1 = __webpack_require__(6);
-const React = __webpack_require__(13);
-const three_1 = __webpack_require__(4);
-const atlas_manager_1 = __webpack_require__(37);
-const atlas_texture_1 = __webpack_require__(39);
-const bounds_1 = __webpack_require__(1);
-const mouse_1 = __webpack_require__(40);
-const quad_tree_1 = __webpack_require__(12);
+const React = __webpack_require__(15);
+const bounds_1 = __webpack_require__(2);
+const curved_line_1 = __webpack_require__(7);
+const chord_generator_1 = __webpack_require__(24);
+const label_generator_1 = __webpack_require__(28);
+const outer_ring_generator_1 = __webpack_require__(32);
+const types_1 = __webpack_require__(17);
+const chord_chart_gl_1 = __webpack_require__(36);
+const selection_1 = __webpack_require__(3);
+const endpointDataProcessing_1 = __webpack_require__(11);
+function isOuterRing(curve) {
+    if (curve.type === curved_line_1.CurveType.CircularCCW)
+        return true;
+    return false;
+}
+function isChord(curve) {
+    if (curve.type === curved_line_1.CurveType.Bezier)
+        return true;
+    return false;
+}
+function recalculateTreeForData(data) {
+    data.tree = endpointDataProcessing_1.recalculateTree(data.endpoints, data.chords);
+    data.endpoints = endpointDataProcessing_1.getTreeLeafNodes(data.tree);
+    data.endpointById = new Map();
+    data.topEndPointByEndPointId = new Map();
+    data.topEndPointMaxDepth = new Map();
+    // Get the top level rendered elements (The very top elements does not render
+    // They merely group into chunks that can be spread apart)
+    const topLevel = [];
+    data.tree.forEach(top => topLevel.push(...top.children));
+    // Make a quick lookup to find the top endpoint for a given endpoint id
+    // Also make the maximum depth of the top endpoint available
+    topLevel.forEach(top => {
+        const toProcess = [...top.children];
+        let depth = 0;
+        let rowCount = top.children.length;
+        while (toProcess.length > 0) {
+            const current = toProcess.shift();
+            toProcess.push(...current.children);
+            data.topEndPointByEndPointId.set(current.id, top);
+            if (--rowCount <= 0) {
+                depth += 1;
+                rowCount = toProcess.length;
+            }
+        }
+        data.topEndPointByEndPointId.set(top.id, top);
+        data.topEndPointMaxDepth.set(top, depth);
+    });
+    data.endpoints.forEach(endpoint => {
+        data.endpointById.set(endpoint.id, endpoint);
+    });
+}
+/**
+ * This defines a component that will render some test results. The shapes
+ * rendered will be quads or bezier curves. The quads are for sanity and
+ * debugging purposes.
+ */
+class ChordChart extends React.Component {
+    constructor() {
+        super(...arguments);
+        /** Indicates if this component has fully mounted already or not */
+        this.initialized = false;
+        /** Selection manager */
+        this.selection = new selection_1.Selection();
+        // Make sure we don't recreate the bound object
+        this.viewport = new bounds_1.Bounds(-350, 350, 350, -350);
+        // Sets the default state
+        this.state = {
+            data: {
+                chords: [],
+                endpointById: new Map(),
+                endpoints: [],
+                topEndPointByEndPointId: new Map(),
+                topEndPointMaxDepth: new Map(),
+                tree: [],
+            },
+            zoom: 1,
+        };
+        this.handleZoomRequest = (zoom) => {
+            this.setState({
+                zoom,
+            });
+        };
+        this.handleMouseHover = (selections, mouse, world, projection) => {
+            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_CHORD);
+            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING);
+            if (selections.length > 0) {
+                let selection;
+                // If has outer ring thing grab it instead
+                const filteredSelections = selections.filter(s => s.type === curved_line_1.CurveType.CircularCCW);
+                if (filteredSelections.length > 0) {
+                    selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+                }
+                else {
+                    selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+                }
+                // Select the chord and it's related outer rings
+                if (isChord(selection)) {
+                    this.selection.select(selection_1.SelectionType.MOUSEOVER_CHORD, selection);
+                    selection.d.outerRings.forEach((ring) => {
+                        this.selection.select(selection_1.SelectionType.MOUSEOVER_OUTER_RING, ring);
+                    });
+                }
+                else if (isOuterRing(selection)) {
+                    this.selection.select(selection_1.SelectionType.MOUSEOVER_OUTER_RING, selection);
+                    selection.d.chords.forEach((chord) => {
+                        this.selection.select(selection_1.SelectionType.MOUSEOVER_CHORD, chord);
+                        // Make sure both ends of each chord are selected
+                        chord.d.outerRings.forEach((ring) => {
+                            this.selection.select(selection_1.SelectionType.MOUSEOVER_OUTER_RING, ring);
+                        });
+                    });
+                }
+                this.forceUpdate();
+            }
+        };
+        this.handleMouseLeave = (selections, mouse, world, projection) => {
+            selections.forEach(curve => {
+                if (curve.type === curved_line_1.CurveType.Bezier) {
+                    this.selection.deselect(selection_1.SelectionType.MOUSEOVER_CHORD, curve);
+                }
+                else if (curve.type === curved_line_1.CurveType.CircularCCW) {
+                    this.selection.deselect(selection_1.SelectionType.MOUSEOVER_OUTER_RING, curve);
+                }
+            });
+            if (selections.length > 0) {
+                this.forceUpdate();
+            }
+        };
+        this.handleMouseUp = (selections, mouse, world, projection) => {
+            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_CHORD);
+            this.selection.clearSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING);
+            if (selections.length > 0) {
+                let selection;
+                // If has outer ring thing grab it instead
+                const filteredSelections = selections.filter(s => s.type === curved_line_1.CurveType.CircularCCW);
+                if (filteredSelections.length > 0) {
+                    selection = filteredSelections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+                }
+                else {
+                    selection = selections.reduce((prev, current) => (current.distanceTo(world) < prev.distanceTo(world)) ? current : prev);
+                }
+                if (this.props.onEndPointClick && selection.d.source.id) {
+                    this.props.onEndPointClick(selection.d.source.id, selection.d.source.metadata, {}, {});
+                }
+            }
+        };
+    }
+    /**
+     * @override
+     * We initialize any needed state here
+     */
+    componentWillMount() {
+        this.chordGenerator = new chord_generator_1.ChordGenerator();
+        this.labelGenerator = new label_generator_1.LabelGenerator();
+        this.outerRingGenerator = new outer_ring_generator_1.OuterRingGenerator();
+        const data = ramda_1.clone(this.props.data);
+        recalculateTreeForData(data);
+        this.setState({ data });
+    }
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.data) {
+            const data = ramda_1.clone(nextProps.data);
+            recalculateTreeForData(data);
+            this.setState({ data });
+        }
+    }
+    componentDidMount() {
+        this.initialized = true;
+    }
+    /**
+     * @override
+     * The react render method
+     */
+    render() {
+        const config = {
+            center: { x: 0, y: 0 },
+            groupSplitDistance: 50,
+            labelDirection: this.props.split ? types_1.LabelDirectionEnum.LINEAR : types_1.LabelDirectionEnum.RADIAL,
+            outerRingSegmentPadding: 0.005,
+            outerRingSegmentRowPadding: 2,
+            radius: 200,
+            ringWidth: 10,
+            splitTopLevelGroups: this.props.split,
+            topLevelGroupPadding: Math.PI / 4,
+        };
+        this.outerRingGenerator.generate(this.state.data, config, this.selection);
+        this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
+        this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
+        return (React.createElement(chord_chart_gl_1.ChordChartGL, { height: this.viewport.height, labels: this.labelGenerator.getBaseBuffer(), onZoomRequest: (zoom) => this.handleZoomRequest, staticCurvedLines: this.chordGenerator.getBaseBuffer(), staticRingLines: this.outerRingGenerator.getBaseBuffer(), interactiveCurvedLines: this.chordGenerator.getInteractionBuffer(), interactiveRingLines: this.outerRingGenerator.getInteractionBuffer(), onMouseHover: this.handleMouseHover, onMouseLeave: this.handleMouseLeave, onMouseUp: this.handleMouseUp, viewport: this.viewport, width: this.viewport.width, zoom: this.state.zoom }));
+    }
+}
+exports.ChordChart = ChordChart;
+
+
+/***/ }),
+/* 20 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * This calculates a quadratic bezier curve.
+ *
+ * We use specific bezier curve implementations for low degree curves as it is
+ * much much faster to calculate.
+ *
+ * @param {number} t The 0 - 1 time interval for the part of the curve we desire
+ * @param {IPoint} p1 The First end point of the curve
+ * @param {IPoint} p2 The second end point of the curve
+ * @param {IPoint} c1 The control point of the curve
+ *
+ * @returns {IPoint} The calculated point on the curve for the provided time interval
+ */
+function bezier2(t, p1, p2, c1) {
+    const t2 = t * t;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    return {
+        x: p1.x * mt2 + c1.x * 2 * mt * t + p2.x * t2,
+        y: p1.y * mt2 + c1.y * 2 * mt * t + p2.y * t2,
+    };
+}
+exports.bezier2 = bezier2;
+/**
+ * This calculates a cubic bezier curve.
+ *
+ * We use specific bezier curve implementations for low degree curves as it is
+ * much much faster to calculate.
+ *
+ * @param {number} t The 0 - 1 time interval for the part of the curve we desire
+ * @param {IPoint} p1 The First end point of the curve
+ * @param {IPoint} p2 The second end point of the curve
+ * @param {IPoint} c1 The first control point of the curve
+ * @param {IPoint} c2 The second control point of the curve
+ *
+ * @returns {IPoint} The calculated point on the curve for the provided time interval
+ */
+function bezier3(t, p1, p2, c1, c2) {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+    return {
+        x: p1.x * mt3 + 3 * c1.x * mt2 * t + 3 * c2.x * mt * t2 + p2.x * t3,
+        y: p1.y * mt3 + 3 * c1.y * mt2 * t + 3 * c2.y * mt * t2 + p2.y * t3,
+    };
+}
+exports.bezier3 = bezier3;
+
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 22 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+/**
+ * This is the common logic for both the Node.js and web browser
+ * implementations of `debug()`.
+ *
+ * Expose `debug()` as the module.
+ */
+
+exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
+exports.coerce = coerce;
+exports.disable = disable;
+exports.enable = enable;
+exports.enabled = enabled;
+exports.humanize = __webpack_require__(23);
+
+/**
+ * The currently active debug mode names, and names to skip.
+ */
+
+exports.names = [];
+exports.skips = [];
+
+/**
+ * Map of special "%n" handling functions, for the debug "format" argument.
+ *
+ * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
+ */
+
+exports.formatters = {};
+
+/**
+ * Previous log timestamp.
+ */
+
+var prevTime;
+
+/**
+ * Select a color.
+ * @param {String} namespace
+ * @return {Number}
+ * @api private
+ */
+
+function selectColor(namespace) {
+  var hash = 0, i;
+
+  for (i in namespace) {
+    hash  = ((hash << 5) - hash) + namespace.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+
+  return exports.colors[Math.abs(hash) % exports.colors.length];
+}
+
+/**
+ * Create a debugger with the given `namespace`.
+ *
+ * @param {String} namespace
+ * @return {Function}
+ * @api public
+ */
+
+function createDebug(namespace) {
+
+  function debug() {
+    // disabled?
+    if (!debug.enabled) return;
+
+    var self = debug;
+
+    // set `diff` timestamp
+    var curr = +new Date();
+    var ms = curr - (prevTime || curr);
+    self.diff = ms;
+    self.prev = prevTime;
+    self.curr = curr;
+    prevTime = curr;
+
+    // turn the `arguments` into a proper Array
+    var args = new Array(arguments.length);
+    for (var i = 0; i < args.length; i++) {
+      args[i] = arguments[i];
+    }
+
+    args[0] = exports.coerce(args[0]);
+
+    if ('string' !== typeof args[0]) {
+      // anything else let's inspect with %O
+      args.unshift('%O');
+    }
+
+    // apply any `formatters` transformations
+    var index = 0;
+    args[0] = args[0].replace(/%([a-zA-Z%])/g, function(match, format) {
+      // if we encounter an escaped % then don't increase the array index
+      if (match === '%%') return match;
+      index++;
+      var formatter = exports.formatters[format];
+      if ('function' === typeof formatter) {
+        var val = args[index];
+        match = formatter.call(self, val);
+
+        // now we need to remove `args[index]` since it's inlined in the `format`
+        args.splice(index, 1);
+        index--;
+      }
+      return match;
+    });
+
+    // apply env-specific formatting (colors, etc.)
+    exports.formatArgs.call(self, args);
+
+    var logFn = debug.log || exports.log || console.log.bind(console);
+    logFn.apply(self, args);
+  }
+
+  debug.namespace = namespace;
+  debug.enabled = exports.enabled(namespace);
+  debug.useColors = exports.useColors();
+  debug.color = selectColor(namespace);
+
+  // env-specific initialization logic for debug instances
+  if ('function' === typeof exports.init) {
+    exports.init(debug);
+  }
+
+  return debug;
+}
+
+/**
+ * Enables a debug mode by namespaces. This can include modes
+ * separated by a colon and wildcards.
+ *
+ * @param {String} namespaces
+ * @api public
+ */
+
+function enable(namespaces) {
+  exports.save(namespaces);
+
+  exports.names = [];
+  exports.skips = [];
+
+  var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
+  var len = split.length;
+
+  for (var i = 0; i < len; i++) {
+    if (!split[i]) continue; // ignore empty strings
+    namespaces = split[i].replace(/\*/g, '.*?');
+    if (namespaces[0] === '-') {
+      exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+    } else {
+      exports.names.push(new RegExp('^' + namespaces + '$'));
+    }
+  }
+}
+
+/**
+ * Disable debug output.
+ *
+ * @api public
+ */
+
+function disable() {
+  exports.enable('');
+}
+
+/**
+ * Returns true if the given mode name is enabled, false otherwise.
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+function enabled(name) {
+  var i, len;
+  for (i = 0, len = exports.skips.length; i < len; i++) {
+    if (exports.skips[i].test(name)) {
+      return false;
+    }
+  }
+  for (i = 0, len = exports.names.length; i < len; i++) {
+    if (exports.names[i].test(name)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Coerce `val`.
+ *
+ * @param {Mixed} val
+ * @return {Mixed}
+ * @api private
+ */
+
+function coerce(val) {
+  if (val instanceof Error) return val.stack || val.message;
+  return val;
+}
+
+
+/***/ }),
+/* 23 */
+/***/ (function(module, exports) {
+
+/**
+ * Helpers.
+ */
+
+var s = 1000;
+var m = s * 60;
+var h = m * 60;
+var d = h * 24;
+var y = d * 365.25;
+
+/**
+ * Parse or format the given `val`.
+ *
+ * Options:
+ *
+ *  - `long` verbose formatting [false]
+ *
+ * @param {String|Number} val
+ * @param {Object} [options]
+ * @throws {Error} throw an error if val is not a non-empty string or a number
+ * @return {String|Number}
+ * @api public
+ */
+
+module.exports = function(val, options) {
+  options = options || {};
+  var type = typeof val;
+  if (type === 'string' && val.length > 0) {
+    return parse(val);
+  } else if (type === 'number' && isNaN(val) === false) {
+    return options.long ? fmtLong(val) : fmtShort(val);
+  }
+  throw new Error(
+    'val is not a non-empty string or a valid number. val=' +
+      JSON.stringify(val)
+  );
+};
+
+/**
+ * Parse the given `str` and return milliseconds.
+ *
+ * @param {String} str
+ * @return {Number}
+ * @api private
+ */
+
+function parse(str) {
+  str = String(str);
+  if (str.length > 100) {
+    return;
+  }
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(
+    str
+  );
+  if (!match) {
+    return;
+  }
+  var n = parseFloat(match[1]);
+  var type = (match[2] || 'ms').toLowerCase();
+  switch (type) {
+    case 'years':
+    case 'year':
+    case 'yrs':
+    case 'yr':
+    case 'y':
+      return n * y;
+    case 'days':
+    case 'day':
+    case 'd':
+      return n * d;
+    case 'hours':
+    case 'hour':
+    case 'hrs':
+    case 'hr':
+    case 'h':
+      return n * h;
+    case 'minutes':
+    case 'minute':
+    case 'mins':
+    case 'min':
+    case 'm':
+      return n * m;
+    case 'seconds':
+    case 'second':
+    case 'secs':
+    case 'sec':
+    case 's':
+      return n * s;
+    case 'milliseconds':
+    case 'millisecond':
+    case 'msecs':
+    case 'msec':
+    case 'ms':
+      return n;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Short format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function fmtShort(ms) {
+  if (ms >= d) {
+    return Math.round(ms / d) + 'd';
+  }
+  if (ms >= h) {
+    return Math.round(ms / h) + 'h';
+  }
+  if (ms >= m) {
+    return Math.round(ms / m) + 'm';
+  }
+  if (ms >= s) {
+    return Math.round(ms / s) + 's';
+  }
+  return ms + 'ms';
+}
+
+/**
+ * Long format for `ms`.
+ *
+ * @param {Number} ms
+ * @return {String}
+ * @api private
+ */
+
+function fmtLong(ms) {
+  return plural(ms, d, 'day') ||
+    plural(ms, h, 'hour') ||
+    plural(ms, m, 'minute') ||
+    plural(ms, s, 'second') ||
+    ms + ' ms';
+}
+
+/**
+ * Pluralization helper.
+ */
+
+function plural(ms, n, name) {
+  if (ms < n) {
+    return;
+  }
+  if (ms < n * 1.5) {
+    return Math.floor(ms / n) + ' ' + name;
+  }
+  return Math.ceil(ms / n) + ' ' + name + 's';
+}
+
+
+/***/ }),
+/* 24 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const selection_1 = __webpack_require__(3);
+const chord_base_cache_1 = __webpack_require__(26);
+const chord_interaction_cache_1 = __webpack_require__(27);
+const debug = __webpack_require__(0)('chord-generator');
+class ChordGenerator {
+    constructor() {
+        this.chordBase = new chord_base_cache_1.ChordBaseCache();
+        this.chordInteractions = new chord_interaction_cache_1.ChordInteractionsCache();
+    }
+    /**
+     * Flag which caches need busting
+     */
+    bustCaches(data, config, outerRings, selection) {
+        const didDataChange = data !== this.lastData;
+        const didSelectionChange = selection.didSelectionCategoryChange(selection_1.SelectionType.MOUSEOVER_CHORD);
+        const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
+        if (didSelectionChange || didDataChange || didHemisphereChange) {
+            this.chordBase.bustCache = true;
+        }
+        if (didSelectionChange || didHemisphereChange) {
+            this.chordInteractions.bustCache = true;
+        }
+        this.lastHemisphere = config.splitTopLevelGroups;
+        this.lastData = data;
+    }
+    /**
+     * Generates the buffers for static chords in the charts
+     */
+    generate(data, config, outerRings, selection) {
+        debug('Generating chords');
+        this.bustCaches(data, config, outerRings, selection);
+        this.chordBase.generate(data, config, outerRings, selection);
+        this.chordInteractions.generate(config, selection);
+    }
+    /**
+     * Get the base buffer
+     */
+    getBaseBuffer() {
+        return this.chordBase.getBuffer();
+    }
+    getInteractionBuffer() {
+        return this.chordInteractions.getBuffer();
+    }
+}
+exports.ChordGenerator = ChordGenerator;
+
+
+/***/ }),
+/* 25 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Takes a map of the form <T, boolean> and returns an array of the keys,
+ * excluding entries who's mapped value is false.
+ *
+ * @param map The map to convert to a list
+ *
+ * @return T[] A list of the keys, exluding false mappings
+ */
+function boolMapToArray(map) {
+    return Array
+        .from(map)
+        .filter((item) => item[1])
+        .map((item) => item[0]);
+}
+exports.boolMapToArray = boolMapToArray;
+/**
+ * Defines a selection control for custom types and categories
+ */
+class CustomSelection {
+    constructor() {
+        /** This caches the list generation of a selection */
+        this.cachedSelection = new Map();
+        /** Map of the custom categories to the selection state */
+        this.selections = new Map();
+        /** Keeps flags indicating if a selection for a given category has changed or not */
+        this._didSelectionChange = new Map();
+    }
+    /**
+     * Clears out all custom selections for every category
+     */
+    clearAllSelections() {
+        for (const key of this.selections.keys()) {
+            this.clearSelection(key);
+        }
+    }
+    /**
+     * Clears the selection for the category specified
+     *
+     * @param {string} category Name of the category of selection
+     */
+    clearSelection(category) {
+        // We must have selected items to clear the selection
+        if (this.getSelection(category).length) {
+            this.selections.set(category, null);
+            this.cachedSelection.set(category, null);
+            this._didSelectionChange.set(category, true);
+        }
+    }
+    /**
+     * Makes an item no longer flaged as selected within the given category
+     *
+     * @param category The custom category of the selection
+     * @param item The item to remove from being selected
+     */
+    deselect(category, item) {
+        const selectionMap = this.selections.get(category);
+        // See if the item is selected already, if it is, clear the selection and bust caches
+        if (selectionMap && selectionMap.get(item)) {
+            // Clear the cache for the selection list
+            this.cachedSelection.set(category, null);
+            // Set the selection
+            selectionMap.set(item, false);
+            // Flag the category of selections as changed
+            this._didSelectionChange.set(category, true);
+        }
+    }
+    /**
+     * Checks if a selection from a category has been modified
+     *
+     * @param {string} category The selection category to check
+     */
+    didSelectionCategoryChange(category) {
+        return this._didSelectionChange.get(category);
+    }
+    /**
+     * Checks if ANY selection has changed
+     *
+     * @return {boolean} True if any selection has changed
+     */
+    didSelectionChange() {
+        return boolMapToArray(this._didSelectionChange).length > 0;
+    }
+    /**
+     * This indicates that updates have taken place to account for selection
+     * changes.
+     */
+    finalizeUpdate() {
+        for (const key of this._didSelectionChange.keys()) {
+            this._didSelectionChange.set(key, false);
+        }
+    }
+    /**
+     * This retrieves a list of the items that are selected
+     *
+     * @param category The selection category to check on
+     *
+     * @return {T} Returns a list of items that are currently selected
+     */
+    getSelection(category) {
+        if (!this.cachedSelection.get(category)) {
+            const theSelection = this.selections.get(category);
+            if (theSelection) {
+                this.cachedSelection.set(category, boolMapToArray(theSelection));
+            }
+            else {
+                this.cachedSelection.set(category, []);
+            }
+        }
+        return this.cachedSelection.get(category);
+    }
+    /**
+     * Specifies an item to flag as selected for the given category
+     *
+     * @param category The custom category of the selection
+     * @param item The item to flag as selected
+     */
+    select(category, item) {
+        let selectionMap = this.selections.get(category);
+        if (!selectionMap) {
+            selectionMap = new Map();
+            this.selections.set(category, selectionMap);
+        }
+        if (!selectionMap.get(item)) {
+            // Clear the cache for the selection list
+            this.cachedSelection.set(category, null);
+            // Set the selection
+            selectionMap.set(item, true);
+            // Flag the category of selections as changed
+            this._didSelectionChange.set(category, true);
+        }
+    }
+    /**
+     * Specifies an item to toggle it's selection status for the provided category
+     *
+     * @param category The custom category of the selection
+     * @param item The item to flag as selected
+     */
+    toggleSelect(category, item) {
+        let selectionMap = this.selections.get(category);
+        if (!selectionMap) {
+            selectionMap = new Map();
+            this.selections.set(category, selectionMap);
+        }
+        // Clear the cache for the selection list
+        this.cachedSelection.set(category, null);
+        // Toggle the selection off if already selected
+        if (selectionMap.get(item)) {
+            this.deselect(category, item);
+        }
+        else {
+            this.select(category, item);
+        }
+        // Flag the category of selections as changed
+        this._didSelectionChange.set(category, true);
+    }
+}
+exports.CustomSelection = CustomSelection;
+
+
+/***/ }),
+/* 26 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(1);
+const curved_line_shape_1 = __webpack_require__(10);
+const curved_line_1 = __webpack_require__(7);
+const shape_buffer_cache_1 = __webpack_require__(5);
+const selection_1 = __webpack_require__(3);
+const endpointDataProcessing_1 = __webpack_require__(11);
+const FADED_ALPHA = 0.1;
+const UNFADED_ALPHA = 0.5;
+function getEndpoint(data, targetName) {
+    function isTarget(endpoint) {
+        return endpoint.id === targetName;
+    }
+    return data.endpoints.find(isTarget);
+}
+function getFlowAngle(endpoint, flowIndex, segmentSpace) {
+    const angleStep = (endpoint.endAngle - endpoint.startAngle
+        - 2 * segmentSpace) / endpoint.totalCount;
+    return endpoint.startAngle + 2 * segmentSpace + (angleStep * flowIndex);
+}
+/**
+ * Responsible for generating the static chords in the system
+ *
+ * @export
+ * @class ChordBaseCache
+ * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
+ */
+class ChordBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
+    generate(data, config, outerRings, selection) {
+        super.generate.apply(this, arguments);
+    }
+    buildCache(data, config, outerRings, selection) {
+        const curves = this.preProcessData(data, config, outerRings);
+        // Map the outer rings by id
+        const ringById = new Map();
+        outerRings.getBaseBuffer().forEach(ring => {
+            ringById.set(ring.d.source.id, ring);
+        });
+        const curveShapes = curves.map((curve) => {
+            const { r, g, b } = curve.color;
+            const color = new three_1.Color(r, g, b);
+            const opacity = selection.getSelection(selection_1.SelectionType.MOUSEOVER_CHORD).length > 0 ? FADED_ALPHA : UNFADED_ALPHA;
+            // Configure the newly made curved line
+            const newCurve = new curved_line_shape_1.CurvedLineShape({
+                controlPoints: [{ x: curve.controlPoint.x, y: curve.controlPoint.y }],
+                end: { x: curve.p2.x, y: curve.p2.y },
+                endColor: color,
+                endOpacity: opacity,
+                lineWidth: 3,
+                start: { x: curve.p1.x, y: curve.p1.y },
+                startColor: color,
+                startOpacity: opacity,
+                type: curved_line_1.CurveType.Bezier,
+            });
+            // Set the relational and domain information for the chord
+            newCurve.d = {
+                outerRings: [
+                    ringById.get(curve.source.source),
+                    ringById.get(curve.source.target),
+                ],
+                source: curve.source,
+            };
+            // Apply the relational information to the outer rings as well
+            newCurve.d.outerRings.forEach(ring => {
+                ring.d.chords.push(newCurve);
+            });
+            return newCurve;
+        });
+        this.buffer = curveShapes;
+    }
+    /**
+     * This processes the data to calculate initial needed metrics to make generating
+     * shapes simpler.
+     */
+    preProcessData(data, config, outerRings) {
+        const { groupSplitDistance, outerRingSegmentPadding: segmentSpace, outerRingSegmentRowPadding: segmentRowPadding, radius: circleRadius, ringWidth, splitTopLevelGroups, topLevelGroupPadding: padding, } = config;
+        const controlPoint = { x: 0, y: 0 };
+        const curveData = [];
+        // First initialize any details not set in the endpoint
+        data.endpoints.forEach(end => {
+            end._inflowIdx = 0;
+            end._outflowIdx = 0;
+        });
+        // Decide the moving direction of points based on segments they are in
+        function getDirection(angle, trees) {
+            const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
+            return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
+        }
+        function calculatePoint(radius, flowAngle, split) {
+            let x = radius * Math.cos(flowAngle);
+            let y = radius * Math.sin(flowAngle);
+            if (split) {
+                const halfAngle = getDirection(flowAngle, data.tree);
+                x = radius * Math.cos(flowAngle) + groupSplitDistance * Math.cos(halfAngle);
+                y = radius * Math.sin(flowAngle) + groupSplitDistance * Math.sin(halfAngle);
+            }
+            return { x, y };
+        }
+        // Loop thrugh each endpoint and analyze the flows
+        data.endpoints.forEach((endpoint) => {
+            data.chords.forEach((chord) => {
+                if (chord.source === endpoint.id) {
+                    const destEndpoint = getEndpoint(data, chord.target);
+                    if (destEndpoint) {
+                        let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
+                        if (splitTopLevelGroups) {
+                            const ancestor1 = endpointDataProcessing_1.getAncestor(endpoint, data.tree);
+                            const ancRange1 = ancestor1.endAngle - ancestor1.startAngle;
+                            const scale1 = (ancRange1 - padding) / ancRange1;
+                            p1FlowAngle =
+                                ancestor1.startAngle + padding / 2 + (p1FlowAngle - ancestor1.startAngle) * scale1;
+                        }
+                        const p1 = calculatePoint(circleRadius - 0.5 * ringWidth - segmentRowPadding, p1FlowAngle, splitTopLevelGroups);
+                        // P2, destEnd
+                        let p2FlowAngle = getFlowAngle(destEndpoint, destEndpoint.totalCount - 1 - destEndpoint._inflowIdx, segmentSpace);
+                        if (splitTopLevelGroups) {
+                            const ancestor2 = endpointDataProcessing_1.getAncestor(destEndpoint, data.tree);
+                            const ancRange2 = ancestor2.endAngle - ancestor2.startAngle;
+                            const scale2 = (ancRange2 - padding) / ancRange2;
+                            p2FlowAngle =
+                                ancestor2.startAngle + padding / 2 + (p2FlowAngle - ancestor2.startAngle) * scale2;
+                        }
+                        const p2 = calculatePoint(circleRadius - 0.5 * ringWidth - segmentRowPadding, p2FlowAngle, splitTopLevelGroups);
+                        const color = outerRings.outerRingBase.shapeById.get(chord.source).color;
+                        endpoint._outflowIdx++;
+                        destEndpoint._inflowIdx++;
+                        curveData.push({
+                            color,
+                            controlPoint,
+                            destEndpoint,
+                            endpoint,
+                            p1,
+                            p2,
+                            source: chord,
+                        });
+                    }
+                }
+            });
+        });
+        return curveData;
+    }
+}
+exports.ChordBaseCache = ChordBaseCache;
+
+
+/***/ }),
+/* 27 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const shape_buffer_cache_1 = __webpack_require__(5);
+const selection_1 = __webpack_require__(3);
+const DEPTH = 10;
+/**
+ * Responsible for generating the static chords in the system
+ */
+class ChordInteractionsCache extends shape_buffer_cache_1.ShapeBufferCache {
+    generate(config, selection) {
+        super.generate.apply(this, arguments);
+    }
+    buildCache(config, selection) {
+        const shapes = Array();
+        selection.getSelection(selection_1.SelectionType.MOUSEOVER_CHORD).forEach(curve => {
+            // Duplicate the curves with active color
+            const curvedLine = curve.clone();
+            curvedLine.a = 1.0;
+            curvedLine.a2 = 1.0;
+            curvedLine.depth = DEPTH;
+            shapes.push(curvedLine);
+        });
+        this.buffer = shapes;
+    }
+}
+exports.ChordInteractionsCache = ChordInteractionsCache;
+
+
+/***/ }),
+/* 28 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const label_base_cache_1 = __webpack_require__(29);
+const debug = __webpack_require__(0)('label-generator');
+class LabelGenerator {
+    constructor() {
+        this.baseCache = new label_base_cache_1.LabelBaseCache();
+    }
+    bustCaches(data, config, selection) {
+        if (data !== this.currentData) {
+            this.baseCache.bustCache = true;
+        }
+        this.currentData = data;
+    }
+    /** */
+    generate(data, config, outerRingGenerator, selection) {
+        debug('Generating Labels');
+        this.bustCaches(data, config, selection);
+        this.baseCache.generate(data, outerRingGenerator, config, selection);
+    }
+    getBaseBuffer() {
+        return this.baseCache.getBuffer();
+    }
+}
+exports.LabelGenerator = LabelGenerator;
+
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const d3_color_1 = __webpack_require__(4);
+const label_1 = __webpack_require__(30);
+const line_1 = __webpack_require__(8);
+const point_1 = __webpack_require__(9);
+const rotateable_quad_1 = __webpack_require__(16);
+const shape_buffer_cache_1 = __webpack_require__(5);
+const types_1 = __webpack_require__(17);
+const debug = __webpack_require__(0)('label');
+/**
+ * This calculates the equivalent angle to where it is bounded between
+ * 0 and 2*pi
+ */
+function ordinaryCircularAngle(angle) {
+    while (angle > 2 * Math.PI) {
+        angle -= 2 * Math.PI;
+    }
+    while (angle < 0) {
+        angle += 2 * Math.PI;
+    }
+    return angle;
+}
+/**
+ * This takes in a ordinary circular angle and determines if the angle lies on
+ * the right side of a circle.
+ *
+ * @param {number} angle The angle to test which hemisphere it lies on.
+ *
+ * @returns {boolean} True if the angle lies within the right hemisphere
+ */
+function isRightHemisphere(angle) {
+    return ((angle >= 0 && angle < Math.PI / 2) ||
+        (angle > (3 * Math.PI) / 2));
+}
+/**
+ * Responsible for generating the static labels around the chart
+ *
+ * @export
+ * @class LabelBaseCache
+ * @extends {ShapeBufferCache<Label<ICurvedLineData>>}
+ */
+class LabelBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
+    generate(data, outerRingGenerator, config, selection) {
+        super.generate.apply(this, arguments);
+    }
+    buildCache(data, outerRingGenerator, config, selection) {
+        const inactiveOpacity = 0.3;
+        const activeOpacity = 1;
+        const defaultColor = d3_color_1.rgb(1, 1, 1, 1);
+        const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
+        debug('labesData is %o', labelsData);
+        const labels = labelsData.map((labelData) => {
+            const { r, g, b } = defaultColor;
+            const color = selection.getSelection('chord or ring mouse over').length > 0 ?
+                d3_color_1.rgb(r, g, b, inactiveOpacity) :
+                d3_color_1.rgb(r, g, b, activeOpacity);
+            const label = new label_1.Label({
+                color: color,
+                fontSize: 14,
+                text: labelData.name,
+            });
+            label.width = label.text.length * label.fontSize;
+            // If we're anchored at the middle left, we need to push a bit more outward
+            // In order to account for the length of the text field
+            if (!config.splitTopLevelGroups) {
+                if (labelData.anchor === rotateable_quad_1.AnchorPosition.MiddleLeft) {
+                    point_1.Point.add(labelData.point, point_1.Point.scale(labelData.direction, label.width / 2), labelData.point);
+                }
+                else {
+                    point_1.Point.add(labelData.point, point_1.Point.scale(labelData.direction, -label.width / 2), labelData.point);
+                }
+            }
+            else {
+                point_1.Point.add(labelData.point, point_1.Point.scale(point_1.Point.make(-1, 0), label.width / 2), labelData.point);
+            }
+            label.rasterizationOffset.y = 10.5;
+            label.rasterizationOffset.x = 0.5;
+            label.rasterizationPadding.height = -10;
+            label.rasterizationPadding.width = 4;
+            label.setAnchor(labelData.anchor);
+            label.setLocation(labelData.point);
+            label.setRotation(labelData.angle);
+            if (config.labelDirection === types_1.LabelDirectionEnum.LINEAR) {
+                label.setRotation(0);
+            }
+            return label;
+        });
+        debug('labels are %o', labels);
+        this.buffer = labels;
+    }
+    preProcessData(data, outerRings, config) {
+        const { outerRingSegmentRowPadding: rowPadding, radius, ringWidth, splitTopLevelGroups, topLevelGroupPadding, } = config;
+        const paddedRingWidth = ringWidth + rowPadding;
+        // This method is used to calculate where the anchor point location will be
+        // For the label
+        const calculatePoint = (endpoint, direction, center) => {
+            // Get the depth of the ring's top level end point
+            const depth = data.topEndPointMaxDepth.get(data.topEndPointByEndPointId.get(endpoint.id)) + 1;
+            // How much is the label pushed out to account for all of the ring levels rendered
+            const ringPadding = paddedRingWidth * depth;
+            // Quick reference to the direction of the angle
+            const dx = direction.x;
+            const dy = direction.y;
+            // The distance from the center we should be
+            const distance = radius + ringPadding;
+            return {
+                x: (distance * dx) + center.x,
+                y: (distance * dy) + center.y,
+            };
+        };
+        const labelData = outerRings.map((ring) => {
+            // Do not render children that have children
+            if (ring.d.source.children.length > 0) {
+                return null;
+            }
+            const center = ring.controlPoints[1];
+            // Make a line between the end points
+            let ringLine = new line_1.Line(ring.p1, ring.p2);
+            if (splitTopLevelGroups) {
+                let topEndPoint = data.topEndPointByEndPointId.get(ring.d.source.id);
+                while (data.topEndPointByEndPointId.get(topEndPoint.parent)) {
+                    topEndPoint = data.topEndPointByEndPointId.get(topEndPoint.parent);
+                }
+                const ancestor = data.tree.filter((t) => t.id === topEndPoint.parent)[0];
+                const ancRange = ancestor.endAngle - ancestor.startAngle;
+                const scale = (ancRange - topLevelGroupPadding) / ancRange;
+                const newStartAngle = ancestor.startAngle + topLevelGroupPadding / 2 + (ring.d.source.startAngle - ancestor.startAngle) * scale;
+                const newEndAngle = ancestor.startAngle + topLevelGroupPadding / 2 + (ring.d.source.endAngle - ancestor.startAngle) * scale;
+                const p1 = {
+                    x: center.x + radius * Math.cos(newStartAngle),
+                    y: center.y + radius * Math.sin(newStartAngle),
+                };
+                const p2 = {
+                    x: center.x + radius * Math.cos(newEndAngle),
+                    y: center.y + radius * Math.sin(newEndAngle),
+                };
+                ringLine = new line_1.Line(p1, p2);
+            }
+            // Get the mid point and use the circle center to get the direction
+            // Vector needed to find the point in the middle of the arc
+            const direction = point_1.Point.getDirection(center, ringLine.mid, true);
+            // Get the angle derived from the direction we figured
+            let angle = ordinaryCircularAngle(Math.atan2(direction.y, direction.x));
+            // Determine the anchor position based on whether the angle is on the left or right hemisphere
+            const anchor = isRightHemisphere(angle) ? rotateable_quad_1.AnchorPosition.MiddleRight : rotateable_quad_1.AnchorPosition.MiddleLeft;
+            // Calculate the point the anchor of the label should be located
+            const point = calculatePoint(ring.d.source, direction, center);
+            // If the label is to appear on the right side of the area, then we must
+            // Rotate it by 180 degrees to have it render in the right location
+            if (anchor === rotateable_quad_1.AnchorPosition.MiddleLeft) {
+                angle += Math.PI;
+            }
+            return {
+                anchor,
+                angle,
+                direction,
+                name: ring.d.source.name,
+                point,
+            };
+        })
+            .filter(Boolean);
+        return labelData;
+    }
+}
+exports.LabelBaseCache = LabelBaseCache;
+
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const d3_color_1 = __webpack_require__(4);
+const ramda_1 = __webpack_require__(6);
+const rotateable_quad_1 = __webpack_require__(16);
+const sprite_1 = __webpack_require__(31);
+const measurement = new sprite_1.Sprite(200, 200, 1, 1);
+const defaultColor = d3_color_1.rgb(255, 255, 255, 1);
+class Label extends rotateable_quad_1.RotateableQuad {
+    /**
+     * Creates an instance of Label.
+     *
+     * @param {Partial<Label<T>>} [options={}]
+     */
+    constructor(options = {}) {
+        super({ x: 0, y: 1 }, { width: 1, height: 1 }, 0, rotateable_quad_1.AnchorPosition.TopLeft);
+        this.color = defaultColor;
+        this.depth = 0;
+        this.direction = 'inherit';
+        this.font = 'serif';
+        this.fontSize = 10;
+        this.fontWeight = 400;
+        this.maxWidth = undefined;
+        this.text = '';
+        this.textAlign = 'start';
+        this.textBaseline = 'alphabetic';
+        this.zoomable = false;
+        /**
+         * This contains an adjustment to aid in the rasterization process. Getting
+         * reliable dimensions for fonts and text can be incredibly challenging,
+         * thus, this allows you to offset the rasterization if you get pieces of
+         * the label cut off.
+         */
+        this.rasterizationOffset = { x: 0, y: 12 };
+        /**
+         * This contains an adjustment to aid in the rasterization process. Getting
+         * reliable dimensions for fonts and text can be incredibly challenging,
+         * thus, this allows you to pad the rasterization space if you get pieces of
+         * the label cut off.
+         */
+        this.rasterizationPadding = { width: 0, height: 0 };
+        // Set props
+        Object.assign(this, options);
+        // Make sure the color is a copy
+        this.color = d3_color_1.rgb(this.color);
+        // Calculate the text's measurements
+        measurement.context.font = this.makeCSSFont();
+        const measuredSize = measurement.context.measureText(this.text);
+        // Adjust the dimensions to the measurement
+        this.setSize({
+            height: this.fontSize + 10,
+            width: measuredSize.width,
+        });
+    }
+    /**
+     * Copies all of the properties of a label and makes this label use them
+     *
+     * @param {Label} label The labels whose properties we wish to copy
+     */
+    copyLabel(label) {
+        // Assign the properties of the other label to this
+        // Specifically, ONLY label properties
+        Object.assign(this, ramda_1.omit(['x', 'y', 'width', 'height'], label));
+        // Use this to set the text to make sure all of the metrics are re-calculated
+        this.setText(label.text);
+    }
+    /**
+     * Takes all of the current settings and makes a CSS font string
+     */
+    makeCSSFont(fontSize) {
+        return `${this.fontWeight} ${fontSize || this.fontSize}px ${this.font}`;
+    }
+    /**
+     * Change the position this text is rendered to
+     *
+     * @param x X world coordinate
+     * @param y Y world coordinate
+     */
+    position(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    /**
+     * Change the text and the calculated bounding box for this label
+     */
+    setText(lbl) {
+        // Recalculate text size
+        measurement.context.font = this.makeCSSFont();
+        const size = measurement.context.measureText(lbl);
+        // Set our properties based on the calculated size
+        this.height = this.fontSize;
+        this.text = lbl;
+        this.width = size.width;
+    }
+}
+exports.Label = Label;
+
+
+/***/ }),
+/* 31 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * A canvas element wrapper that aids in tracking a canvas element along with
+ * content scaling properties.
+ *
+ * @class Sprite
+ */
+class Sprite {
+    //
+    // Ctor at the top below props
+    //
+    /**
+     * Creates an instance of Sprite.
+     *
+     * @param w             The width of the context to create
+     * @param h             The height of the context to create
+     * @param contentScaleX The content scaling of the content
+     * @param contentScaleY The content scaling of the content
+     *
+     * @memberOf Sprite
+     */
+    constructor(w, h, contentScaleX, contentScaleY) {
+        this.scaleX = 1;
+        this.scaleY = 1;
+        const canvas = document.createElement('canvas');
+        if (canvas) {
+            this.scaleX = contentScaleX || this.scaleX;
+            this.scaleY = contentScaleY || this.scaleY;
+            canvas.width = w * this.scaleX;
+            canvas.height = h * this.scaleY;
+            this.context = canvas.getContext('2d');
+            this.canvas = canvas;
+        }
+    }
+    /**
+     * Retrieves the content scaling of this object
+     *
+     * @readonly
+     *
+     * @memberOf Sprite
+     */
+    getContentScale() {
+        return {
+            x: this.scaleX,
+            y: this.scaleY,
+        };
+    }
+    /**
+     * Retrieves the size of the content ignoring scaling
+     *
+     * @readonly
+     *
+     * @memberOf Sprite
+     */
+    getContentSize() {
+        return {
+            height: this.canvas.height,
+            width: this.canvas.width,
+        };
+    }
+    /**
+     * Retrieves the dimensional width of the content applying scaling
+     *
+     * @readonly
+     *
+     * @memberOf Sprite
+     */
+    getWidth() {
+        return this.canvas.width / this.scaleX;
+    }
+    /**
+     * Retrieves the dimensional height of the content applying scaling
+     *
+     * @readonly
+     *
+     * @memberOf Sprite
+     */
+    getHeight() {
+        return this.canvas.height / this.scaleY;
+    }
+}
+exports.Sprite = Sprite;
+
+
+/***/ }),
+/* 32 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const selection_1 = __webpack_require__(3);
+const outer_ring_base_cache_1 = __webpack_require__(33);
+const outer_ring_interaction_cache_1 = __webpack_require__(35);
+const debug = __webpack_require__(0)('outer-ring-chart');
+class OuterRingGenerator {
+    constructor() {
+        this.outerRingBase = new outer_ring_base_cache_1.OuterRingBaseCache();
+        this.outerRingInteraction = new outer_ring_interaction_cache_1.OuterRingInteractionsCache();
+    }
+    /**
+     * Flag which caches need busting
+     */
+    bustCaches(data, config, selection) {
+        const didDataChange = data !== this.lastData;
+        const didSelectionChange = selection.didSelectionCategoryChange(selection_1.SelectionType.MOUSEOVER_OUTER_RING);
+        const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
+        if (didDataChange || didSelectionChange || didHemisphereChange) {
+            this.outerRingBase.bustCache = true;
+        }
+        if (didDataChange || didSelectionChange || didHemisphereChange) {
+            this.outerRingInteraction.bustCache = true;
+        }
+        this.lastData = data;
+        this.lastHemisphere = config.splitTopLevelGroups;
+    }
+    /**
+     * Generates the buffers for static outer rings in the charts
+     */
+    generate(data, config, selection) {
+        debug('Generating outer rings');
+        this.bustCaches(data, config, selection);
+        debug(data);
+        this.outerRingBase.generate(data, config, selection);
+        this.outerRingInteraction.generate(data, config, selection);
+    }
+    /**
+     * Get the base buffer
+     */
+    getBaseBuffer() {
+        return this.outerRingBase.getBuffer();
+    }
+    getInteractionBuffer() {
+        return this.outerRingInteraction.getBuffer();
+    }
+}
+exports.OuterRingGenerator = OuterRingGenerator;
+
+
+/***/ }),
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const d3_color_1 = __webpack_require__(4);
+const d3_scale_1 = __webpack_require__(34);
+const three_1 = __webpack_require__(1);
+const curved_line_shape_1 = __webpack_require__(10);
+const curved_line_1 = __webpack_require__(7);
+const shape_buffer_cache_1 = __webpack_require__(5);
+const selection_1 = __webpack_require__(3);
+const endpointDataProcessing_1 = __webpack_require__(11);
+const debug = __webpack_require__(0)('outer-ring-base');
+const DEPTH = 20;
+const FADED_ALPHA = 0.1;
+const UNFADED_ALPHA = 1.0;
+/**
+ * Responsible for generating the static outer rings in the system
+ */
+class OuterRingBaseCache extends shape_buffer_cache_1.ShapeBufferCache {
+    constructor() {
+        super(...arguments);
+        this.shapeById = new Map();
+    }
+    generate(data, config, selection) {
+        super.generate.apply(this, arguments);
+    }
+    buildCache(data, config, selection) {
+        const { ringWidth } = config;
+        this.shapeById = new Map();
+        const segments = this.preProcessData(data, config);
+        // Check if a selection exists such that the base needs to be faded
+        const hasSelection = selection.getSelection(selection_1.SelectionType.MOUSEOVER_CHORD).length > 0 ||
+            selection.getSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING).length > 0;
+        const circleEdges = segments.map((segment) => {
+            const { r, g, b } = segment.color;
+            const color = new three_1.Color(r, g, b);
+            const opacity = hasSelection ? FADED_ALPHA : UNFADED_ALPHA;
+            const curve = new curved_line_shape_1.CurvedLineShape({
+                controlPoints: [{ x: segment.controlPoint.x, y: segment.controlPoint.y }],
+                depth: DEPTH,
+                end: { x: segment.p2.x, y: segment.p2.y },
+                endColor: color,
+                endOpacity: opacity,
+                lineWidth: ringWidth,
+                resolution: 200,
+                start: { x: segment.p1.x, y: segment.p1.y },
+                startColor: color,
+                startOpacity: opacity,
+                type: curved_line_1.CurveType.CircularCCW,
+            });
+            curve.lineWidth = ringWidth;
+            curve.depth = DEPTH;
+            curve.d = {
+                chords: [],
+                source: segment.source,
+            };
+            // Keep a mapping of our shape by it's source identifier
+            this.shapeById.set(segment.source.id, curve);
+            return curve;
+        });
+        debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
+        this.buffer = circleEdges;
+    }
+    /**
+     * This processes the data to calculate initial needed metrics to make generating
+     * shapes simpler.
+     */
+    preProcessData(data, config) {
+        const { groupSplitDistance, outerRingSegmentPadding: segmentPadding, outerRingSegmentRowPadding: segmentRowPadding, radius: circleRadius, ringWidth, splitTopLevelGroups: splitGroups, topLevelGroupPadding: padding, } = config;
+        const paddedRingWidth = ringWidth + segmentRowPadding;
+        let controlPoint = { x: 0, y: 0 };
+        debug('data is %o', data);
+        // Decide the moving direction of points based on segments they are in
+        function getDirection(angle, trees) {
+            const tree = trees.find(t => t.startAngle <= angle && t.endAngle > angle);
+            return tree.startAngle + 0.5 * (tree.endAngle - tree.startAngle);
+        }
+        // Get depth of tree in order to render layers
+        function getDepthOfTree(tree) {
+            if (tree.children === undefined || tree.children.length === 0)
+                return 1;
+            let max = 0;
+            tree.children.forEach((c) => {
+                const temp = getDepthOfTree(c);
+                if (temp > max)
+                    max = temp;
+            });
+            return max + 1;
+        }
+        // Travel the tree to render three layers of ring
+        function traverseTree(tree) {
+            let segments = [];
+            tree.forEach((t) => {
+                const depth = getDepthOfTree(t);
+                if (depth > 1) {
+                    const startAngle = t.startAngle + segmentPadding;
+                    const endAngle = t.endAngle - segmentPadding;
+                    let p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, startAngle);
+                    let p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, endAngle);
+                    if (splitGroups) {
+                        const ancestor = endpointDataProcessing_1.getAncestor(t, data.tree);
+                        debug('ancestor is %o,t is %o', ancestor, t);
+                        if (ancestor !== undefined) {
+                            const ancRange = ancestor.endAngle - ancestor.startAngle;
+                            const scale = (ancRange - padding) / ancRange;
+                            const newStartAngle = ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
+                            const newEndAngle = ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
+                            p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newStartAngle);
+                            p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newEndAngle);
+                        }
+                        else {
+                            const ancRange = t.endAngle - t.startAngle;
+                            const scale = (ancRange - padding) / ancRange;
+                            const newStartAngle = t.startAngle + padding / 2 + (startAngle - t.startAngle) * scale;
+                            const newEndAngle = t.startAngle + padding / 2 + (endAngle - t.startAngle) * scale;
+                            p1 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newStartAngle);
+                            p2 = calculatePoint(circleRadius + (depth - 1) * paddedRingWidth, newEndAngle);
+                        }
+                        const angle = t.startAngle + segmentPadding;
+                        const halfAngle = getDirection(angle, data.tree);
+                        controlPoint = {
+                            x: groupSplitDistance * Math.cos(halfAngle),
+                            y: groupSplitDistance * Math.sin(halfAngle),
+                        };
+                    }
+                    const colorVal = d3_color_1.rgb(d3_color_1.color(calculateColor(t.id)));
+                    const flows = [];
+                    if (depth >= 2 && t.parent !== '') {
+                        segments.push({
+                            color: new three_1.Color(colorVal.r / 255.0, colorVal.g / 255.0, colorVal.b / 255.0),
+                            controlPoint,
+                            flows,
+                            id: t.id,
+                            p1,
+                            p2,
+                            source: t,
+                        });
+                    }
+                    const childSegments = traverseTree(t.children);
+                    segments = segments.concat(childSegments);
+                }
+            });
+            return segments;
+        }
+        const calculatePoint = (radius, radianAngle) => {
+            let x = radius * Math.cos(radianAngle);
+            let y = radius * Math.sin(radianAngle);
+            // Change the position in hemiSphere
+            if (splitGroups) {
+                const halfAngle = getDirection(radianAngle, data.tree);
+                x = radius * Math.cos(radianAngle) + groupSplitDistance * Math.cos(halfAngle);
+                y = radius * Math.sin(radianAngle) + groupSplitDistance * Math.sin(halfAngle);
+            }
+            return { x, y };
+        };
+        const ids = data.endpoints.map((endpoint) => endpoint.id);
+        const calculateColor = d3_scale_1.scaleOrdinal(d3_scale_1.schemeCategory20).domain(ids);
+        const segments = data.endpoints.map((endpoint) => {
+            const startAngle = endpoint.startAngle + segmentPadding;
+            const endAngle = endpoint.endAngle - segmentPadding;
+            let p1 = calculatePoint(circleRadius, startAngle);
+            let p2 = calculatePoint(circleRadius, endAngle);
+            // Change controlPoint in hemiSphere
+            if (splitGroups) {
+                const ancestor = endpointDataProcessing_1.getAncestor(endpoint, data.tree);
+                const ancRange = ancestor.endAngle - ancestor.startAngle;
+                const scale = (ancRange - padding) / ancRange;
+                const newStartAngle = ancestor.startAngle + padding / 2 + (startAngle - ancestor.startAngle) * scale;
+                const newEndAngle = ancestor.startAngle + padding / 2 + (endAngle - ancestor.startAngle) * scale;
+                p1 = calculatePoint(circleRadius, newStartAngle);
+                p2 = calculatePoint(circleRadius, newEndAngle);
+                const angle = endpoint.startAngle + segmentPadding;
+                const halfAngle = getDirection(angle, data.tree);
+                controlPoint = { x: groupSplitDistance * Math.cos(halfAngle), y: groupSplitDistance * Math.sin(halfAngle) };
+            }
+            const colorVal = d3_color_1.rgb(d3_color_1.color(calculateColor(endpoint.id)));
+            const flows = data.chords.filter((flow) => flow.source === endpoint.id);
+            return {
+                color: new three_1.Color(colorVal.r / 255.0, colorVal.g / 255.0, colorVal.b / 255.0),
+                controlPoint,
+                flows,
+                id: endpoint.id,
+                p1,
+                p2,
+                source: endpoint,
+            };
+        });
+        const segments2 = traverseTree(data.tree);
+        return segments.concat(segments2);
+    }
+}
+exports.OuterRingBaseCache = OuterRingBaseCache;
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_34__;
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const shape_buffer_cache_1 = __webpack_require__(5);
+const selection_1 = __webpack_require__(3);
+const depth = 21;
+/**
+ * Responsible for generating the static OuterRings in the system
+ */
+class OuterRingInteractionsCache extends shape_buffer_cache_1.ShapeBufferCache {
+    generate(data, config, selection) {
+        super.generate.apply(this, arguments);
+    }
+    buildCache(data, config, selection) {
+        const shapes = Array();
+        selection.getSelection(selection_1.SelectionType.MOUSEOVER_OUTER_RING).map(selected => {
+            // Highlight hovered ring
+            const curvedLine = selected.clone();
+            curvedLine.a = 1.0;
+            curvedLine.a2 = 1.0;
+            curvedLine.depth = depth;
+            shapes.push(curvedLine);
+        });
+        this.buffer = shapes;
+    }
+}
+exports.OuterRingInteractionsCache = OuterRingInteractionsCache;
+
+
+/***/ }),
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(1);
+const simple_bezier_line_buffer_1 = __webpack_require__(37);
+const simple_circular_line_buffer_1 = __webpack_require__(38);
+const simple_label_buffer_1 = __webpack_require__(39);
+const curved_line_shape_1 = __webpack_require__(10);
+const quad_tree_1 = __webpack_require__(14);
+const quad_tree_2 = __webpack_require__(14);
+const webgl_surface_1 = __webpack_require__(40);
+const debug = __webpack_require__(0)('chord-chart:gl');
+// --[ SHADERS ]-------------------------------------------
+const bezierVertexShader = __webpack_require__(47);
+const fillVertexShader = __webpack_require__(48);
+const fillFragmentShader = __webpack_require__(49);
+const textureVertexShader = __webpack_require__(50);
+const textureFragmentShader = __webpack_require__(51);
+/**
+ * The base component for the communications view
+ */
+class ChordChartGL extends webgl_surface_1.WebGLSurface {
+    constructor() {
+        super(...arguments);
+        // BUFFERS
+        this.interactiveBezierBuffer = new simple_bezier_line_buffer_1.SimpleStaticBezierLineBuffer();
+        this.interactiveCircularBuffer = new simple_circular_line_buffer_1.SimpleStaticCircularLineBuffer();
+        this.staticBezierBuffer = new simple_bezier_line_buffer_1.SimpleStaticBezierLineBuffer();
+        this.staticCircularBuffer = new simple_circular_line_buffer_1.SimpleStaticCircularLineBuffer();
+        // LABELS BUFFER ITEMS
+        this.staticLabelBuffer = new simple_label_buffer_1.SimpleStaticLabelBuffer();
+        this.interactiveLabelBuffer = new simple_label_buffer_1.SimpleStaticLabelBuffer();
+        /** The current dataset that is being rendered by this component */
+        this.animatedCurvedLines = [];
+        /** The current dataset that is being rendered by this component */
+        this.interactiveCurvedLines = [];
+        this.interactiveRingLines = [];
+        /** The current dataset that is being rendered by this component */
+        this.staticCurvedLineSet = [];
+        // Keeps track of some maouse interaction states
+        this.mouseHovered = new Map();
+    }
+    /**
+     * Applies new props injected into this component.
+     *
+     * @param  props The new properties for this component
+     */
+    applyBufferChanges(props) {
+        const { staticCurvedLines, staticRingLines, interactiveCurvedLines, interactiveRingLines, } = props;
+        // Set to true when the quad tree needs to be updated
+        let needsTreeUpdate = false;
+        // Commit static bezier lines
+        needsTreeUpdate = this.staticBezierBuffer.update(staticCurvedLines) || needsTreeUpdate;
+        // Commit ring curved lines using old methods
+        needsTreeUpdate = this.staticCircularBuffer.update(staticRingLines) || needsTreeUpdate;
+        // Commit interactive curved lines
+        this.forceDraw = this.interactiveBezierBuffer.update(interactiveCurvedLines) || this.forceDraw;
+        // Commit interactive ring curves
+        this.forceDraw = this.interactiveCircularBuffer.update(interactiveRingLines) || this.forceDraw;
+        this.forceDraw = this.forceDraw || needsTreeUpdate;
+        if (needsTreeUpdate) {
+            if (this.quadTree) {
+                this.quadTree.destroy();
+                this.quadTree = null;
+            }
+            // Gather the items to place in the quad tree
+            const toAdd = staticCurvedLines.concat(staticRingLines);
+            // Make the new quad tree and insert the new items
+            this.quadTree = new quad_tree_2.QuadTree(0, 0, 0, 0);
+            this.quadTree.bounds.copyBounds(toAdd[0]);
+            this.quadTree.addAll(toAdd);
+        }
+        debug('CAMERA %o', this.camera);
+    }
+    /**
+     * @override
+     *
+     * This special hook is called when the labels are ready for rendering
+     *
+     * @param props The newly applied props being applied to this component
+     */
+    applyLabelBufferChanges(props) {
+        const { labels, interactiveLabels, } = props;
+        // Set up any materials that needs the labels.
+        {
+            // Make sure the uniforms for anything using the label's atlas texture is updated
+            const material = this.staticLabelBuffer.bufferItems.system.material;
+            const uniforms = material.uniforms;
+            uniforms.atlasTexture.value = this.atlasManager.getAtlasTexture(this.atlasNames.labels);
+            this.atlasManager.getAtlasTexture(this.atlasNames.labels).needsUpdate = true;
+            this.atlasManager.getAtlasTexture(this.atlasNames.labels).anisotropy = 2;
+        }
+        // Apply static labels
+        this.staticLabelBuffer.update(labels);
+        // Apply interactive labels
+        this.interactiveLabelBuffer.update(interactiveLabels);
+    }
+    /**
+     * This is a hook allowing sub classes to have a place to initialize their buffers
+     * and materials etc.
+     */
+    initBuffers() {
+        // SET UP MATERIALS AND UNIFORMS
+        const quadMaterial = new three_1.ShaderMaterial({
+            blending: three_1.NormalBlending,
+            depthTest: true,
+            fragmentShader: fillFragmentShader,
+            transparent: true,
+            uniforms: { halfLinewidth: { value: 1.5 } },
+            vertexShader: bezierVertexShader,
+        });
+        const ringMaterial = new three_1.ShaderMaterial({
+            blending: three_1.NormalBlending,
+            depthTest: true,
+            fragmentShader: fillFragmentShader,
+            transparent: true,
+            vertexShader: fillVertexShader,
+        });
+        const texUniforms = {
+            atlasTexture: { type: 't', value: this.atlasManager.getAtlasTexture(this.atlasNames.labels) },
+        };
+        const textureMaterial = new three_1.ShaderMaterial({
+            blending: three_1.CustomBlending,
+            depthTest: true,
+            fragmentShader: textureFragmentShader,
+            transparent: true,
+            uniforms: texUniforms,
+            vertexShader: textureVertexShader,
+        });
+        textureMaterial.blendSrc = three_1.OneFactor;
+        // GENERATE THE QUAD BUFFER
+        {
+            // Initialize the static curve buffer
+            this.staticBezierBuffer.init(quadMaterial, 100000);
+            // Place the mesh in the scene
+            this.scene.add(this.staticBezierBuffer.bufferItems.system);
+        }
+        // GENERATE RING QUAD BUFFER
+        {
+            // Initialize the static buffer for circular lines
+            this.staticCircularBuffer.init(ringMaterial, 100000);
+            // Place the mesh in the scene
+            this.scene.add(this.staticCircularBuffer.bufferItems.system);
+        }
+        // GENERATE THE INTERACTION QUAD BUFFER
+        {
+            // The interactive bezier buffer
+            this.interactiveBezierBuffer.init(quadMaterial, 100000);
+            // Place the mesh in the scene
+            this.scene.add(this.interactiveBezierBuffer.bufferItems.system);
+        }
+        // GENERATE THE INTERACTIVE RING BUFFER
+        {
+            /// Initialize the buffer for interactive circular curved lines
+            this.interactiveCircularBuffer.init(ringMaterial, 100000);
+            // Place the mesh in the scene
+            this.scene.add(this.interactiveCircularBuffer.bufferItems.system);
+        }
+        // GENERATE THE LABEL BUFFER
+        {
+            // Initialize the buffer for base static labels
+            this.staticLabelBuffer.init(textureMaterial, 10000);
+            // Place the mesh in the scene
+            this.scene.add(this.staticLabelBuffer.bufferItems.system);
+        }
+        // GENERATE THE INTERACTIVE LABEL BUFFER
+        {
+            // Initialize the buffer for interactive labels
+            this.interactiveLabelBuffer.init(textureMaterial, 10000);
+            // Place the mesh in the scene
+            this.scene.add(this.interactiveLabelBuffer.bufferItems.system);
+        }
+    }
+    onMouseHover(hitInside, mouse, world, projection) {
+        // Filter out curves that presently exist in interactiveCurvedLines
+        // Includes outerRings and chords
+        const hitCurvedLines = quad_tree_1.filterQuery([curved_line_shape_1.CurvedLineShape], hitInside);
+        // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
+        const screenDistance = projection.screenSizeToWorld(1, 1).width;
+        // This will keep track of all items that were hovered but are no longer hovered
+        const leftItems = [];
+        const selections = hitCurvedLines.filter((curve, idx) => {
+            if (curve.distanceTo(world) < screenDistance) {
+                this.mouseHovered.set(curve, true);
+                return true;
+            }
+            else if (this.mouseHovered.get(curve)) {
+                this.mouseHovered.delete(curve);
+                leftItems.push(curve);
+            }
+            return false;
+        });
+        if (this.props.onMouseHover) {
+            this.props.onMouseHover(selections, mouse, world, projection);
+        }
+        if (this.props.onMouseLeave) {
+            this.props.onMouseLeave(leftItems, mouse, world, projection);
+        }
+    }
+    onMouseLeave(left, mouse, world, projection) {
+        // Const selections: CurvedLineShape<any>[] = [];
+        const leftCurvedLines = quad_tree_1.filterQuery([curved_line_shape_1.CurvedLineShape], left);
+        // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
+        const screenDistance = projection.screenSizeToWorld(1, 1).width;
+        const selections = leftCurvedLines.filter((curve, idx) => {
+            if (curve.distanceTo(world) > screenDistance) {
+                if (this.mouseHovered.get(curve)) {
+                    this.mouseHovered.delete(curve);
+                    return true;
+                }
+            }
+            return false;
+        });
+        if (this.props.onMouseLeave) {
+            this.props.onMouseLeave(selections, mouse, world, projection);
+        }
+    }
+    onMouseUp(e, hitInside, mouse, world, projection) {
+        // Const selections: CurvedLineShape<any>[] = [];
+        debug('ccg mouse up');
+        const clickedCurvedLines = quad_tree_1.filterQuery([curved_line_shape_1.CurvedLineShape], hitInside);
+        // We want the user to be a specified distance in SCREEN PIXELS to interact with the lines
+        const screenDistance = projection.screenSizeToWorld(1, 1).width;
+        const selections = clickedCurvedLines.filter((curve, idx) => {
+            if (curve.distanceTo(world) < screenDistance) {
+                return true;
+            }
+            return false;
+        });
+        if (this.props.onMouseUp) {
+            this.props.onMouseUp(selections, mouse, world, projection);
+        }
+    }
+    /**
+     * Any uniforms tied to changes in the camera are updated here
+     */
+    updateCameraUniforms() {
+        // NOTE: Implement if required. Leave empty to prevent any default behavior
+    }
+}
+exports.ChordChartGL = ChordChartGL;
+
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(1);
+const buffer_util_1 = __webpack_require__(12);
+const base_buffer_1 = __webpack_require__(13);
+class SimpleStaticBezierLineBuffer extends base_buffer_1.BaseBuffer {
+    /**
+     * @override
+     * See interface definition
+     */
+    init(material, unitCount) {
+        this.bufferItems = buffer_util_1.BufferUtil.makeBufferItems();
+        this.bufferItems.attributes = [
+            {
+                defaults: [0, 0, 0],
+                name: 'position',
+                size: buffer_util_1.AttributeSize.THREE,
+            },
+            {
+                defaults: [0, 0, 0, 1],
+                name: 'customColor',
+                size: buffer_util_1.AttributeSize.FOUR,
+            },
+            {
+                defaults: [1],
+                name: 'normalDirection',
+                size: buffer_util_1.AttributeSize.ONE,
+            },
+            {
+                defaults: [0, 0, 0, 0],
+                name: 'endPoints',
+                size: buffer_util_1.AttributeSize.FOUR,
+            },
+            {
+                defaults: [0, 0],
+                name: 'controlPoint',
+                size: buffer_util_1.AttributeSize.TWO,
+            },
+        ];
+        const verticesPerQuad = 6;
+        const numQuads = unitCount;
+        this.bufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.bufferItems.attributes);
+        this.bufferItems.system = new three_1.Mesh(this.bufferItems.geometry, material);
+        this.bufferItems.system.frustumCulled = false;
+        this.bufferItems.system.drawMode = three_1.TriangleStripDrawMode;
+    }
+    /**
+     * @override
+     * See interface definition
+     *
+     * @param shapeBuffer
+     */
+    update(shapeBuffer) {
+        if (!shapeBuffer) {
+            return false;
+        }
+        // Commit static curved lines
+        let needsUpdate = false;
+        const numVerticesPerSegment = 6;
+        const colorAttributeSize = 4;
+        const length = 20;
+        buffer_util_1.BufferUtil.beginUpdates();
+        for (const curvedLine of shapeBuffer) {
+            needsUpdate = buffer_util_1.BufferUtil.updateBuffer(shapeBuffer, this.bufferItems, numVerticesPerSegment, length, function (i, positions, ppos, colors, cpos, normals, npos, endPoints, epos, controlPoints, copos) {
+                // Copy first vertex twice for intro degenerate tri
+                positions[ppos] = (i + 1) / length;
+                positions[++ppos] = length;
+                positions[++ppos] = curvedLine.depth;
+                // Skip over degenerate tris color
+                cpos += colorAttributeSize;
+                normals[npos] = 1;
+                endPoints[epos] = curvedLine.p1.x;
+                endPoints[++epos] = curvedLine.p1.y;
+                endPoints[++epos] = curvedLine.p2.x;
+                endPoints[++epos] = curvedLine.p2.y;
+                controlPoints[copos] = curvedLine.controlPoints[0].x;
+                controlPoints[++copos] = curvedLine.controlPoints[0].y;
+                // TR
+                positions[++ppos] = (i + 1) / length;
+                positions[++ppos] = length;
+                positions[++ppos] = curvedLine.depth;
+                colors[cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                normals[++npos] = 1;
+                endPoints[++epos] = curvedLine.p1.x;
+                endPoints[++epos] = curvedLine.p1.y;
+                endPoints[++epos] = curvedLine.p2.x;
+                endPoints[++epos] = curvedLine.p2.y;
+                controlPoints[++copos] = curvedLine.controlPoints[0].x;
+                controlPoints[++copos] = curvedLine.controlPoints[0].y;
+                // BR
+                positions[++ppos] = (i + 1) / length;
+                positions[++ppos] = length;
+                positions[++ppos] = curvedLine.depth;
+                colors[++cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                normals[++npos] = -1;
+                endPoints[++epos] = curvedLine.p1.x;
+                endPoints[++epos] = curvedLine.p1.y;
+                endPoints[++epos] = curvedLine.p2.x;
+                endPoints[++epos] = curvedLine.p2.y;
+                controlPoints[++copos] = curvedLine.controlPoints[0].x;
+                controlPoints[++copos] = curvedLine.controlPoints[0].y;
+                // TL
+                positions[++ppos] = i / length;
+                positions[++ppos] = length;
+                positions[++ppos] = curvedLine.depth;
+                colors[++cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                normals[++npos] = 1;
+                endPoints[++epos] = curvedLine.p1.x;
+                endPoints[++epos] = curvedLine.p1.y;
+                endPoints[++epos] = curvedLine.p2.x;
+                endPoints[++epos] = curvedLine.p2.y;
+                controlPoints[++copos] = curvedLine.controlPoints[0].x;
+                controlPoints[++copos] = curvedLine.controlPoints[0].y;
+                // BL
+                positions[++ppos] = i / length;
+                positions[++ppos] = length;
+                positions[++ppos] = curvedLine.depth;
+                colors[++cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                normals[++npos] = -1;
+                endPoints[++epos] = curvedLine.p1.x;
+                endPoints[++epos] = curvedLine.p1.y;
+                endPoints[++epos] = curvedLine.p2.x;
+                endPoints[++epos] = curvedLine.p2.y;
+                controlPoints[++copos] = curvedLine.controlPoints[0].x;
+                controlPoints[++copos] = curvedLine.controlPoints[0].y;
+                // Copy last vertex again for degenerate tri
+                positions[++ppos] = i / length;
+                positions[++ppos] = length;
+                positions[++ppos] = curvedLine.depth;
+                // Skip over degenerate tris for color
+                cpos += colorAttributeSize;
+                normals[++npos] = -1;
+                endPoints[++epos] = curvedLine.p1.x;
+                endPoints[++epos] = curvedLine.p1.y;
+                endPoints[++epos] = curvedLine.p2.x;
+                endPoints[++epos] = curvedLine.p2.y;
+                controlPoints[++copos] = curvedLine.controlPoints[0].x;
+                controlPoints[++copos] = curvedLine.controlPoints[0].y;
+            });
+            // If no updating is happening, just quit the loop
+            if (!needsUpdate) {
+                break;
+            }
+        }
+        const numBatches = buffer_util_1.BufferUtil.endUpdates();
+        // Only if updates happened, should this change
+        if (needsUpdate) {
+            this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+        }
+        else if (shapeBuffer.length === 0) {
+            this.bufferItems.geometry.setDrawRange(0, 0);
+        }
+        return needsUpdate;
+    }
+}
+exports.SimpleStaticBezierLineBuffer = SimpleStaticBezierLineBuffer;
+
+
+/***/ }),
+/* 38 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(1);
+const buffer_util_1 = __webpack_require__(12);
+const base_buffer_1 = __webpack_require__(13);
+class SimpleStaticCircularLineBuffer extends base_buffer_1.BaseBuffer {
+    /**
+     * @override
+     * See interface definition
+     */
+    init(material, unitCount) {
+        this.bufferItems = buffer_util_1.BufferUtil.makeBufferItems();
+        this.bufferItems.attributes = [
+            {
+                defaults: [0, 0, 0],
+                name: 'position',
+                size: buffer_util_1.AttributeSize.THREE,
+            },
+            {
+                defaults: [0, 0, 0, 1],
+                name: 'customColor',
+                size: buffer_util_1.AttributeSize.FOUR,
+            },
+        ];
+        const verticesPerQuad = 6;
+        const numQuads = unitCount;
+        this.bufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.bufferItems.attributes);
+        this.bufferItems.system = new three_1.Mesh(this.bufferItems.geometry, material);
+        this.bufferItems.system.frustumCulled = false;
+        this.bufferItems.system.drawMode = three_1.TriangleStripDrawMode;
+    }
+    /**
+     * @override
+     * See interface definition
+     *
+     * @param shapeBuffer
+     */
+    update(shapeBuffer) {
+        let needsUpdate = false;
+        const numVerticesPerSegment = 6;
+        const colorAttributeSize = 4;
+        let stripPos = 0;
+        buffer_util_1.BufferUtil.beginUpdates();
+        for (const curvedLine of shapeBuffer) {
+            const strip = curvedLine.getTriangleStrip();
+            let TR;
+            let BR;
+            let TL;
+            let BL;
+            needsUpdate = buffer_util_1.BufferUtil.updateBuffer(shapeBuffer, this.bufferItems, numVerticesPerSegment, strip.length / 4, function (i, positions, ppos, colors, cpos) {
+                stripPos = i * 4;
+                TR = strip[stripPos];
+                BR = strip[stripPos + 1];
+                TL = strip[stripPos + 2];
+                BL = strip[stripPos + 3];
+                // 1
+                positions[ppos] = TR.x;
+                positions[++ppos] = TR.y;
+                positions[++ppos] = curvedLine.depth;
+                cpos += colorAttributeSize;
+                // 2
+                positions[++ppos] = TR.x;
+                positions[++ppos] = TR.y;
+                positions[++ppos] = curvedLine.depth;
+                colors[cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                // 3
+                positions[++ppos] = BR.x;
+                positions[++ppos] = BR.y;
+                positions[++ppos] = curvedLine.depth;
+                colors[++cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                // 4
+                positions[++ppos] = TL.x;
+                positions[++ppos] = TL.y;
+                positions[++ppos] = curvedLine.depth;
+                colors[++cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                // 5
+                positions[++ppos] = BL.x;
+                positions[++ppos] = BL.y;
+                positions[++ppos] = curvedLine.depth;
+                colors[++cpos] = curvedLine.r;
+                colors[++cpos] = curvedLine.g;
+                colors[++cpos] = curvedLine.b;
+                colors[++cpos] = curvedLine.a;
+                // 6
+                positions[++ppos] = BL.x;
+                positions[++ppos] = BL.y;
+                positions[++ppos] = curvedLine.depth;
+                cpos += colorAttributeSize;
+            });
+            if (!needsUpdate) {
+                break;
+            }
+        }
+        const numBatches = buffer_util_1.BufferUtil.endUpdates();
+        if (needsUpdate) {
+            this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+        }
+        return needsUpdate;
+    }
+}
+exports.SimpleStaticCircularLineBuffer = SimpleStaticCircularLineBuffer;
+
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const three_1 = __webpack_require__(1);
+const buffer_util_1 = __webpack_require__(12);
+const base_buffer_1 = __webpack_require__(13);
+class SimpleStaticLabelBuffer extends base_buffer_1.BaseBuffer {
+    /**
+     * @override
+     * See interface definition
+     */
+    init(material, unitCount) {
+        this.bufferItems = buffer_util_1.BufferUtil.makeBufferItems();
+        this.bufferItems.attributes = [
+            {
+                defaults: [0, 0, 0],
+                name: 'position',
+                size: buffer_util_1.AttributeSize.THREE,
+            },
+            {
+                defaults: [0, 0, 0],
+                name: 'customColor',
+                size: buffer_util_1.AttributeSize.THREE,
+            },
+            {
+                defaults: [0, 0, 1],
+                name: 'texCoord',
+                size: buffer_util_1.AttributeSize.THREE,
+            },
+        ];
+        const verticesPerQuad = 6;
+        const numQuads = unitCount;
+        this.bufferItems.geometry = buffer_util_1.BufferUtil.makeBuffer(numQuads * verticesPerQuad, this.bufferItems.attributes);
+        this.bufferItems.system = new three_1.Mesh(this.bufferItems.geometry, material);
+        this.bufferItems.system.frustumCulled = false;
+        this.bufferItems.system.drawMode = three_1.TriangleStripDrawMode;
+    }
+    /**
+     * @override
+     * See interface definition
+     *
+     * @param shapeBuffer
+     */
+    update(shapeBuffer) {
+        // Make some constants and props for our buffer update loop
+        const numVerticesPerQuad = 6;
+        const colorAttributeSize = 3;
+        const texCoordAttributeSize = 3;
+        let label;
+        let texture;
+        if (!shapeBuffer) {
+            return false;
+        }
+        const updated = buffer_util_1.BufferUtil.updateBuffer(shapeBuffer, this.bufferItems, numVerticesPerQuad, shapeBuffer.length, function (i, positions, ppos, colors, cpos, texCoords, tpos) {
+            label = shapeBuffer[i];
+            texture = label.rasterizedLabel;
+            // Make sure the label is updated with it's latest metrics
+            label.update();
+            // Copy first vertex twice for intro degenerate tri
+            positions[ppos] = label.TR.x;
+            positions[++ppos] = label.TR.y;
+            positions[++ppos] = label.depth;
+            // Skip over degenerate tris color and tex
+            cpos += colorAttributeSize;
+            tpos += texCoordAttributeSize;
+            // TR
+            positions[++ppos] = label.TR.x;
+            positions[++ppos] = label.TR.y;
+            positions[++ppos] = label.depth;
+            texCoords[tpos] = texture.atlasTR.x;
+            texCoords[++tpos] = texture.atlasTR.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // BR
+            positions[++ppos] = label.BR.x;
+            positions[++ppos] = label.BR.y;
+            positions[++ppos] = label.depth;
+            texCoords[++tpos] = texture.atlasBR.x;
+            texCoords[++tpos] = texture.atlasBR.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // TL
+            positions[++ppos] = label.TL.x;
+            positions[++ppos] = label.TL.y;
+            positions[++ppos] = label.depth;
+            texCoords[++tpos] = texture.atlasTL.x;
+            texCoords[++tpos] = texture.atlasTL.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[++cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // BL
+            positions[++ppos] = label.BL.x;
+            positions[++ppos] = label.BL.y;
+            positions[++ppos] = label.depth;
+            texCoords[++tpos] = texture.atlasBL.x;
+            texCoords[++tpos] = texture.atlasBL.y;
+            texCoords[++tpos] = label.color.opacity;
+            colors[++cpos] = label.color.r;
+            colors[++cpos] = label.color.g;
+            colors[++cpos] = label.color.b;
+            // Copy last vertex again for degenerate tri
+            positions[++ppos] = label.BL.x;
+            positions[++ppos] = label.BL.y;
+            positions[++ppos] = label.depth;
+        });
+        this.bufferItems.geometry.setDrawRange(0, numVerticesPerQuad * shapeBuffer.length);
+        return updated;
+    }
+}
+exports.SimpleStaticLabelBuffer = SimpleStaticLabelBuffer;
+
+
+/***/ }),
+/* 40 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const ramda_1 = __webpack_require__(6);
+const React = __webpack_require__(15);
+const three_1 = __webpack_require__(1);
+const atlas_manager_1 = __webpack_require__(41);
+const atlas_texture_1 = __webpack_require__(43);
+const bounds_1 = __webpack_require__(2);
+const mouse_1 = __webpack_require__(44);
+const quad_tree_1 = __webpack_require__(14);
 const debug = __webpack_require__(0)('webgl-surface:GPU');
 const debugCam = __webpack_require__(0)('webgl-surface:Camera');
 const debugLabels = __webpack_require__(0)('webgl-surface:Labels');
@@ -49957,7 +49848,7 @@ class WebGLSurface extends React.Component {
             const tl = this.screenToWorld(0, 0);
             const br = this.screenToWorld(this.ctx.width, this.ctx.height);
             this.camera.updateMatrixWorld(true);
-            const visible = this.quadTree.query(new bounds_1.Bounds(tl.x, br.x, br.y, tl.y));
+            const visible = this.quadTree.query(new bounds_1.Bounds(tl.x, br.x, tl.y, br.y));
             this.onViewport(visible, this.projection, this.ctx);
         };
         /**
@@ -50359,7 +50250,7 @@ class WebGLSurface extends React.Component {
                 }
                 // Ensure we have our quad tree available even if it is empty
                 if (!this.quadTree) {
-                    this.quadTree = new quad_tree_1.QuadTree(0, 1, 0, 1);
+                    this.quadTree = new quad_tree_1.QuadTree(0, 1, 1, 0);
                 }
                 return {};
             },
@@ -50661,16 +50552,16 @@ exports.WebGLSurface = WebGLSurface;
 
 
 /***/ }),
-/* 37 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const d3_color_1 = __webpack_require__(3);
-const three_1 = __webpack_require__(4);
-const bounds_1 = __webpack_require__(1);
-const pack_node_1 = __webpack_require__(38);
+const d3_color_1 = __webpack_require__(4);
+const three_1 = __webpack_require__(1);
+const bounds_1 = __webpack_require__(2);
+const pack_node_1 = __webpack_require__(42);
 const debug = __webpack_require__(0)('webgl-surface:Atlas');
 const debugLabels = __webpack_require__(0)('webgl-surface:Labels');
 /**
@@ -50792,7 +50683,7 @@ class AtlasManager {
         if (loadedImage) {
             debug('Image loaded: %o', image.imagePath);
             // Now we create a Rectangle to store the image dimensions
-            const rect = new bounds_1.Bounds(0, image.pixelWidth, 0, image.pixelHeight);
+            const rect = new bounds_1.Bounds(0, image.pixelWidth, image.pixelHeight, 0);
             // Create ImageDimension to insert into our atlas mapper
             const dimensions = {
                 first: image,
@@ -50818,12 +50709,13 @@ class AtlasManager {
                 const uy = insertedNode.nodeDimensions.y / this.textureHeight;
                 const uw = insertedNode.nodeDimensions.width / this.textureWidth;
                 const uh = insertedNode.nodeDimensions.height / this.textureHeight;
-                const atlasDimensions = new bounds_1.Bounds(ux, ux + uw, 1.0 - (uy + uh), 1.0 - uy);
+                debugLabels('uy is %o', uy);
+                const atlasDimensions = new bounds_1.Bounds(ux, ux + uw, 1.0 - uy, 1.0 - (uy + uh));
                 image.atlasReferenceID = atlasName;
+                image.atlasBL = { x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height };
+                image.atlasBR = { x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height };
                 image.atlasTL = { x: atlasDimensions.x, y: atlasDimensions.y };
                 image.atlasTR = { x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
-                image.atlasBL = { x: atlasDimensions.x, y: atlasDimensions.y + atlasDimensions.height };
-                image.atlasBR = { x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y + atlasDimensions.height };
                 // Now draw the image to the indicated canvas
                 canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);
                 // We have finished inserting
@@ -50920,13 +50812,13 @@ exports.AtlasManager = AtlasManager;
 
 
 /***/ }),
-/* 38 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const bounds_1 = __webpack_require__(1);
+const bounds_1 = __webpack_require__(2);
 /**
  * This is used specifically by the atlas manager to aid in packing
  * in textures within an area. This will guarantee boundaries of textures are
@@ -50937,7 +50829,7 @@ class PackNode {
         this.child = [null, null];
         this.isLeaf = true;
         this.nodeImage = null;
-        this.nodeDimensions = new bounds_1.Bounds(x, x + width, y, y + height);
+        this.nodeDimensions = new bounds_1.Bounds(x, x + width, y, y - height);
     }
     /**
      * Deletes all of the sub nodes in this Mapping, thus clearing up memory usage
@@ -51007,7 +50899,7 @@ class PackNode {
             }
             else {
                 this.child[0] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y, this.nodeDimensions.width, imgHeight);
-                this.child[1] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y + imgHeight, this.nodeDimensions.width, dHeight);
+                this.child[1] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y - imgHeight, this.nodeDimensions.width, dHeight);
             }
         }
         // Insert into first child we created
@@ -51052,7 +50944,7 @@ exports.PackNode = PackNode;
 
 
 /***/ }),
-/* 39 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -51082,14 +50974,14 @@ exports.AtlasTexture = AtlasTexture;
 
 
 /***/ }),
-/* 40 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const browser = __webpack_require__(41);
-const three_1 = __webpack_require__(4);
+const browser = __webpack_require__(45);
+const three_1 = __webpack_require__(1);
 const debug = __webpack_require__(0)('CommunicationsView:Mouse');
 /** Used to adjust the base whee delta for IE browsers */
 const IE_ADJUSTMENT = 1 / 30;
@@ -51224,7 +51116,7 @@ exports.eventElementPosition = eventElementPosition;
 
 
 /***/ }),
-/* 41 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*!
@@ -51235,7 +51127,7 @@ exports.eventElementPosition = eventElementPosition;
 
 !function (root, name, definition) {
   if (typeof module != 'undefined' && module.exports) module.exports = definition()
-  else if (true) __webpack_require__(42)(name, definition)
+  else if (true) __webpack_require__(46)(name, definition)
   else root[name] = definition()
 }(this, 'bowser', function () {
   /**
@@ -51831,7 +51723,7 @@ exports.eventElementPosition = eventElementPosition;
 
 
 /***/ }),
-/* 42 */
+/* 46 */
 /***/ (function(module, exports) {
 
 module.exports = function() {
@@ -51840,31 +51732,31 @@ module.exports = function() {
 
 
 /***/ }),
-/* 43 */
+/* 47 */
 /***/ (function(module, exports) {
 
 module.exports = "attribute vec4 customColor;\nvarying vec4 vColor;\n\n// 1 or -1, used to indicate the direction\nattribute float normalDirection;\n\n// (x,y) is the first point, (z,w) is the second point \nattribute vec4 endPoints;\n\nattribute vec2 controlPoint;\n\nuniform float halfLinewidth;\n\nvec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {\n  float x = (1.0 - t) * (1.0 - t) * p1.x + 2.0 * t * (1.0 - t) * c1.x + t * t * p2.x;\n  float y = (1.0 - t) * (1.0 - t) * p1.y + 2.0 * t * (1.0 - t) * c1.y + t * t * p2.y;\n  return vec2(x, y);\n}\n\nvoid main() {\n  vColor = customColor;\n  vec2 p1 = vec2(endPoints.x, endPoints.y);\n  vec2 p2 = vec2(endPoints.z, endPoints.w);\n\n  vec2 currentPosition = makeBezier2(position.x, p1, p2, controlPoint);\n  vec2 prePosition = makeBezier2(position.x - 1.0 / position.y, p1, p2, controlPoint);\n  vec2 nextPosition = makeBezier2(position.x + 1.0 / position.y, p1, p2, controlPoint);\n\n  vec2 preLine = prePosition - currentPosition;\n  vec2 nextLine = nextPosition - currentPosition;\n\n  vec2 preNormal = vec2(preLine.y, -preLine.x);\n  vec2 nextNormal = vec2(-nextLine.y, nextLine.x);\n  vec2 currentNormal = normalize(preNormal) + normalize(nextNormal);\n  currentNormal = normalize(currentNormal);\n  if (position.y < 0.0)currentNormal = normalize(preNormal);\n  if (position.z > 1.0)currentNormal = normalize(nextNormal);\n  \n\n  float x = currentPosition.x + currentNormal.x * normalDirection * halfLinewidth;\n  float y = currentPosition.y + currentNormal.y * normalDirection * halfLinewidth;\n  \n  vec4 mvPosition = modelViewMatrix * vec4(x, y, position.z, 1.0 );\n  gl_Position = projectionMatrix * mvPosition;\n}\n"
 
 /***/ }),
-/* 44 */
+/* 48 */
 /***/ (function(module, exports) {
 
 module.exports = "/**\n * Simple vertex shader for rendering a vertex with a custom\n * color\n */\n\nattribute vec4 customColor;\nvarying vec4 vColor;\n\nvoid main() {\n  vColor = customColor;\n  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n  gl_Position = projectionMatrix * mvPosition;\n}\n"
 
 /***/ }),
-/* 45 */
+/* 49 */
 /***/ (function(module, exports) {
 
 module.exports = "/**\n * Simple fragment shader for rendering a with a custom\n * color\n */\n\nvarying vec4 vColor;\n\nvoid main() {\n  gl_FragColor = vec4(\n    vColor.a * vColor.r,\n    vColor.a * vColor.g,\n    vColor.a * vColor.b,\n    vColor.a\n  );\n}\n"
 
 /***/ }),
-/* 46 */
+/* 50 */
 /***/ (function(module, exports) {
 
 module.exports = "/**\n * Simple shader for merely rendering a texture to a point sprite. Point sprites\n * reduce bandwidth and memory usage significantly and also reduce vertices to be\n * processed\n */\n\n/** The tex coordinate and opacity of the output texture {tx, ty, opacity} */\nattribute vec3 texCoord;\n\n/** Passes the tex coord to the FS */\nvarying vec2 texCoordinate;\n/** Passes the specified opacity of the image to the FS */\nvarying float opacity;\n\nvoid main() {\n  texCoordinate = vec2(texCoord.x, texCoord.y);\n  opacity = texCoord.z;\n  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\n  gl_Position = projectionMatrix * mvPosition;\n}\n"
 
 /***/ }),
-/* 47 */
+/* 51 */
 /***/ (function(module, exports) {
 
 module.exports = "/**\n * Simple shader for merely rendering a textured quad that references an atlas map.\n */\n\nuniform sampler2D atlasTexture;\nvarying vec2 texCoordinate;\nvarying float opacity;\n\nvoid main() {\n  vec4 color = texture2D(atlasTexture, texCoordinate);\n  color *= opacity;\n  gl_FragColor = color;\n  // gl_FragColor = vec4(opacity, opacity, opacity, 1.0);\n  gl_FragColor = texture2D(atlasTexture, texCoordinate);\n}\n"

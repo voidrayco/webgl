@@ -45,7 +45,7 @@ export class Label<T> extends RotateableQuad<T> {
    * @param {Partial<Label<T>>} [options={}]
    */
   constructor(options: Partial<Label<T>> = {}) {
-    super({x: 0, y: 0}, {width: 1, height: 1}, 0, AnchorPosition.TopLeft);
+    super({x: 0, y: 1}, {width: 1, height: 1}, 0, AnchorPosition.TopLeft);
 
     // Set props
     Object.assign(this, options);
