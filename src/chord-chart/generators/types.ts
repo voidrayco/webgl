@@ -30,6 +30,11 @@ export interface IChordChartConfig {
   topLevelGroupPadding: number;
 }
 
+export interface IDataAPI {
+  endpoints: IEndpointAPI[];
+  chords: IChordAPI[];
+}
+
 /**
  * This is the base raw data calculated for the chord chart
  */
@@ -45,34 +50,40 @@ export interface IData {
   topEndPointMaxDepth?: Map<IEndpoint, number>;
 }
 
+export interface IEndpointAPI {
+  id: string;
+  name: string;
+  parent: string;
+  weight: number;
+}
+
 /**
  * This defines the raw data needed for an end point in the chord chart
  */
-export interface IEndpoint {
+export interface IEndpoint extends IEndpointAPI {
   _inflowIdx?: number;  // Used for internal flow calculations
   _outflowIdx?: number;  // Used for internal flow calculations
   children?: IEndpoint[]
   endAngle?: number;
-  id: string;
   incomingCount?: number;
   metadata?: any;
-  name: string;
   outgoingCount?: number;
-  parent: string;
   startAngle?: number;
   totalCount?: number;
-  weight: number;
+}
+
+export interface IChordAPI {
+  id: string;
+  source: string;
+  target: string;
 }
 
 /**
  * This defines the raw data needed to render a chord in the chord chart
  */
-export interface IChord {
+export interface IChord extends IChordAPI {
   dstIndex?: number;
-  id: string;
   metadata?: any;
-  source: string;
   srcExpandedTarget?: string;
   srcIndex?: number;
-  target: string;
 }

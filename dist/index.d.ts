@@ -218,6 +218,10 @@ export interface IChordChartConfig {
     /** This sets the padding (in radians) of the top level groupings of items */
     topLevelGroupPadding: number;
 }
+export interface IDataAPI {
+    endpoints: IEndpointAPI[];
+    chords: IChordAPI[];
+}
 /**
   * This is the base raw data calculated for the chord chart
   */
@@ -232,35 +236,39 @@ export interface IData {
     /** Stores the max depth of a given top level end point */
     topEndPointMaxDepth?: Map<IEndpoint, number>;
 }
+export interface IEndpointAPI {
+    id: string;
+    name: string;
+    parent: string;
+    weight: number;
+}
 /**
   * This defines the raw data needed for an end point in the chord chart
   */
-export interface IEndpoint {
+export interface IEndpoint extends IEndpointAPI {
     _inflowIdx?: number;
     _outflowIdx?: number;
     children?: IEndpoint[];
     endAngle?: number;
-    id: string;
     incomingCount?: number;
     metadata?: any;
-    name: string;
     outgoingCount?: number;
-    parent: string;
     startAngle?: number;
     totalCount?: number;
-    weight: number;
+}
+export interface IChordAPI {
+    id: string;
+    source: string;
+    target: string;
 }
 /**
   * This defines the raw data needed to render a chord in the chord chart
   */
-export interface IChord {
+export interface IChord extends IChordAPI {
     dstIndex?: number;
-    id: string;
     metadata?: any;
-    source: string;
     srcExpandedTarget?: string;
     srcIndex?: number;
-    target: string;
 }
 
 export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
@@ -330,7 +338,7 @@ export interface IChordChartProps {
     /** Enables the ability for the user to pan via click and drag */
     allowPan?: boolean;
     /** The data for the chart to render */
-    data: IData;
+    data: IDataAPI;
     /** The space in pixels from the renderings edge to where the chart begins to appear */
     margin?: {
         top: number;

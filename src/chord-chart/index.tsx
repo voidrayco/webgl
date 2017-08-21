@@ -6,7 +6,7 @@ import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
-import { IData } from './generators/types';
+import { IData, IDataAPI } from './generators/types';
 import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
@@ -18,7 +18,7 @@ export interface IChordChartProps {
   /** Enables the ability for the user to pan via click and drag */
   allowPan?: boolean,
   /** The data for the chart to render */
-  data: IData;
+  data: IDataAPI;
   /** The space in pixels from the renderings edge to where the chart begins to appear */
   margin?: {top: number, left: number, bottom: number, right: number},
   /** Styling config object that adjusts visuals of the chart */
@@ -148,7 +148,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
   componentWillReceiveProps(nextProps: any) {
     if (nextProps.data) {
-      const data = clone(nextProps.data);
+      const data: IDataAPI = clone(nextProps.data);
       recalculateTreeForData(data);
 
       this.setState({data});
