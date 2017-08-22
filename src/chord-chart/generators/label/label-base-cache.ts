@@ -1,5 +1,5 @@
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
-import { rgb, RGBColor } from 'd3-color';
+import { Color } from 'three';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Label } from 'webgl-surface/drawing/label';
 import { Line } from 'webgl-surface/primitives/line';
@@ -10,6 +10,8 @@ import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, IData, IEndpoint, LabelDirectionEnum } from '../types';
 const debug = require('debug')('label_cache');
+
+const defaultColor: Color = new Color(1, 1, 1);
 
 /**
  * This calculates the equivalent angle to where it is bounded between
@@ -51,14 +53,14 @@ function isRightHemisphere(angle: number) {
  * @extends {ShapeBufferCache<Label<ICurvedLineData>>}
  */
 export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
-  generate(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, selection: Selection) {
+  generate(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, selection: Selection) {
+  buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
     const inactiveOpacity: number = 0.3;
     const activeOpacity: number = 1;
-    const defaultColor: RGBColor = rgb(1, 1, 1, 1);
+
     const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
 
     debug('labelsData is %o', labelsData);
@@ -67,19 +69,21 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
     const hasSelection =
       selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
-      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0;
+      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
+    ;
 
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
-      const color = hasSelection ?
-        rgb(r, g, b, inactiveOpacity) :
-        rgb(r, g, b, activeOpacity)
+      const color = new Color(r, g, b);
+      const opacity = hasSelection ?
+        inactiveOpacity :
+        activeOpacity
       ;
 
       const label = new Label<any>({
+        a: opacity,
+        baseLabel: labelLookup.get(labelData.name),
         color: color,
-        fontSize: 14,
-        text: labelData.name,
       });
 
       label.width = label.text.length * label.fontSize;

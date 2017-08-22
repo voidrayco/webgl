@@ -11,7 +11,7 @@ export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData
     }
 
     buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, selection: Selection){
-        const labels = Array<any>();
+        const labels: Label<any>[] = [];
 
         this.buffer = labels;
     }

@@ -258,9 +258,10 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     return (
       <ChordChartGL
         height={this.viewport.height}
-        labels={this.labelGenerator.getBaseBuffer()}
+        labels={this.labelGenerator.getUniqueLabels()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer()}
+        staticLabels={this.labelGenerator.getBaseBuffer()}
         staticRingLines={this.outerRingGenerator.getBaseBuffer()}
         interactiveCurvedLines={this.chordGenerator.getInteractionBuffer()}
         interactiveLabels={this.labelGenerator.getInteractionBuffer()}
