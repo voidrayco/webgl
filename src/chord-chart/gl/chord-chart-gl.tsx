@@ -127,7 +127,9 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       interactiveLabels,
     } = props;
 
+    let updated = false;
     // Set up any materials that needs the labels.
+
     {
       // Make sure the uniforms for anything using the label's atlas texture is updated
       const material: ShaderMaterial = this.staticLabelBuffer.bufferItems.system.material as ShaderMaterial;
@@ -138,9 +140,11 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     }
 
     // Apply static labels
-    this.staticLabelBuffer.update(labels);
+    updated = this.staticLabelBuffer.update(labels);
+    debug('updated? %o', updated);
     // Apply interactive labels
     this.interactiveLabelBuffer.update(interactiveLabels);
+
   }
 
   /**

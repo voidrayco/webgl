@@ -6,10 +6,10 @@ import { Line } from 'webgl-surface/primitives/line';
 import { IPoint, Point } from 'webgl-surface/primitives/point';
 import { AnchorPosition } from 'webgl-surface/primitives/rotateable-quad';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, IData, IEndpoint, LabelDirectionEnum } from '../types';
-const debug = require('debug')('label');
+const debug = require('debug')('label_cache');
 
 /**
  * This calculates the equivalent angle to where it is bounded between
@@ -61,11 +61,17 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
     const defaultColor: RGBColor = rgb(1, 1, 1, 1);
     const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
 
-    debug('labesData is %o', labelsData);
+    debug('labelsData is %o', labelsData);
+    debug('config is %o', config);
+    debug('selection is %o', selection);
+
+    const hasSelection =
+      selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
+      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0;
 
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
-      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
+      const color = hasSelection ?
         rgb(r, g, b, inactiveOpacity) :
         rgb(r, g, b, activeOpacity)
       ;

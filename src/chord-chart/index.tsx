@@ -14,6 +14,8 @@ import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
+const debug = require('debug')('index');
+
 export interface IChordChartProps {
   onEndPointClick?(endpointId: string): void,
   hemiSphere: boolean;
@@ -238,6 +240,17 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       topLevelGroupPadding: Math.PI / 4,
     };
 
+    const hasSelection =
+      this.selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
+      this.selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
+    ;
+
+    debug('has selection: %o', hasSelection);
+
+    debug('selection is %o', this.selection);
+
+    debug('%o', SelectionType.RELATED_SELECTED_OUTER_SECTIONS);
+
     this.outerRingGenerator.generate(this.state.data, config, this.selection);
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
@@ -250,6 +263,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         staticCurvedLines={this.chordGenerator.getBaseBuffer()}
         staticRingLines={this.outerRingGenerator.getBaseBuffer()}
         interactiveCurvedLines={this.chordGenerator.getInteractionBuffer()}
+        interactiveLabels={this.labelGenerator.getInteractionBuffer()}
         interactiveRingLines={this.outerRingGenerator.getInteractionBuffer()}
         onMouseHover={this.handleMouseHover}
         onMouseLeave={this.handleMouseLeave}
