@@ -21,21 +21,7 @@ declare module "voidgl" {
 
 
 import { Color } from 'three';
-
-
-
-
-
-
-
-
-
-
-
-
 import * as React from 'react';
-
-import { ShaderMaterial } from 'three';
 import { Mesh } from 'three';
 import { RGBColor } from 'd3-color';
 import { Texture } from 'three';

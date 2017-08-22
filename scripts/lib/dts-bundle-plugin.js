@@ -14,6 +14,7 @@ const fs = require('fs-extra');
  *          files in this directory and subdirectories.
  *   out: The output file for the bundled typings
  *   moduleName: The name of the module (should === the name property in package.json)
+ *   tslintConfig: Path to the project's tslint
  * }
  *
  * @return {void}
@@ -33,11 +34,9 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
 
     console.log('Bundling type declarations', input);
     dts.bundle({
-      // baseDir: input,
       indent: '  ',
       name: moduleName,
       main: path.join(input, '**/*.d.ts'),
-      // main: path.join(input, 'index.d.ts'),
       out: out,
       removeSource: true,
       outputAsModuleFolder: true,
@@ -69,8 +68,6 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
       let file = fs.readFileSync(out, 'utf8');
       const files = fs.readdirSync(input);
 
-      // console.log(file.match(new RegExp('import.+from.+', 'g')));
-
       // Our system uses roots in the webpack configuration making statements
       // like 'webgl-surface/blah/blah' possible. Our bundler blindly adds all
       // items in our src in our bundle, but it gets confused about roots and
@@ -86,7 +83,6 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
       // handle this in an appropriate way, so we simply wrap the beginning and the
       // end with the module name
       file = `declare module "${moduleName}" {\n${file}\n}`;
-
       fs.writeFileSync(out, file, 'utf8');
       callback();
     }, 2000);

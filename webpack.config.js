@@ -43,6 +43,7 @@ if (isProduction) {
       input: resolve('dist/src'),
       moduleName: library,
       out: path.join(resolve('dist'), 'index.d.ts'),
+      tslintConfig: resolve('tslint.json'),
     })
   );
 }
