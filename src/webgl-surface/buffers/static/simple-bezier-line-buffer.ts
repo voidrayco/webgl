@@ -86,7 +86,7 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
       length = curvedLine.resolution;
       halfWidth = curvedLine.width / 2.0;
       length = 20;
-      halfWidth = 10;
+      halfWidth = 1.5;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
