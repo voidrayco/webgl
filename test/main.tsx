@@ -5,7 +5,7 @@ import { IQuadShapeData } from '../src/bezier/shape-data-types/quad-shape-data';
 import { ChordChart } from '../src/chord-chart';
 import { IChord, IEndpoint } from '../src/chord-chart/generators/types';
 
-const testChordData = require('./chord-test-data/two.json');
+const testChordData = require('./chord-test-data/seven.json');
 const chords: IChord[] = testChordData.flows;
 const endpoints: IEndpoint[] = testChordData.endpoints;
 

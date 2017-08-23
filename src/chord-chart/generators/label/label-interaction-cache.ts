@@ -57,38 +57,38 @@ export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData
 
             label.width = label.text.length * label.fontSize;
 
-             if (!config.splitTopLevelGroups) {
-        if (labelData.anchor === AnchorPosition.MiddleLeft) {
-          Point.add(
-            labelData.point,
-            Point.scale(
-              labelData.direction,
-              label.width / 2,
-            ),
-            labelData.point,
-          );
+            if (!config.splitTopLevelGroups) {
+                if (labelData.anchor === AnchorPosition.MiddleLeft) {
+                    Point.add(
+                    labelData.point,
+                    Point.scale(
+                        labelData.direction,
+                        label.width / 2,
+                    ),
+                labelData.point,
+                );
+                }
+                else {
+                    Point.add(
+                    labelData.point,
+                    Point.scale(
+                        labelData.direction,
+                        - label.width / 2,
+                    ),
+                    labelData.point,
+                );
+                }
+            }
+            else {
+                Point.add(
+                labelData.point,
+                Point.scale(
+                    Point.make(-1, 0),
+                    label.width / 2,
+                ),
+                labelData.point,
+            );
         }
-        else {
-          Point.add(
-            labelData.point,
-            Point.scale(
-              labelData.direction,
-              - label.width / 2,
-            ),
-            labelData.point,
-          );
-        }
-      }
-      else {
-        Point.add(
-          labelData.point,
-          Point.scale(
-            Point.make(-1, 0),
-            label.width / 2,
-          ),
-          labelData.point,
-        );
-      }
 
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
