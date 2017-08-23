@@ -59,7 +59,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
   buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
     const inactiveOpacity: number = 0.3;
-    const activeOpacity: number = 1;
+    const activeOpacity: number = 1.0;
 
     const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
 
@@ -79,7 +79,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         inactiveOpacity :
         activeOpacity
       ;
-
+      debug('opacity is %o', opacity);
       const label = new Label<any>({
         a: opacity,
         baseLabel: labelLookup.get(labelData.name),
@@ -90,6 +90,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
       // If we're anchored at the middle left, we need to push a bit more outward
       // In order to account for the length of the text field
+      debug('label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
+      debug('label is %o,anchor is %o', labelData.name, labelData.anchor);
       if (!config.splitTopLevelGroups) {
         if (labelData.anchor === AnchorPosition.MiddleLeft) {
           Point.add(
@@ -122,7 +124,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
           labelData.point,
         );
       }
-
+      debug('AFTER---label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
@@ -166,9 +168,9 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       // Quick reference to the direction of the angle
       const dx = direction.x;
       const dy = direction.y;
+      debug('squere %o', dx * dx + dy * dy);
       // The distance from the center we should be
       const distance = radius + ringPadding;
-
       return {
         x: (distance * dx) + center.x,
         y: (distance * dy) + center.y,
@@ -219,6 +221,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         ringLine.mid,
         true,
       );
+
+      debug('direction  %o,ring %o', direction, ring.d.source.name);
 
       // Get the angle derived from the direction we figured
       let angle = ordinaryCircularAngle(Math.atan2(direction.y, direction.x));

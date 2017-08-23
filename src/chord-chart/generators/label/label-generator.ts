@@ -30,8 +30,12 @@ export class LabelGenerator {
       selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
     ;
 
+    debug('didDataChange  %o', didDataChange);
+    debug('didSelectionChange %o', didSelectionChange);
+    debug('hasSelection %o, ', hasSelection);
+
     // Anytime the data changes or the split state changes all must be re-rendered
-    if (didDataChange || didSplitChange) {
+    if (didDataChange || didSplitChange ) {
       this.baseCache.bustCache = true;
       this.interactionCache.bustCache = true;
       this.isHovered = false;
@@ -56,6 +60,7 @@ export class LabelGenerator {
     // If the data changed, then we have to regenerate our unique labels to work
     // With.
     if (didDataChange) {
+      debug('GEnerating uniquelabels....');
       data.endpoints.forEach(endpoint => {
         if (!this.labelByString.get(endpoint.name)) {
           this.labelByString.set(endpoint.name, new Label({
@@ -80,7 +85,7 @@ export class LabelGenerator {
     debug('selection is %o', selection);
     this.bustCaches(data, config, selection);
     this.baseCache.generate(data, outerRingGenerator, config, this.labelByString, selection);
-    this.interactionCache.generate(data, outerRingGenerator, config, selection);
+    this.interactionCache.generate(data, outerRingGenerator, config, this.labelByString, selection);
   }
 
   getUniqueLabels(): Label<any>[] {

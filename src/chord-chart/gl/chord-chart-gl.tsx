@@ -129,7 +129,6 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       staticLabels,
     } = props;
 
-    let updated = false;
     // Set up any materials that needs the labels.
 
     {
@@ -142,11 +141,9 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     }
 
     // Apply static labels
-    updated = this.staticLabelBuffer.update(staticLabels);
-    debug('updated? %o', updated);
+    this.staticLabelBuffer.update(staticLabels);
     // Apply interactive labels
     this.interactiveLabelBuffer.update(interactiveLabels);
-
   }
 
   /**
