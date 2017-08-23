@@ -22,7 +22,7 @@ vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
 }
 
 void main() {
-  vertexColor = customColor;
+  vertexColor = mix(customColor, customColorEnd, bezier.x);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
@@ -38,9 +38,9 @@ void main() {
   vec2 nextNormal = vec2(-nextLine.y, nextLine.x);
   vec2 currentNormal = normalize(preNormal) + normalize(nextNormal);
   currentNormal = normalize(currentNormal);
+
   if (bezier.y < 0.0) currentNormal = normalize(preNormal);
   if (bezier.z > 1.0) currentNormal = normalize(nextNormal);
-
 
   float x = currentPosition.x + currentNormal.x * normalDirection * bezier.w;
   float y = currentPosition.y + currentNormal.y * normalDirection * bezier.w;
