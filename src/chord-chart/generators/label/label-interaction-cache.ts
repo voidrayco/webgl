@@ -138,12 +138,12 @@ export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData
         };
 
         const labelData = outerRings.map((ring: CurvedLineShape<IOuterRingData>) => {
-      // Do not render children that have children
-      if (ring.d.source.children.length > 0) {
-        return null;
-      }
+            // Do not render children that have children
+            if (ring.d.source.children.length > 0) {
+            return null;
+        }
 
-      const center = ring.controlPoints[1];
+      const center = ring.controlPoints[0];
 
       let ringLine: Line<any> = new Line<any>(ring.p1, ring.p2);
 

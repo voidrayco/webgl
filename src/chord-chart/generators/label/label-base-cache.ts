@@ -86,7 +86,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         color: color,
       });
 
-      label.width = label.text.length * label.fontSize;
+      // Label.width = label.text.length * label.fontSize;
+      label.setText(labelData.name);
 
       // If we're anchored at the middle left, we need to push a bit more outward
       // In order to account for the length of the text field
@@ -98,7 +99,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
             labelData.point,
             Point.scale(
               labelData.direction,
-              label.width / 2,
+              label.width,
             ),
             labelData.point,
           );
@@ -108,7 +109,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
             labelData.point,
             Point.scale(
               labelData.direction,
-              - label.width / 2,
+              - label.width,
             ),
             labelData.point,
           );
@@ -124,7 +125,9 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
           labelData.point,
         );
       }
+
       debug('AFTER---label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
+      debug('label is %o,width is %o', labelData.name, label.width);
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
