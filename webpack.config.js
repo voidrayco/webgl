@@ -2,25 +2,27 @@ const {DtsBundlePlugin} = require('./scripts/lib/dts-bundle-plugin');
 const {resolve} = require('path');
 const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const webpack = require('webpack');
 
 const tslintLoader = {loader: 'tslint-loader', options: {
   fix: true,
   emitErrors: true,
 }};
 
-const isRelease = process.env.NODE_ENV === 'release';
-const isProduction = process.env.NODE_ENV === 'production' || isRelease;
-const isDevelopment = process.env.NODE_ENV === 'development';
+const IS_RELEASE = process.env.NODE_ENV === 'release';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || IS_RELEASE;
+const IS_DEVELOPMENT = process.env.NODE_ENV === 'development';
 
-const plugins = [
-  new ForkTsCheckerWebpackPlugin(),
-];
+const plugins = [];
 
 let externals = [];
 let library;
 let libraryTarget;
 
-if (isProduction) {
+if (IS_DEVELOPMENT)
+  plugins.push(new ForkTsCheckerWebpackPlugin());
+
+if (IS_PRODUCTION) {
   // List our external libs for the library generation so they do
   // not get bundled into ours
   externals = [
@@ -36,6 +38,20 @@ if (isProduction) {
   library = 'voidgl';
   libraryTarget = 'umd';
 
+  // We should minify and mangle our distribution for npm
+  console.log('Minification enabled');
+
+  // Add in uglify to handle minification
+  plugins.push(
+    new webpack.optimize.UglifyJsPlugin({
+      uglifyOptions: {
+        compress: {
+          warnings: true
+        }
+      }
+    })
+  );
+
   // Add our bundler as a plugin so we can perform the bundling AFTER webpack
   // has generated the proper files
   plugins.push(
@@ -49,13 +65,13 @@ if (isProduction) {
 }
 
 module.exports = {
-  entry: isProduction ? './src' : './test',
+  entry: IS_PRODUCTION ? './src' : './test',
   externals,
 
   module: {
     rules: [
       {test: /\.tsx?/, use: tslintLoader, enforce: 'pre'},
-      {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: isDevelopment}}},
+      {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: IS_DEVELOPMENT}}},
       {test: /\.less$/, use: ['style-loader', 'css-loader', 'less-loader']},
       {test: /index.html$/, use: {loader: 'file-loader', options: {name: 'index.html'}}},
       {test: /\.[fv]s$/, use: ['raw-loader']}, // Currently used to load shaders into javascript files
@@ -63,10 +79,10 @@ module.exports = {
   },
 
   output: {
-    filename: isProduction ? 'index.js' : 'app.js',
+    filename: IS_PRODUCTION ? 'index.js' : 'app.js',
     library,
     libraryTarget,
-    path: isProduction ? resolve('dist') : resolve('build'),
+    path: IS_PRODUCTION ? resolve('dist') : resolve('build'),
     publicPath: '/',
   },
 
