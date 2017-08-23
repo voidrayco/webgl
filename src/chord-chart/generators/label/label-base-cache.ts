@@ -120,7 +120,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
           labelData.point,
           Point.scale(
             Point.make(-1, 0),
-            label.width / 2,
+            label.width,
           ),
           labelData.point,
         );
