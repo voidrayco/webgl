@@ -4,9 +4,10 @@
  */
 
 attribute vec4 customColor;
-varying vec4 vColor;
+varying vec4 vertexColor;
+
 void main() {
-  vColor = customColor;
+  vertexColor = customColor;
   vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
   gl_Position = projectionMatrix * mvPosition;
 }

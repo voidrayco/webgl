@@ -40,8 +40,8 @@ export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
 
 // --[ SHADERS ]-------------------------------------------
 const bezierVertexShader = require('webgl-surface/shaders/bezier.vs');
-const fillVertexShader = require('./shaders/simple-fill.vs');
-const fillFragmentShader = require('./shaders/simple-fill.fs');
+const fillVertexShader = require('webgl-surface/shaders/simple-line.vs');
+const fillFragmentShader = require('webgl-surface/shaders/simple-line.fs');
 const textureVertexShader = require('webgl-surface/shaders/textured-quad.vs');
 const textureFragmentShader = require('webgl-surface/shaders/textured-quad.fs');
 

@@ -14,13 +14,18 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
 
     this.bufferItems.attributes = [
       {
-        defaults: [0, 0, 0],
-        name: 'position',
-        size: AttributeSize.THREE,
+        defaults: [0, 0, 0, 0],
+        name: 'bezier',
+        size: AttributeSize.FOUR,
       },
       {
         defaults: [0, 0, 0, 1],
         name: 'customColor',
+        size: AttributeSize.FOUR,
+      },
+      {
+        defaults: [0, 0, 0, 1],
+        name: 'customColorEnd',
         size: AttributeSize.FOUR,
       },
       {
@@ -72,24 +77,37 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
     let needsUpdate = false;
     const numVerticesPerSegment = 6;
     const colorAttributeSize = 4;
-    const length = 20;
+    let length = 20;
+    let halfWidth = 0;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
+      length = curvedLine.resolution;
+      halfWidth = curvedLine.width / 2.0;
+      length = 20;
+      halfWidth = 10;
+
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
         numVerticesPerSegment, length,
-        function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number,
-          normals: Float32Array, npos: number, endPoints: Float32Array, epos: number,
+        function(
+          i: number,
+          bezier: Float32Array, ppos: number,
+          colors: Float32Array, cpos: number,
+          colorEnds: Float32Array, cendpos: number,
+          normals: Float32Array, npos: number,
+          endPoints: Float32Array, epos: number,
           controlPoints: Float32Array, copos: number) {
 
           // Copy first vertex twice for intro degenerate tri
-          positions[ppos] = (i + 1) / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          bezier[ppos] = (i + 1) / length;
+          bezier[++ppos] = length;
+          bezier[++ppos] = curvedLine.depth;
+          bezier[++ppos] = halfWidth;
           // Skip over degenerate tris color
           cpos += colorAttributeSize;
+          cendpos += colorAttributeSize;
           normals[npos] = 1;
           endPoints[epos] = curvedLine.p1.x;
           endPoints[++epos] = curvedLine.p1.y;
@@ -99,13 +117,18 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // TR
-          positions[++ppos] = (i + 1) / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          bezier[++ppos] = (i + 1) / length;
+          bezier[++ppos] = length;
+          bezier[++ppos] = curvedLine.depth;
+          bezier[++ppos] = halfWidth;
           colors[cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
+          colorEnds[cendpos] = curvedLine.r2;
+          colorEnds[++cendpos] = curvedLine.g2;
+          colorEnds[++cendpos] = curvedLine.b2;
+          colorEnds[++cendpos] = curvedLine.a2;
           normals[++npos] = 1;
           endPoints[++epos] = curvedLine.p1.x;
           endPoints[++epos] = curvedLine.p1.y;
@@ -115,13 +138,18 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // BR
-          positions[++ppos] = (i + 1) / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          bezier[++ppos] = (i + 1) / length;
+          bezier[++ppos] = length;
+          bezier[++ppos] = curvedLine.depth;
+          bezier[++ppos] = halfWidth;
           colors[++cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
+          colorEnds[++cendpos] = curvedLine.r2;
+          colorEnds[++cendpos] = curvedLine.g2;
+          colorEnds[++cendpos] = curvedLine.b2;
+          colorEnds[++cendpos] = curvedLine.a2;
           normals[++npos] = -1;
           endPoints[++epos] = curvedLine.p1.x;
           endPoints[++epos] = curvedLine.p1.y;
@@ -131,13 +159,18 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // TL
-          positions[++ppos] = i / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          bezier[++ppos] = i / length;
+          bezier[++ppos] = length;
+          bezier[++ppos] = curvedLine.depth;
+          bezier[++ppos] = halfWidth;
           colors[++cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
+          colorEnds[++cendpos] = curvedLine.r2;
+          colorEnds[++cendpos] = curvedLine.g2;
+          colorEnds[++cendpos] = curvedLine.b2;
+          colorEnds[++cendpos] = curvedLine.a2;
           normals[++npos] = 1;
           endPoints[++epos] = curvedLine.p1.x;
           endPoints[++epos] = curvedLine.p1.y;
@@ -147,13 +180,18 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // BL
-          positions[++ppos] = i / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          bezier[++ppos] = i / length;
+          bezier[++ppos] = length;
+          bezier[++ppos] = curvedLine.depth;
+          bezier[++ppos] = halfWidth;
           colors[++cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
+          colorEnds[++cendpos] = curvedLine.r2;
+          colorEnds[++cendpos] = curvedLine.g2;
+          colorEnds[++cendpos] = curvedLine.b2;
+          colorEnds[++cendpos] = curvedLine.a2;
           normals[++npos] = -1;
           endPoints[++epos] = curvedLine.p1.x;
           endPoints[++epos] = curvedLine.p1.y;
@@ -163,9 +201,10 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // Copy last vertex again for degenerate tri
-          positions[++ppos] = i / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          bezier[++ppos] = i / length;
+          bezier[++ppos] = length;
+          bezier[++ppos] = curvedLine.depth;
+          bezier[++ppos] = halfWidth;
           // Skip over degenerate tris for color
           cpos += colorAttributeSize;
           normals[++npos] = -1;

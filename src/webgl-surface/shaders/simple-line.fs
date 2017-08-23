@@ -3,7 +3,8 @@
  * color
  */
 
-varying vec4 vColor;
+varying vec4 vertexColor;
+
 void main() {
-  gl_FragColor = vColor;
+  gl_FragColor = vertexColor * vertexColor.a;
 }
