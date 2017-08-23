@@ -4,7 +4,7 @@
     "email": "support@voidray.co",
     "url": "http://www.voidray.co"
   },
-  "name": "voidgl",
+  "name": "@voidrayco/voidgl",
   "version": "0.1.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
