@@ -1,11 +1,12 @@
-// Import { Mesh, TriangleStripDrawMode } from 'three';
-import { Points } from 'three';
+import { Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
+import { IPoint } from 'webgl-surface/primitives/point';
 import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any>, Points> {
+export class SimpleStaticBezierLineBuffer extends BaseBuffer < CurvedLineShape < any >,
+Mesh > {
   /**
    * @override
    * See interface definition
@@ -15,20 +16,15 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
 
     this.bufferItems.attributes = [
       {
-        defaults: [0, 0, 0, 0],
-        name: 'bezier',
-        size: AttributeSize.FOUR,
+        defaults: [0, 0, 0],
+        name: 'position',
+        size: AttributeSize.THREE,
       },
       {
         defaults: [0, 0, 0, 1],
         name: 'customColor',
         size: AttributeSize.FOUR,
       },
-      // {
-      //   Defaults: [0, 0, 0, 1],
-      //   Name: 'customColorEnd',
-      //   Size: AttributeSize.FOUR,
-      // },
       {
         defaults: [1],
         name: 'normalDirection',
@@ -44,6 +40,16 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
         name: 'controlPoint',
         size: AttributeSize.TWO,
       },
+      {
+        defaults: [0],
+        name: 'halfLinewidth',
+        size: AttributeSize.ONE,
+      },
+      {
+        defaults: [0, 0, 0, 1],
+        name: 'customColorEnd',
+        size: AttributeSize.FOUR,
+      },
     ];
 
     const verticesPerQuad = 6;
@@ -54,13 +60,13 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
       this.bufferItems.attributes,
     );
 
-    this.bufferItems.system = new Points(
+    this.bufferItems.system = new Mesh(
       this.bufferItems.geometry,
       material,
     );
 
     this.bufferItems.system.frustumCulled = false;
-    // This.bufferItems.system.drawMode = TriangleStripDrawMode;
+    this.bufferItems.system.drawMode = TriangleStripDrawMode;
   }
 
   /**
@@ -75,145 +81,148 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
     }
 
     // Commit static curved lines
-    let needsUpdate = false;
-    const numVerticesPerSegment = 6;
     const colorAttributeSize = 4;
-    let length = 20;
-    let halfWidth = 0;
+    const numVerticesPerSegment = 6;
+    let halfWidthSize = 1;
+    let length = 15;
+    let needsUpdate = false;
+    let p1: IPoint;
+    let p2: IPoint;
 
     BufferUtil.beginUpdates();
-    console.log(this.bufferItems);
 
     for (const curvedLine of shapeBuffer) {
+      halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
-      halfWidth = curvedLine.width / 2.0;
-      length = 20;
-      halfWidth = 1.5;
+      p1 = curvedLine.p1;
+      p2 = curvedLine.p2;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
         numVerticesPerSegment, length,
-        function(
-          i: number,
-          bezier: Float32Array, ppos: number,
+        function(i: number,
+          positions: Float32Array, ppos: number,
           colors: Float32Array, cpos: number,
-          // ColorEnds: Float32Array, cendpos: number,
           normals: Float32Array, npos: number,
           endPoints: Float32Array, epos: number,
-          controlPoints: Float32Array, copos: number) {
+          controlPoints: Float32Array, copos: number,
+          halfWidth: Float32Array, wpos: number,
+          colorEnd: Float32Array, cepos: number,
+        ) {
 
           // Copy first vertex twice for intro degenerate tri
-          bezier[ppos] = (i + 1);
-          bezier[++ppos] = length;
-          bezier[++ppos] = curvedLine.depth;
-          bezier[++ppos] = halfWidth;
+          positions[ppos] = (i + 1) / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          halfWidth[wpos] = halfWidthSize;
           // Skip over degenerate tris color
           cpos += colorAttributeSize;
-          // Cendpos += colorAttributeSize;
+          cepos += colorAttributeSize;
           normals[npos] = 1;
-          endPoints[epos] = curvedLine.p1.x;
-          endPoints[++epos] = curvedLine.p1.y;
-          endPoints[++epos] = curvedLine.p2.x;
-          endPoints[++epos] = curvedLine.p2.y;
+          endPoints[epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
           controlPoints[copos] = curvedLine.controlPoints[0].x;
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // TR
-          bezier[++ppos] = (i + 1);
-          bezier[++ppos] = length;
-          bezier[++ppos] = curvedLine.depth;
-          bezier[++ppos] = halfWidth;
+          positions[++ppos] = (i + 1) / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = 1;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
+          controlPoints[++copos] = curvedLine.controlPoints[0].x;
+          controlPoints[++copos] = curvedLine.controlPoints[0].y;
           colors[cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          // ColorEnds[cendpos] = curvedLine.r2;
-          // ColorEnds[++cendpos] = curvedLine.g2;
-          // ColorEnds[++cendpos] = curvedLine.b2;
-          // ColorEnds[++cendpos] = curvedLine.a2;
-          normals[++npos] = 1;
-          endPoints[++epos] = curvedLine.p1.x;
-          endPoints[++epos] = curvedLine.p1.y;
-          endPoints[++epos] = curvedLine.p2.x;
-          endPoints[++epos] = curvedLine.p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
+          colorEnd[cepos] = curvedLine.r;
+          colorEnd[++cepos] = curvedLine.g;
+          colorEnd[++cepos] = curvedLine.b;
+          colorEnd[++cepos] = curvedLine.a;
 
           // BR
-          bezier[++ppos] = (i + 1);
-          bezier[++ppos] = length;
-          bezier[++ppos] = curvedLine.depth;
-          bezier[++ppos] = halfWidth;
+          positions[++ppos] = (i + 1) / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = -1;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
+          controlPoints[++copos] = curvedLine.controlPoints[0].x;
+          controlPoints[++copos] = curvedLine.controlPoints[0].y;
           colors[++cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          // ColorEnds[++cendpos] = curvedLine.r2;
-          // ColorEnds[++cendpos] = curvedLine.g2;
-          // ColorEnds[++cendpos] = curvedLine.b2;
-          // ColorEnds[++cendpos] = curvedLine.a2;
-          normals[++npos] = -1;
-          endPoints[++epos] = curvedLine.p1.x;
-          endPoints[++epos] = curvedLine.p1.y;
-          endPoints[++epos] = curvedLine.p2.x;
-          endPoints[++epos] = curvedLine.p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
+          colorEnd[++cepos] = curvedLine.r;
+          colorEnd[++cepos] = curvedLine.g;
+          colorEnd[++cepos] = curvedLine.b;
+          colorEnd[++cepos] = curvedLine.a;
 
           // TL
-          bezier[++ppos] = i;
-          bezier[++ppos] = length;
-          bezier[++ppos] = curvedLine.depth;
-          bezier[++ppos] = halfWidth;
+          positions[++ppos] = i / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = 1;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
+          controlPoints[++copos] = curvedLine.controlPoints[0].x;
+          controlPoints[++copos] = curvedLine.controlPoints[0].y;
           colors[++cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          // ColorEnds[++cendpos] = curvedLine.r2;
-          // ColorEnds[++cendpos] = curvedLine.g2;
-          // ColorEnds[++cendpos] = curvedLine.b2;
-          // ColorEnds[++cendpos] = curvedLine.a2;
-          normals[++npos] = 1;
-          endPoints[++epos] = curvedLine.p1.x;
-          endPoints[++epos] = curvedLine.p1.y;
-          endPoints[++epos] = curvedLine.p2.x;
-          endPoints[++epos] = curvedLine.p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
+          colorEnd[++cepos] = curvedLine.r;
+          colorEnd[++cepos] = curvedLine.g;
+          colorEnd[++cepos] = curvedLine.b;
+          colorEnd[++cepos] = curvedLine.a;
 
           // BL
-          bezier[++ppos] = i;
-          bezier[++ppos] = length;
-          bezier[++ppos] = curvedLine.depth;
-          bezier[++ppos] = halfWidth;
+          positions[++ppos] = i / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = -1;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
+          controlPoints[++copos] = curvedLine.controlPoints[0].x;
+          controlPoints[++copos] = curvedLine.controlPoints[0].y;
           colors[++cpos] = curvedLine.r;
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          // ColorEnds[++cendpos] = curvedLine.r2;
-          // ColorEnds[++cendpos] = curvedLine.g2;
-          // ColorEnds[++cendpos] = curvedLine.b2;
-          // ColorEnds[++cendpos] = curvedLine.a2;
-          normals[++npos] = -1;
-          endPoints[++epos] = curvedLine.p1.x;
-          endPoints[++epos] = curvedLine.p1.y;
-          endPoints[++epos] = curvedLine.p2.x;
-          endPoints[++epos] = curvedLine.p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
+          colorEnd[++cepos] = curvedLine.r;
+          colorEnd[++cepos] = curvedLine.g;
+          colorEnd[++cepos] = curvedLine.b;
+          colorEnd[++cepos] = curvedLine.a;
 
           // Copy last vertex again for degenerate tri
-          bezier[++ppos] = i;
-          bezier[++ppos] = length;
-          bezier[++ppos] = curvedLine.depth;
-          bezier[++ppos] = halfWidth;
+          positions[++ppos] = i / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          halfWidth[++wpos] = halfWidthSize;
           // Skip over degenerate tris for color
           cpos += colorAttributeSize;
+          cepos += colorAttributeSize;
           normals[++npos] = -1;
-          endPoints[++epos] = curvedLine.p1.x;
-          endPoints[++epos] = curvedLine.p1.y;
-          endPoints[++epos] = curvedLine.p2.x;
-          endPoints[++epos] = curvedLine.p2.y;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
           controlPoints[++copos] = curvedLine.controlPoints[0].x;
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
         },
@@ -229,14 +238,11 @@ export class SimpleStaticBezierLineBuffer extends BaseBuffer<CurvedLineShape<any
 
     // Only if updates happened, should this change
     if (needsUpdate) {
-      // This.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-      this.bufferItems.geometry.setDrawRange(0, 100);
-      console.log(numVerticesPerSegment * numBatches);
+      this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
     }
 
     else if (shapeBuffer.length === 0) {
       this.bufferItems.geometry.setDrawRange(0, 0);
-      console.log('Nothing to draw');
     }
 
     return needsUpdate;
