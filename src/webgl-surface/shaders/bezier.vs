@@ -7,7 +7,7 @@ attribute vec4 endPoints;
 attribute vec2 controlPoint;
 attribute float halfLinewidth;
 
-varying vec4 vColor;
+varying vec4 vertexColor;
 
 vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
   return vec2(
@@ -17,7 +17,8 @@ vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
 }
 
 void main() {
-  vColor = customColor;
+  vertexColor = customColor;
+
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
 
