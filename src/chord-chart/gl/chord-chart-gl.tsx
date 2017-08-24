@@ -44,6 +44,7 @@ const fillVertexShader = require('webgl-surface/shaders/simple-line.vs');
 const fillFragmentShader = require('webgl-surface/shaders/simple-line.fs');
 const textureVertexShader = require('webgl-surface/shaders/textured-quad.vs');
 const textureFragmentShader = require('webgl-surface/shaders/textured-quad.fs');
+'hey';
 
 /**
  * The base component for the communications view
@@ -91,7 +92,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     // Commit ring curved lines using old methods
     needsTreeUpdate = this.staticCircularBuffer.update(staticRingLines) || needsTreeUpdate;
     // Commit interactive curved lines
-    this.forceDraw = this.interactiveBezierBuffer.update(interactiveCurvedLines) || this.forceDraw;
+    // This.forceDraw = this.interactiveBezierBuffer.update(interactiveCurvedLines) || this.forceDraw;
     // Commit interactive ring curves
     this.forceDraw = this.interactiveCircularBuffer.update(interactiveRingLines) || this.forceDraw;
     this.forceDraw = this.forceDraw || needsTreeUpdate;
@@ -149,7 +150,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
    */
   initBuffers() {
     // SET UP MATERIALS AND UNIFORMS
-    const quadMaterial = new ShaderMaterial({
+    const bezierMaterial = new ShaderMaterial({
       blending: NormalBlending,
       depthTest: true,
       fragmentShader: fillFragmentShader,
@@ -180,10 +181,10 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
 
     textureMaterial.blendSrc = OneFactor;
 
-    // GENERATE THE QUAD BUFFER
+    // GENERATE THE BEZIER BUFFER
     {
       // Initialize the static curve buffer
-      this.staticBezierBuffer.init(quadMaterial, 100000);
+      this.staticBezierBuffer.init(bezierMaterial, 100000);
       // Place the mesh in the scene
       this.scene.add(this.staticBezierBuffer.bufferItems.system);
     }
@@ -196,12 +197,12 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       this.scene.add(this.staticCircularBuffer.bufferItems.system);
     }
 
-    // GENERATE THE INTERACTION QUAD BUFFER
+    // GENERATE THE INTERACTION BEZIER BUFFER
     {
       // The interactive bezier buffer
-      this.interactiveBezierBuffer.init(quadMaterial, 100000);
+      // This.interactiveBezierBuffer.init(bezierMaterial, 100000);
       // Place the mesh in the scene
-      this.scene.add(this.interactiveBezierBuffer.bufferItems.system);
+      // This.scene.add(this.interactiveBezierBuffer.bufferItems.system);
     }
 
     // GENERATE THE INTERACTIVE RING BUFFER
@@ -209,7 +210,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       /// Initialize the buffer for interactive circular curved lines
       this.interactiveCircularBuffer.init(ringMaterial, 100000);
       // Place the mesh in the scene
-      this.scene.add(this.interactiveCircularBuffer.bufferItems.system);
+      // This.scene.add(this.interactiveCircularBuffer.bufferItems.system);
     }
 
     // GENERATE THE LABEL BUFFER
@@ -217,7 +218,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       // Initialize the buffer for base static labels
       this.staticLabelBuffer.init(textureMaterial, 10000);
       // Place the mesh in the scene
-      this.scene.add(this.staticLabelBuffer.bufferItems.system);
+      // This.scene.add(this.staticLabelBuffer.bufferItems.system);
     }
 
     // GENERATE THE INTERACTIVE LABEL BUFFER
@@ -225,7 +226,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       // Initialize the buffer for interactive labels
       this.interactiveLabelBuffer.init(textureMaterial, 10000);
       // Place the mesh in the scene
-      this.scene.add(this.interactiveLabelBuffer.bufferItems.system);
+      // This.scene.add(this.interactiveLabelBuffer.bufferItems.system);
     }
   }
 
