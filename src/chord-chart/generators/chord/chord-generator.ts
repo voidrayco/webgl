@@ -1,3 +1,4 @@
+import { ColorGenerator } from 'chord-chart/generators/color/color-generator';
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Selection, SelectionType } from '../../selections/selection';
@@ -18,7 +19,7 @@ export class ChordGenerator {
   /**
    * Flag which caches need busting
    */
-  bustCaches(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
+  bustCaches(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, outerRings: OuterRingGenerator, selection: Selection) {
     const didDataChange = data !== this.lastData;
     const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD);
     const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
@@ -38,11 +39,11 @@ export class ChordGenerator {
   /**
    * Generates the buffers for static chords in the charts
    */
-  generate(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, outerRings: OuterRingGenerator, selection: Selection) {
     debug('Generating chords');
-    this.bustCaches(data, config, outerRings, selection);
-    this.chordBase.generate(data, config, outerRings, selection);
-    this.chordInteractions.generate(config, selection);
+    this.bustCaches(data, config, colorGenerator, outerRings, selection);
+    this.chordBase.generate(data, config, colorGenerator, outerRings, selection);
+    this.chordInteractions.generate(config, colorGenerator, selection);
   }
 
   /**

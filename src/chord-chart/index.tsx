@@ -5,6 +5,7 @@ import { AtlasColor } from 'webgl-surface/drawing/texture/atlas-color';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
+import { ColorGenerator } from './generators/color/color-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
@@ -18,7 +19,7 @@ import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing
 const colors: AtlasColor[] = [];
 
 for (let i = 0; i < 5000; i++) {
-  colors.push(new AtlasColor(Math.random(), Math.random(), Math.random()));
+  colors.push(new AtlasColor(Math.random(), Math.random(), Math.random(), Math.random()));
 }
 
 export interface IChordChartProps {
@@ -89,8 +90,10 @@ function recalculateTreeForData(data: IData) {
 export class ChordChart extends React.Component<IChordChartProps, IChordChartState> {
   /** Indicates if this component has fully mounted already or not */
   initialized: boolean = false;
-  /** This is the generator that produces the buffers for our quads */
+  /** This is the generator that produces the buffers for our chords */
   chordGenerator: ChordGenerator;
+  /** This is the generator that calculates and produces all colors needed */
+  colorGenerator: ColorGenerator;
   /** This is the generator that produces the buffers for our labels */
   labelGenerator: LabelGenerator;
   /** This is the generator that produces the buffers for our outer rings */
@@ -119,6 +122,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   componentWillMount() {
     this.chordGenerator = new ChordGenerator();
+    this.colorGenerator = new ColorGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
     const data = clone(this.props.data);
@@ -245,13 +249,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       topLevelGroupPadding: Math.PI / 4,
     };
 
-    this.outerRingGenerator.generate(this.state.data, config, this.selection);
-    this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
+    this.colorGenerator.generate(this.state.data, config);
+    this.outerRingGenerator.generate(this.state.data, config, this.colorGenerator, this.selection);
+    this.chordGenerator.generate(this.state.data, config, this.colorGenerator, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
 
     return (
       <ChordChartGL
-        colors={colors}
+        colors={this.colorGenerator.getBaseBuffer()}
         height={this.viewport.height}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}

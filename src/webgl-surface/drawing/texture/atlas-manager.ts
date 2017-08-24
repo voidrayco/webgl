@@ -298,19 +298,22 @@ export class AtlasManager {
       const renderSpace = insertedNode.nodeDimensions;
       const startX: number = renderSpace.x;
       const startY: number = renderSpace.y;
-      const nextX: number = 1.0 / this.textureWidth;
-      const nextY: number = 1.0 / this.textureHeight;
+      const nextX: number = colorWidth / this.textureWidth;
+      const nextY: number = colorHeight / this.textureHeight;
       let col = 0;
       let row = 0;
 
+      // Loop through each color, establish metrics, draw to the atlas
       for (const color of colors) {
         // Staore the info needed to make the color referenceable again
         color.atlasReferenceID = atlasName;
         color.colorIndex = col + (row * colCount);
+        color.colorsPerRow = colCount;
 
+        // The location of the middle of the first color
         color.firstColor = {
-          x: startX,
-          y: startY,
+          x: startX + (nextX / 2.0),
+          y: startY + (nextY / 2.0),
         };
 
         color.nextColor = {
@@ -318,8 +321,10 @@ export class AtlasManager {
           y: nextY,
         };
 
+        const { r, g, b } = color.color;
+
         // Draw the color to the canvas
-        canvas.fillStyle = `#${color.color.getHexString()}`;
+        canvas.fillStyle = `rgba(${Math.round(r * 255.0)}, ${Math.round(g * 255.0)}, ${Math.round(b * 255.0)}, ${color.opacity})`;
         canvas.fillRect(
           col * colorWidth + startX,
           row * colorHeight + startY,

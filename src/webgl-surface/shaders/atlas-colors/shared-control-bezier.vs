@@ -1,11 +1,29 @@
-attribute vec4 customColor;
+// These uniforms are information regarding the color atlas
+uniform sampler2D colorAtlas;
+uniform float colorsPerRow;
+uniform vec2 firstColor;
+uniform vec2 nextColor;
+// This is the shared control point for all of the vertices
+uniform vec2 controlPoint;
+
+/**
+  Position contains this information:
+  {
+    x: the bezier time value for the current vertex
+    y: the total number of vertices for the curve
+    z: the z depth
+  }
+**/
+// The picked color for the item
+attribute float startColorPick;
+attribute float endColorPick;
 // 1 or -1, used to indicate the direction
 attribute float normalDirection;
 // (x,y) is the first point, (z,w) is the second point
 attribute vec4 endPoints;
-attribute vec2 controlPoint;
 attribute float halfLinewidth;
 
+// This passes the calculated color of the vertex
 varying vec4 vertexColor;
 
 vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
@@ -15,8 +33,14 @@ vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
   );
 }
 
+vec4 pickColor(float index) {
+  float row = floor(index / colorsPerRow);
+  float col = index - (row * colorsPerRow);
+  return texCoord(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
+}
+
 void main() {
-  vertexColor = customColor;
+  vertexColor = mix(pickColor(startColorPick, endColorPick, position.x);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);

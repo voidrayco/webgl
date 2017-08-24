@@ -7,6 +7,8 @@ import { IPoint } from '../../primitives/point';
 export class AtlasColor {
   // This is the metrics of the color that is rendered to the atlas
   color: Color;
+  // Value between 1 - 0 for the opacity of the color
+  opacity: number = 1.0;
 
   // The pixel width and height of the color rendered onto the atlas
   // This will always be a 2x2 so the color can be sampled in the middle
@@ -33,8 +35,9 @@ export class AtlasColor {
    * later by a single value.
    *
    * @param {Color} color The color to be put into the atlas and be referenceable
+   * @param {number} opacity The opacity of the color
    */
-  constructor(color: Color);
+  constructor(color: Color, opacity: number);
 
   /**
    * Generates a color that is rendered to an atlas and can be referenced via texture
@@ -43,20 +46,22 @@ export class AtlasColor {
    * @param {number} r value of 0 to 1 for red channel
    * @param {number} g value of 0 to 1 for green channel
    * @param {number} b value of 0 to 1 for blue channel
-   * @param {number} a value of 0 to 1 for blue channel
+   * @param {number} a value of 0 to 1 for alpha channel defaults to 1
    */
-  constructor(r: number, g: number, b: number);
+  constructor(r: number, g: number, b: number, a?: number);
 
   /**
    * Constructor implementation
    */
-  constructor(color: Color | number, g?: number, b?: number) {
+  constructor(color: Color | number, g?: number, b?: number, a: number = 1.0) {
     if (color instanceof Color) {
       this.color = color.clone();
+      this.opacity = g === undefined ? 1.0 : g;
     }
 
     else {
       this.color = new Color(color, g, b);
+      this.opacity = a;
     }
   }
 }

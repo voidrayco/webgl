@@ -1,3 +1,4 @@
+import { ColorGenerator } from 'chord-chart/generators/color/color-generator';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
@@ -38,12 +39,12 @@ export class OuterRingGenerator {
   /**
    * Generates the buffers for static outer rings in the charts
    */
-  generate(data: IChordData, config: IChordChartConfig, selection: Selection) {
+  generate(data: IChordData, config: IChordChartConfig, colorGenerator: ColorGenerator, selection: Selection) {
     debug('Generating outer rings');
     this.bustCaches(data, config, selection);
     debug(data);
-    this.outerRingBase.generate(data, config, selection);
-    this.outerRingInteraction.generate(data, config, selection);
+    this.outerRingBase.generate(data, config, colorGenerator, selection);
+    this.outerRingInteraction.generate(data, config, colorGenerator, selection);
   }
 
   /**

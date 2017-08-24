@@ -1,5 +1,4 @@
-import { Mesh, TriangleStripDrawMode } from 'three';
-import { ShaderMaterial } from 'three';
+import { Color, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { IPoint } from 'webgl-surface/primitives/point';
 import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
@@ -89,10 +88,14 @@ Mesh > {
     let needsUpdate = false;
     let p1: IPoint;
     let p2: IPoint;
+    let color: Color;
+    let alpha: number;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
+      alpha = curvedLine.startColor.base.opacity;
+      color = curvedLine.startColor.base.color;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
       p1 = curvedLine.p1;
@@ -137,10 +140,10 @@ Mesh > {
           endPoints[++epos] = p2.y;
           controlPoints[++copos] = curvedLine.controlPoints[0].x;
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[cpos] = curvedLine.r;
-          colors[++cpos] = curvedLine.g;
-          colors[++cpos] = curvedLine.b;
-          colors[++cpos] = curvedLine.a;
+          colors[cpos] = color.r;
+          colors[++cpos] = color.g;
+          colors[++cpos] = color.b;
+          colors[++cpos] = alpha;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -154,10 +157,10 @@ Mesh > {
           endPoints[++epos] = p2.y;
           controlPoints[++copos] = curvedLine.controlPoints[0].x;
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[++cpos] = curvedLine.r;
-          colors[++cpos] = curvedLine.g;
-          colors[++cpos] = curvedLine.b;
-          colors[++cpos] = curvedLine.a;
+          colors[++cpos] = color.r;
+          colors[++cpos] = color.g;
+          colors[++cpos] = color.b;
+          colors[++cpos] = alpha;
 
           // TL
           positions[++ppos] = i / length;
@@ -171,10 +174,10 @@ Mesh > {
           endPoints[++epos] = p2.y;
           controlPoints[++copos] = curvedLine.controlPoints[0].x;
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[++cpos] = curvedLine.r;
-          colors[++cpos] = curvedLine.g;
-          colors[++cpos] = curvedLine.b;
-          colors[++cpos] = curvedLine.a;
+          colors[++cpos] = color.r;
+          colors[++cpos] = color.g;
+          colors[++cpos] = color.b;
+          colors[++cpos] = alpha;
 
           // BL
           positions[++ppos] = i / length;
@@ -188,10 +191,10 @@ Mesh > {
           endPoints[++epos] = p2.y;
           controlPoints[++copos] = curvedLine.controlPoints[0].x;
           controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[++cpos] = curvedLine.r;
-          colors[++cpos] = curvedLine.g;
-          colors[++cpos] = curvedLine.b;
-          colors[++cpos] = curvedLine.a;
+          colors[++cpos] = color.r;
+          colors[++cpos] = color.g;
+          colors[++cpos] = color.b;
+          colors[++cpos] = alpha;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
