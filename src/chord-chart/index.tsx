@@ -1,18 +1,25 @@
 import { clone } from 'ramda';
 import * as React from 'react';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
+import { AtlasColor } from 'webgl-surface/drawing/texture/atlas-color';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
-import { IData } from './generators/types';
 import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
+import { IData } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
+
+const colors: AtlasColor[] = [];
+
+for (let i = 0; i < 5000; i++) {
+  colors.push(new AtlasColor(Math.random(), Math.random(), Math.random()));
+}
 
 export interface IChordChartProps {
   onEndPointClick?(endpointId: string): void,
@@ -244,6 +251,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
     return (
       <ChordChartGL
+        colors={colors}
         height={this.viewport.height}
         labels={this.labelGenerator.getBaseBuffer()}
         onZoomRequest={(zoom) => this.handleZoomRequest}

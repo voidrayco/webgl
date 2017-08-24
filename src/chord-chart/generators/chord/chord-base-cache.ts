@@ -17,6 +17,7 @@ export interface ICurveData {
   color: Color;
   controlPoint: IPoint;
   destEndpoint: {};
+  endColor: Color;
   endpoint: {};
   p1: IPoint;
   p2: IPoint;
@@ -59,19 +60,17 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
     });
 
     const curveShapes = curves.map((curve) => {
-      const {r, g, b} = curve.color;
-      const color = new Color(r, g, b);
       const opacity = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? FADED_ALPHA : UNFADED_ALPHA;
 
       // Configure the newly made curved line
       const newCurve = new CurvedLineShape<IChordData>({
         controlPoints: [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
         end: {x: curve.p2.x, y: curve.p2.y},
-        endColor: color,
+        endColor: curve.endColor,
         endOpacity: opacity,
         lineWidth: 3,
         start: {x: curve.p1.x, y: curve.p1.y},
-        startColor: color,
+        startColor: curve.color,
         startOpacity: opacity,
         type: CurveType.Bezier,
       });
@@ -186,6 +185,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
             );
 
             const color = outerRings.outerRingBase.shapeById.get(chord.srcTarget).color;
+            const endColor = outerRings.outerRingBase.shapeById.get(chord.dstTarget).color;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
 
@@ -193,6 +193,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               color,
               controlPoint,
               destEndpoint,
+              endColor,
               endpoint,
               p1,
               p2,

@@ -92,7 +92,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     // Commit ring curved lines using old methods
     needsTreeUpdate = this.staticCircularBuffer.update(staticRingLines) || needsTreeUpdate;
     // Commit interactive curved lines
-    // This.forceDraw = this.interactiveBezierBuffer.update(interactiveCurvedLines) || this.forceDraw;
+    this.forceDraw = this.interactiveBezierBuffer.update(interactiveCurvedLines) || this.forceDraw;
     // Commit interactive ring curves
     this.forceDraw = this.interactiveCircularBuffer.update(interactiveRingLines) || this.forceDraw;
     this.forceDraw = this.forceDraw || needsTreeUpdate;
@@ -200,9 +200,9 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     // GENERATE THE INTERACTION BEZIER BUFFER
     {
       // The interactive bezier buffer
-      // This.interactiveBezierBuffer.init(bezierMaterial, 100000);
+      this.interactiveBezierBuffer.init(bezierMaterial, 100000);
       // Place the mesh in the scene
-      // This.scene.add(this.interactiveBezierBuffer.bufferItems.system);
+      this.scene.add(this.interactiveBezierBuffer.bufferItems.system);
     }
 
     // GENERATE THE INTERACTIVE RING BUFFER
@@ -210,7 +210,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       /// Initialize the buffer for interactive circular curved lines
       this.interactiveCircularBuffer.init(ringMaterial, 100000);
       // Place the mesh in the scene
-      // This.scene.add(this.interactiveCircularBuffer.bufferItems.system);
+      this.scene.add(this.interactiveCircularBuffer.bufferItems.system);
     }
 
     // GENERATE THE LABEL BUFFER
@@ -218,7 +218,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       // Initialize the buffer for base static labels
       this.staticLabelBuffer.init(textureMaterial, 10000);
       // Place the mesh in the scene
-      // This.scene.add(this.staticLabelBuffer.bufferItems.system);
+      this.scene.add(this.staticLabelBuffer.bufferItems.system);
     }
 
     // GENERATE THE INTERACTIVE LABEL BUFFER
@@ -226,7 +226,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       // Initialize the buffer for interactive labels
       this.interactiveLabelBuffer.init(textureMaterial, 10000);
       // Place the mesh in the scene
-      // This.scene.add(this.interactiveLabelBuffer.bufferItems.system);
+      this.scene.add(this.interactiveLabelBuffer.bufferItems.system);
     }
   }
 

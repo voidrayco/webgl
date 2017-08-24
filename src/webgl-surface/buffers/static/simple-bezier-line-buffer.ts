@@ -5,6 +5,12 @@ import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
+/**
+ * This renders a curved line by injecting all attributes needed to render it.
+ * This naively includes all possible data in the vertex.
+ *
+ * This ONLY supports a single color
+ */
 export class SimpleStaticBezierLineBuffer extends BaseBuffer < CurvedLineShape < any >,
 Mesh > {
   /**
@@ -44,11 +50,6 @@ Mesh > {
         defaults: [0],
         name: 'halfLinewidth',
         size: AttributeSize.ONE,
-      },
-      {
-        defaults: [0, 0, 0, 1],
-        name: 'customColorEnd',
-        size: AttributeSize.FOUR,
       },
     ];
 
@@ -107,7 +108,6 @@ Mesh > {
           endPoints: Float32Array, epos: number,
           controlPoints: Float32Array, copos: number,
           halfWidth: Float32Array, wpos: number,
-          colorEnd: Float32Array, cepos: number,
         ) {
 
           // Copy first vertex twice for intro degenerate tri
@@ -117,7 +117,6 @@ Mesh > {
           halfWidth[wpos] = halfWidthSize;
           // Skip over degenerate tris color
           cpos += colorAttributeSize;
-          cepos += colorAttributeSize;
           normals[npos] = 1;
           endPoints[epos] = p1.x;
           endPoints[++epos] = p1.y;
@@ -142,10 +141,6 @@ Mesh > {
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          colorEnd[cepos] = curvedLine.r;
-          colorEnd[++cepos] = curvedLine.g;
-          colorEnd[++cepos] = curvedLine.b;
-          colorEnd[++cepos] = curvedLine.a;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -163,10 +158,6 @@ Mesh > {
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          colorEnd[++cepos] = curvedLine.r;
-          colorEnd[++cepos] = curvedLine.g;
-          colorEnd[++cepos] = curvedLine.b;
-          colorEnd[++cepos] = curvedLine.a;
 
           // TL
           positions[++ppos] = i / length;
@@ -184,10 +175,6 @@ Mesh > {
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          colorEnd[++cepos] = curvedLine.r;
-          colorEnd[++cepos] = curvedLine.g;
-          colorEnd[++cepos] = curvedLine.b;
-          colorEnd[++cepos] = curvedLine.a;
 
           // BL
           positions[++ppos] = i / length;
@@ -205,10 +192,6 @@ Mesh > {
           colors[++cpos] = curvedLine.g;
           colors[++cpos] = curvedLine.b;
           colors[++cpos] = curvedLine.a;
-          colorEnd[++cepos] = curvedLine.r;
-          colorEnd[++cepos] = curvedLine.g;
-          colorEnd[++cepos] = curvedLine.b;
-          colorEnd[++cepos] = curvedLine.a;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -217,7 +200,6 @@ Mesh > {
           halfWidth[++wpos] = halfWidthSize;
           // Skip over degenerate tris for color
           cpos += colorAttributeSize;
-          cepos += colorAttributeSize;
           normals[++npos] = -1;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;
