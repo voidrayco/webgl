@@ -16,15 +16,7 @@ import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
-<<<<<<< HEAD
-const colors: AtlasColor[] = [];
-
-for (let i = 0; i < 5000; i++) {
-  colors.push(new AtlasColor(Math.random(), Math.random(), Math.random(), Math.random()));
-}
-=======
 const debug = require('debug')('index');
->>>>>>> 4d465b10b2c3309c897a954987f5975d5065d764
 
 export interface IChordChartProps {
   onEndPointClick?(endpointId: string): void,
