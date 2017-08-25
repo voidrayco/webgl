@@ -4,6 +4,8 @@ import { Label } from '../../drawing/label';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
+const debug = require('debug')('simple-label-buffer');
+
 export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
   /**
    * @override
@@ -67,6 +69,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
       function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number, texCoords: Float32Array, tpos: number) {
         label = shapeBuffer[i];
         texture = label.rasterizedLabel;
+        debug('texture is %o', texture);
         // Make sure the label is updated with it's latest metrics
         label.update();
 
@@ -84,40 +87,40 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.depth;
         texCoords[tpos] = texture.atlasTR.x;
         texCoords[++tpos] = texture.atlasTR.y;
-        texCoords[++tpos] = label.color.opacity;
-        colors[cpos] = label.color.r;
-        colors[++cpos] = label.color.g;
-        colors[++cpos] = label.color.b;
+        texCoords[++tpos] = label.a;
+        colors[cpos] = label.r;
+        colors[++cpos] = label.g;
+        colors[++cpos] = label.b;
         // BR
         positions[++ppos] = label.BR.x;
         positions[++ppos] = label.BR.y;
         positions[++ppos] = label.depth;
         texCoords[++tpos] = texture.atlasBR.x;
         texCoords[++tpos] = texture.atlasBR.y;
-        texCoords[++tpos] = label.color.opacity;
-        colors[cpos] = label.color.r;
-        colors[++cpos] = label.color.g;
-        colors[++cpos] = label.color.b;
+        texCoords[++tpos] = label.a;
+        colors[cpos] = label.r;
+        colors[++cpos] = label.g;
+        colors[++cpos] = label.b;
         // TL
         positions[++ppos] = label.TL.x;
         positions[++ppos] = label.TL.y;
         positions[++ppos] = label.depth;
         texCoords[++tpos] = texture.atlasTL.x;
         texCoords[++tpos] = texture.atlasTL.y;
-        texCoords[++tpos] = label.color.opacity;
-        colors[++cpos] = label.color.r;
-        colors[++cpos] = label.color.g;
-        colors[++cpos] = label.color.b;
+        texCoords[++tpos] = label.a;
+        colors[++cpos] = label.r;
+        colors[++cpos] = label.g;
+        colors[++cpos] = label.b;
         // BL
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
         texCoords[++tpos] = texture.atlasBL.x;
         texCoords[++tpos] = texture.atlasBL.y;
-        texCoords[++tpos] = label.color.opacity;
-        colors[++cpos] = label.color.r;
-        colors[++cpos] = label.color.g;
-        colors[++cpos] = label.color.b;
+        texCoords[++tpos] = label.a;
+        colors[++cpos] = label.r;
+        colors[++cpos] = label.g;
+        colors[++cpos] = label.b;
 
         // Copy last vertex again for degenerate tri
         positions[++ppos] = label.BL.x;

@@ -32,6 +32,8 @@ export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   staticCurvedLines?: CurvedLineShape<any>[],
   /** It is used to seperater from curved lines */
   staticRingLines?: CurvedLineShape<any>[],
+  /** These are the non-frequently changing labels */
+  staticLabels?: Label<any>[],
   /** Event handlers */
   onMouseHover?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
   onMouseLeave?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
@@ -124,11 +126,12 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
    */
   applyLabelBufferChanges(props: IChordChartGLProperties) {
     const {
-      labels,
       interactiveLabels,
+      staticLabels,
     } = props;
 
     // Set up any materials that needs the labels.
+
     {
       // Make sure the uniforms for anything using the label's atlas texture is updated
       const material: ShaderMaterial = this.staticLabelBuffer.bufferItems.system.material as ShaderMaterial;
@@ -139,7 +142,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     }
 
     // Apply static labels
-    this.staticLabelBuffer.update(labels);
+    this.staticLabelBuffer.update(staticLabels);
     // Apply interactive labels
     this.interactiveLabelBuffer.update(interactiveLabels);
   }

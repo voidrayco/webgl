@@ -622,6 +622,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         // We call the label buffering when the labels are ready to render
         if (this.labelsReady) {
+          debugLabels('labels changed %o', props);
           this.applyLabelBufferChanges(props);
         }
 

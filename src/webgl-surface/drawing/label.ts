@@ -1,5 +1,5 @@
-import { rgb, RGBColor } from 'd3-color';
 import { omit } from 'ramda';
+import { Color } from 'three';
 import { IPoint } from '../primitives/point';
 import { AnchorPosition, RotateableQuad } from '../primitives/rotateable-quad';
 import { ISize } from '../primitives/size';
@@ -7,10 +7,8 @@ import { Sprite } from './sprite';
 import { AtlasTexture } from './texture/atlas-texture';
 
 const measurement = new Sprite(200, 200, 1, 1);
-const defaultColor: RGBColor = rgb(255, 255, 255, 1);
 
 export class Label<T> extends RotateableQuad<T> {
-  color: RGBColor = defaultColor;
   depth: number = 0;
   direction: string = 'inherit';
   font: string = 'serif';
@@ -22,8 +20,45 @@ export class Label<T> extends RotateableQuad<T> {
   textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging' = 'alphabetic';
   zoomable: boolean = false;
 
+  /**
+   * For rasterizing a label, we don't want to have duplicate labels rendered to our atlas
+   * so we can base a label off another label. When this happens ONLY certain properties
+   * on this label can cause notable changes (such as color and positioning)
+   */
+  _baseLabel: Label<any>;
+
+  set baseLabel(value: Label<any>) {
+    this._baseLabel = value;
+    this.text = value.text;
+    this.fontSize = value.fontSize;
+    this.font = value.font;
+    this.textAlign = value.textAlign;
+    this.textBaseline = value.textBaseline;
+  }
+
+  get baseLabel(): Label<any> {
+    return this._baseLabel;
+  }
+
   /** This contains the texture information that was used to rasterize the label */
-  rasterizedLabel: AtlasTexture;
+  _rasterizedLabel: AtlasTexture;
+
+  /**
+   * This getter ensures the rasterized label retrieved is either this labels own rasterization
+   * or from a base.
+   */
+  get rasterizedLabel(): AtlasTexture {
+    if (this.baseLabel) {
+      return this.baseLabel.rasterizedLabel;
+    }
+
+    return this._rasterizedLabel;
+  }
+
+  set rasterizedLabel(value: AtlasTexture) {
+    this._rasterizedLabel = value;
+  }
+
   /**
    * This contains an adjustment to aid in the rasterization process. Getting
    * reliable dimensions for fonts and text can be incredibly challenging,
@@ -39,6 +74,18 @@ export class Label<T> extends RotateableQuad<T> {
    */
   rasterizationPadding: ISize = {width: 0, height: 0};
 
+  // Label coloring
+  r: number = 1;
+  g: number = 1;
+  b: number = 1;
+  a: number = 1;
+
+  set color(value: Color) {
+    this.r = value.r;
+    this.g = value.g;
+    this.b = value.b;
+  }
+
   /**
    * Creates an instance of Label.
    *
@@ -49,9 +96,6 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Set props
     Object.assign(this, options);
-
-    // Make sure the color is a copy
-    this.color = rgb(this.color);
 
     // Calculate the text's measurements
     measurement.context.font = this.makeCSSFont();

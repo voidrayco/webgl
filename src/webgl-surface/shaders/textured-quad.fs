@@ -10,6 +10,4 @@ void main() {
   vec4 color = texture2D(atlasTexture, texCoordinate);
   color *= opacity;
   gl_FragColor = color;
-  // gl_FragColor = vec4(opacity, opacity, opacity, 1.0);
-  gl_FragColor = texture2D(atlasTexture, texCoordinate);
 }
