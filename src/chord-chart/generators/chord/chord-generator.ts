@@ -32,8 +32,6 @@ export class ChordGenerator {
       selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
     ;
 
-    console.log(selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length);
-
     if (didDataChange || didSplitChange) {
       this.chordBase.bustCache = true;
       this.chordInteractions.bustCache = true;
