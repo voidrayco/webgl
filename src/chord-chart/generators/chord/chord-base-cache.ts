@@ -1,5 +1,5 @@
+import { ColorGenerator } from 'chord-chart/generators/color/color-generator';
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
-import { Color } from 'three';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { IPoint } from 'webgl-surface/primitives/point';
@@ -8,13 +8,9 @@ import { Selection, SelectionType } from '../../selections/selection';
 import { IChordData } from '../../shape-data-types/chord-data';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { getAncestor } from '../../util/endpointDataProcessing';
-import { IChord, IChordChartConfig, IData, IEndpoint } from '../types';
-
-const FADED_ALPHA = 0.1;
-const UNFADED_ALPHA = 0.5;
+import { ColorState, IChord, IChordChartConfig, IData, IEndpoint } from '../types';
 
 export interface ICurveData {
-  color: Color;
   controlPoint: IPoint;
   destEndpoint: {};
   endpoint: {};
@@ -22,6 +18,8 @@ export interface ICurveData {
   p2: IPoint;
   source: IChord;
 }
+
+const LINE_WIDTH: number = 1;
 
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
@@ -44,11 +42,11 @@ function getFlowAngle(endpoint: IEndpoint, flowIndex: number, segmentSpace: numb
  * @extends {ShapeBufferCache<CurvedLineShape<ICurvedLineData>>}
  */
 export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>> {
-  generate(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, outerRings: OuterRingGenerator, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, config: IChordChartConfig, outerRings: OuterRingGenerator, selection: Selection) {
+  buildCache(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, outerRings: OuterRingGenerator, selection: Selection) {
     const curves = this.preProcessData(data, config, outerRings);
 
     // Map the outer rings by id
@@ -58,21 +56,22 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       ringById.set(ring.d.source.id, ring);
     });
 
+    const hasSelection =
+      selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
+      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
+    ;
+
     const curveShapes = curves.map((curve) => {
-      const {r, g, b} = curve.color;
-      const color = new Color(r, g, b);
-      const opacity = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ? FADED_ALPHA : UNFADED_ALPHA;
+      const colorState = hasSelection ? ColorState.CHORD_INACTIVE : ColorState.CHORD_DEFAULT;
 
       // Configure the newly made curved line
       const newCurve = new CurvedLineShape<IChordData>({
         controlPoints: [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
         end: {x: curve.p2.x, y: curve.p2.y},
-        endColor: color,
-        endOpacity: opacity,
-        lineWidth: 3,
+        endColor: colorGenerator.pick(colorState, curve.source.target),
+        lineWidth: LINE_WIDTH,
         start: {x: curve.p1.x, y: curve.p1.y},
-        startColor: color,
-        startOpacity: opacity,
+        startColor: colorGenerator.pick(colorState, curve.source.source),
         type: CurveType.Bezier,
       });
 
@@ -185,12 +184,10 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               splitTopLevelGroups,
             );
 
-            const color = outerRings.outerRingBase.shapeById.get(chord.source).color;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
 
             curveData.push({
-              color,
               controlPoint,
               destEndpoint,
               endpoint,

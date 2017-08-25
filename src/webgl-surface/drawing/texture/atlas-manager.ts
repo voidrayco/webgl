@@ -1,5 +1,6 @@
 import { rgb } from 'd3-color';
 import { Texture } from 'three';
+import { AtlasColor } from 'webgl-surface/drawing/texture/atlas-color';
 import { Bounds } from '../../primitives/bounds';
 import { IPoint } from '../../primitives/point';
 import { ImageDimensions, PackNode } from '../../util/pack-node';
@@ -50,11 +51,13 @@ export class AtlasManager {
    * @return {Texture} The Threejs texture that is created as our atlas. The images injected
    *                   into the texture will be populated with the atlas'
    */
-  async createAtlas(atlasName: string, images: AtlasTexture[]) {
+  async createAtlas(atlasName: string, images: AtlasTexture[], colors?: AtlasColor[]) {
     // Create a new mapping to track the packing within the texture
     const atlasMap: PackNode = new PackNode(0, 0, this.textureWidth, this.textureHeight);
     // Create the mapping element for the new atlas so we can track insertions / deletions
     this.atlasMap[atlasName] = atlasMap;
+    // Make a listing of images that is within the atlas
+    this.atlasImages[atlasName] = [];
 
     // Generate a canvas to render our images into so we can convert it over to
     // A three-js texture
@@ -65,8 +68,20 @@ export class AtlasManager {
     canvas.canvas.height = this.textureHeight;
 
     // Now we load, pack in, and draw each requested image
-    for (const image of images) {
-      await this.draw(image, atlasName, canvas);
+    if (images) {
+      for (const image of images) {
+        await this.draw(image, atlasName, canvas);
+      }
+    }
+
+    // Now draw in any color lookups
+    if (colors) {
+      const image = await this.drawColors(colors, atlasName, canvas);
+
+      // Add the dummy texture info as an image to our list of images
+      if (image) {
+        this.atlasImages[atlasName].push(image);
+      }
     }
 
     // After loading we can transform the canvas to a glorious three texture to
@@ -79,7 +94,9 @@ export class AtlasManager {
     // Store the texture as the atlas.
     this.atlasTexture[atlasName] = texture;
     // Store the images as images within the atlas
-    this.atlasImages[atlasName] = [].concat(images);
+    if (images) {
+      this.atlasImages[atlasName].push(...images);
+    }
 
     debug('Atlas Created-> texture: %o mapping: %o images: %o', texture, atlasMap, images);
 
@@ -208,6 +225,138 @@ export class AtlasManager {
     else {
       // Log an error
       throw new Error(`Could not load image ${image.imagePath}`);
+    }
+  }
+
+  /**
+   * This renders a list of colors to the canvas. This using the same packing
+   * algorithm as any image so the rendering is placed correctly or determines
+   * if enough space is not available.
+   *
+   * @param {AtlasColor[]} colors The list of colors to be rendered to the atlas
+   * @param {string} atlasName The name of the atlas being rendered to
+   * @param {CanvasRenderingContext2D} canvas The canvas of the atlas being rendered to
+   *
+   * @returns {Promise<boolean>} Resolves to true if the operation was successful
+   */
+  async drawColors(colors: AtlasColor[], atlasName: string, canvas: CanvasRenderingContext2D): Promise<AtlasTexture> {
+    debug('Finding space for colors on the atlas: %o', colors);
+
+    // All colors will ALWAYS be 2x2
+    const colorWidth = 2;
+    const colorHeight = 2;
+    // Set a max per row limit. We default to rendering across the width of a 512x512
+    // Max texture
+    const maxPerRow = 512 / colorWidth;
+    // We get the width of a row of colors
+    const rowWidth = Math.min(this.textureWidth, maxPerRow * colorWidth);
+    // Get how many rows it will take to render the colors
+    const rowCount = Math.ceil((colors.length * colorWidth) / rowWidth);
+    // Calulate how many will appear per column based on the determined row width
+    const colCount = Math.ceil(rowWidth / colorWidth);
+    // Get how tall the rendering will be based on the row count
+    const renderHeight = rowCount * colorHeight;
+
+    // Create ImageDimension to insert into our atlas mapper
+    const dimensions: ImageDimensions = {
+      // Since the algorithm requires something to fill this slot, just make a
+      // Dummy object
+      first: new AtlasTexture(null, null),
+      // Set the dimensions we calculated for the space our colors will take up
+      // Within the atlas
+      second: new Bounds<never>(0, rowWidth, renderHeight, 0),
+    };
+
+    // Auto add a buffer in
+    dimensions.second.width += 1;
+    dimensions.second.height += 1;
+    // Get the atlas map node
+    const node: PackNode = this.atlasMap[atlasName];
+    // Store the node resulting from the insert operation
+    const insertedNode: PackNode = node.insert(dimensions);
+
+    // If the result was NULL we did not successfully insert the image into any map
+    if (insertedNode) {
+      debug('Atlas location determined for colors: %o', insertedNode);
+
+      // Apply the image to the node
+      const image = insertedNode.nodeImage = dimensions.first;
+
+      // Set our image's atlas properties. Again this is a stub image but it
+      // Will at least be associated with the atlas to properly contain the
+      // Dimensions where the colors were packed
+      const ux = insertedNode.nodeDimensions.x / this.textureWidth;
+      const uy = insertedNode.nodeDimensions.y / this.textureHeight;
+      const uw = insertedNode.nodeDimensions.width / this.textureWidth;
+      const uh = insertedNode.nodeDimensions.height / this.textureHeight;
+
+      const atlasDimensions: Bounds<never> = new Bounds<never>(
+        ux,
+        ux + uw,
+        1.0 - uy,
+        1.0 - (uy + uh),
+      );
+
+      image.atlasReferenceID = atlasName;
+      image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
+      image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
+      image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
+      image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
+
+      // Now draw the colors to the indicated canvas
+      const renderSpace = insertedNode.nodeDimensions;
+      const startX: number = renderSpace.x;
+      const startY: number = renderSpace.y;
+      const nextX: number = colorWidth / this.textureWidth;
+      const nextY: number = -colorHeight / this.textureHeight;
+      const beginX: number = (startX / this.textureWidth) + (nextX / 2.0);
+      const beginY: number = 1.0 - (startY / this.textureHeight) + (nextY / 2.0);
+      let col = 0;
+      let row = 0;
+
+      // Loop through each color, establish metrics, draw to the atlas
+      for (const color of colors) {
+        // Staore the info needed to make the color referenceable again
+        color.atlasReferenceID = atlasName;
+        color.colorIndex = col + (row * colCount);
+        color.colorsPerRow = colCount;
+
+        // The location of the middle of the first color
+        color.firstColor = {
+          x: beginX,
+          y: beginY,
+        };
+
+        color.nextColor = {
+          x: nextX,
+          y: nextY,
+        };
+
+        const { r, g, b } = color.color;
+
+        // Draw the color to the canvas
+        canvas.fillStyle = `rgba(${Math.round(r * 255.0)}, ${Math.round(g * 255.0)}, ${Math.round(b * 255.0)}, ${color.opacity})`;
+        canvas.fillRect(
+          col * colorWidth + startX,
+          row * colorHeight + startY,
+          colorWidth,
+          colorHeight,
+        );
+
+        col++;
+        if (col === colCount) {
+          col = 0;
+          row++;
+        }
+      }
+
+      // We have finished inserting
+      return image;
+    }
+
+    else {
+      // Log an error
+      throw new Error('Could not fit colors into atlas');
     }
   }
 

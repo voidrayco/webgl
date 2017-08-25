@@ -1,6 +1,4 @@
-import { color, rgb } from 'd3-color';
-import { scaleOrdinal, schemeCategory20 } from 'd3-scale';
-import { Color } from 'three';
+import { ColorGenerator } from 'chord-chart/generators/color/color-generator';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { IPoint } from 'webgl-surface/primitives/point';
@@ -8,20 +6,17 @@ import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { getAncestor } from '../../util/endpointDataProcessing';
-import { IChord, IChordChartConfig, IData, IEndpoint } from '../types';
+import { ColorState, IChord, IChordChartConfig, IData, IEndpoint } from '../types';
 
 const debug = require('debug')('outer-ring-base');
 
 const DEPTH = 20;
-const FADED_ALPHA = 0.1;
-const UNFADED_ALPHA = 1.0;
 
 interface IEndPointMetrics {
   id: string,
   p1: IPoint,
   p2: IPoint,
   controlPoint: IPoint,
-  color: Color,
   flows: IChord[],
   source: IEndpoint,
 }
@@ -32,11 +27,11 @@ interface IEndPointMetrics {
 export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterRingData>> {
   shapeById = new Map<string, CurvedLineShape<IOuterRingData>>();
 
-  generate(data: IData, config: IChordChartConfig, selection: Selection) {
+  generate(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, config: IChordChartConfig, selection: Selection) {
+  buildCache(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, selection: Selection) {
     const { ringWidth } = config;
 
     this.shapeById = new Map<string, CurvedLineShape<IOuterRingData>>();
@@ -48,30 +43,27 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
     ;
 
-    debug('has selelction : %o', hasSelection);
-
+    // Generate the shapes from our calculated metrics
     const circleEdges = segments.map((segment: IEndPointMetrics) => {
-      const { r, g, b } = segment.color;
-      const color = new Color(r, g, b);
-      const opacity = hasSelection ? FADED_ALPHA : UNFADED_ALPHA;
+      const colorState = hasSelection ? ColorState.OUTER_RING_INACTIVE : ColorState.OUTER_RING_DEFAULT;
+      const color = colorGenerator.pick(colorState, segment.id);
 
       const curve = new CurvedLineShape<IOuterRingData>({
         controlPoints: [{x: segment.controlPoint.x, y: segment.controlPoint.y}],
         depth: DEPTH,
         end: {x: segment.p2.x, y: segment.p2.y},
         endColor: color,
-        endOpacity: opacity,
         lineWidth: ringWidth,
         resolution: 200,
         start: {x: segment.p1.x, y: segment.p1.y},
         startColor: color,
-        startOpacity: opacity,
         type: CurveType.CircularCCW,
       });
 
       curve.lineWidth = ringWidth;
       curve.depth = DEPTH;
       curve.d = {
+        childEndpoints: [],
         chords: [],
         source: segment.source,
       };
@@ -80,6 +72,11 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       this.shapeById.set(segment.source.id, curve);
 
       return curve;
+    });
+
+    // Map the children shapes into the data for quick reference
+    circleEdges.forEach(endpoint => {
+      endpoint.d.childEndpoints = endpoint.d.source.children.map(child => this.shapeById.get(child.id));
     });
 
     debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);
@@ -172,12 +169,10 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
             };
           }
 
-          const colorVal = rgb(color(calculateColor(t.id)));
           const flows: IChord[] = [];
 
           if (depth >= 2 && t.parent !== '') {
             segments.push({
-              color: new Color(colorVal.r / 255.0, colorVal.g / 255.0, colorVal.b / 255.0),
               controlPoint,
               flows,
               id: t.id,
@@ -207,9 +202,6 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       return {x, y};
     };
 
-    const ids = data.endpoints.map((endpoint) => endpoint.id);
-    const calculateColor = scaleOrdinal(schemeCategory20).domain(ids);
-
     const segments = data.endpoints.map((endpoint) => {
       const startAngle = endpoint.startAngle + segmentPadding;
       const endAngle = endpoint.endAngle - segmentPadding;
@@ -236,11 +228,9 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         controlPoint = {x: groupSplitDistance * Math.cos(halfAngle), y: groupSplitDistance * Math.sin(halfAngle)};
       }
 
-      const colorVal = rgb(color(calculateColor(endpoint.id)));
       const flows = data.chords.filter((flow) => flow.source === endpoint.id);
 
       return {
-        color: new Color(colorVal.r / 255.0, colorVal.g / 255.0, colorVal.b / 255.0),
         controlPoint,
         flows,
         id: endpoint.id,

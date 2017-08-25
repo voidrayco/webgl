@@ -1,5 +1,8 @@
-import { Color, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { CurvedLineShape } from '../../drawing/curved-line-shape';
+import { ReferenceColor } from '../../drawing/reference/reference-color';
+import { AtlasColor } from '../../drawing/texture/atlas-color';
+import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
@@ -8,9 +11,9 @@ import { BaseBuffer } from '../base-buffer';
  * This renders a curved line by injecting all attributes needed to render it.
  * This naively includes all possible data in the vertex.
  *
- * This ONLY supports a single color
+ * This only supports atlas colors.
  */
-export class SimpleStaticBezierLineBuffer extends BaseBuffer < CurvedLineShape < any >,
+export class SharedControlCurvedLineBuffer extends BaseBuffer < CurvedLineShape < any >,
 Mesh > {
   /**
    * @override
@@ -26,9 +29,14 @@ Mesh > {
         size: AttributeSize.THREE,
       },
       {
-        defaults: [0, 0, 0, 1],
-        name: 'customColor',
-        size: AttributeSize.FOUR,
+        defaults: [0],
+        name: 'startColorPick',
+        size: AttributeSize.ONE,
+      },
+      {
+        defaults: [0],
+        name: 'endColorPick',
+        size: AttributeSize.ONE,
       },
       {
         defaults: [1],
@@ -39,11 +47,6 @@ Mesh > {
         defaults: [0, 0, 0, 0],
         name: 'endPoints',
         size: AttributeSize.FOUR,
-      },
-      {
-        defaults: [0, 0],
-        name: 'controlPoint',
-        size: AttributeSize.TWO,
       },
       {
         defaults: [0],
@@ -73,29 +76,54 @@ Mesh > {
    * @override
    * See interface definition
    *
-   * @param shapeBuffer
+   * @param {CurvedLineShape<any>[]} shapeBuffer A buffer of curved line shapes
+   * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
+   *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: CurvedLineShape<any>[]) {
+  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, sharedControl?: IPoint) {
     if (!shapeBuffer) {
       return false;
     }
 
+    // As this is a single material, we have to assume that the color atlas
+    // For our shapes will be the same atlas for all colors. Thus, the atlas
+    // Information for one color will be valid for all colors
+    if (shapeBuffer && shapeBuffer.length > 0 && atlasManager) {
+      const colorRef: ReferenceColor = shapeBuffer[0].startColor;
+      const colorBase = colorRef.base;
+
+      // Update all uniforms for this material to utilize the atlas metrics for
+      // Picking colors
+      const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
+      const uniforms: { [k: string]: IUniform } = material.uniforms;
+      const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
+      uniforms.colorAtlas.value = atlas;
+      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
+      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
+      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
+      // This is the shared control point for all of the vertices
+      uniforms.controlPoint.value = [sharedControl.x, sharedControl.y];
+      atlas.needsUpdate = true;
+    }
+
     // Commit static curved lines
-    const colorAttributeSize = 4;
+    const colorAttributeSize = 1;
     const numVerticesPerSegment = 6;
     let halfWidthSize = 1;
     let length = 15;
     let needsUpdate = false;
     let p1: IPoint;
     let p2: IPoint;
-    let color: Color;
+    let colorStart: AtlasColor;
+    let colorEnd: AtlasColor;
     let alpha: number;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
       alpha = curvedLine.startColor.base.opacity;
-      color = curvedLine.startColor.base.color;
+      colorStart = curvedLine.startColor.base;
+      colorEnd = curvedLine.endColor.base;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
       p1 = curvedLine.p1;
@@ -106,10 +134,10 @@ Mesh > {
         numVerticesPerSegment, length,
         function(i: number,
           positions: Float32Array, ppos: number,
-          colors: Float32Array, cpos: number,
+          startColor: Float32Array, scpos: number,
+          endColor: Float32Array, ecpos: number,
           normals: Float32Array, npos: number,
           endPoints: Float32Array, epos: number,
-          controlPoints: Float32Array, copos: number,
           halfWidth: Float32Array, wpos: number,
         ) {
 
@@ -119,14 +147,13 @@ Mesh > {
           positions[++ppos] = curvedLine.depth;
           halfWidth[wpos] = halfWidthSize;
           // Skip over degenerate tris color
-          cpos += colorAttributeSize;
+          scpos += colorAttributeSize;
+          ecpos += colorAttributeSize;
           normals[npos] = 1;
           endPoints[epos] = p1.x;
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPoints[copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
 
           // TR
           positions[++ppos] = (i + 1) / length;
@@ -138,12 +165,8 @@ Mesh > {
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[cpos] = color.r;
-          colors[++cpos] = color.g;
-          colors[++cpos] = color.b;
-          colors[++cpos] = alpha;
+          startColor[scpos] = colorStart.colorIndex;
+          endColor[ecpos] = colorEnd.colorIndex;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -155,12 +178,8 @@ Mesh > {
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[++cpos] = color.r;
-          colors[++cpos] = color.g;
-          colors[++cpos] = color.b;
-          colors[++cpos] = alpha;
+          startColor[++scpos] = colorStart.colorIndex;
+          endColor[++ecpos] = colorEnd.colorIndex;
 
           // TL
           positions[++ppos] = i / length;
@@ -172,12 +191,8 @@ Mesh > {
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[++cpos] = color.r;
-          colors[++cpos] = color.g;
-          colors[++cpos] = color.b;
-          colors[++cpos] = alpha;
+          startColor[++scpos] = colorStart.colorIndex;
+          endColor[++ecpos] = colorEnd.colorIndex;
 
           // BL
           positions[++ppos] = i / length;
@@ -189,12 +204,8 @@ Mesh > {
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
-          colors[++cpos] = color.r;
-          colors[++cpos] = color.g;
-          colors[++cpos] = color.b;
-          colors[++cpos] = alpha;
+          startColor[++scpos] = colorStart.colorIndex;
+          endColor[++ecpos] = colorEnd.colorIndex;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -202,14 +213,13 @@ Mesh > {
           positions[++ppos] = curvedLine.depth;
           halfWidth[++wpos] = halfWidthSize;
           // Skip over degenerate tris for color
-          cpos += colorAttributeSize;
+          scpos += colorAttributeSize;
+          ecpos += colorAttributeSize;
           normals[++npos] = -1;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPoints[++copos] = curvedLine.controlPoints[0].x;
-          controlPoints[++copos] = curvedLine.controlPoints[0].y;
         },
       );
 

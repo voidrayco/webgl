@@ -1,4 +1,4 @@
-import { Mesh, TriangleStripDrawMode } from 'three';
+import { Color, Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
 import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
@@ -48,13 +48,17 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
     let stripPos = 0;
 
     BufferUtil.beginUpdates();
+    let TR;
+    let BR;
+    let TL;
+    let BL;
+    let color: Color;
+    let alpha: number;
 
     for (const curvedLine of shapeBuffer){
       const strip = curvedLine.getTriangleStrip();
-      let TR;
-      let BR;
-      let TL;
-      let BL;
+      color = curvedLine.startColor.base.color;
+      alpha = curvedLine.startColor.base.opacity;
 
       needsUpdate = BufferUtil.updateBuffer(shapeBuffer, this.bufferItems, numVerticesPerSegment, strip.length / 4,
       function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number){
@@ -73,37 +77,37 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
         positions[++ppos] = TR.x;
         positions[++ppos] = TR.y;
         positions[++ppos] = curvedLine.depth;
-        colors[cpos] = curvedLine.r;
-        colors[++cpos] = curvedLine.g;
-        colors[++cpos] = curvedLine.b;
-        colors[++cpos] = curvedLine.a;
+        colors[cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        colors[++cpos] = alpha;
 
         // 3
         positions[++ppos] = BR.x;
         positions[++ppos] = BR.y;
         positions[++ppos] = curvedLine.depth;
-        colors[++cpos] = curvedLine.r;
-        colors[++cpos] = curvedLine.g;
-        colors[++cpos] = curvedLine.b;
-        colors[++cpos] = curvedLine.a;
+        colors[++cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        colors[++cpos] = alpha;
 
         // 4
         positions[++ppos] = TL.x;
         positions[++ppos] = TL.y;
         positions[++ppos] = curvedLine.depth;
-        colors[++cpos] = curvedLine.r;
-        colors[++cpos] = curvedLine.g;
-        colors[++cpos] = curvedLine.b;
-        colors[++cpos] = curvedLine.a;
+        colors[++cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        colors[++cpos] = alpha;
 
         // 5
         positions[++ppos] = BL.x;
         positions[++ppos] = BL.y;
         positions[++ppos] = curvedLine.depth;
-        colors[++cpos] = curvedLine.r;
-        colors[++cpos] = curvedLine.g;
-        colors[++cpos] = curvedLine.b;
-        colors[++cpos] = curvedLine.a;
+        colors[++cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        colors[++cpos] = alpha;
 
         // 6
         positions[++ppos] = BL.x;
@@ -122,6 +126,10 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
 
     if (needsUpdate){
       this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+    }
+
+    else if (shapeBuffer.length === 0) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
     }
 
     return needsUpdate;

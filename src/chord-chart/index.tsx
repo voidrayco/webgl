@@ -4,6 +4,7 @@ import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
+import { ColorGenerator } from './generators/color/color-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IData, IDataAPI } from './generators/types';
@@ -13,8 +14,6 @@ import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
-
-const debug = require('debug')('index');
 
 export interface IChordChartProps {
   /** Enables the ability for the user to pan via click and drag */
@@ -110,8 +109,10 @@ function recalculateTreeForData(data: IData) {
 export class ChordChart extends React.Component<IChordChartProps, IChordChartState> {
   /** Indicates if this component has fully mounted already or not */
   initialized: boolean = false;
-  /** This is the generator that produces the buffers for our quads */
+  /** This is the generator that produces the buffers for our chords */
   chordGenerator: ChordGenerator;
+  /** This is the generator that calculates and produces all colors needed */
+  colorGenerator: ColorGenerator;
   /** This is the generator that produces the buffers for our labels */
   labelGenerator: LabelGenerator;
   /** This is the generator that produces the buffers for our outer rings */
@@ -140,6 +141,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
    */
   componentWillMount() {
     this.chordGenerator = new ChordGenerator();
+    this.colorGenerator = new ColorGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
     const data = clone(this.props.data);
@@ -170,6 +172,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   handleMouseHover = (selections: any[], mouse: any, world: any, projection: any) => {
     this.selection.clearSelection(SelectionType.MOUSEOVER_CHORD);
     this.selection.clearSelection(SelectionType.MOUSEOVER_OUTER_RING);
+
     if (selections.length > 0) {
       let selection;
       // If has outer ring thing grab it instead
@@ -194,9 +197,19 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
       // Select the outer ring and it's related chords
       else if (isOuterRing(selection)) {
-        this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, selection);
+        // We will select any child endpoints of the selection as well as select
+        // The chords of those children
+        const toProcess = [selection];
+        const allChords = [];
 
-        selection.d.chords.forEach((chord: CurvedLineShape<IChordData>) => {
+        while (toProcess.length > 0) {
+          const endpoint = toProcess.shift();
+          toProcess.push(...endpoint.d.childEndpoints);
+          allChords.push(...endpoint.d.chords);
+          this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, endpoint);
+        }
+
+        allChords.forEach((chord: CurvedLineShape<IChordData>) => {
           this.selection.select(SelectionType.MOUSEOVER_CHORD, chord);
 
           // Make sure both ends of each chord are selected
@@ -266,14 +279,14 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       topLevelGroupPadding: Math.PI / 4,
     };
 
-    this.outerRingGenerator.generate(this.state.data, config, this.selection);
-    this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
+    this.colorGenerator.generate(this.state.data, config);
+    this.outerRingGenerator.generate(this.state.data, config, this.colorGenerator, this.selection);
+    this.chordGenerator.generate(this.state.data, config, this.colorGenerator, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
-
-    debug('rending');
 
     return (
       <ChordChartGL
+        colors={this.colorGenerator.getBaseBuffer()}
         height={this.viewport.height}
         labels={this.labelGenerator.getUniqueLabels()}
         onZoomRequest={(zoom) => this.handleZoomRequest}

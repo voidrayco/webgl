@@ -45,6 +45,7 @@ let attrRegister2: number[] = [];
 let attrRegister3: number[] = [];
 let attrRegister4: number[] = [];
 let attrRegister5: number[] = [];
+let attrRegister6: number[] = [];
 
 let attrIndex0: number = 0;
 let attrIndex1: number = 0;
@@ -52,6 +53,7 @@ let attrIndex2: number = 0;
 let attrIndex3: number = 0;
 let attrIndex4: number = 0;
 let attrIndex5: number = 0;
+let attrIndex6: number = 0;
 
 let attrIndexIncr0: number = 0;
 let attrIndexIncr1: number = 0;
@@ -59,6 +61,7 @@ let attrIndexIncr2: number = 0;
 let attrIndexIncr3: number = 0;
 let attrIndexIncr4: number = 0;
 let attrIndexIncr5: number = 0;
+let attrIndexIncr6: number = 0;
 
 /** This is used to define a starting batch location to aid in continuing batch updates */
 let lastBatchRegister: number = 0;
@@ -77,6 +80,7 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
   attrRegister3 = attributeBuffers[3];
   attrRegister4 = attributeBuffers[4];
   attrRegister5 = attributeBuffers[5];
+  attrRegister6 = attributeBuffers[6];
 
   attrIndexIncr0 = incrementValues[0];
   attrIndexIncr1 = incrementValues[1];
@@ -84,6 +88,7 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
   attrIndexIncr3 = incrementValues[3];
   attrIndexIncr4 = incrementValues[4];
   attrIndexIncr5 = incrementValues[5];
+  attrIndexIncr6 = incrementValues[6];
 }
 
 /**
@@ -150,6 +155,19 @@ function updateBuffer6(numBatches: number, updateAccessor: Function) {
   }
 }
 
+function updateBuffer7(numBatches: number, updateAccessor: Function) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    attrIndex6 = i * attrIndexIncr6;
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4, attrRegister5, attrIndex5, attrRegister6, attrIndex6);
+  }
+}
+
 /**
  * This takes the defaults array provided and loads them into our default
  * lookup values
@@ -210,6 +228,7 @@ const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: F
   4: updateBuffer4,
   5: updateBuffer5,
   6: updateBuffer6,
+  7: updateBuffer7,
 };
 
 /**

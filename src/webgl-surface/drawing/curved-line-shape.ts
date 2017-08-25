@@ -1,5 +1,4 @@
-import { rgb, RGBColor } from 'd3-color';
-import { Color } from 'three';
+import { ReferenceColor } from 'webgl-surface/drawing/reference/reference-color';
 import { CurvedLine, ICurvedLineOptions } from '../primitives/curved-line';
 import { Line } from '../primitives/line';
 import { IPoint, Point } from '../primitives/point';
@@ -13,7 +12,7 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
    * The color that will be at the end of the line. If this is differing from the
    * start color, the line will be a gradient.
    */
-  endColor?: Color;
+  endColor?: ReferenceColor;
   /**
    * The ending opacity of the line. If this differs from the start opacity, the line
    * will be a gradient.
@@ -22,7 +21,7 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
   /** The desired thickness of the line */
   lineWidth?: number;
   /** The base color of the line. */
-  startColor: Color;
+  startColor: ReferenceColor;
   /** The base opacity of the line */
   startOpacity?: number;
 }
@@ -42,77 +41,14 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
   cachesQuadSegments: boolean;
   /** If caching is set, then this stores the calculated quads that composes this line */
   cachedQuadSegments: IPoint[];
-  /** How thick the line should be */
-  lineWidth: number = 1;
   /** Depeth of draw location */
   depth: number = 0;
-
-  // The starting color components of this line
-  r: number = 0;
-  g: number = 0;
-  b: number = 0;
-  a: number = 1;
-  // The ending color components of this line
-  r2: number = 0;
-  g2: number = 0;
-  b2: number = 0;
-  a2: number = 1;
-
-  /**
-   * This indicates whether or not this line is rendered thin with a width of 1 or not
-   * thin lines perform much better than fat lines.
-   */
-  isThin: boolean = false;
-
-  /**
-   * Retrieves the color of this curve based on gl color values
-   * @return {Color}
-   */
-  get color(): Color {
-    return new Color(this.r, this.g, this.b);
-  }
-
-  /**
-   * Retrieves the color of this curve based on 256 value colors
-   * @return {RGBColor}
-   */
-  get color256(): RGBColor {
-    return rgb(this.r * 255.0, this.g * 255.0, this.b * 255.0, this.a);
-  }
-
-  /**
-   * Applies an rgb color to this curve.
-   */
-  set color(val: Color) {
-    this.r = val.r;
-    this.g = val.g;
-    this.b = val.b;
-  }
-
-  /**
-   * Retrieves the end color of this curve based on gl color values
-   * @return {Color}
-   */
-  get endColor(): Color {
-    return new Color(this.r2, this.g2, this.b2);
-  }
-
-  /**
-   * Retrieves the end color of this curve based on 256 value colors
-   * @return {RGBColor}
-   */
-  get endColor256(): RGBColor {
-    return rgb(this.r2 * 255.0, this.g2 * 255.0, this.b2 * 255.0, this.a);
-  }
-
-  /**
-   * Applies an ending rgb color to this curve.
-   */
-  set endColor(val: Color) {
-    this.r2 = val.r;
-    this.g2 = val.g;
-    this.b2 = val.b;
-  }
+  /** The ending color components of this line. This must be a color reference */
+  endColor: ReferenceColor;
+  /** The starting color components of this line. This must be a color reference */
+  startColor: ReferenceColor;
+  /** How thick the line should be */
+  lineWidth: number = 1;
 
   /**
    * Creates an instance of CurvedLineShape.
@@ -127,21 +63,9 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     this.encapsulatePoints(this.getTriangleStrip());
     this.cachesQuadSegments = options.cacheSegments;
     this.depth = options.depth || 0;
-    this.a = options.startOpacity || 0;
-    this.a2 = options.endOpacity || 0;
     this.lineWidth = options.lineWidth || 1;
-
-    if (options.startColor) {
-      this.color = options.startColor;
-    }
-
-    if (options.endColor) {
-      this.endColor = options.endColor;
-    }
-
-    else if (options.startColor) {
-      this.endColor = options.startColor;
-    }
+    this.startColor = options.startColor;
+    this.endColor = options.endColor;
   }
 
   /**
@@ -155,12 +79,11 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
       cacheSegments: this.cachesSegments,
       controlPoints: this.controlPoints,
       end: this.p2,
-      endOpacity: this.a2,
+      endColor: this.endColor,
       lineWidth: this.lineWidth,
       resolution: this.resolution,
       start: this.p1,
-      startColor: this.color,
-      startOpacity: this.a,
+      startColor: this.startColor,
       type: this.type,
     });
 

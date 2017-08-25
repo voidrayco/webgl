@@ -6,6 +6,18 @@ export enum LabelDirectionEnum {
 }
 
 /**
+ * THe various states that colors correlate to
+ */
+export enum ColorState {
+  CHORD_DEFAULT,
+  CHORD_HOVER,
+  CHORD_INACTIVE,
+  OUTER_RING_DEFAULT,
+  OUTER_RING_HOVER,
+  OUTER_RING_INACTIVE,
+}
+
+/**
  * This defines the configuration properties the chord chart uses to alter how
  * it is being rendered.
  */

@@ -1,3 +1,4 @@
+import { ColorGenerator } from 'chord-chart/generators/color/color-generator';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
@@ -13,7 +14,8 @@ export class OuterRingGenerator {
 
   /** Tracks last data set that was rendered */
   lastData: IChordData;
-  lastHemisphere: boolean;
+  lastSplit: boolean;
+  isHovered: boolean = false;
 
   /**
    * Flag which caches need busting
@@ -21,29 +23,41 @@ export class OuterRingGenerator {
   bustCaches(data: IChordData, config: IChordChartConfig, selection: Selection) {
     const didDataChange = data !== this.lastData;
     const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_OUTER_RING);
-    const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
+    const didSplitChange = this.lastSplit !== config.splitTopLevelGroups;
+    const hasSelection = selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0;
 
-    if (didDataChange || didSelectionChange || didHemisphereChange) {
+    if (didDataChange || didSplitChange) {
       this.outerRingBase.bustCache = true;
+      this.outerRingInteraction.bustCache = true;
     }
 
-    if (didDataChange || didSelectionChange || didHemisphereChange) {
+    if (didSelectionChange) {
+      if (this.isHovered && !hasSelection) {
+        this.outerRingBase.bustCache = true;
+        this.isHovered = false;
+      }
+
+      else if (!this.isHovered && hasSelection) {
+        this.outerRingBase.bustCache = true;
+        this.isHovered = true;
+      }
+
       this.outerRingInteraction.bustCache = true;
     }
 
     this.lastData = data;
-    this.lastHemisphere = config.splitTopLevelGroups;
+    this.lastSplit = config.splitTopLevelGroups;
   }
 
   /**
    * Generates the buffers for static outer rings in the charts
    */
-  generate(data: IChordData, config: IChordChartConfig, selection: Selection) {
+  generate(data: IChordData, config: IChordChartConfig, colorGenerator: ColorGenerator, selection: Selection) {
     debug('Generating outer rings');
     this.bustCaches(data, config, selection);
     debug(data);
-    this.outerRingBase.generate(data, config, selection);
-    this.outerRingInteraction.generate(data, config, selection);
+    this.outerRingBase.generate(data, config, colorGenerator, selection);
+    this.outerRingInteraction.generate(data, config, colorGenerator, selection);
   }
 
   /**

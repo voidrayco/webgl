@@ -26,7 +26,7 @@ export interface IMainState {
 export class Main extends React.Component<any, IMainState> {
   // Set default state values
   state: IMainState = {
-    currentTab: 1,
+    currentTab: 2,
     zoom: 1,
   };
 
