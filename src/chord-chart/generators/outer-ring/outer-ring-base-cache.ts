@@ -43,6 +43,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
     ;
 
+    // Generate the shapes from our calculated metrics
     const circleEdges = segments.map((segment: IEndPointMetrics) => {
       const colorState = hasSelection ? ColorState.OUTER_RING_INACTIVE : ColorState.OUTER_RING_DEFAULT;
       const color = colorGenerator.pick(colorState, segment.id);
@@ -62,6 +63,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       curve.lineWidth = ringWidth;
       curve.depth = DEPTH;
       curve.d = {
+        childEndpoints: [],
         chords: [],
         source: segment.source,
       };
@@ -70,6 +72,11 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       this.shapeById.set(segment.source.id, curve);
 
       return curve;
+    });
+
+    // Map the children shapes into the data for quick reference
+    circleEdges.forEach(endpoint => {
+      endpoint.d.childEndpoints = endpoint.d.source.children.map(child => this.shapeById.get(child.id));
     });
 
     debug('Generated outer ring segments: %o edges: %o', segments, circleEdges);

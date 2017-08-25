@@ -174,9 +174,19 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
       // Select the outer ring and it's related chords
       else if (isOuterRing(selection)) {
-        this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, selection);
+        // We will select any child endpoints of the selection as well as select
+        // The chords of those children
+        const toProcess = [selection];
+        const allChords = [];
 
-        selection.d.chords.forEach((chord: CurvedLineShape<IChordData>) => {
+        while (toProcess.length > 0) {
+          const endpoint = toProcess.shift();
+          toProcess.push(...endpoint.d.childEndpoints);
+          allChords.push(...endpoint.d.chords);
+          this.selection.select(SelectionType.MOUSEOVER_OUTER_RING, endpoint);
+        }
+
+        allChords.forEach((chord: CurvedLineShape<IChordData>) => {
           this.selection.select(SelectionType.MOUSEOVER_CHORD, chord);
 
           // Make sure both ends of each chord are selected
