@@ -14,6 +14,8 @@ import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
+const debug = require('debug')('index');
+
 export interface IChordChartProps {
   /** Enables the ability for the user to pan via click and drag */
   allowPan?: boolean,
@@ -268,14 +270,18 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
 
+    debug('rending');
+
     return (
       <ChordChartGL
         height={this.viewport.height}
-        labels={this.labelGenerator.getBaseBuffer()}
+        labels={this.labelGenerator.getUniqueLabels()}
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer()}
+        staticLabels={this.labelGenerator.getBaseBuffer()}
         staticRingLines={this.outerRingGenerator.getBaseBuffer()}
         interactiveCurvedLines={this.chordGenerator.getInteractionBuffer()}
+        interactiveLabels={this.labelGenerator.getInteractionBuffer()}
         interactiveRingLines={this.outerRingGenerator.getInteractionBuffer()}
         onMouseHover={this.handleMouseHover}
         onMouseLeave={this.handleMouseLeave}

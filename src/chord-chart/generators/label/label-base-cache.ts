@@ -1,15 +1,17 @@
 import { OuterRingGenerator } from 'chord-chart/generators/outer-ring/outer-ring-generator';
-import { rgb, RGBColor } from 'd3-color';
+import { Color } from 'three';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Label } from 'webgl-surface/drawing/label';
 import { Line } from 'webgl-surface/primitives/line';
 import { IPoint, Point } from 'webgl-surface/primitives/point';
 import { AnchorPosition } from 'webgl-surface/primitives/rotateable-quad';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
-import { Selection } from '../../selections/selection';
+import { Selection, SelectionType } from '../../selections/selection';
 import { IOuterRingData } from '../../shape-data-types/outer-ring-data';
 import { IChordChartConfig, IData, IEndpoint, LabelDirectionEnum } from '../types';
-const debug = require('debug')('label');
+const debug = require('debug')('label_cache');
+
+const defaultColor: Color = new Color(1, 1, 1);
 
 /**
  * This calculates the equivalent angle to where it is bounded between
@@ -51,42 +53,53 @@ function isRightHemisphere(angle: number) {
  * @extends {ShapeBufferCache<Label<ICurvedLineData>>}
  */
 export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
-  generate(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, selection: Selection) {
+  generate(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
     super.generate.apply(this, arguments);
   }
 
-  buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, selection: Selection) {
+  buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
     const inactiveOpacity: number = 0.3;
-    const activeOpacity: number = 1;
-    const defaultColor: RGBColor = rgb(1, 1, 1, 1);
+    const activeOpacity: number = 1.0;
+
     const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
 
-    debug('labesData is %o', labelsData);
+    debug('labelsData is %o', labelsData);
+    debug('config is %o', config);
+    debug('selection is %o', selection);
+
+    const hasSelection =
+      selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
+      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
+    ;
 
     const labels = labelsData.map((labelData) => {
       const {r, g, b} = defaultColor;
-      const color = selection.getSelection('chord or ring mouse over').length > 0 ?
-        rgb(r, g, b, inactiveOpacity) :
-        rgb(r, g, b, activeOpacity)
+      const color = new Color(r, g, b);
+      const opacity = hasSelection ?
+        inactiveOpacity :
+        activeOpacity
       ;
-
+      debug('opacity is %o', opacity);
       const label = new Label<any>({
+        a: opacity,
+        baseLabel: labelLookup.get(labelData.name),
         color: color,
-        fontSize: 14,
-        text: labelData.name,
       });
 
-      label.width = label.text.length * label.fontSize;
+      // Label.width = label.text.length * label.fontSize;
+      label.setText(labelData.name);
 
       // If we're anchored at the middle left, we need to push a bit more outward
       // In order to account for the length of the text field
+      debug('label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
+      debug('label is %o,anchor is %o', labelData.name, labelData.anchor);
       if (!config.splitTopLevelGroups) {
         if (labelData.anchor === AnchorPosition.MiddleLeft) {
           Point.add(
             labelData.point,
             Point.scale(
               labelData.direction,
-              label.width / 2,
+              label.width,
             ),
             labelData.point,
           );
@@ -96,7 +109,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
             labelData.point,
             Point.scale(
               labelData.direction,
-              - label.width / 2,
+              - label.width,
             ),
             labelData.point,
           );
@@ -107,12 +120,14 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
           labelData.point,
           Point.scale(
             Point.make(-1, 0),
-            label.width / 2,
+            label.width,
           ),
           labelData.point,
         );
       }
 
+      debug('AFTER---label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
+      debug('label is %o,width is %o', labelData.name, label.width);
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
@@ -156,9 +171,9 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       // Quick reference to the direction of the angle
       const dx = direction.x;
       const dy = direction.y;
+      debug('squere %o', dx * dx + dy * dy);
       // The distance from the center we should be
       const distance = radius + ringPadding;
-
       return {
         x: (distance * dx) + center.x,
         y: (distance * dy) + center.y,
@@ -209,6 +224,8 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         ringLine.mid,
         true,
       );
+
+      debug('direction  %o,ring %o', direction, ring.d.source.name);
 
       // Get the angle derived from the direction we figured
       let angle = ordinaryCircularAngle(Math.atan2(direction.y, direction.x));
