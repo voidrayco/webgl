@@ -79,8 +79,8 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       // Set the relational and domain information for the chord
       newCurve.d = {
         outerRings: [
-          ringById.get(curve.source.srcTarget),
-          ringById.get(curve.source.dstTarget),
+          ringById.get(curve.source.source),
+          ringById.get(curve.source.target),
         ],
         source: curve.source,
       };
@@ -141,9 +141,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
     // Loop thrugh each endpoint and analyze the flows
     data.endpoints.forEach((endpoint) => {
-      data.flows.forEach((chord) => {
-        if (chord.srcTarget === endpoint.id) {
-          const destEndpoint = getEndpoint(data, chord.dstTarget);
+      data.chords.forEach((chord) => {
+        if (chord.source === endpoint.id) {
+          const destEndpoint = getEndpoint(data, chord.target);
 
           if (destEndpoint) {
             let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
@@ -185,7 +185,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
               splitTopLevelGroups,
             );
 
-            const color = outerRings.outerRingBase.shapeById.get(chord.srcTarget).color;
+            const color = outerRings.outerRingBase.shapeById.get(chord.source).color;
             endpoint._outflowIdx++;
             destEndpoint._inflowIdx++;
 
