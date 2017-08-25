@@ -1,0 +1,150 @@
+{
+  "endpoints": [
+    {
+      "id": "p3",
+      "name": "SloppyJoe",
+      "weight": 1,
+      "parent": "hemisphere1"
+    },
+    {
+      "id": "TrustZone_6",
+      "name": "TimTime",
+      "weight": 1,
+      "parent": "hemisphere1"
+    },
+    {
+      "id": "hemisphere1",
+      "name": "DarthVader",
+      "weight": 1,
+      "parent": ""
+    },
+    {
+      "id": "hemisphere2",
+      "name": "EggSalad",
+      "weight": 1,
+      "parent": ""
+    },
+    {
+      "id": "p4",
+      "name": "SoupForU",
+      "weight": 66,
+      "parent": "p3"
+    },
+    {
+      "id": "TrustZone_3",
+      "name": "JustNow",
+      "weight": 43,
+      "parent": "p3"
+    },
+    {
+      "id": "TrustZone_Untrusted",
+      "name": "TopTower",
+      "weight": 21,
+      "parent": "hemisphere2"
+    },
+    {
+      "id": "TrustZone_13",
+      "name": "EatPeas",
+      "weight": 27,
+      "parent": "hemisphere2"
+    },
+    {
+      "id": "TrustZone_10",
+      "name": "PaperCut",
+      "weight": 64,
+      "parent": "hemisphere2"
+    },
+    {
+      "id": "TrustZone_8",
+      "name": "FlyBy",
+      "weight": 27,
+      "parent": "hemisphere2"
+    },
+    {
+      "id": "TrustZone_14",
+      "name": "JustInCase",
+      "weight": 65,
+      "parent": "hemisphere2"
+    },
+    {
+      "id": "TrustZone_11",
+      "name": "HalfPast",
+      "weight": 23,
+      "parent": "hemisphere2"
+    },
+    {
+      "id": "NetworkObject_3",
+      "name": "WithoutYou",
+      "weight": 25,
+      "parent": "hemisphere2"
+    }
+  ],
+  "chords": [
+    {
+      "id": "1",
+      "target": "NetworkObject_3",
+      "source": "TrustZone_8"
+    },
+    {
+      "id": "2",
+      "target": "NetworkObject_3",
+      "source": "TrustZone_8"
+    },
+    {
+      "id": "3",
+      "target": "NetworkObject_3",
+      "source": "TrustZone_Untrusted"
+    },
+    {
+      "id": "4",
+      "target": "TrustZone_14",
+      "source": "NetworkObject_3"
+    },
+    {
+      "id": "5",
+      "target": "TrustZone_8",
+      "source": "TrustZone_10"
+    },
+    {
+      "id": "6",
+      "target": "TrustZone_8",
+      "source": "NetworkObject_3"
+    },
+    {
+      "id": "7",
+      "target": "NetworkObject_3",
+      "source": "TrustZone_8"
+    },
+    {
+      "id": "8",
+      "target": "TrustZone_Untrusted",
+      "source": "NetworkObject_3"
+    },
+    {
+      "id": "9",
+      "target": "NetworkObject_3",
+      "source": "TrustZone_8"
+    },
+    {
+      "id": "11",
+      "target": "TrustZone_Untrusted",
+      "source": "NetworkObject_3"
+    },
+    {
+      "id": "22",
+      "target": "NetworkObject_3",
+      "source": "TrustZone_8"
+    },
+    {
+      "id": "33",
+      "target": "TrustZone_8",
+      "source": "NetworkObject_3"
+    },
+    {
+      "id": "44",
+      "target": "TrustZone_Untrusted",
+      "source": "NetworkObject_3"
+    }
+  ]
+}
+
