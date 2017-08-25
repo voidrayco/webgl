@@ -60,7 +60,7 @@ export class LabelGenerator {
     // If the data changed, then we have to regenerate our unique labels to work
     // With.
     if (didDataChange) {
-      debug('GEnerating uniquelabels....');
+      debug('Generating uniquelabels....');
       data.endpoints.forEach(endpoint => {
         if (!this.labelByString.get(endpoint.name)) {
           this.labelByString.set(endpoint.name, new Label({

@@ -56,7 +56,10 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       ringById.set(ring.d.source.id, ring);
     });
 
-    const hasSelection = selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0;
+    const hasSelection =
+      selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
+      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
+    ;
 
     const curveShapes = curves.map((curve) => {
       const colorState = hasSelection ? ColorState.CHORD_INACTIVE : ColorState.CHORD_DEFAULT;

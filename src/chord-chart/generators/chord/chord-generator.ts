@@ -13,26 +13,47 @@ export class ChordGenerator {
   chordBase: ChordBaseCache = new ChordBaseCache();
   chordInteractions: ChordInteractionsCache = new ChordInteractionsCache();
 
-  lastHemisphere: boolean;
+  lastSplit: boolean;
   lastData: IData;
+  isHovered: boolean = false;
 
   /**
    * Flag which caches need busting
    */
   bustCaches(data: IData, config: IChordChartConfig, colorGenerator: ColorGenerator, outerRings: OuterRingGenerator, selection: Selection) {
     const didDataChange = data !== this.lastData;
-    const didSelectionChange = selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD);
-    const didHemisphereChange = this.lastHemisphere !== config.splitTopLevelGroups;
+    const didSelectionChange =
+      selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_CHORD) ||
+      selection.didSelectionCategoryChange(SelectionType.MOUSEOVER_OUTER_RING)
+    ;
+    const didSplitChange = this.lastSplit !== config.splitTopLevelGroups;
+    const hasSelection =
+      selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
+      selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
+    ;
 
-    if (didSelectionChange || didDataChange || didHemisphereChange) {
+    console.log(selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length);
+
+    if (didDataChange || didSplitChange) {
       this.chordBase.bustCache = true;
-    }
-
-    if (didSelectionChange || didHemisphereChange) {
       this.chordInteractions.bustCache = true;
     }
 
-    this.lastHemisphere = config.splitTopLevelGroups;
+    if (didSelectionChange) {
+      if (this.isHovered && !hasSelection) {
+        this.chordBase.bustCache = true;
+        this.isHovered = false;
+      }
+
+      else if (!this.isHovered && hasSelection) {
+        this.chordBase.bustCache = true;
+        this.isHovered = true;
+      }
+
+      this.chordInteractions.bustCache = true;
+    }
+
+    this.lastSplit = config.splitTopLevelGroups;
     this.lastData = data;
   }
 

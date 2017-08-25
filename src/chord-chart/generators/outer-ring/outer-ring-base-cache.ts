@@ -43,8 +43,6 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       selection.getSelection(SelectionType.MOUSEOVER_OUTER_RING).length > 0
     ;
 
-    debug('has selelction : %o', hasSelection);
-
     const circleEdges = segments.map((segment: IEndPointMetrics) => {
       const colorState = hasSelection ? ColorState.OUTER_RING_INACTIVE : ColorState.OUTER_RING_DEFAULT;
       const color = colorGenerator.pick(colorState, segment.id);
