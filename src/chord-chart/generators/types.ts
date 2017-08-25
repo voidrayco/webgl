@@ -54,6 +54,8 @@ export interface IData {
   tree?: IEndpoint[];
   endpoints: IEndpoint[];
   chords: IChord[];
+  /** Quick look up for a chord by id */
+  chordById?: Map<string, IChord>;
   /** Quick look up for an end point by it's id */
   endpointById?: Map<string, IEndpoint>;
   /** Get the top level end point for a given child end point's id */
@@ -64,6 +66,7 @@ export interface IData {
 
 export interface IEndpointAPI {
   id: string;
+  metadata?: any;
   name: string;
   parent: string;
   weight: number;
@@ -78,7 +81,6 @@ export interface IEndpoint extends IEndpointAPI {
   children?: IEndpoint[]
   endAngle?: number;
   incomingCount?: number;
-  metadata?: any;
   outgoingCount?: number;
   startAngle?: number;
   totalCount?: number;
@@ -86,6 +88,7 @@ export interface IEndpoint extends IEndpointAPI {
 
 export interface IChordAPI {
   id: string;
+  metadata?: any;
   source: string;
   target: string;
 }
@@ -95,7 +98,6 @@ export interface IChordAPI {
  */
 export interface IChord extends IChordAPI {
   dstIndex?: number;
-  metadata?: any;
   srcExpandedTarget?: string;
   srcIndex?: number;
 }

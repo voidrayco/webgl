@@ -186,9 +186,15 @@ export class Main extends React.Component<any, IMainState> {
     if (this.state.currentTab === 1) {
       component = (
         <ChordChart
+          data={testChordData}
           onEndPointClick={this.handleEndPointClicked}
           split={false}
-          data={testChordData}
+          containerProps={{
+            style: {
+              height: '600px',
+              width: '100%',
+            },
+          }}
         />
       );
     }
@@ -196,9 +202,15 @@ export class Main extends React.Component<any, IMainState> {
     if (this.state.currentTab === 2) {
       component = (
         <ChordChart
+          data={testChordData}
           onEndPointClick={this.handleEndPointClicked}
           split={true}
-          data={testChordData}
+          containerProps={{
+            style: {
+              height: '600px',
+              width: '100%',
+            },
+          }}
         />
       );
     }
