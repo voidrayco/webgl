@@ -23,8 +23,8 @@ export class ChordInteractionsCache extends ShapeBufferCache<CurvedLineShape<ICh
       // Duplicate the curves with active color
       const curvedLine = curve.clone();
 
-      curvedLine.startColor = colorGenerator.pick(ColorState.CHORD_HOVER, curve.d.source.srcTarget);
-      curvedLine.endColor = colorGenerator.pick(ColorState.CHORD_HOVER, curve.d.source.dstTarget);
+      curvedLine.startColor = colorGenerator.pick(ColorState.CHORD_HOVER, curve.d.source.source);
+      curvedLine.endColor = colorGenerator.pick(ColorState.CHORD_HOVER, curve.d.source.target);
       curvedLine.depth = DEPTH;
 
       shapes.push(curvedLine);

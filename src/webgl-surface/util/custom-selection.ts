@@ -28,7 +28,7 @@ export class CustomSelection {
    * Clears out all custom selections for every category
    */
   clearAllSelections() {
-    for (const key of this.selections.keys()) {
+    for (const key of Array.from(this.selections.keys())) {
       this.clearSelection(key);
     }
   }
@@ -90,7 +90,7 @@ export class CustomSelection {
    * changes.
    */
   finalizeUpdate() {
-    for (const key of this._didSelectionChange.keys()) {
+    for (const key of Array.from(this._didSelectionChange.keys())) {
       this._didSelectionChange.set(key, false);
     }
   }

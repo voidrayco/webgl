@@ -42,13 +42,18 @@ export interface IChordChartConfig {
   topLevelGroupPadding: number;
 }
 
+export interface IDataAPI {
+  endpoints: IEndpointAPI[];
+  chords: IChordAPI[];
+}
+
 /**
  * This is the base raw data calculated for the chord chart
  */
 export interface IData {
   tree?: IEndpoint[];
   endpoints: IEndpoint[];
-  flows: IChord[];
+  chords: IChord[];
   /** Quick look up for an end point by it's id */
   endpointById?: Map<string, IEndpoint>;
   /** Get the top level end point for a given child end point's id */
@@ -57,32 +62,40 @@ export interface IData {
   topEndPointMaxDepth?: Map<IEndpoint, number>;
 }
 
+export interface IEndpointAPI {
+  id: string;
+  name: string;
+  parent: string;
+  weight: number;
+}
+
 /**
  * This defines the raw data needed for an end point in the chord chart
  */
-export interface IEndpoint {
-  children?: IEndpoint[]
-  id: string;
-  name: string;
-  startAngle?: number;
-  endAngle?: number;
-  outgoingCount?: number;
-  incomingCount?: number;
-  parent: string;
-  totalCount?: number;
-  _outflowIdx?: number;  // Used for internal flow calculations
+export interface IEndpoint extends IEndpointAPI {
   _inflowIdx?: number;  // Used for internal flow calculations
-  weight: number;
+  _outflowIdx?: number;  // Used for internal flow calculations
+  children?: IEndpoint[]
+  endAngle?: number;
+  incomingCount?: number;
+  metadata?: any;
+  outgoingCount?: number;
+  startAngle?: number;
+  totalCount?: number;
+}
+
+export interface IChordAPI {
+  id: string;
+  source: string;
+  target: string;
 }
 
 /**
  * This defines the raw data needed to render a chord in the chord chart
  */
-export interface IChord {
-  srcExpandedTarget?: string;
-  srcTarget: string;
-  destExpandedTarget?: string;
-  dstTarget: string;
-  srcIndex?: number;
+export interface IChord extends IChordAPI {
   dstIndex?: number;
+  metadata?: any;
+  srcExpandedTarget?: string;
+  srcIndex?: number;
 }

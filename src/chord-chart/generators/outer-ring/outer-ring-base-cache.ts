@@ -228,7 +228,7 @@ export class OuterRingBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         controlPoint = {x: groupSplitDistance * Math.cos(halfAngle), y: groupSplitDistance * Math.sin(halfAngle)};
       }
 
-      const flows = data.flows.filter((flow) => flow.srcTarget === endpoint.id);
+      const flows = data.chords.filter((flow) => flow.source === endpoint.id);
 
       return {
         controlPoint,

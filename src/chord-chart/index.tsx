@@ -1,27 +1,50 @@
 import { clone } from 'ramda';
 import * as React from 'react';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
-import { AtlasColor } from 'webgl-surface/drawing/texture/atlas-color';
 import { Bounds } from 'webgl-surface/primitives/bounds';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { ColorGenerator } from './generators/color/color-generator';
 import { LabelGenerator } from './generators/label/label-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
+import { IData, IDataAPI } from './generators/types';
 import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
-import { IData } from './generators/types';
 import { ChordChartGL } from './gl/chord-chart-gl';
 import { Selection, SelectionType } from './selections/selection';
 import { IChordData } from './shape-data-types/chord-data';
 import { IOuterRingData } from './shape-data-types/outer-ring-data';
 import { getTreeLeafNodes, recalculateTree } from './util/endpointDataProcessing';
 
-const debug = require('debug')('index');
-
 export interface IChordChartProps {
-  onEndPointClick?(endpointId: string): void,
-  hemiSphere: boolean;
-  data: IData;
+  /** Enables the ability for the user to pan via click and drag */
+  allowPan?: boolean,
+  /** The data for the chart to render */
+  data: IDataAPI;
+  /** The space in pixels from the renderings edge to where the chart begins to appear */
+  margin?: {top: number, left: number, bottom: number, right: number},
+  /** Styling config object that adjusts visuals of the chart */
+  styling?: {
+    /** Total center radius area where chords appear */
+    chartRadius?: number,
+    /** Padding between each endpoint segment in radians */
+    endpointPadding?: number,
+    /** Padding between each row of endpoints */
+    endpointRowPadding?: number,
+    /** The width of an endpoint */
+    endpointWidth?: number,
+    /** The padding between main groups in radians */
+    groupPadding?: number,
+    /** The distance each group appeas from the initial circle center */
+    groupSplitDistance?: number,
+  }
+  /** If true, this component renders each main group a distance away from the center */
+  split?: boolean;
+  /** Callback for when a chord is clicked */
+  onChordClick?(chordId: string, chordData: any, screen: object, world: object): void,
+  /** Callback for when an endpoint is clicked */
+  onEndPointClick?(endpointId: string, endpointData: any, screen: object, world: object): void,
+  /** Callback for when nothing is clicked */
+  onClickNothing?(screen: object, world: object): void,
 }
 
 export interface IChordChartState {
@@ -40,7 +63,7 @@ function isChord(curve: any): curve is CurvedLineShape<IChordData> {
 }
 
 function recalculateTreeForData(data: IData) {
-  data.tree = recalculateTree(data.endpoints, data.flows);
+  data.tree = recalculateTree(data.endpoints, data.chords);
   data.endpoints = getTreeLeafNodes(data.tree);
   data.endpointById = new Map<string, IEndpoint>();
   data.topEndPointByEndPointId = new Map<string, IEndpoint>();
@@ -102,9 +125,9 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   // Sets the default state
   state: IChordChartState = {
     data: {
+      chords: [],
       endpointById: new Map<string, IEndpoint>(),
       endpoints: [],
-      flows: [],
       topEndPointByEndPointId: new Map<string, IEndpoint>(),
       topEndPointMaxDepth: new Map<IEndpoint, number>(),
       tree: [],
@@ -129,7 +152,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
 
   componentWillReceiveProps(nextProps: any) {
     if (nextProps.data) {
-      const data = clone(nextProps.data);
+      const data: IDataAPI = clone(nextProps.data);
       recalculateTreeForData(data);
 
       this.setState({data});
@@ -234,7 +257,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
       }
 
       if (this.props.onEndPointClick && selection.d.source.id) {
-        this.props.onEndPointClick(selection.d.source.id);
+        this.props.onEndPointClick(selection.d.source.id, selection.d.source.metadata, {}, {});
       }
     }
   }
@@ -247,12 +270,12 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     const config: IChordChartConfig = {
       center: {x: 0, y: 0},
       groupSplitDistance: 50,
-      labelDirection: this.props.hemiSphere ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
+      labelDirection: this.props.split ? LabelDirectionEnum.LINEAR : LabelDirectionEnum.RADIAL,
       outerRingSegmentPadding: 0.005,
       outerRingSegmentRowPadding: 2,
       radius: 200,
       ringWidth: 10,
-      splitTopLevelGroups: this.props.hemiSphere,
+      splitTopLevelGroups: this.props.split,
       topLevelGroupPadding: Math.PI / 4,
     };
 

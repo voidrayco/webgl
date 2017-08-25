@@ -14,6 +14,7 @@ const fs = require('fs-extra');
  *          files in this directory and subdirectories.
  *   out: The output file for the bundled typings
  *   moduleName: The name of the module (should === the name property in package.json)
+ *   tslintConfig: Path to the project's tslint
  * }
  *
  * @return {void}
@@ -29,14 +30,13 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
 
   compiler.plugin('after-emit', function(compilation, callback) {
     const dts = require('dts-bundle');
+    const filesIncluded = new Map();
 
     console.log('Bundling type declarations', input);
     dts.bundle({
-      // baseDir: input,
       indent: '  ',
       name: moduleName,
       main: path.join(input, '**/*.d.ts'),
-      // main: path.join(input, 'index.d.ts'),
       out: out,
       removeSource: true,
       outputAsModuleFolder: true,
@@ -50,7 +50,13 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
        * @return {boolean} Returns true if the file is to be excluded
        */
       exclude: filename => {
-        return filename === 'index.d.ts';
+        if (filename === 'index.d.ts')
+          return true;
+
+        if (filesIncluded.get(filename))
+          return true;
+
+        filesIncluded.set(filename, true);
       },
     });
 
@@ -77,7 +83,6 @@ DtsBundlePlugin.prototype.apply = function(compiler) {
       // handle this in an appropriate way, so we simply wrap the beginning and the
       // end with the module name
       file = `declare module "${moduleName}" {\n${file}\n}`;
-
       fs.writeFileSync(out, file, 'utf8');
       callback();
     }, 2000);

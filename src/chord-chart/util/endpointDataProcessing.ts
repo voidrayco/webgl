@@ -31,9 +31,9 @@ function _recalculateFlowCounts(node: IEndpoint, flows: IChord[]) {
   let outgoingCount = 0, incomingCount = 0, totalCount = 0;
 
   flows.forEach((flow) => {
-    if (flow.srcTarget === nodeObj.id) outgoingCount++;
-    if (flow.dstTarget === nodeObj.id) incomingCount++;
-    if (flow.srcTarget === nodeObj.id || flow.dstTarget === nodeObj.id) totalCount++;
+    if (flow.source === nodeObj.id) outgoingCount++;
+    if (flow.target === nodeObj.id) incomingCount++;
+    if (flow.source === nodeObj.id || flow.target === nodeObj.id) totalCount++;
   });
 
   nodeObj.outgoingCount = outgoingCount;

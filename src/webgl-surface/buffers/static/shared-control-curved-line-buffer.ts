@@ -1,4 +1,4 @@
-import { Color, IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { AtlasColor } from '../../drawing/texture/atlas-color';

@@ -1,13 +1,14 @@
 const { dirname } = require('path');
-const { readFile } = require('fs');
+const { readFile, readFileSync, writeFile, writeFileSync } = require('fs-extra');
 const { resolve } = require('path');
 const { spawn } = require('child_process');
-const { writeFile } = require('fs');
 const debug = require('debug')('isenpai:build');
 const mkdirp = require('mkdirp');
 const tar = require('tar');
 const toPromise = require('./lib/toPromise');
 const webpack = require('webpack');
+const uglify = require('uglify-js');
+const minifier = require('minifier');
 
 const OUT_FOLDER = resolve('dist');
 const PACKAGE_JSON = resolve('package.json');
@@ -64,7 +65,9 @@ async function build() {
   // Make the build folder
   await toPromise(c => mkdirp(OUT_FOLDER, c));
   // Make web pack do the build
-  if (!NO_BUILD) await webpackBuild();
+  if (!NO_BUILD) {
+    await webpackBuild();
+  }
 }
 
 async function bumpVersion() {

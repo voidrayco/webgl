@@ -68,18 +68,18 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
       const newCurve = new CurvedLineShape<IChordData>({
         controlPoints: [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
         end: {x: curve.p2.x, y: curve.p2.y},
-        endColor: colorGenerator.pick(colorState, curve.source.dstTarget),
+        endColor: colorGenerator.pick(colorState, curve.source.target),
         lineWidth: LINE_WIDTH,
         start: {x: curve.p1.x, y: curve.p1.y},
-        startColor: colorGenerator.pick(colorState, curve.source.srcTarget),
+        startColor: colorGenerator.pick(colorState, curve.source.source),
         type: CurveType.Bezier,
       });
 
       // Set the relational and domain information for the chord
       newCurve.d = {
         outerRings: [
-          ringById.get(curve.source.srcTarget),
-          ringById.get(curve.source.dstTarget),
+          ringById.get(curve.source.source),
+          ringById.get(curve.source.target),
         ],
         source: curve.source,
       };
@@ -140,9 +140,9 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
 
     // Loop thrugh each endpoint and analyze the flows
     data.endpoints.forEach((endpoint) => {
-      data.flows.forEach((chord) => {
-        if (chord.srcTarget === endpoint.id) {
-          const destEndpoint = getEndpoint(data, chord.dstTarget);
+      data.chords.forEach((chord) => {
+        if (chord.source === endpoint.id) {
+          const destEndpoint = getEndpoint(data, chord.target);
 
           if (destEndpoint) {
             let p1FlowAngle = getFlowAngle(endpoint, endpoint._outflowIdx, segmentSpace);
