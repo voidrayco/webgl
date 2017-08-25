@@ -128,6 +128,10 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
       this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
     }
 
+    else if (shapeBuffer.length === 0) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
+    }
+
     return needsUpdate;
   }
 }

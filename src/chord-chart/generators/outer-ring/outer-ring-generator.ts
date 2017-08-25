@@ -28,7 +28,7 @@ export class OuterRingGenerator {
 
     if (didDataChange || didSplitChange) {
       this.outerRingBase.bustCache = true;
-      this.outerRingBase.bustCache = true;
+      this.outerRingInteraction.bustCache = true;
     }
 
     if (didSelectionChange) {
