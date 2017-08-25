@@ -56,6 +56,8 @@ export class AtlasManager {
     const atlasMap: PackNode = new PackNode(0, 0, this.textureWidth, this.textureHeight);
     // Create the mapping element for the new atlas so we can track insertions / deletions
     this.atlasMap[atlasName] = atlasMap;
+    // Make a listing of images that is within the atlas
+    this.atlasImages[atlasName] = [];
 
     // Generate a canvas to render our images into so we can convert it over to
     // A three-js texture
@@ -74,7 +76,12 @@ export class AtlasManager {
 
     // Now draw in any color lookups
     if (colors) {
-      this.drawColors(colors, atlasName, canvas);
+      const image = await this.drawColors(colors, atlasName, canvas);
+
+      // Add the dummy texture info as an image to our list of images
+      if (image) {
+        this.atlasImages[atlasName].push(image);
+      }
     }
 
     // After loading we can transform the canvas to a glorious three texture to
@@ -87,7 +94,9 @@ export class AtlasManager {
     // Store the texture as the atlas.
     this.atlasTexture[atlasName] = texture;
     // Store the images as images within the atlas
-    this.atlasImages[atlasName] = [].concat(images);
+    if (images) {
+      this.atlasImages[atlasName].push(...images);
+    }
 
     debug('Atlas Created-> texture: %o mapping: %o images: %o', texture, atlasMap, images);
 
@@ -230,7 +239,7 @@ export class AtlasManager {
    *
    * @returns {Promise<boolean>} Resolves to true if the operation was successful
    */
-  async drawColors(colors: AtlasColor[], atlasName: string, canvas: CanvasRenderingContext2D): Promise<boolean> {
+  async drawColors(colors: AtlasColor[], atlasName: string, canvas: CanvasRenderingContext2D): Promise<AtlasTexture> {
     debug('Finding space for colors on the atlas: %o', colors);
 
     // All colors will ALWAYS be 2x2
@@ -299,7 +308,9 @@ export class AtlasManager {
       const startX: number = renderSpace.x;
       const startY: number = renderSpace.y;
       const nextX: number = colorWidth / this.textureWidth;
-      const nextY: number = colorHeight / this.textureHeight;
+      const nextY: number = -colorHeight / this.textureHeight;
+      const beginX: number = (startX / this.textureWidth) + (nextX / 2.0);
+      const beginY: number = 1.0 - (startY / this.textureHeight) + (nextY / 2.0);
       let col = 0;
       let row = 0;
 
@@ -312,8 +323,8 @@ export class AtlasManager {
 
         // The location of the middle of the first color
         color.firstColor = {
-          x: startX + (nextX / 2.0),
-          y: startY + (nextY / 2.0),
+          x: beginX,
+          y: beginY,
         };
 
         color.nextColor = {
@@ -340,7 +351,7 @@ export class AtlasManager {
       }
 
       // We have finished inserting
-      return true;
+      return image;
     }
 
     else {

@@ -36,11 +36,11 @@ vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
 vec4 pickColor(float index) {
   float row = floor(index / colorsPerRow);
   float col = index - (row * colorsPerRow);
-  return texCoord(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
+  return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
 }
 
 void main() {
-  vertexColor = mix(pickColor(startColorPick, endColorPick, position.x);
+  vertexColor = mix(pickColor(startColorPick), pickColor(endColorPick), position.x);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);

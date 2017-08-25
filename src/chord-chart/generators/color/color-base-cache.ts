@@ -5,9 +5,9 @@ import { AtlasColor } from 'webgl-surface/drawing/texture/atlas-color';
 import { ShapeBufferCache } from 'webgl-surface/util/shape-buffer-cache';
 import { ColorState, IChordChartConfig, IData, IEndpoint } from '../types';
 
-const CHORD_DEFAULT_ALPHA = 0.2;
-const CHORD_HOVER_ALPHA = 1.0;
-const CHORD_INACTIVE_ALPHA = 0.1;
+const CHORD_DEFAULT_ALPHA = 0.4;
+const CHORD_HOVER_ALPHA = 0.8;
+const CHORD_INACTIVE_ALPHA = 0.15;
 const OUTER_RING_DEFAULT_ALPHA = 1.0;
 const OUTER_RING_HOVER_ALPHA = 1.0;
 const OUTER_RING_INACTIVE_ALPHA = 0.1;

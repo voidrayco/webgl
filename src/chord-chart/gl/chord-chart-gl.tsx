@@ -4,8 +4,9 @@ import {
   NormalBlending,
   OneFactor,
   ShaderMaterial,
+  Vector2,
 } from 'three';
-import { SimpleStaticBezierLineBuffer } from 'webgl-surface/buffers/static/simple-bezier-line-buffer';
+import { SharedControlCurvedLineBuffer } from 'webgl-surface/buffers/static/shared-control-curved-line-buffer';
 import { SimpleStaticCircularLineBuffer } from 'webgl-surface/buffers/static/simple-circular-line-buffer';
 import { SimpleStaticLabelBuffer } from 'webgl-surface/buffers/static/simple-label-buffer';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
@@ -41,21 +42,20 @@ export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
 }
 
 // --[ SHADERS ]-------------------------------------------
-const bezierVertexShader = require('webgl-surface/shaders/bezier.vs');
+const bezierVertexShader = require('webgl-surface/shaders/atlas-colors/shared-control-bezier.vs');
 const fillVertexShader = require('webgl-surface/shaders/simple-line.vs');
 const fillFragmentShader = require('webgl-surface/shaders/simple-line.fs');
 const textureVertexShader = require('webgl-surface/shaders/textured-quad.vs');
 const textureFragmentShader = require('webgl-surface/shaders/textured-quad.fs');
-'hey';
 
 /**
  * The base component for the communications view
  */
 export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   // BUFFERS
-  interactiveBezierBuffer: SimpleStaticBezierLineBuffer = new SimpleStaticBezierLineBuffer();
+  interactiveBezierBuffer: SharedControlCurvedLineBuffer = new SharedControlCurvedLineBuffer();
   interactiveCircularBuffer: SimpleStaticCircularLineBuffer = new SimpleStaticCircularLineBuffer();
-  staticBezierBuffer: SimpleStaticBezierLineBuffer = new SimpleStaticBezierLineBuffer();
+  staticBezierBuffer: SharedControlCurvedLineBuffer = new SharedControlCurvedLineBuffer();
   staticCircularBuffer: SimpleStaticCircularLineBuffer = new SimpleStaticCircularLineBuffer();
 
   // LABELS BUFFER ITEMS
@@ -74,11 +74,14 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   mouseHovered = new Map<any, boolean>();
 
   /**
-   * Applies new props injected into this component.
+   * @override
    *
-   * @param  props The new properties for this component
+   * Same as applyBufferChanges but has to wait for colors to be ready.
+   * This special hook is called when the colors are ready for rendering
+   *
+   * @param props The newly applied props being applied to this component
    */
-  applyBufferChanges(props: IChordChartGLProperties) {
+  applyColorBufferChanges(props: IChordChartGLProperties) {
     const {
       staticCurvedLines,
       staticRingLines,
@@ -90,11 +93,19 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     let needsTreeUpdate = false;
 
     // Commit static bezier lines
-    needsTreeUpdate = this.staticBezierBuffer.update(staticCurvedLines) || needsTreeUpdate;
+    needsTreeUpdate = this.staticBezierBuffer.update(
+      staticCurvedLines,
+      this.atlasManager,
+      {x: 0, y: 0},
+    ) || needsTreeUpdate;
     // Commit ring curved lines using old methods
     needsTreeUpdate = this.staticCircularBuffer.update(staticRingLines) || needsTreeUpdate;
     // Commit interactive curved lines
-    this.forceDraw = this.interactiveBezierBuffer.update(interactiveCurvedLines) || this.forceDraw;
+    this.forceDraw = this.interactiveBezierBuffer.update(
+      interactiveCurvedLines,
+      this.atlasManager,
+      {x: 0, y: 0},
+    ) || this.forceDraw;
     // Commit interactive ring curves
     this.forceDraw = this.interactiveCircularBuffer.update(interactiveRingLines) || this.forceDraw;
     this.forceDraw = this.forceDraw || needsTreeUpdate;
@@ -158,6 +169,13 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       depthTest: true,
       fragmentShader: fillFragmentShader,
       transparent: true,
+      uniforms: {
+        colorAtlas: { type: 't', value: this.atlasManager.getAtlasTexture(this.atlasNames.colors) },
+        colorsPerRow: { type: 'f', value: 0 },
+        controlPoint: { type: 'v2', value: new Vector2(0, 0) },
+        firstColor: { type: 'v2', value: new Vector2(0, 0) },
+        nextColor: { type: 'v2', value: new Vector2(0, 0) },
+      },
       vertexShader: bezierVertexShader,
     });
 

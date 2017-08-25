@@ -19,6 +19,8 @@ export interface ICurveData {
   source: IChord;
 }
 
+const LINE_WIDTH: number = 1;
+
 function getEndpoint(data: IData, targetName: string) {
   function isTarget(endpoint: IEndpoint) {
     return endpoint.id === targetName;
@@ -64,7 +66,7 @@ export class ChordBaseCache extends ShapeBufferCache<CurvedLineShape<IChordData>
         controlPoints: [{x: curve.controlPoint.x, y: curve.controlPoint.y}],
         end: {x: curve.p2.x, y: curve.p2.y},
         endColor: colorGenerator.pick(colorState, curve.source.dstTarget),
-        lineWidth: 3,
+        lineWidth: LINE_WIDTH,
         start: {x: curve.p1.x, y: curve.p1.y},
         startColor: colorGenerator.pick(colorState, curve.source.srcTarget),
         type: CurveType.Bezier,
