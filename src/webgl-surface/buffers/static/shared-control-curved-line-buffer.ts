@@ -1,6 +1,6 @@
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
-import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
+import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { IPoint } from '../../primitives/point';
@@ -13,8 +13,7 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineBuffer extends BaseBuffer < CurvedLineShape < any >,
-Mesh > {
+export class SharedControlCurvedLineBuffer extends BaseBuffer < CurvedLineShape < any >, Mesh > {
   /**
    * @override
    * See interface definition

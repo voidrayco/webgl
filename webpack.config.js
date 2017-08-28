@@ -1,5 +1,4 @@
-const {DtsBundlePlugin} = require('./scripts/lib/dts-bundle-plugin');
-const {resolve} = require('path');
+const { resolve } = require('path');
 const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpack = require('webpack');
@@ -31,7 +30,8 @@ if (IS_PRODUCTION) {
     'ramda',
     'react-dom',
     'react',
-    'threejs',
+    'three',
+    'bowser',
   ];
 
   // We are bundling a library so set the output targets correctly
@@ -49,17 +49,6 @@ if (IS_PRODUCTION) {
           warnings: true
         }
       }
-    })
-  );
-
-  // Add our bundler as a plugin so we can perform the bundling AFTER webpack
-  // has generated the proper files
-  plugins.push(
-    new DtsBundlePlugin({
-      input: resolve('dist/src'),
-      moduleName: library,
-      out: path.join(resolve('dist'), 'index.d.ts'),
-      tslintConfig: resolve('tslint.json'),
     })
   );
 }

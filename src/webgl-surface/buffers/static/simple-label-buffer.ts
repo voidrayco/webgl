@@ -1,6 +1,6 @@
 import { Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
-import { Label } from '../../drawing/label';
+import { Label } from '../../drawing/shape/label';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 

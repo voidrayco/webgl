@@ -1,6 +1,6 @@
 import { Color, Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
-import { CurvedLineShape } from '../../drawing/curved-line-shape';
+import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 

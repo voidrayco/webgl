@@ -1,7 +1,7 @@
 import { merge } from 'ramda';
 import * as React from 'react';
 import { Color, CullFaceNone, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
-import { Label } from './drawing/label';
+import { Label } from './drawing/shape/label';
 import { AtlasColor } from './drawing/texture/atlas-color';
 import { AtlasManager } from './drawing/texture/atlas-manager';
 import { AtlasTexture } from './drawing/texture/atlas-texture';
