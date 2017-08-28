@@ -1,7 +1,7 @@
-import { ReferenceColor } from 'webgl-surface/drawing/reference/reference-color';
-import { CurvedLine, ICurvedLineOptions } from '../primitives/curved-line';
-import { Line } from '../primitives/line';
-import { IPoint, Point } from '../primitives/point';
+import { CurvedLine, ICurvedLineOptions } from '../../primitives/curved-line';
+import { Line } from '../../primitives/line';
+import { IPoint, Point } from '../../primitives/point';
+import { ReferenceColor } from '../reference/reference-color';
 
 export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
   /** Flags whether or not the calculated geometry for the line is cached or not */

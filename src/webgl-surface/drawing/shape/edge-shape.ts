@@ -1,6 +1,6 @@
 import { rgb, RGBColor } from 'd3-color';
-import { Line } from '../primitives/line';
-import { IPoint } from '../primitives/point';
+import { Line } from '../../primitives/line';
+import { IPoint } from '../../primitives/point';
 import { LineShape } from './line-shape';
 
 /**

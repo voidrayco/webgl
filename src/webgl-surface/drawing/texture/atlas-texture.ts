@@ -1,5 +1,5 @@
 import { IPoint } from '../../primitives/point';
-import { Label } from '../label';
+import { Label } from '../shape/label';
 
 /**
  * Defines a texture that is located on an atlas

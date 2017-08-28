@@ -1,10 +1,10 @@
 import { omit } from 'ramda';
 import { Color } from 'three';
-import { IPoint } from '../primitives/point';
-import { AnchorPosition, RotateableQuad } from '../primitives/rotateable-quad';
-import { ISize } from '../primitives/size';
-import { Sprite } from './sprite';
-import { AtlasTexture } from './texture/atlas-texture';
+import { IPoint } from '../../primitives/point';
+import { AnchorPosition, RotateableQuad } from '../../primitives/rotateable-quad';
+import { ISize } from '../../primitives/size';
+import { AtlasTexture } from '../texture/atlas-texture';
+import { Sprite } from '../texture/sprite';
 
 const measurement = new Sprite(200, 200, 1, 1);
 

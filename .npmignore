@@ -16,12 +16,12 @@ npm*log-*
 # -----[ Distribution ] -------------------------------------------
 # scripts
 scripts
-# Excess typings
-dist/src
 # The non-obfuscated Distribution
 dist/index.js.map
 # Remove any development Code
 src
+# Ensure distribution sources are included
+!dist/src
 # Remove any tests
 test
 # Clear out any uneeded config files of any sort

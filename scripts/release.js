@@ -1,14 +1,11 @@
 const { dirname } = require('path');
-const { readFile, readFileSync, writeFile, writeFileSync } = require('fs-extra');
+const { copy, readFile, readFileSync, writeFile, writeFileSync } = require('fs-extra');
 const { resolve } = require('path');
 const { spawn } = require('child_process');
 const debug = require('debug')('isenpai:build');
 const mkdirp = require('mkdirp');
-const tar = require('tar');
 const toPromise = require('./lib/toPromise');
 const webpack = require('webpack');
-const uglify = require('uglify-js');
-const minifier = require('minifier');
 
 const OUT_FOLDER = resolve('dist');
 const PACKAGE_JSON = resolve('package.json');
@@ -70,6 +67,17 @@ async function build() {
   }
 }
 
+async function copyShaders() {
+  console.log('Copying shader files to distribution');
+  await toPromise(c => copy('src/webgl-surface/shaders', 'dist/shaders', (err) => {
+    if (err) {
+      console.error(err.message || err.stack);
+    }
+
+    c();
+  }));
+}
+
 async function bumpVersion() {
   //
   // Update the app.conf
@@ -99,6 +107,7 @@ async function bumpVersion() {
 }
 
 build()
+.then(copyShaders)
 .then(bumpVersion)
 .catch(e => console.log('ERROR', e))
 ;

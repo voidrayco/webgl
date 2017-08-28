@@ -1,5 +1,5 @@
 import { RGBColor } from 'd3-color';
-import { Bounds } from '../primitives/bounds';
+import { Bounds } from '../../primitives/bounds';
 
 export class QuadShape<T> extends Bounds<T> {
   r: number = 1.0;

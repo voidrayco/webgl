@@ -1,6 +1,6 @@
 import { rgb } from 'd3-color';
 import { Texture } from 'three';
-import { AtlasColor } from 'webgl-surface/drawing/texture/atlas-color';
+import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { Bounds } from '../../primitives/bounds';
 import { IPoint } from '../../primitives/point';
 import { ImageDimensions, PackNode } from '../../util/pack-node';

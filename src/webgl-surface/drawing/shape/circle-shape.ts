@@ -1,5 +1,5 @@
-import {rgb, RGBColor} from 'd3-color';
-import {Circle} from '../primitives/circle';
+import { rgb, RGBColor } from 'd3-color';
+import { Circle } from '../../primitives/circle';
 
 /**
  * Defines a circular shape that can be drawn

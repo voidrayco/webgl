@@ -1,5 +1,5 @@
-import { Bounds } from '../primitives/bounds';
-import { AtlasTexture } from './texture/atlas-texture';
+import { Bounds } from '../../primitives/bounds';
+import { AtlasTexture } from '../texture/atlas-texture';
 
 /**
  * Defines an image that can be rendered by the gpu. This is an axis oriented
