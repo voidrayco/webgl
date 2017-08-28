@@ -15,6 +15,17 @@ export interface IAttributeInfo {
 }
 
 /**
+ * These are all of the items needed for rendering and determining if a re-render
+ * is necessary
+ */
+export interface IBufferItems<T, U> {
+  attributes: IAttributeInfo[],
+  geometry: BufferGeometry,
+  system: U,
+  currentData: T[],
+}
+
+/**
  * These are for fast look ups of the default values provided
  * Doing this fashion avoids array look ups in the defaults values
  */
@@ -34,6 +45,7 @@ let attrRegister2: number[] = [];
 let attrRegister3: number[] = [];
 let attrRegister4: number[] = [];
 let attrRegister5: number[] = [];
+let attrRegister6: number[] = [];
 
 let attrIndex0: number = 0;
 let attrIndex1: number = 0;
@@ -41,6 +53,7 @@ let attrIndex2: number = 0;
 let attrIndex3: number = 0;
 let attrIndex4: number = 0;
 let attrIndex5: number = 0;
+let attrIndex6: number = 0;
 
 let attrIndexIncr0: number = 0;
 let attrIndexIncr1: number = 0;
@@ -48,6 +61,11 @@ let attrIndexIncr2: number = 0;
 let attrIndexIncr3: number = 0;
 let attrIndexIncr4: number = 0;
 let attrIndexIncr5: number = 0;
+let attrIndexIncr6: number = 0;
+
+/** This is used to define a starting batch location to aid in continuing batch updates */
+let lastBatchRegister: number = 0;
+let isStreamUpdatingRegister: boolean = false;
 
 /**
  * This takes our list of attribute buffers and applies them to the registers for rapid lookups
@@ -62,6 +80,7 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
   attrRegister3 = attributeBuffers[3];
   attrRegister4 = attributeBuffers[4];
   attrRegister5 = attributeBuffers[5];
+  attrRegister6 = attributeBuffers[6];
 
   attrIndexIncr0 = incrementValues[0];
   attrIndexIncr1 = incrementValues[1];
@@ -69,6 +88,7 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
   attrIndexIncr3 = incrementValues[3];
   attrIndexIncr4 = incrementValues[4];
   attrIndexIncr5 = incrementValues[5];
+  attrIndexIncr6 = incrementValues[6];
 }
 
 /**
@@ -79,59 +99,72 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
  * @param {Function} updateAccessor The accessor function that will update the buffer values
  */
 function updateBuffer1(numBatches: number, updateAccessor: Function) {
-  for (let i = 0; i < numBatches; ++i) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
-    updateAccessor(i, attrRegister0, attrIndex0);
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0);
   }
 }
 
 function updateBuffer2(numBatches: number, updateAccessor: Function) {
-  for (let i = 0; i < numBatches; ++i) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
     attrIndex1 = i * attrIndexIncr1;
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1);
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1);
   }
 }
 
 function updateBuffer3(numBatches: number, updateAccessor: Function) {
-  for (let i = 0; i < numBatches; ++i) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
     attrIndex1 = i * attrIndexIncr1;
     attrIndex2 = i * attrIndexIncr2;
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2);
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2);
   }
 }
 
 function updateBuffer4(numBatches: number, updateAccessor: Function) {
-  for (let i = 0; i < numBatches; ++i) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
     attrIndex1 = i * attrIndexIncr1;
     attrIndex2 = i * attrIndexIncr2;
     attrIndex3 = i * attrIndexIncr3;
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3);
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3);
   }
 }
 
 function updateBuffer5(numBatches: number, updateAccessor: Function) {
-  for (let i = 0; i < numBatches; ++i) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
     attrIndex1 = i * attrIndexIncr1;
     attrIndex2 = i * attrIndexIncr2;
     attrIndex3 = i * attrIndexIncr3;
     attrIndex4 = i * attrIndexIncr4;
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4);
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4);
   }
 }
 
 function updateBuffer6(numBatches: number, updateAccessor: Function) {
-  for (let i = 0; i < numBatches; ++i) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
     attrIndex0 = i * attrIndexIncr0;
     attrIndex1 = i * attrIndexIncr1;
     attrIndex2 = i * attrIndexIncr2;
     attrIndex3 = i * attrIndexIncr3;
     attrIndex4 = i * attrIndexIncr4;
     attrIndex5 = i * attrIndexIncr5;
-    updateAccessor(i, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4, attrRegister5, attrIndex5);
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4, attrRegister5, attrIndex5);
+  }
+}
+
+function updateBuffer7(numBatches: number, updateAccessor: Function) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    attrIndex6 = i * attrIndexIncr6;
+    updateAccessor(i - lastBatchRegister, attrRegister0, attrIndex0, attrRegister1, attrIndex1, attrRegister2, attrIndex2, attrRegister3, attrIndex3, attrRegister4, attrIndex4, attrRegister5, attrIndex5, attrRegister6, attrIndex6);
   }
 }
 
@@ -195,6 +228,7 @@ const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: F
   4: updateBuffer4,
   5: updateBuffer5,
   6: updateBuffer6,
+  7: updateBuffer7,
 };
 
 /**
@@ -202,6 +236,29 @@ const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: F
  * and population.
  */
 export class BufferUtil {
+  /**
+   * This places our updateBuffer into a mode where the updates start at index 0 of the
+   * buffer. Subsequent calls will start where the previous call left off. This lets
+   * you stream in updates to the buffer rather than just update the entire buffer
+   * all at once.
+   */
+  static beginUpdates() {
+    isStreamUpdatingRegister = true;
+    lastBatchRegister = 0;
+  }
+
+  /**
+   * This stops updates streaming into the buffers and makes it where an update
+   * will always just start at the beginning of the buffer.
+   */
+  static endUpdates(): number {
+    const totalBatches = lastBatchRegister;
+    isStreamUpdatingRegister = false;
+    lastBatchRegister = 0;
+
+    return totalBatches;
+  }
+
   /**
    * @static
    * This handles many of the common tasks associated with constructing a new buffer
@@ -267,19 +324,75 @@ export class BufferUtil {
    *
    * You then can update the buffers based on the index information handed alongside each buffer
    *
-   * @param {BufferGeometry} buffer The buffer object to be updated
-   * @param {IAttributeInfo[]} attributes The attributes describing this buffer
+   * @param {T[]} newData The new data that is going to be injected into the buffer. This must be a NEW REFERENCE of data
+   *                      that does NOT match the reference in the bufferItems.currentData. So newData !== bufferItems.currentData
+   *                      in order for the update to occur.
+   * @param {BufferGeometry} bufferItems The buffer related items used to identify how to update the buffer
    * @param {number} vertexBatch The number of vertices to include per update batch
    * @param {number} numBatches The number of batches to execute
    * @param {Function} updateAccessor The accessor for performing the data update to the buffer
+   *
+   * @return {boolean} True if the buffer was updated with this call
    */
-  static updateBuffer(buffer: BufferGeometry, attributes: IAttributeInfo[], vertexBatch: number, numBatches: number, updateAccessor: Function) {
-    const bufferAttributes: any[] = attributes.map((attr: IAttributeInfo) => (buffer.attributes as any)[attr.name]);
-    const attributeBuffers: number[][] = bufferAttributes.map((attr: any) => attr.array as number[]);
-    const incrementValues: number[] = attributes.map((attr: IAttributeInfo) => (attr.size + 1) * vertexBatch);
-    applyAttributeRegisters(attributeBuffers, incrementValues);
-    const updateMethod = updateBufferLookUp[attributes.length];
-    updateMethod(numBatches, updateAccessor);
-    bufferAttributes.forEach(attr => attr.needsUpdate = true);
+  static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function): boolean {
+    const attributes = bufferItems.attributes;
+    const buffer = bufferItems.geometry;
+
+    // If we passed the data check on the first pass, then all future streamed updates
+    // Should pass as well
+    const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
+
+    // We check if there is a reference change in the data indicating a buffer push needs to happen
+    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed) {
+      // If we aren't streaming updates, then we always start at the beginning
+      if (!isStreamUpdatingRegister) {
+        // Reset out last batch register as this is an entriely new update
+        lastBatchRegister = 0;
+      }
+
+      // Flag the newly rendered data as our current data
+      bufferItems.currentData = newData;
+      // Get the attributes by name out of the three js buffer
+      const bufferAttributes: any[] = attributes.map((attr: IAttributeInfo) => (buffer.attributes as any)[attr.name]);
+      // Get the raw number buffers
+      const attributeBuffers: number[][] = bufferAttributes.map((attr: any) => attr.array as number[]);
+      // Determine what kind of buffer pointer increments we will need
+      const incrementValues: number[] = attributes.map((attr: IAttributeInfo) => (attr.size + 1) * vertexBatch);
+      // Apply all data needed to any registers we need
+      applyAttributeRegisters(attributeBuffers, incrementValues);
+      // Get the method that will perform the update based on number of attributes
+      const updateMethod = updateBufferLookUp[attributes.length];
+      // Execute the update method
+      updateMethod(numBatches + lastBatchRegister, updateAccessor);
+      // Flag each buffer attribute for needing an update
+      bufferAttributes.forEach(attr => attr.needsUpdate = true);
+      // Move our register forward in case we are in a stream update
+      lastBatchRegister += numBatches;
+
+      return true;
+    }
+
+    // Even if the data does not match, keep moving forward the appropriate amount in
+    // The buffer
+    else {
+      // Move our register forward in case we are in a stream update
+      lastBatchRegister += numBatches;
+    }
+
+    return false;
+  }
+
+  /**
+   * This makes all of the typical items used in creating and managing a buffer of items rendered to the screen
+   *
+   * @returns {IBufferItems<T>} An empty object of the particular buffer items needed
+   */
+  static makeBufferItems<T, U>(): IBufferItems<T, U> {
+    return {
+      attributes: [],
+      currentData: [],
+      geometry: null,
+      system: null,
+    };
   }
 }
