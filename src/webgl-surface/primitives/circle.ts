@@ -15,9 +15,9 @@ export class Circle<T> extends Bounds<T> {
 
   get values() {
     return {
+      radius: this._radius,
       x: this._centerX,
       y: this._centerY,
-      radius: this._radius,
     };
   }
 

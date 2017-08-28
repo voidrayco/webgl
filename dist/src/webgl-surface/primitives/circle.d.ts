@@ -10,9 +10,9 @@ export declare class Circle<T> extends Bounds<T> {
     /** Y coord of the center of the circle */
     _centerY: number;
     readonly values: {
+        radius: number;
         x: number;
         y: number;
-        radius: number;
     };
     radius: number;
     centerX: number;

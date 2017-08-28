@@ -6,15 +6,15 @@ import { IPoint } from '../../primitives/point';
  */
 export class LineShape<T> extends Line<T> {
   // Color 1
-  r: number = 1;
-  g: number = 0;
-  b: number = 0;
   a: number = 0;
+  b: number = 0;
+  g: number = 0;
+  r: number = 1;
   // Color 2 ?
-  r2: number = 1;
-  g2: number = 0;
-  b2: number = 0;
   a2: number = 0;
+  b2: number = 0;
+  g2: number = 0;
+  r2: number = 1;
   // Other properties
   cull: boolean = true;
   selectedIndex: number;
@@ -27,7 +27,15 @@ export class LineShape<T> extends Line<T> {
     super(p1, p2);
 
     Object.assign(this, {
-      d, r, g, b, a, r2, g2, b2, a2,
+      a,
+      a2,
+      b,
+      b2,
+      d,
+      g,
+      g2,
+      r,
+      r2,
     });
 
     if (thickness !== undefined) {

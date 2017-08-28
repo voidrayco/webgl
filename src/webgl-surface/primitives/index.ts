@@ -1,4 +1,4 @@
-export * from './Bounds';
+export * from './bounds';
 export * from './circle';
 export * from './curved-line';
 export * from './line';

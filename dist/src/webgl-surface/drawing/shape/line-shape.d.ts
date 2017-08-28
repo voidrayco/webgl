@@ -4,14 +4,14 @@ import { IPoint } from '../../primitives/point';
  * Defines a line that can be drawn
  */
 export declare class LineShape<T> extends Line<T> {
-    r: number;
-    g: number;
-    b: number;
     a: number;
-    r2: number;
-    g2: number;
-    b2: number;
+    b: number;
+    g: number;
+    r: number;
     a2: number;
+    b2: number;
+    g2: number;
+    r2: number;
     cull: boolean;
     selectedIndex: number;
     thickness: number;
