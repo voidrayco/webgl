@@ -4,7 +4,7 @@ import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mesh> {
+export class SimpleStaticLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mesh> {
   /**
    * @override
    * See interface definition
@@ -126,6 +126,8 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
 
     if (needsUpdate){
       this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+    }else if (shapeBuffer.length === 0) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
     }
 
     else if (shapeBuffer.length === 0) {

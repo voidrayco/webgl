@@ -64,6 +64,7 @@ export declare class RotateableQuad<T> extends Bounds<T> {
      *                        than the calculated version.
      */
     setAnchor(anchor?: AnchorPosition, custom?: IPoint): void;
+    getAnchorType(): AnchorPosition;
     /**
      * This sets the location of this quad to a given position where the anchor
      * point will be located on top of the location provided.
@@ -71,12 +72,24 @@ export declare class RotateableQuad<T> extends Bounds<T> {
      * @param {IPoint} location The location to place the quad
      */
     setLocation(location: IPoint): void;
+    getLocation(): IPoint;
     /**
      * Sets the rotation of this quad, in radians, rotated around the anchor point.
      *
      * @param {number} rotation The rotation of the quad
      */
     setRotation(rotation: number): void;
+    /**
+     * get Rotation
+     */
+    getRotation(): number;
+    /**
+     * get direction as a point
+     */
+    getDirection(): {
+        x: number;
+        y: number;
+    };
     /**
      * Applies the size to the base
      *

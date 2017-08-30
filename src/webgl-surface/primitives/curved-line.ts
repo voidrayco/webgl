@@ -474,6 +474,7 @@ export class CurvedLine<T> extends Bounds<T> {
     // Apply the points
     this.p1 = p1;
     this.p2 = p2;
+    if (controlPoints.length === 0) debug('p1: %o, p2:%o', p1, p2);
 
     // Get the available segment methods for the given type
     const segmentMethods = pickSegmentMethod[this.type];
