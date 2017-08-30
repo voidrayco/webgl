@@ -63,9 +63,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
     const labelsData = this.preProcessData(data, outerRingGenerator.getBaseBuffer(), config);
 
-    debug('labelsData is %o', labelsData);
-    debug('config is %o', config);
-    debug('selection is %o', selection);
+    debug('data is %o', data);
 
     const hasSelection =
       selection.getSelection(SelectionType.MOUSEOVER_CHORD).length > 0 ||
@@ -79,20 +77,17 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         inactiveOpacity :
         activeOpacity
       ;
-      debug('opacity is %o', opacity);
       const label = new Label<any>({
         a: opacity,
         baseLabel: labelLookup.get(labelData.name),
         color: color,
       });
 
-      // Label.width = label.text.length * label.fontSize;
+      // Label.width will be calculated by setting text;
       label.setText(labelData.name);
 
       // If we're anchored at the middle left, we need to push a bit more outward
       // In order to account for the length of the text field
-      debug('label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
-      debug('label is %o,anchor is %o', labelData.name, labelData.anchor);
       if (!config.splitTopLevelGroups) {
         if (labelData.anchor === AnchorPosition.MiddleLeft) {
           Point.add(
@@ -126,8 +121,6 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         );
       }
 
-      debug('AFTER---label is %o,point is %o', labelData.name, labelData.point.x * labelData.point.x + labelData.point.y * labelData.point.y);
-      debug('label is %o,width is %o', labelData.name, label.width);
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
       label.rasterizationPadding.height = -10;
@@ -143,9 +136,89 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       return label;
     });
 
-    debug('labels are %o', labels);
+    labels.forEach(label => {
+      const addedWidth = this.getOffsetByName(label.text, data.tree, labelLookup);
+      if (!config.splitTopLevelGroups) {
+        if (label.getAnchorType() === AnchorPosition.MiddleLeft) {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                label.getDirection(),
+                - addedWidth,
+              ),
+            ),
+          );
+        }
+        else {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                label.getDirection(),
+                addedWidth,
+              ),
+            ),
+          );
+        }
+      }
+      else {
+        if (label.getAnchorType() === AnchorPosition.MiddleLeft) {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                Point.make(-1, 0),
+                addedWidth,
+              ),
+            ),
+          );
+        }
+        else {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                Point.make(1, 0),
+                addedWidth,
+              ),
+            ),
+          );
+        }
+      }
+    });
 
     this.buffer = labels;
+  }
+
+  // Get the max offset from all the children of the tree as its offset
+  getOffsetByTree(tree: IEndpoint, labelLookup: Map<string, Label<any>>) {
+    if (tree.children.length === 0) return 0;
+    let max = 0;
+    tree.children.forEach(c => {
+      const label = new Label({baseLabel: labelLookup.get(c.name)});
+      label.setText(c.name);
+      const offset = label.width + this.getOffsetByTree(c, labelLookup) + 10;
+      if (offset > max) max = offset;
+    });
+    return max;
+  }
+
+  // Get extra width added to a parent label by getting its children
+  getOffsetByName(name: string, tree: IEndpoint[], labelLookup: Map<string, Label<any>>) {
+    const queue: IEndpoint[] = [];
+    tree.forEach(t => queue.push(t));
+    // BFS
+    while (queue.length !== 0) {
+      const q = queue.shift();
+      if (q.name === name && q.children.length !== 0) {
+        return this.getOffsetByTree(q, labelLookup);
+      }
+      else {
+        q.children.forEach(c => queue.push(c));
+      }
+    }
+    return 0;
   }
 
   preProcessData(data: IData, outerRings: CurvedLineShape<IOuterRingData>[], config: IChordChartConfig) {
@@ -171,7 +244,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
       // Quick reference to the direction of the angle
       const dx = direction.x;
       const dy = direction.y;
-      debug('squere %o', dx * dx + dy * dy);
+
       // The distance from the center we should be
       const distance = radius + ringPadding;
       return {
@@ -181,11 +254,6 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
     };
 
     const labelData = outerRings.map((ring: CurvedLineShape<IOuterRingData>) => {
-      // Do not render children that have children
-      if (ring.d.source.children.length > 0) {
-        return null;
-      }
-
       const center = ring.controlPoints[1];
 
       // Make a line between the end points
@@ -193,7 +261,7 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
 
       if (splitTopLevelGroups){
         let topEndPoint = data.topEndPointByEndPointId.get(ring.d.source.id);
-        while (data.topEndPointByEndPointId.get(topEndPoint.parent)){
+        while (data.topEndPointByEndPointId.get(topEndPoint.parent)) {
           topEndPoint = data.topEndPointByEndPointId.get(topEndPoint.parent);
         }
         const ancestor = data.tree.filter((t) => t.id === topEndPoint.parent)[0];
@@ -224,8 +292,6 @@ export class LabelBaseCache extends ShapeBufferCache<Label<IOuterRingData>> {
         ringLine.mid,
         true,
       );
-
-      debug('direction  %o,ring %o', direction, ring.d.source.name);
 
       // Get the angle derived from the direction we figured
       let angle = ordinaryCircularAngle(Math.atan2(direction.y, direction.x));

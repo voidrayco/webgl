@@ -5,6 +5,7 @@ import { Bounds } from 'webgl-surface/primitives/bounds';
 import { CurveType } from 'webgl-surface/primitives/curved-line';
 import { ChordGenerator } from './generators/chord/chord-generator';
 import { LabelGenerator } from './generators/label/label-generator';
+import { LabelLineGenerator } from './generators/label/label-line-generator';
 import { OuterRingGenerator } from './generators/outer-ring/outer-ring-generator';
 import { IData, IDataAPI } from './generators/types';
 import { IChordChartConfig, IEndpoint, LabelDirectionEnum } from './generators/types';
@@ -114,6 +115,8 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
   chordGenerator: ChordGenerator;
   /** This is the generator that produces the buffers for our labels */
   labelGenerator: LabelGenerator;
+  /** This is the generator that produces lines which connect parents labels and children labels */
+  labelLineGenerator: LabelLineGenerator;
   /** This is the generator that produces the buffers for our outer rings */
   outerRingGenerator: OuterRingGenerator;
   /** Selection manager */
@@ -142,6 +145,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.chordGenerator = new ChordGenerator();
     this.labelGenerator = new LabelGenerator();
     this.outerRingGenerator = new OuterRingGenerator();
+    this.labelLineGenerator = new LabelLineGenerator();
     const data = clone(this.props.data);
     recalculateTreeForData(data);
 
@@ -269,6 +273,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
     this.outerRingGenerator.generate(this.state.data, config, this.selection);
     this.chordGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
     this.labelGenerator.generate(this.state.data, config, this.outerRingGenerator, this.selection);
+    this.labelLineGenerator.generate(this.state.data, config, this.outerRingGenerator, this.labelGenerator, this.selection);
 
     debug('rending');
 
@@ -279,6 +284,7 @@ export class ChordChart extends React.Component<IChordChartProps, IChordChartSta
         onZoomRequest={(zoom) => this.handleZoomRequest}
         staticCurvedLines={this.chordGenerator.getBaseBuffer()}
         staticLabels={this.labelGenerator.getBaseBuffer()}
+        staticLabelLines={this.labelLineGenerator.getBaseBuffer()}
         staticRingLines={this.outerRingGenerator.getBaseBuffer()}
         interactiveCurvedLines={this.chordGenerator.getInteractionBuffer()}
         interactiveLabels={this.labelGenerator.getInteractionBuffer()}

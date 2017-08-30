@@ -3,7 +3,7 @@ import { IOuterRingData } from 'chord-chart/shape-data-types/outer-ring-data';
 import { Color } from 'three';
 import { Label } from 'webgl-surface/drawing/label';
 import { Selection, SelectionType } from '../../selections/selection';
-import { IChordChartConfig, IData } from '../types';
+import { IChordChartConfig, IData, IEndpoint } from '../types';
 import { LabelBaseCache } from './label-base-cache';
 import { LabelInteractionCache } from './label-interaction-cache';
 
@@ -61,22 +61,31 @@ export class LabelGenerator {
     // With.
     if (didDataChange) {
       debug('GEnerating uniquelabels....');
-      data.endpoints.forEach(endpoint => {
-        if (!this.labelByString.get(endpoint.name)) {
-          this.labelByString.set(endpoint.name, new Label({
-            a: 1.0,
-            color: new Color(1, 1, 1),
-            fontSize: 14,
-            text: endpoint.name,
-          }));
-        }
-      });
+      this.travelTree(data.tree);
 
       this.uniqueLabels = Array.from(this.labelByString.values());
     }
 
     this.lastData = data;
     this.lastSplit = config.splitTopLevelGroups;
+  }
+
+  travelTree(tree: IEndpoint[]) {
+    if (tree.length !== 0) {
+      tree.forEach((t) => {
+        if (t.parent !== '') {
+          if (!this.labelByString.get(t.name)) {
+            this.labelByString.set(t.name, new Label({
+              a: 1.0,
+              color: new Color(1, 1, 1),
+              fontSize: 14,
+              text: t.name,
+            }));
+          }
+        }
+        this.travelTree(t.children);
+       });
+    }
   }
 
   /** */
@@ -96,7 +105,7 @@ export class LabelGenerator {
     return this.baseCache.getBuffer();
   }
 
-  getInteractionBuffer(): Label<IOuterRingData>[]{
+  getInteractionBuffer(): Label<IOuterRingData>[] {
     return this.interactionCache.getBuffer();
   }
 }

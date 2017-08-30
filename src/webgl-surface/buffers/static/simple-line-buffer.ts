@@ -3,12 +3,9 @@ import { ShaderMaterial } from 'three';
 import { CurvedLineShape } from '../../drawing/curved-line-shape';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
+const debug = require('debug')('line_buffer');
 
-export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mesh> {
-  /**
-   * @override
-   * See interface definition
-   */
+export class SimpleStaticLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mesh> {
   init(material: ShaderMaterial, unitCount: number) {
     this.bufferItems = BufferUtil.makeBufferItems();
 
@@ -28,20 +25,22 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
     const verticesPerQuad = 6;
     const numQuads = unitCount;
 
-    this.bufferItems.geometry = BufferUtil.makeBuffer(numQuads * verticesPerQuad,
-      this.bufferItems.attributes);
-    this.bufferItems.system = new Mesh(this.bufferItems.geometry, material);
+    this.bufferItems.geometry = BufferUtil.makeBuffer(
+      numQuads * verticesPerQuad,
+      this.bufferItems.attributes,
+    );
+
+    this.bufferItems.system = new Mesh(
+      this.bufferItems.geometry,
+      material,
+    );
+
     this.bufferItems.system.frustumCulled = false;
     this.bufferItems.system.drawMode = TriangleStripDrawMode;
   }
 
-  /**
-   * @override
-   * See interface definition
-   *
-   * @param shapeBuffer
-   */
   update(shapeBuffer: CurvedLineShape<any>[]): boolean {
+
     let needsUpdate = false;
     const numVerticesPerSegment = 6;
     const colorAttributeSize = 4;
@@ -49,7 +48,8 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
 
     BufferUtil.beginUpdates();
 
-    for (const curvedLine of shapeBuffer){
+    debug('shapeBuffer is %o', shapeBuffer);
+    shapeBuffer.forEach(curvedLine => {
       const strip = curvedLine.getTriangleStrip();
       let TR;
       let BR;
@@ -57,7 +57,7 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
       let BL;
 
       needsUpdate = BufferUtil.updateBuffer(shapeBuffer, this.bufferItems, numVerticesPerSegment, strip.length / 4,
-      function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number){
+      function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number) {
         stripPos = i * 4;
         TR = strip[stripPos];
         BR = strip[stripPos + 1];
@@ -113,18 +113,11 @@ export class SimpleStaticCircularLineBuffer extends BaseBuffer<CurvedLineShape<a
       },
     );
 
-      if (!needsUpdate){
-        break;
-      }
-    }
+    });
 
     const numBatches = BufferUtil.endUpdates();
 
-    if (needsUpdate){
-      this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-    }else if (shapeBuffer.length === 0) {
-      this.bufferItems.geometry.setDrawRange(0, 0);
-    }
+    this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
 
     return needsUpdate;
   }

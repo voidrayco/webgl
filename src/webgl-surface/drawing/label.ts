@@ -16,6 +16,7 @@ export class Label<T> extends RotateableQuad<T> {
   fontWeight: number = 400;
   maxWidth: number = undefined;
   text: string = '';
+  id: string = '';
   textAlign: 'start' | 'center' | 'right' = 'start';
   textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging' = 'alphabetic';
   zoomable: boolean = false;

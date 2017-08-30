@@ -8,6 +8,7 @@ import {
 import { SimpleStaticBezierLineBuffer } from 'webgl-surface/buffers/static/simple-bezier-line-buffer';
 import { SimpleStaticCircularLineBuffer } from 'webgl-surface/buffers/static/simple-circular-line-buffer';
 import { SimpleStaticLabelBuffer } from 'webgl-surface/buffers/static/simple-label-buffer';
+import { SimpleStaticLineBuffer } from 'webgl-surface/buffers/static/simple-line-buffer';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
 import { Label } from 'webgl-surface/drawing/label';
 import { Bounds } from 'webgl-surface/primitives/bounds';
@@ -34,6 +35,8 @@ export interface IChordChartGLProperties extends IWebGLSurfaceProperties {
   staticRingLines?: CurvedLineShape<any>[],
   /** These are the non-frequently changing labels */
   staticLabels?: Label<any>[],
+  /** There are the labelLines that are not changed */
+  staticLabelLines?: CurvedLineShape<any>[],
   /** Event handlers */
   onMouseHover?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
   onMouseLeave?(curves: CurvedLineShape<any>[], mouse: IPoint, world: IPoint, projection: IProjection): void,
@@ -60,6 +63,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   // LABELS BUFFER ITEMS
   staticLabelBuffer: SimpleStaticLabelBuffer = new SimpleStaticLabelBuffer();
   interactiveLabelBuffer: SimpleStaticLabelBuffer = new SimpleStaticLabelBuffer();
+  staticLabelLinesBuffer: SimpleStaticLineBuffer = new SimpleStaticLineBuffer();
 
   /** The current dataset that is being rendered by this component */
   animatedCurvedLines: CurvedLineShape<any>[] = [];
@@ -83,6 +87,7 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       staticRingLines,
       interactiveCurvedLines,
       interactiveRingLines,
+      staticLabelLines,
     } = props;
 
     // Set to true when the quad tree needs to be updated
@@ -97,6 +102,9 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
     // Commit interactive ring curves
     this.forceDraw = this.interactiveCircularBuffer.update(interactiveRingLines) || this.forceDraw;
     this.forceDraw = this.forceDraw || needsTreeUpdate;
+
+    // Apply label Lines
+    this.staticLabelLinesBuffer.update(staticLabelLines);
 
     if (needsTreeUpdate) {
       if (this.quadTree) {
@@ -159,6 +167,14 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       transparent: true,
       uniforms: {halfLinewidth: {value: 1.5}},
       vertexShader: bezierVertexShader,
+    });
+
+    const lineMaterial = new ShaderMaterial({
+      blending: NormalBlending,
+      depthTest: true,
+      fragmentShader: fillFragmentShader,
+      transparent: true,
+      vertexShader: fillVertexShader,
     });
 
     const ringMaterial = new ShaderMaterial({
@@ -230,6 +246,14 @@ export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
       this.interactiveLabelBuffer.init(textureMaterial, 10000);
       // Place the mesh in the scene
       this.scene.add(this.interactiveLabelBuffer.bufferItems.system);
+    }
+
+    // GENERATE THE LABEL LINES
+    {
+      // Initialize the buffer for label lines
+      this.staticLabelLinesBuffer.init(lineMaterial, 10000);
+      // Place the mesh in the scene
+      this.scene.add(this.staticLabelLinesBuffer.bufferItems.system);
     }
   }
 

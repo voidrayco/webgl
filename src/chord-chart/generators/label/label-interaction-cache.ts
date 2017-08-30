@@ -34,61 +34,61 @@ function isRightHemisphere(angle: number) {
 }
 
 export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData>>{
-    generate(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection){
-        super.generate.apply(this, arguments);
-    }
+  generate(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
+    super.generate.apply(this, arguments);
+  }
 
-    buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection){
-        debug('selection is %o', selection);
+  buildCache(data: IData, outerRingGenerator: OuterRingGenerator, config: IChordChartConfig, labelLookup: Map<string, Label<any>>, selection: Selection) {
+    debug('selection is %o', selection);
 
-        const selectedCurve =
-        selection.getSelection<CurvedLineShape<IOuterRingData>>(SelectionType.MOUSEOVER_OUTER_RING);
+    const selectedCurve =
+    selection.getSelection<CurvedLineShape<IOuterRingData>>(SelectionType.MOUSEOVER_OUTER_RING);
 
-        const labelsData = this.preProcessData(data, selectedCurve, config);
+    const labelsData = this.preProcessData(data, selectedCurve, config);
 
-        const labels = labelsData.map((labelData) => {
-            const {r, g, b} = defaultColor;
-            const color = new Color(r, g, b);
-            const label = new Label<any>({
-                a: 1.0,
-                baseLabel: labelLookup.get(labelData.name),
-                color: color,
-            });
+    const labels = labelsData.map((labelData) => {
+      const {r, g, b} = defaultColor;
+      const color = new Color(r, g, b);
+      const label = new Label<any>({
+        a: 1.0,
+        baseLabel: labelLookup.get(labelData.name),
+        color: color,
+      });
 
-            label.setText(labelData.name);
+      label.setText(labelData.name);
 
-            if (!config.splitTopLevelGroups) {
-                if (labelData.anchor === AnchorPosition.MiddleLeft) {
-                    Point.add(
-                    labelData.point,
-                    Point.scale(
-                        labelData.direction,
-                        label.width,
-                    ),
-                labelData.point,
-                );
-                }
-                else {
-                    Point.add(
-                    labelData.point,
-                    Point.scale(
-                        labelData.direction,
-                        - label.width,
-                    ),
-                    labelData.point,
-                );
-                }
-            }
-            else {
-                Point.add(
-                labelData.point,
-                Point.scale(
-                    Point.make(-1, 0),
-                    label.width,
-                ),
-                labelData.point,
-            );
+      if (!config.splitTopLevelGroups) {
+        if (labelData.anchor === AnchorPosition.MiddleLeft) {
+          Point.add(
+            labelData.point,
+            Point.scale(
+              labelData.direction,
+              label.width,
+            ),
+            labelData.point,
+          );
         }
+        else {
+          Point.add(
+            labelData.point,
+            Point.scale(
+              labelData.direction,
+            - label.width,
+            ),
+            labelData.point,
+          );
+        }
+      }
+      else {
+        Point.add(
+        labelData.point,
+        Point.scale(
+          Point.make(-1, 0),
+          label.width,
+        ),
+        labelData.point,
+        );
+      }
 
       label.rasterizationOffset.y = 10.5;
       label.rasterizationOffset.x = 0.5;
@@ -103,45 +103,127 @@ export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData
       }
 
       return label;
-        });
-        debug('selectedCurve is %o', selectedCurve);
-        this.buffer = labels;
-    }
-
-    preProcessData(data: IData, outerRings: CurvedLineShape<IOuterRingData>[], config: IChordChartConfig){
-        const {
-            outerRingSegmentRowPadding: rowPadding,
-            radius,
-            ringWidth,
-            splitTopLevelGroups,
-            topLevelGroupPadding,
-        } = config;
-
-        const paddedRingWidth = ringWidth + rowPadding;
-
-        const calculatePoint = (endpoint: IEndpoint, direction: IPoint, center: IPoint) => {
-         const depth = data.topEndPointMaxDepth.get(
-             data.topEndPointByEndPointId.get(endpoint.id),
-         ) + 1;
-
-         const ringPadding = paddedRingWidth * depth;
-
-         const dx = direction.x;
-         const dy = direction.y;
-
-         const distance = radius + ringPadding;
-
-         return {
-             x: (distance * dx) + center.x,
-             y: (distance * dy) + center.y,
-         };
-        };
-
-        const labelData = outerRings.map((ring: CurvedLineShape<IOuterRingData>) => {
-            // Do not render children that have children
-            if (ring.d.source.children.length > 0) {
-            return null;
+    });
+    debug('selectedCurve is %o', selectedCurve);
+    labels.forEach(label => {
+      const addedWidth = this.getOffsetByName(label.text, data.tree, labelLookup);
+      if (!config.splitTopLevelGroups) {
+        debug('Before label is %o', label);
+        if (label.getAnchorType() === AnchorPosition.MiddleLeft) {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                label.getDirection(),
+                - addedWidth,
+              ),
+            ),
+          );
         }
+        else {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                label.getDirection(),
+                addedWidth,
+              ),
+            ),
+          );
+        }
+      }
+      else {
+        if (label.getAnchorType() === AnchorPosition.MiddleLeft) {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                Point.make(-1, 0),
+                addedWidth,
+              ),
+            ),
+          );
+        }
+        else {
+          label.setLocation(
+            Point.add(
+              label.getLocation(),
+              Point.scale(
+                Point.make(1, 0),
+                addedWidth,
+              ),
+            ),
+          );
+        }
+      }
+    });
+    this.buffer = labels;
+  }
+
+ // Get the max offset from all the children of the tree as its offset
+ getOffsetByTree(tree: IEndpoint, labelLookup: Map<string, Label<any>>) {
+  if (tree.children.length === 0) return 0;
+  let max = 0;
+  tree.children.forEach(c => {
+    const label = new Label({baseLabel: labelLookup.get(c.name)});
+    label.setText(c.name);
+    const offset = label.width + this.getOffsetByTree(c, labelLookup) + 10;
+    if (offset > max) max = offset;
+  });
+  return max;
+}
+
+// Get extra width added to a parent label by getting its children
+getOffsetByName(name: string, tree: IEndpoint[], labelLookup: Map<string, Label<any>>) {
+  const queue: IEndpoint[] = [];
+  tree.forEach(t => queue.push(t));
+  // BFS
+  while (queue.length !== 0) {
+    const q = queue.shift();
+    if (q.name === name && q.children.length !== 0) {
+      return this.getOffsetByTree(q, labelLookup);
+    }
+    else {
+      q.children.forEach(c => queue.push(c));
+    }
+  }
+  return 0;
+}
+
+  preProcessData(data: IData, outerRings: CurvedLineShape<IOuterRingData>[], config: IChordChartConfig) {
+    const {
+      outerRingSegmentRowPadding: rowPadding,
+      radius,
+      ringWidth,
+      splitTopLevelGroups,
+      topLevelGroupPadding,
+    } = config;
+
+    const paddedRingWidth = ringWidth + rowPadding;
+
+    const calculatePoint = (endpoint: IEndpoint, direction: IPoint, center: IPoint) => {
+      const depth = data.topEndPointMaxDepth.get(
+        data.topEndPointByEndPointId.get(endpoint.id),
+      ) + 1;
+
+      const ringPadding = paddedRingWidth * depth;
+
+      const dx = direction.x;
+      const dy = direction.y;
+
+      const distance = radius + ringPadding;
+
+      return {
+        x: (distance * dx) + center.x,
+        y: (distance * dy) + center.y,
+      };
+    };
+
+    const labelData = outerRings.map((ring: CurvedLineShape<IOuterRingData>) => {
+      // Do not render children that have children
+      if (ring.d.source.children.length > 0) {
+          // Return null;
+      }
 
       const center = ring.controlPoints[0];
 
