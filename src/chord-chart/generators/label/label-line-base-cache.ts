@@ -15,16 +15,6 @@ const debug = require('debug')('label-line-base-cache');
 
 const DEPTH = 30;
 
-function getDepthOfTree(tree: IEndpoint) {
-  if (tree.children === undefined || tree.children.length === 0) return 1;
-  let max = 0;
-  tree.children.forEach((c) => {
-    const temp = getDepthOfTree(c);
-    if (temp > max) max = temp;
-  });
-  return max + 1;
-}
-
 /**
  * This takes in a ordinary circular angle and determines if the angle lies on
  * the right side of a circle.
@@ -48,6 +38,8 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
   buildCache(data: IData, outerRingGenerator: OuterRingGenerator, labelGenerator: LabelGenerator, config: IChordChartConfig, selection: Selection) {
     const {
+      labelOffset,
+      labelPadding,
       outerRingSegmentRowPadding: rowPadding,
       radius,
       ringWidth,
@@ -64,7 +56,7 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
       const children = this.getChildrenFromTree(ring.d.source.name, data.tree);
 
       if (children.length > 0) {
-        const maxOffset = this.getOffsetByName(ring.d.source.name, data.tree, labelLookup);
+        const maxOffset = this.getOffsetByName(ring.d.source.name, data.tree, labelLookup, labelOffset);
 
         const depth = data.topEndPointMaxDepth.get(
           data.topEndPointByEndPointId.get(ring.d.source.id),
@@ -74,6 +66,7 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
         let p1: IPoint;
 
+        // If Top level Groups are split, the position of left and right are calculated differently
         if (splitTopLevelGroups) {
           const center = ring.controlPoints[1];
 
@@ -97,13 +90,13 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
           if (anchor === AnchorPosition.MiddleRight) {
             p1 = {
-              x: center.x + maxOffset + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
+              x: center.x + maxOffset - labelPadding + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
               y: center.y +  (padding * depth + radius) * Math.sin((newStartAngle + newEndAngle) / 2),
             };
           }
           else {
             p1 = {
-              x: center.x - maxOffset + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
+              x: center.x - maxOffset + labelPadding + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
               y: center.y +  (padding * depth + radius) * Math.sin((newStartAngle + newEndAngle) / 2),
             };
           }
@@ -111,9 +104,9 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         }
         else {
           p1 = {
-            x: (padding * depth + radius + maxOffset)
+            x: (padding * depth + radius + maxOffset - labelPadding)
             * Math.cos((ring.d.source.startAngle + ring.d.source.endAngle) / 2),
-            y: (padding * depth  + radius + maxOffset)
+            y: (padding * depth  + radius + maxOffset - labelPadding)
             * Math.sin((ring.d.source.startAngle + ring.d.source.endAngle) / 2),
           };
         }
@@ -121,7 +114,7 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
         children.forEach(c => {
           const cLabel = new Label({baseLabel: labelLookup.get(c.name)});
           cLabel.setText(c.name);
-          const offset = cLabel.width + this.getOffsetByName(c.name, data.tree, labelLookup);
+          const offset = cLabel.width + this.getOffsetByName(c.name, data.tree, labelLookup, labelOffset);
           const childRing = rings.filter(r => r.d.source.name === c.name)[0];
 
           let p2: IPoint;
@@ -149,22 +142,24 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
 
             if (anchor === AnchorPosition.MiddleRight) {
               p2 = {
-                x: center.x + offset + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
+                x: center.x + offset + labelPadding
+                 + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
                 y: center.y +  (padding * depth + radius) * Math.sin((newStartAngle + newEndAngle) / 2),
               };
             }
             else {
               p2 = {
-                x: center.x - offset + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
+                x: center.x - offset - labelPadding
+                 + (padding * depth + radius) * Math.cos((newStartAngle + newEndAngle) / 2),
                 y: center.y +  (padding * depth + radius) * Math.sin((newStartAngle + newEndAngle) / 2),
               };
             }
           }
           else {
             p2 = {
-              x: (padding * depth + radius + offset)
+              x: (padding * depth + radius + offset + labelPadding)
               * Math.cos((childRing.d.source.startAngle + childRing.d.source.endAngle) / 2),
-              y: (padding * depth + radius + offset)
+              y: (padding * depth + radius + offset + labelPadding)
               * Math.sin((childRing.d.source.startAngle + childRing.d.source.endAngle) / 2),
             };
           }
@@ -216,27 +211,27 @@ export class LabelLineBaseCache extends ShapeBufferCache<CurvedLineShape<IOuterR
   }
 
   // Get the max offset from all the children of the tree as its offset
-  getOffsetByTree(tree: IEndpoint, labelLookup: Map<string, Label<any>>) {
+  getOffsetByTree(tree: IEndpoint, labelLookup: Map<string, Label<any>>, labelOffset: number) {
     if (tree.children.length === 0) return 0;
     let max = 0;
     tree.children.forEach(c => {
       const label = new Label({baseLabel: labelLookup.get(c.name)});
       label.setText(c.name);
-      const offset = label.width + this.getOffsetByTree(c, labelLookup) + 10;
+      const offset = label.width + this.getOffsetByTree(c, labelLookup, labelOffset) + labelOffset;
       if (offset > max) max = offset;
     });
     return max;
   }
 
   // Get extra width added to a parent label by getting its children
-  getOffsetByName(name: string, tree: IEndpoint[], labelLookup: Map<string, Label<any>>) {
+  getOffsetByName(name: string, tree: IEndpoint[], labelLookup: Map<string, Label<any>>, labelOffset: number) {
     const queue: IEndpoint[] = [];
     tree.forEach(t => queue.push(t));
     // BFS
     while (queue.length !== 0) {
       const q = queue.shift();
       if (q.name === name && q.children.length !== 0) {
-        return this.getOffsetByTree(q, labelLookup);
+        return this.getOffsetByTree(q, labelLookup, labelOffset);
       }
       else {
         q.children.forEach(c => queue.push(c));

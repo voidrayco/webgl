@@ -13,6 +13,7 @@ const debug =  require('debug')('label_interactive_cache');
 
 const defaultColor: Color = new Color(1, 1, 1);
 
+/** This function takes an angle to change it into 0 ~ 2*PI */
 function ordinaryCircularAngle(angle: number) {
   while (angle > 2 * Math.PI) {
     angle -= 2 * Math.PI;
@@ -106,7 +107,7 @@ export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData
     });
     debug('selectedCurve is %o', selectedCurve);
     labels.forEach(label => {
-      const addedWidth = this.getOffsetByName(label.text, data.tree, labelLookup);
+      const addedWidth = this.getOffsetByName(label.text, data.tree, labelLookup, config.labelOffset);
       if (!config.splitTopLevelGroups) {
         debug('Before label is %o', label);
         if (label.getAnchorType() === AnchorPosition.MiddleLeft) {
@@ -161,27 +162,27 @@ export class LabelInteractionCache extends ShapeBufferCache<Label<IOuterRingData
   }
 
  // Get the max offset from all the children of the tree as its offset
- getOffsetByTree(tree: IEndpoint, labelLookup: Map<string, Label<any>>) {
+ getOffsetByTree(tree: IEndpoint, labelLookup: Map<string, Label<any>>, labelOffset: number) {
   if (tree.children.length === 0) return 0;
   let max = 0;
   tree.children.forEach(c => {
     const label = new Label({baseLabel: labelLookup.get(c.name)});
     label.setText(c.name);
-    const offset = label.width + this.getOffsetByTree(c, labelLookup) + 10;
+    const offset = label.width + this.getOffsetByTree(c, labelLookup, labelOffset) + labelOffset;
     if (offset > max) max = offset;
   });
   return max;
 }
 
 // Get extra width added to a parent label by getting its children
-getOffsetByName(name: string, tree: IEndpoint[], labelLookup: Map<string, Label<any>>) {
+getOffsetByName(name: string, tree: IEndpoint[], labelLookup: Map<string, Label<any>>, labelOffset: number) {
   const queue: IEndpoint[] = [];
   tree.forEach(t => queue.push(t));
   // BFS
   while (queue.length !== 0) {
     const q = queue.shift();
     if (q.name === name && q.children.length !== 0) {
-      return this.getOffsetByTree(q, labelLookup);
+      return this.getOffsetByTree(q, labelLookup, labelOffset);
     }
     else {
       q.children.forEach(c => queue.push(c));

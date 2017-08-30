@@ -28,6 +28,10 @@ export interface IChordChartConfig {
   splitTopLevelGroups: boolean;
   /** This sets the padding (in radians) of the top level groupings of items */
   topLevelGroupPadding: number;
+  /** This sets how far the parent labels get pushed from the child labels */
+  labelOffset: number;
+  /** This sets padding  between straight line end points and their target labels */
+  labelPadding: number;
 }
 
 export interface IDataAPI {
