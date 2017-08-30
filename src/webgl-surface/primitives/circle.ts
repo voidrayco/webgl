@@ -1,5 +1,5 @@
-import {Bounds} from './bounds';
-import {IPoint} from './point';
+import { Bounds } from './bounds';
+import { IPoint } from './point';
 
 let UID = 0;
 
@@ -15,9 +15,9 @@ export class Circle<T> extends Bounds<T> {
 
   get values() {
     return {
+      radius: this._radius,
       x: this._centerX,
       y: this._centerY,
-      radius: this._radius,
     };
   }
 

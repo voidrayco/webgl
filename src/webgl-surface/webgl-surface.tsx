@@ -1,7 +1,8 @@
 import { merge } from 'ramda';
 import * as React from 'react';
 import { Color, CullFaceNone, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
-import { Label } from './drawing/label';
+import { Label } from './drawing/shape/label';
+import { AtlasColor } from './drawing/texture/atlas-color';
 import { AtlasManager } from './drawing/texture/atlas-manager';
 import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
@@ -29,6 +30,8 @@ export enum BaseApplyPropsMethods {
   CAMERA,
   /** Generates the labels as images within the atlas manager */
   LABELS,
+  /** Generates the colors within the atlas manager */
+  COLORS,
 }
 
 /**
@@ -99,6 +102,8 @@ const BACKGROUND_COLOR = new Color().setRGB(38 / BYTE_MAX, 50 / BYTE_MAX, 78 / B
 export interface IWebGLSurfaceProperties {
   /** When true, will cause a camera recentering to take place when new base items are injected */
   centerOnNewItems?: boolean
+  /** All of the unique colors used in the system */
+  colors?: AtlasColor[]
   /** The forced size of the render surface */
   height?: number
   /** This will be the view the camera focuses on when the camera is initialized */
@@ -151,6 +156,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   atlasManager: AtlasManager = new AtlasManager(2048, 2048);
   /** Tracks the names of the atlas' generated */
   atlasNames = {
+    colors: 'colors',
     labels: 'labels',
   };
   /**
@@ -241,6 +247,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   animating: boolean = false;
   labels: Label<any>[] = [];
   labelsReady: boolean = false;
+  /** When this is set to true, the atlas with the colors is now ready to be referenced */
+  colors: AtlasColor[] = [];
+  colorsReady: boolean = false;
 
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
@@ -446,6 +455,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   /**
+   * This is a hook for subclasses to be able to apply buffer changes that rely
+   * on colors rendered into the atlas after the system has prepped the colors for render.
+   */
+  applyColorBufferChanges(props: T) {
+    // Note: For subclasses
+  }
+
+  /**
    * This is a hook for subclasses to be able to apply label buffer changes after the system has
    * prepped the labels for render.
    */
@@ -569,6 +586,36 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         return response;
       },
 
+      [BaseApplyPropsMethods.COLORS]: (props: T): IApplyPropsMethodResponse => {
+        const response = {};
+
+        // If we have a new labels reference we must regenerate the labels in our image lookup
+        if (props.colors && props.colors !== this.colors) {
+          debugLabels('Colors are being comitted to an Atlas %o', props.colors);
+          // Flag the labels as incapable of rendering
+          this.colorsReady = false;
+          // Store the set of labels we are rendering so that they do not get re-generated
+          // In the atlas rapidly.
+          this.colors = props.colors;
+
+          if (this.atlasManager.getAtlasTexture(this.atlasNames.colors)) {
+            this.atlasManager.destroyAtlas(this.atlasNames.colors);
+          }
+
+          debugLabels('Creating the atlas for colors based on these colors %o', this.colors);
+          this.atlasManager.createAtlas(this.atlasNames.colors, null, this.colors)
+          .then(() => {
+            debugLabels('Colors rasterized within the atlas!');
+            this.forceDraw = true;
+            this.colorsReady = true;
+            // Reapply the props so any buffers that were not updating can update now
+            this.applyProps(this.props);
+          });
+        }
+
+        return response;
+      },
+
       [BaseApplyPropsMethods.BUFFERCHANGES]: (props: T): IApplyPropsMethodResponse => {
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
@@ -577,6 +624,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         if (this.labelsReady) {
           debugLabels('labels changed %o', props);
           this.applyLabelBufferChanges(props);
+        }
+
+        if (this.colorsReady) {
+          this.applyColorBufferChanges(props);
         }
 
         return {};
@@ -686,6 +737,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.propsMethodList = this.applyPropsMethods(basePropsMethods, [
       basePropsMethods[BaseApplyPropsMethods.INITIALIZE],
       basePropsMethods[BaseApplyPropsMethods.LABELS],
+      basePropsMethods[BaseApplyPropsMethods.COLORS],
       basePropsMethods[BaseApplyPropsMethods.BUFFERCHANGES],
       basePropsMethods[BaseApplyPropsMethods.CAMERA],
     ]);
@@ -771,7 +823,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Set up the camera now that the ctx is set up
     this.initCamera();
     // Create a scene so we can add our buffer objects to it
-    this.scene = new Scene();
+    // We also add the scene to the window to make threejs tools available
+    (window as any).scene = this.scene = new Scene();
     // Fire our hook for starting up our specific buffer implementation
     this.initBuffers();
 

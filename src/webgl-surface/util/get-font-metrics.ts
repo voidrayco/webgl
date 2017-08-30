@@ -1,4 +1,4 @@
-interface IGetFontMetricsProps {
+export interface IGetFontMetricsProps {
   ctx: CanvasRenderingContext2D;
   text: string;
   bboxHeight: number;
