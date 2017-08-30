@@ -6,7 +6,6 @@ import {
   ShaderMaterial,
 } from 'three';
 import { SimpleStaticBezierLineBuffer } from 'webgl-surface/buffers/static/simple-bezier-line-buffer';
-import { SimpleStaticCircularLineBuffer } from 'webgl-surface/buffers/static/simple-circular-line-buffer';
 import { SimpleStaticLabelBuffer } from 'webgl-surface/buffers/static/simple-label-buffer';
 import { SimpleStaticLineBuffer } from 'webgl-surface/buffers/static/simple-line-buffer';
 import { CurvedLineShape } from 'webgl-surface/drawing/curved-line-shape';
@@ -56,9 +55,9 @@ const textureFragmentShader = require('webgl-surface/shaders/textured-quad.fs');
 export class ChordChartGL extends WebGLSurface<IChordChartGLProperties, {}> {
   // BUFFERS
   interactiveBezierBuffer: SimpleStaticBezierLineBuffer = new SimpleStaticBezierLineBuffer();
-  interactiveCircularBuffer: SimpleStaticCircularLineBuffer = new SimpleStaticCircularLineBuffer();
+  interactiveCircularBuffer: SimpleStaticLineBuffer = new SimpleStaticLineBuffer();
   staticBezierBuffer: SimpleStaticBezierLineBuffer = new SimpleStaticBezierLineBuffer();
-  staticCircularBuffer: SimpleStaticCircularLineBuffer = new SimpleStaticCircularLineBuffer();
+  staticCircularBuffer: SimpleStaticLineBuffer = new SimpleStaticLineBuffer();
 
   // LABELS BUFFER ITEMS
   staticLabelBuffer: SimpleStaticLabelBuffer = new SimpleStaticLabelBuffer();
