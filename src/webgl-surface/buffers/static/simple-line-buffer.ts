@@ -126,7 +126,9 @@ export class SimpleStaticLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mes
 
     if (needsUpdate){
       this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
-    }else if (shapeBuffer.length === 0) {
+    }
+
+    else if (shapeBuffer.length === 0) {
       this.bufferItems.geometry.setDrawRange(0, 0);
     }
 

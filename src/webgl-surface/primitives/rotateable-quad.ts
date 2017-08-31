@@ -180,14 +180,14 @@ export class RotateableQuad<T> extends Bounds<T> {
   /**
    * get Rotation
    */
-  getRotation(){
+  getRotation() {
     return this.rotation;
   }
 
   /**
    * get direction as a point
    */
-  getDirection(){
+  getDirection() {
     const angle = this.rotation;
     return{
       x: Math.cos(angle),
