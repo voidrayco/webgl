@@ -150,6 +150,10 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.calculateAnchor(anchor);
   }
 
+  getAnchorType() {
+    return this.anchorType;
+  }
+
   /**
    * This sets the location of this quad to a given position where the anchor
    * point will be located on top of the location provided.
@@ -160,6 +164,10 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.location = location;
   }
 
+  getLocation() {
+    return this.location;
+  }
+
   /**
    * Sets the rotation of this quad, in radians, rotated around the anchor point.
    *
@@ -167,6 +175,24 @@ export class RotateableQuad<T> extends Bounds<T> {
    */
   setRotation(rotation: number) {
     this.rotation = rotation;
+  }
+
+  /**
+   * get Rotation
+   */
+  getRotation() {
+    return this.rotation;
+  }
+
+  /**
+   * get direction as a point
+   */
+  getDirection() {
+    const angle = this.rotation;
+    return{
+      x: Math.cos(angle),
+      y: Math.sin(angle),
+    };
   }
 
   /**
