@@ -646,9 +646,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.currentY = this.destinationY = mid.y;
 
           // Calculate the zoom level when the input zoom is at 1
-          // Const zoomToFitH = this.ctx.width / this.quadTree.bounds.width;
-          // Const zoomToFitV = this.ctx.height / this.quadTree.bounds.height;
-          // Const zoomAtOne = Math.min(zoomToFitH, zoomToFitV);
           const zoomAtOne = 1;
 
           // Calculate the zoom needed for the viewport

@@ -81,7 +81,7 @@ export class PackNode {
         this.child[1] = new PackNode(this.nodeDimensions.x + imgWidth, this.nodeDimensions.y, dWidth, this.nodeDimensions.height);
       } else {
         this.child[0] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y  , this.nodeDimensions.width, imgHeight);
-        this.child[1] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y - imgHeight, this.nodeDimensions.width, dHeight);
+        this.child[1] = new PackNode(this.nodeDimensions.x, this.nodeDimensions.y + imgHeight, this.nodeDimensions.width, dHeight);
       }
     }
 
