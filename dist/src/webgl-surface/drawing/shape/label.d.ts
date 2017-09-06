@@ -61,6 +61,10 @@ export declare class Label<T> extends RotateableQuad<T> {
      */
     copyLabel(label: Label<T>): void;
     /**
+     * This gets the actual text this label is capable of rendering
+     */
+    getText(): string;
+    /**
      * Takes all of the current settings and makes a CSS font string
      */
     makeCSSFont(fontSize?: number): string;
@@ -71,6 +75,12 @@ export declare class Label<T> extends RotateableQuad<T> {
      * @param y Y world coordinate
      */
     position(x: number, y: number): void;
+    /**
+     * This sets the font size for the label based on the base text dimensions
+     *
+     * @param {number} fontSize
+     */
+    setFontSize(fontSize: number): void;
     /**
      * Change the text and the calculated bounding box for this label
      */

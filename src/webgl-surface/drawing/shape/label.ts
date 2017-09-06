@@ -97,16 +97,8 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Set props
     Object.assign(this, options);
-
-    // Calculate the text's measurements
-    measurement.context.font = this.makeCSSFont();
-    const measuredSize = measurement.context.measureText(this.text);
-
-    // Adjust the dimensions to the measurement
-    this.setSize({
-      height: this.fontSize + 10,
-      width: measuredSize.width,
-    });
+    // Make sure our dimensions are set
+    this.setFontSize(options.fontSize);
   }
 
   /**
@@ -124,6 +116,17 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Use this to set the text to make sure all of the metrics are re-calculated
     this.setText(label.text);
+  }
+
+  /**
+   * This gets the actual text this label is capable of rendering
+   */
+  getText(): string {
+    if (this._baseLabel) {
+      return this._baseLabel.getText();
+    }
+
+    return this.text;
   }
 
   /**
@@ -145,16 +148,38 @@ export class Label<T> extends RotateableQuad<T> {
   }
 
   /**
+   * This sets the font size for the label based on the base text dimensions
+   *
+   * @param {number} fontSize
+   */
+  setFontSize(fontSize: number) {
+    const lbl = this.getText();
+
+    if (this._baseLabel) {
+      const scale = fontSize / this.baseLabel.fontSize;
+      this.height = this.baseLabel.height * scale;
+      this.width = this.baseLabel.width * scale;
+      console.log('with base', fontSize, this.height, this.width, this.baseLabel.height, scale);
+    }
+
+    else {
+      measurement.context.font = this.makeCSSFont();
+      const size = measurement.context.measureText(lbl);
+      // Set our properties based on the calculated size
+      this.height = fontSize + this.rasterizationPadding.height;
+      this.width = size.width + this.rasterizationPadding.width;
+      console.log('no base', fontSize, this.height, this.width);
+    }
+
+    this.fontSize = fontSize;
+    this.setSize(this);
+  }
+
+  /**
    * Change the text and the calculated bounding box for this label
    */
   setText(lbl: string) {
-    // Recalculate text size
-    measurement.context.font = this.makeCSSFont();
-    const size = measurement.context.measureText(lbl);
-
-    // Set our properties based on the calculated size
-    this.height = this.fontSize;
     this.text = lbl;
-    this.width = size.width;
+    this.setFontSize(this.fontSize);
   }
 }
