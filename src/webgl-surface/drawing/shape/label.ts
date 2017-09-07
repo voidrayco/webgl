@@ -154,25 +154,28 @@ export class Label<T> extends RotateableQuad<T> {
    */
   setFontSize(fontSize: number) {
     const lbl = this.getText();
+    let width = 1;
+    let height = 1;
 
     if (this._baseLabel) {
       const scale = fontSize / this.baseLabel.fontSize;
-      this.height = this.baseLabel.height * scale;
-      this.width = this.baseLabel.width * scale;
-      console.log('with base', fontSize, this.height, this.width, this.baseLabel.height, scale);
+      height = this.baseLabel.height * scale;
+      width = this.baseLabel.width * scale;
+      console.log('with base', fontSize, height, this.baseLabel.height, scale, fontSize, this.baseLabel.fontSize);
     }
 
     else {
       measurement.context.font = this.makeCSSFont();
       const size = measurement.context.measureText(lbl);
       // Set our properties based on the calculated size
-      this.height = fontSize + this.rasterizationPadding.height;
-      this.width = size.width + this.rasterizationPadding.width;
-      console.log('no base', fontSize, this.height, this.width);
+      height = fontSize + this.rasterizationPadding.height;
+      width = size.width + this.rasterizationPadding.width;
+      console.log('no base', fontSize, height, width);
     }
 
     this.fontSize = fontSize;
-    this.setSize(this);
+    this.setSize({width, height});
+    this.update();
   }
 
   /**
