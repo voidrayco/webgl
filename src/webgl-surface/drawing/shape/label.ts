@@ -98,7 +98,7 @@ export class Label<T> extends RotateableQuad<T> {
     // Set props
     Object.assign(this, options);
     // Make sure our dimensions are set
-    this.setFontSize(options.fontSize);
+    this.setFontSize(options.fontSize || 12);
   }
 
   /**
@@ -154,28 +154,27 @@ export class Label<T> extends RotateableQuad<T> {
    */
   setFontSize(fontSize: number) {
     const lbl = this.getText();
-    let width = 1;
-    let height = 1;
+    const size = this.getSize();
+    let width = size.width;
+    let height = size.height;
 
-    if (this._baseLabel) {
+    if (this.baseLabel) {
+      const baseSize = this.baseLabel.getSize();
       const scale = fontSize / this.baseLabel.fontSize;
-      height = this.baseLabel.height * scale;
-      width = this.baseLabel.width * scale;
-      console.log('with base', fontSize, height, this.baseLabel.height, scale, fontSize, this.baseLabel.fontSize);
+      height = baseSize.height * scale;
+      width = baseSize.width * scale;
     }
 
     else {
       measurement.context.font = this.makeCSSFont();
       const size = measurement.context.measureText(lbl);
       // Set our properties based on the calculated size
-      height = fontSize + this.rasterizationPadding.height;
-      width = size.width + this.rasterizationPadding.width;
-      console.log('no base', fontSize, height, width);
+      height = fontSize;
+      width = size.width;
     }
 
     this.fontSize = fontSize;
     this.setSize({width, height});
-    this.update();
   }
 
   /**
@@ -184,5 +183,10 @@ export class Label<T> extends RotateableQuad<T> {
   setText(lbl: string) {
     this.text = lbl;
     this.setFontSize(this.fontSize);
+  }
+
+  update() {
+    this.setFontSize(this.fontSize);
+    super.update();
   }
 }

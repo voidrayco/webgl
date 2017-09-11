@@ -1,5 +1,5 @@
-import {IPoint} from '../primitives/point';
-import {ISize} from '../primitives/size';
+import { IPoint } from '../primitives/point';
+import { ISize } from '../primitives/size';
 
 /**
  * Defines projection methods used to switch between screen and world spaces
