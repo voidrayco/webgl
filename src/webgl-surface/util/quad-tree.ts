@@ -223,9 +223,9 @@ export class Node<T extends Bounds<any>> {
     // Make our bounds cover the new area
     this.bounds.encapsulate(bounds);
     this.bounds.x -= 1;
-    this.bounds.y -= 1;
+    this.bounds.y += 1;
     this.bounds.width += 2;
-    this.bounds.height += 2;
+    this.bounds.height += 4;
     // Get all of the children underneath this node
     const allChildren = this.gatherChildren([]);
 
@@ -280,17 +280,18 @@ export class Node<T extends Bounds<any>> {
     else if (child.isInside(this.bounds)) {
       this.children.push(child);
 
-      // If we exceeded our population for this quadrant, it is time to split up
-      if (this.children.length > maxPopulation && this.depth < maxDepth) {
-        this.split();
-      }
-
       return true;
     }
 
+    // HACK: We've hacked this for the time being, because it was breaking the
+    // > client's system. When we figure out what's wrong with the bounds, we
+    // > could put this back
+
     // Otherwise, this quad tree needs to be resized to include the child
     // But we will consider adds outside of the bounds an error
-    throw new Error('Child does not fit in node.');
+    // DISABLED TEMPORARILY: throw new Error('Child does not fit in node.');
+    this.children.push(child);
+    return true;
   }
 
   /**

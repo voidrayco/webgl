@@ -148,13 +148,13 @@ export class Bounds<T> {
       if (p.x < minX) {
         minX = p.x;
       }
-      else if (p.right > maxX) {
+      if (p.right > maxX) {
         maxX = p.right;
       }
       if (p.bottom < minY) {
         minY = p.bottom;
       }
-      else if (p.y > maxY) {
+      if (p.y > maxY) {
         maxY = p.y;
       }
     });
@@ -325,12 +325,11 @@ export class Bounds<T> {
   }
 
   /**
-   * Check if the provided bounds is completely contained within this instance
+   * Check if this instance is completely inside the provided bounds
    *
    * @param bounds The bounds to test against this instance
    *
-   * @return True if the provided bounds is completely contained within this
-   * instance
+   * @return True if this instance is inside the provided bounds
    */
   isInside(bounds : Bounds<T>) {
     return (
