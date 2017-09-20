@@ -47,8 +47,9 @@ if (IS_PRODUCTION) {
       uglifyOptions: {
         compress: {
           warnings: true
-        }
-      }
+        },
+      },
+      sourceMap: true,
     })
   );
 }
