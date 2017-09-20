@@ -70,7 +70,7 @@ export class AtlasManager {
     // Now we load, pack in, and draw each requested image
     if (images) {
       for (const image of images) {
-        if (image.label && image.label.text) {
+        if (image && image.label && image.label.text) {
           await this.draw(image, atlasName, canvas);
         }
       }
