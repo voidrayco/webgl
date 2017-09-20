@@ -70,6 +70,7 @@ export class AtlasManager {
     // Now we load, pack in, and draw each requested image
     if (images) {
       for (const image of images) {
+        if (!image.label || (image.label.text  === null || image.label.text === '' || image.label.text === undefined)) continue;
         await this.draw(image, atlasName, canvas);
       }
     }
@@ -218,13 +219,15 @@ export class AtlasManager {
 
       else {
         // Log an error
-        throw new Error(`Could not fit image into atlas ${image.imagePath}`);
+        console.error(`Could not fit image into atlas ${image.imagePath}`);
+        return false;
       }
     }
 
     else {
       // Log an error
-      throw new Error(`Could not load image ${image.imagePath}`);
+      console.error(`Could not load image ${image.imagePath}`);
+      return false;
     }
   }
 
