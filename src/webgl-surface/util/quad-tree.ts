@@ -280,6 +280,11 @@ export class Node<T extends Bounds<any>> {
     else if (child.isInside(this.bounds)) {
       this.children.push(child);
 
+      // If we exceeded our population for this quadrant, it is time to split up
+      if (this.children.length > maxPopulation && this.depth < maxDepth) {
+        this.split();
+      }
+
       return true;
     }
 
