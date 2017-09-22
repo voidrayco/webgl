@@ -70,7 +70,7 @@ export class AtlasManager {
     // Now we load, pack in, and draw each requested image
     if (images) {
       for (const image of images) {
-        if (image && image.label && image.label.text) {
+        if (image && (image.imagePath || (image.label && image.label.text))) {
           await this.draw(image, atlasName, canvas);
         }
       }
@@ -206,10 +206,10 @@ export class AtlasManager {
         );
 
         image.atlasReferenceID = atlasName;
-        image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
-        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
-        image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
+        image.atlasBL = {x: atlasDimensions.x || 0, y: atlasDimensions.y - atlasDimensions.height || 0};
+        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width || 0, y: atlasDimensions.y - atlasDimensions.height || 0};
+        image.atlasTL = {x: atlasDimensions.x || 0, y: atlasDimensions.y || 0 };
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width || 0, y: atlasDimensions.y || 0};
 
         // Now draw the image to the indicated canvas
         canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);

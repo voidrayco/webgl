@@ -85,8 +85,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
-        texCoords[tpos] = texture.atlasTR && texture.atlasTR.x || 0;
-        texCoords[++tpos] = texture.atlasTR && texture.atlasTR.y || 0;
+        texCoords[tpos] = texture.atlasTR.x;
+        texCoords[++tpos] = texture.atlasTR.y;
         texCoords[++tpos] = label.a;
         colors[cpos] = label.r;
         colors[++cpos] = label.g;
@@ -95,8 +95,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.BR.x;
         positions[++ppos] = label.BR.y;
         positions[++ppos] = label.depth;
-        texCoords[++tpos] = texture.atlasBR && texture.atlasBR.x || 0;
-        texCoords[++tpos] = texture.atlasBR && texture.atlasBR.y || 0;
+        texCoords[++tpos] = texture.atlasBR.x;
+        texCoords[++tpos] = texture.atlasBR.y;
         texCoords[++tpos] = label.a;
         colors[cpos] = label.r;
         colors[++cpos] = label.g;
@@ -105,8 +105,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.TL.x;
         positions[++ppos] = label.TL.y;
         positions[++ppos] = label.depth;
-        texCoords[++tpos] = texture.atlasTL && texture.atlasTL.x || 0;
-        texCoords[++tpos] = texture.atlasTL && texture.atlasTL.y || 0;
+        texCoords[++tpos] = texture.atlasTL.x;
+        texCoords[++tpos] = texture.atlasTL.y;
         texCoords[++tpos] = label.a;
         colors[++cpos] = label.r;
         colors[++cpos] = label.g;
@@ -115,8 +115,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
-        texCoords[++tpos] = texture.atlasBL && texture.atlasBL.x || 0;
-        texCoords[++tpos] = texture.atlasBL && texture.atlasBL.y || 0;
+        texCoords[++tpos] = texture.atlasBL.x;
+        texCoords[++tpos] = texture.atlasBL.y;
         texCoords[++tpos] = label.a;
         colors[++cpos] = label.r;
         colors[++cpos] = label.g;
