@@ -10,6 +10,17 @@ import { AtlasTexture } from './atlas-texture';
 const debug = require('debug')('webgl-surface:Atlas');
 const debugLabels = require('debug')('webgl-surface:Labels');
 
+const DEFAULT_IMAGE_VALUES = {
+  atlasBL: {x: 0, y: 0},
+  atlasBR: {x: 0, y: 0},
+  atlasReferenceID: '',
+  atlasTL: {x: 0, y: 0},
+  atlasTR: {x: 0, y: 0},
+  label: new Label<any>({text: ' '}),
+  pixelHeight: 0,
+  pixelWidth: 0,
+};
+
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
  * textures defining those pieces of atlas.
@@ -146,14 +157,7 @@ export class AtlasManager {
   }
 
   setDefaultImage(image: AtlasTexture){
-    image.label = new Label<any>({text: ' '});
-    image.pixelWidth = 0;
-    image.pixelHeight = 0;
-    image.atlasReferenceID = '';
-    image.atlasTL = {x: 0, y: 0};
-    image.atlasTR = {x: 0, y: 0};
-    image.atlasBL = {x: 0, y: 0};
-    image.atlasBR = {x: 0, y: 0};
+    image = Object.assign(image, DEFAULT_IMAGE_VALUES);
     return image;
   }
 
