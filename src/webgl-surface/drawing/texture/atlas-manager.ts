@@ -4,6 +4,7 @@ import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { Bounds } from '../../primitives/bounds';
 import { IPoint } from '../../primitives/point';
 import { ImageDimensions, PackNode } from '../../util/pack-node';
+import { Label } from '../shape/label';
 import { AtlasTexture } from './atlas-texture';
 
 const debug = require('debug')('webgl-surface:Atlas');
@@ -147,6 +148,14 @@ export class AtlasManager {
   }
 
   setDefaultImage(image: AtlasTexture){
+    image.label = new Label<any>({text: ' '});
+    image.pixelWidth = 0;
+    image.pixelHeight = 0;
+    image.atlasReferenceID = '';
+    image.atlasTL = {x: 0, y: 0};
+    image.atlasTR = {x: 0, y: 0};
+    image.atlasBL = {x: 0, y: 0};
+    image.atlasBR = {x: 0, y: 0};
     return image;
   }
 
@@ -243,7 +252,7 @@ export class AtlasManager {
     else {
       // Log an error and load a default image
       console.error(`Could not load image ${image.imagePath}`);
-      this.setDefaultImage(image);
+      image = this.setDefaultImage(image);
       await this.draw(image, atlasName, canvas);
       return true;
     }
