@@ -10,10 +10,9 @@ import { AtlasTexture } from './atlas-texture';
 const debug = require('debug')('webgl-surface:Atlas');
 const debugLabels = require('debug')('webgl-surface:Labels');
 
-const DEFAULT_IMAGE_VALUES = {
+const ZERO_IMAGE = {
   atlasBL: {x: 0, y: 0},
   atlasBR: {x: 0, y: 0},
-  atlasReferenceID: '',
   atlasTL: {x: 0, y: 0},
   atlasTR: {x: 0, y: 0},
   label: new Label<any>({text: ' '}),
@@ -156,8 +155,8 @@ export class AtlasManager {
     return isValid;
   }
 
-  setDefaultImage(image: AtlasTexture){
-    image = Object.assign(image, DEFAULT_IMAGE_VALUES);
+  setDefaultImage(image: AtlasTexture, atlasName: string){
+    image = Object.assign(image, ZERO_IMAGE, {atlasReferenceID: atlasName});
     return image;
   }
 
@@ -254,8 +253,7 @@ export class AtlasManager {
     else {
       // Log an error and load a default image
       console.error(`Could not load image ${image.imagePath}`);
-      image = this.setDefaultImage(image);
-      await this.draw(image, atlasName, canvas);
+      image = this.setDefaultImage(image, atlasName);
       return true;
     }
   }

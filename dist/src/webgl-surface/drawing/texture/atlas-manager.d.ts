@@ -53,7 +53,7 @@ export declare class AtlasManager {
      */
     destroyAtlas(atlasName: string): void;
     isValidImage(image: AtlasTexture): boolean;
-    setDefaultImage(image: AtlasTexture): AtlasTexture;
+    setDefaultImage(image: AtlasTexture, atlasName: string): AtlasTexture;
     /**
      * This loads, packs, and draws the indicated image into the specified canvas
      * using the metrics that exists for the specified atlas.
