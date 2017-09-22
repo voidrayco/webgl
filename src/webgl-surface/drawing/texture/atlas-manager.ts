@@ -70,9 +70,9 @@ export class AtlasManager {
     // Now we load, pack in, and draw each requested image
     if (images) {
       for (const image of images) {
-        if (image && (image.imagePath || (image.label && image.label.text))) {
-          await this.draw(image, atlasName, canvas);
-        }
+        // If (image && (image.imagePath || (image.label && image.label.text))) {
+        await this.draw(image, atlasName, canvas);
+        // }
       }
     }
 
@@ -136,6 +136,20 @@ export class AtlasManager {
     }
   }
 
+  isValidImage(image: AtlasTexture){
+    let isValid = false;
+    if (image && (image.imagePath || (image.label && image.label.text))) {
+      if (image.pixelWidth && image.pixelHeight){
+        isValid = true;
+      }
+    }
+    return isValid;
+  }
+
+  setDefaultImage(image: AtlasTexture){
+    return image;
+  }
+
   /**
    * This loads, packs, and draws the indicated image into the specified canvas
    * using the metrics that exists for the specified atlas.
@@ -163,7 +177,7 @@ export class AtlasManager {
     image.atlasReferenceID = null;
 
     // Only a non-null image means the image loaded correctly
-    if (loadedImage) {
+    if (loadedImage && this.isValidImage(image)) {
       debug('Image loaded: %o', image.imagePath);
       // Now we create a Rectangle to store the image dimensions
       const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, image.pixelHeight, 0);
@@ -227,9 +241,11 @@ export class AtlasManager {
     }
 
     else {
-      // Log an error
+      // Log an error and load a default image
       console.error(`Could not load image ${image.imagePath}`);
-      return false;
+      this.setDefaultImage(image);
+      await this.draw(image, atlasName, canvas);
+      return true;
     }
   }
 
