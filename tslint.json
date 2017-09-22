@@ -4,7 +4,7 @@
     "no-magic-numbers": [false],
     "no-namespace": [true, "allow-declarations"],
     "prefer-for-of": true,
-    "no-console": [true],
+    "no-console": [true, "log"],
     "curly": [true, "ignore-same-line"],
     "no-arg": true,
     "no-construct": true,
