@@ -245,6 +245,7 @@ export class AtlasManager {
       else {
         // Log an error
         console.error(`Could not fit image into atlas ${image.imagePath}`);
+        image = this.setDefaultImage(image, atlasName);
         return false;
 
       }
@@ -254,7 +255,7 @@ export class AtlasManager {
       // Log an error and load a default image
       console.error(`Could not load image ${image.imagePath}`);
       image = this.setDefaultImage(image, atlasName);
-      return true;
+      return false;
     }
   }
 
