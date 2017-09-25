@@ -5,7 +5,7 @@
     "url": "http://www.voidray.co"
   },
   "name": "@voidrayco/voidgl",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "license": "MIT",
