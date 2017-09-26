@@ -212,6 +212,12 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     animating: boolean;
     labels: Label<any>[];
     labelsReady: boolean;
+    /**
+     * This is the latest labels loading identifier, used to determine if the labels
+     * last loaded matches the labels currently needing to be rendered.
+     */
+    labelsCurrentLoadedId: number;
+    labelsLoadId: number;
     /** When this is set to true, the atlas with the colors is now ready to be referenced */
     colors: AtlasColor[];
     colorsReady: boolean;
