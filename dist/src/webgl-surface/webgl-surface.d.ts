@@ -223,6 +223,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     colorsReady: boolean;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
+    /** Flag for detecting whether or not webgl is supported at all */
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
      * This updates the cameras current position and causes changes over time for
