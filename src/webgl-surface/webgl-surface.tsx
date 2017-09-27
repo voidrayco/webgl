@@ -1421,7 +1421,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     const { width, height } = this.props;
 
     if (!WEBGL_SUPPORTED) {
-      return this.props.children || <div>Web GL not supported</div>;
+      return <div>{this.props.children || 'Web GL not supported'}</div>;
     }
 
     return (
