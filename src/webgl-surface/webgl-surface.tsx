@@ -247,6 +247,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   animating: boolean = false;
   labels: Label<any>[] = [];
   labelsReady: boolean = false;
+  /**
+   * This is the latest labels loading identifier, used to determine if the labels
+   * last loaded matches the labels currently needing to be rendered.
+   */
+  labelsCurrentLoadedId: number = 0;
+  labelsLoadId: number = 0;
   /** When this is set to true, the atlas with the colors is now ready to be referenced */
   colors: AtlasColor[] = [];
   colorsReady: boolean = false;
@@ -562,6 +568,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           debugLabels('Labels are being comitted to an Atlas %o', props.labels);
           // Flag the labels as incapable of rendering
           this.labelsReady = false;
+          this.labelsLoadId++;
           // Store the set of labels we are rendering so that they do not get re-generated
           // In the atlas rapidly.
           this.labels = props.labels;
@@ -577,7 +584,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           .then(() => {
             debugLabels('Labels rasterized within the atlas!');
             this.forceDraw = true;
-            this.labelsReady = true;
+            this.labelsCurrentLoadedId++;
+
+            // If we are done loading AND we match up with the current load id, then labels
+            // For the latest labels update are indeed ready for display
+            if (this.labelsCurrentLoadedId === this.labelsLoadId) {
+              this.labelsReady = true;
+            }
+
             // Reapply the props so any buffers that were not updating can update now
             this.applyProps(this.props);
           });
@@ -638,7 +652,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         // On initialization this should start with some base camera metrics
         if (props.viewport && props.viewport !== this.appliedViewport && this.quadTree) {
-          debugCam('Applying viewport to camera: %o World Space Bounds: %o', props.viewport, this.quadTree.bounds);
+          debugCam('Applying viewport to camera: %o World Space Bounds: %o Screen context: %o', props.viewport, this.quadTree.bounds, {width: props.width, height: props.height});
 
           // Position the camera over the mid of the specified viewport
           const mid = props.viewport.mid;
@@ -649,8 +663,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           const zoomAtOne = 1;
 
           // Calculate the zoom needed for the viewport
-          const zoomToFitViewH = this.ctx.width / props.viewport.width;
-          const zoomToFitViewV = this.ctx.height / props.viewport.height;
+          const zoomToFitViewH = props.width / props.viewport.width;
+          const zoomToFitViewV = props.height / props.viewport.height;
           const zoomToFit = Math.min(zoomToFitViewH, zoomToFitViewV);
 
           // This adjusts the destination zxoom by a tiny amount so the view will redraw
@@ -666,8 +680,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.zoomTargetY = mid.y;
 
           // Make sure mouse position doesn't mess with the zooming focus either
-          this.lastMousePosition.x = this.ctx.widthHalf;
-          this.lastMousePosition.y = this.ctx.heightHalf;
+          this.lastMousePosition.x = props.width / 2.0;
+          this.lastMousePosition.y = props.height / 2.0;
 
           // Apply the values immediately to the camera
           this.positionCamera(this.currentX, this.currentY);

@@ -115,12 +115,11 @@ export declare class Bounds<T> {
      */
     static isBounds(value: any): value is Bounds<any>;
     /**
-     * Check if the provided bounds is completely contained within this instance
+     * Check if this instance is completely inside the provided bounds
      *
      * @param bounds The bounds to test against this instance
      *
-     * @return True if the provided bounds is completely contained within this
-     * instance
+     * @return True if this instance is inside the provided bounds
      */
     isInside(bounds: Bounds<T>): boolean;
     /**

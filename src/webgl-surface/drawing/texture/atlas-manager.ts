@@ -4,10 +4,21 @@ import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { Bounds } from '../../primitives/bounds';
 import { IPoint } from '../../primitives/point';
 import { ImageDimensions, PackNode } from '../../util/pack-node';
+import { Label } from '../shape/label';
 import { AtlasTexture } from './atlas-texture';
 
 const debug = require('debug')('webgl-surface:Atlas');
 const debugLabels = require('debug')('webgl-surface:Labels');
+
+const ZERO_IMAGE = {
+  atlasBL: {x: 0, y: 0},
+  atlasBR: {x: 0, y: 0},
+  atlasTL: {x: 0, y: 0},
+  atlasTR: {x: 0, y: 0},
+  label: new Label<any>({text: ' '}),
+  pixelHeight: 0,
+  pixelWidth: 0,
+};
 
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
@@ -134,6 +145,21 @@ export class AtlasManager {
     }
   }
 
+  isValidImage(image: AtlasTexture){
+    let isValid = false;
+    if (image && (image.imagePath || (image.label && image.label.text))) {
+      if (image.pixelWidth && image.pixelHeight){
+        isValid = true;
+      }
+    }
+    return isValid;
+  }
+
+  setDefaultImage(image: AtlasTexture, atlasName: string){
+    image = Object.assign(image, ZERO_IMAGE, {atlasReferenceID: atlasName});
+    return image;
+  }
+
   /**
    * This loads, packs, and draws the indicated image into the specified canvas
    * using the metrics that exists for the specified atlas.
@@ -161,7 +187,7 @@ export class AtlasManager {
     image.atlasReferenceID = null;
 
     // Only a non-null image means the image loaded correctly
-    if (loadedImage) {
+    if (loadedImage && this.isValidImage(image)) {
       debug('Image loaded: %o', image.imagePath);
       // Now we create a Rectangle to store the image dimensions
       const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, image.pixelHeight, 0);
@@ -207,7 +233,7 @@ export class AtlasManager {
         image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
         image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
         image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y };
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y};
 
         // Now draw the image to the indicated canvas
         canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);
@@ -218,13 +244,18 @@ export class AtlasManager {
 
       else {
         // Log an error
-        throw new Error(`Could not fit image into atlas ${image.imagePath}`);
+        console.error(`Could not fit image into atlas ${image.imagePath}`);
+        image = this.setDefaultImage(image, atlasName);
+        return false;
+
       }
     }
 
     else {
-      // Log an error
-      throw new Error(`Could not load image ${image.imagePath}`);
+      // Log an error and load a default image
+      console.error(`Could not load image ${image.imagePath}`);
+      image = this.setDefaultImage(image, atlasName);
+      return false;
     }
   }
 
@@ -247,7 +278,7 @@ export class AtlasManager {
     const colorHeight = 2;
     // Set a max per row limit. We default to rendering across the width of a 512x512
     // Max texture
-    const maxPerRow = 512 / colorWidth;
+    const maxPerRow = 1024 / colorWidth;
     // We get the width of a row of colors
     const rowWidth = Math.min(this.textureWidth, maxPerRow * colorWidth);
     // Get how many rows it will take to render the colors

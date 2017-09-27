@@ -46,13 +46,13 @@ function normalizeFirefoxWheel(e: React.WheelEvent<HTMLDivElement>) {
   // Keep our FIR memory clean and only the size of the number of coefficients
   lowPassY.pop();
 
-  return new Vector2(-deltaX, deltaY);
+  return new Vector2(-deltaX, -deltaY);
 }
 
 function normalizeChromeWheel(e: React.WheelEvent<HTMLDivElement>) {
   const wheel: WheelEvent = e.nativeEvent as WheelEvent;
 
-  return new Vector2(wheel.deltaX, wheel.deltaY);
+  return new Vector2(wheel.deltaX, -wheel.deltaY);
 }
 
 function normalizeIE11Wheel(e: React.WheelEvent<HTMLDivElement>) {
@@ -75,7 +75,7 @@ function normalizeIE11Wheel(e: React.WheelEvent<HTMLDivElement>) {
     }
   }
 
-  return new Vector2(-deltaX, deltaY);
+  return new Vector2(-deltaX, -deltaY);
 }
 
 function normalizeIE12Wheel(e: React.WheelEvent<HTMLDivElement>) {
@@ -96,7 +96,7 @@ function normalizeIE12Wheel(e: React.WheelEvent<HTMLDivElement>) {
     }
   }
 
-  const v = new Vector2(deltaX, deltaY);
+  const v = new Vector2(deltaX, -deltaY);
   v.multiplyScalar(0.25);
 
   return v;
