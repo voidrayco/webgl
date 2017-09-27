@@ -278,7 +278,7 @@ export class AtlasManager {
     const colorHeight = 2;
     // Set a max per row limit. We default to rendering across the width of a 512x512
     // Max texture
-    const maxPerRow = 512 / colorWidth;
+    const maxPerRow = 1024 / colorWidth;
     // We get the width of a row of colors
     const rowWidth = Math.min(this.textureWidth, maxPerRow * colorWidth);
     // Get how many rows it will take to render the colors
