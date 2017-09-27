@@ -5,7 +5,6 @@ import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
-import { getAttributeCurrentTime } from '../../util/time';
 import { BaseBuffer } from '../base-buffer';
 
 /**
