@@ -148,6 +148,21 @@ function sign(value: number): number {
   return 0;
 }
 
+function isWebGLSupported() {
+  try{
+    const canvas = document.createElement('canvas');
+    return !! (window as any).WebGLRenderingContext && (
+      canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' )
+    );
+  }
+
+  catch (e) {
+    return false;
+  }
+}
+
+const WEBGL_SUPPORTED = isWebGLSupported();
+
 /**
  * The base component for the communications view
  */
@@ -259,6 +274,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
+
+  /** Flag for detecting whether or not webgl is supported at all */
 
   /**
    * This is the update loop that operates at the requestAnimationFrame speed.
@@ -1402,6 +1419,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   render() {
     const { width, height } = this.props;
+
+    if (!WEBGL_SUPPORTED) {
+      return this.props.children || <div>Web GL not supported</div>;
+    }
 
     return (
       <div
