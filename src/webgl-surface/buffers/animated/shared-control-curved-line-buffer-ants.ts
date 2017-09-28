@@ -13,7 +13,7 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<any>, Mesh> {
+export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineShape < any >, Mesh > {
   /**
    * @override
    * See interface definition
@@ -51,6 +51,11 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
         defaults: [0],
         name: 'halfLinewidth',
         size: AttributeSize.ONE,
+      },
+      {
+        defaults: [0, 0, 0, 0],
+        name: 'marching',
+        size: AttributeSize.FOUR,
       },
     ];
 
@@ -107,6 +112,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
 
     // Commit static curved lines
     const colorAttributeSize = 1;
+    const marchingAttributeSize = 4;
     const numVerticesPerSegment = 6;
     let halfWidthSize = 1;
     let length = 15;
@@ -116,10 +122,23 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
     let colorStart: AtlasColor;
     let colorEnd: AtlasColor;
     let alpha: number;
+    let antLength: number;
+    let antGap: number;
+    let antSpeed: number;
+    // We can not accurately send very large numbers via float point into the attributes
+    // So we trim down our time sent to the attribute down to a number that is less than
+    // 16,777,217 which means we can only reliably grab the last 7 digits of the date's time
+    const antStartTime: number = 0;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
+      // We will not render the curved line with this buffer if the marching ants are not provided
+      if (!curvedLine.marchingAnts) {
+        console.error('Attempted to render a curved line shape with a marching ant buffer but provided no marching ant metrics. This curved line shape will be skipped', curvedLine);
+        continue;
+      }
+
       alpha = curvedLine.startColor.base.opacity;
       colorStart = curvedLine.startColor.base;
       colorEnd = curvedLine.endColor.base;
@@ -127,6 +146,9 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       length = curvedLine.resolution;
       p1 = curvedLine.p1;
       p2 = curvedLine.p2;
+      antGap = curvedLine.marchingAnts.gapLength;
+      antSpeed = curvedLine.marchingAnts.speed;
+      antLength = curvedLine.marchingAnts.strokeLength + curvedLine.marchingAnts.gapLength;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
@@ -138,6 +160,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           normals: Float32Array, npos: number,
           endPoints: Float32Array, epos: number,
           halfWidth: Float32Array, wpos: number,
+          marching: Float32Array, mpos: number,
         ) {
 
           // Copy first vertex twice for intro degenerate tri
@@ -148,6 +171,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           // Skip over degenerate tris color
           scpos += colorAttributeSize;
           ecpos += colorAttributeSize;
+          mpos += marchingAttributeSize;
           normals[npos] = 1;
           endPoints[epos] = p1.x;
           endPoints[++epos] = p1.y;
@@ -166,6 +190,10 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[scpos] = colorStart.colorIndex;
           endColor[ecpos] = colorEnd.colorIndex;
+          marching[mpos] = antStartTime;
+          marching[++mpos] = antSpeed;
+          marching[++mpos] = antGap;
+          marching[++mpos] = antLength;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -179,6 +207,10 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[++scpos] = colorStart.colorIndex;
           endColor[++ecpos] = colorEnd.colorIndex;
+          marching[++mpos] = antStartTime;
+          marching[++mpos] = antSpeed;
+          marching[++mpos] = antGap;
+          marching[++mpos] = antLength;
 
           // TL
           positions[++ppos] = i / length;
@@ -192,6 +224,10 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[++scpos] = colorStart.colorIndex;
           endColor[++ecpos] = colorEnd.colorIndex;
+          marching[++mpos] = antStartTime;
+          marching[++mpos] = antSpeed;
+          marching[++mpos] = antGap;
+          marching[++mpos] = antLength;
 
           // BL
           positions[++ppos] = i / length;
@@ -205,6 +241,10 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[++scpos] = colorStart.colorIndex;
           endColor[++ecpos] = colorEnd.colorIndex;
+          marching[++mpos] = antStartTime;
+          marching[++mpos] = antSpeed;
+          marching[++mpos] = antGap;
+          marching[++mpos] = antLength;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -214,6 +254,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           // Skip over degenerate tris for color
           scpos += colorAttributeSize;
           ecpos += colorAttributeSize;
+          mpos += marchingAttributeSize;
           normals[++npos] = -1;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;

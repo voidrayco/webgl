@@ -212,11 +212,18 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     animating: boolean;
     labels: Label<any>[];
     labelsReady: boolean;
+    /**
+     * This is the latest labels loading identifier, used to determine if the labels
+     * last loaded matches the labels currently needing to be rendered.
+     */
+    labelsCurrentLoadedId: number;
+    labelsLoadId: number;
     /** When this is set to true, the atlas with the colors is now ready to be referenced */
     colors: AtlasColor[];
     colorsReady: boolean;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
+    /** Flag for detecting whether or not webgl is supported at all */
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
      * This updates the cameras current position and causes changes over time for

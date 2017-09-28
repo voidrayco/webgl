@@ -9,3 +9,4 @@ export * from './shape-buffer-cache';
 
 export * from './interpolation';
 export * from './mouse';
+export * from './time';

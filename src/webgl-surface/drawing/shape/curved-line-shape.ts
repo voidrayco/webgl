@@ -3,6 +3,28 @@ import { Line } from '../../primitives/line';
 import { IPoint, Point } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
 
+export interface IMarchingAnts {
+  /**
+   * This is how fast the ants will march along the line. A speed of 1 will
+   * make the ants march the full line in 1 second. A speed of 2 will make them
+   * march the line if half a second. Conversly, a speed of 0.5 will make them
+   * march in 2 seconds.
+   */
+  speed: number;
+  /**
+   * This is how long the solid part of the ant line is
+   * This number is a value that ranges from 0 - 1, so it is more a percentage
+   * of the line rather than a pixel value. The pixel value can be calculated
+   * if the distance of the line is first calculated.
+   */
+  strokeLength: number;
+  /**
+   * This is how long the gap is between each ant. This too is a value between
+   * 0 - 1 (see strokeLength)
+   */
+  gapLength: number;
+}
+
 export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
   /** Flags whether or not the calculated geometry for the line is cached or not */
   cacheSegments?: boolean;
@@ -20,6 +42,11 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
   endOpacity?: number;
   /** The desired thickness of the line */
   lineWidth?: number;
+  /**
+   * When this is set, the line will have properties needed for rendering marching
+   * ants in webgl
+   */
+  marchingAnts?: IMarchingAnts;
   /** The base color of the line. */
   startColor: ReferenceColor;
   /** The base opacity of the line */
@@ -49,6 +76,8 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
   startColor: ReferenceColor;
   /** How thick the line should be */
   lineWidth: number = 1;
+  /** When set, this curved line will have the potential to render as a marching ant line */
+  marchingAnts: IMarchingAnts;
 
   /**
    * Creates an instance of CurvedLineShape.
