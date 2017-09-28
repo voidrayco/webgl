@@ -288,14 +288,18 @@ export class Node<T extends Bounds<any>> {
       return true;
     }
 
-    // HACK: We've hacked this for the time being, because it was breaking the
-    // > client's system. When we figure out what's wrong with the bounds, we
-    // > could put this back
+    // This is when there is something wrong with the insertted child. The bounds
+    // For the quad should have grown without issue, but in this case the bounds
+    // Could not grow to accomodate the child.
+    if (isNaN(child.width + child.height + child.x + child.y)) {
+      console.error('Child did not fit into bounds because a dimension is NaN', child);
+    }
 
-    // Otherwise, this quad tree needs to be resized to include the child
-    // But we will consider adds outside of the bounds an error
-    // DISABLED TEMPORARILY: throw new Error('Child does not fit in node.');
-    this.children.push(child);
+    else if (child.area === 0) {
+      console.error('Child did not fit into bounds because the area is zero', child);
+    }
+
+    // Don't insert the child and continue
     return true;
   }
 
