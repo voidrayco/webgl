@@ -85,4 +85,5 @@ export declare class Label<T> extends RotateableQuad<T> {
      * Change the text and the calculated bounding box for this label
      */
     setText(lbl: string): void;
+    update(): void;
 }
