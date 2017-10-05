@@ -90,16 +90,13 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
                tpos: number,
                sizes: Float32Array,
                spos: number,
-               achors: Float32Array,
+               anchors: Float32Array,
                apos: number,
               ) {
         label = shapeBuffer[i];
         texture = label.rasterizedLabel;
         color = label.color.base.color;
         alpha = label.color.base.opacity;
-        debug('label %o  anchortype %o', label.text, label.getAnchorType());
-        debug('position %o anchor %o', label.getLocation(), label.getAnchor());
-        debug('color  %o', color);
         // Make sure the label is updated with it's latest metrics
         label.update();
 
@@ -107,8 +104,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
-        achors[apos] = label.getLocation().x + label.getSize().width;
-        achors[++apos] = label.getLocation().y;
+        anchors[apos] = label.getLocation().x + label.getSize().width;
+        anchors[++apos] = label.getLocation().y;
         // Skip over degenerate tris color and tex
         cpos += colorAttributeSize;
         tpos += texCoordAttributeSize;
@@ -126,8 +123,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        achors[++apos] = label.getLocation().x + label.getSize().width;
-        achors[++apos] = label.getLocation().y;
+        anchors[++apos] = label.getLocation().x + label.getSize().width;
+        anchors[++apos] = label.getLocation().y;
         // BR
         positions[++ppos] = label.BR.x;
         positions[++ppos] = label.BR.y;
@@ -140,8 +137,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        achors[++apos] = label.getLocation().x + label.getSize().width;
-        achors[++apos] = label.getLocation().y;
+        anchors[++apos] = label.getLocation().x + label.getSize().width;
+        anchors[++apos] = label.getLocation().y;
         // TL
         positions[++ppos] = label.TL.x;
         positions[++ppos] = label.TL.y;
@@ -154,8 +151,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        achors[++apos] = label.getLocation().x + label.getSize().width;
-        achors[++apos] = label.getLocation().y;
+        anchors[++apos] = label.getLocation().x + label.getSize().width;
+        anchors[++apos] = label.getLocation().y;
         // BL
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
@@ -168,15 +165,15 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        achors[++apos] = label.getLocation().x + label.getSize().width;
-        achors[++apos] = label.getLocation().y;
+        anchors[++apos] = label.getLocation().x + label.getSize().width;
+        anchors[++apos] = label.getLocation().y;
 
         // Copy last vertex again for degenerate tri
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
-        achors[++apos] = label.getLocation().x + label.getSize().width;
-        achors[++apos] = label.getLocation().y;
+        anchors[++apos] = label.getLocation().x + label.getSize().width;
+        anchors[++apos] = label.getLocation().y;
       },
     );
 
