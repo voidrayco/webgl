@@ -444,10 +444,10 @@ export class AtlasManager {
           const fontSize = label.fontSize;
 
           const color = rgb(
-            label.r * 255,
-            label.g * 255,
-            label.b * 255,
-            label.a,
+            label.color.base.color.r * 255,
+            label.color.base.color.g * 255,
+            label.color.base.color.b * 255,
+            label.color.base.opacity,
           );
 
           ctx.font = label.makeCSSFont(fontSize);

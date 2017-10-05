@@ -1,4 +1,4 @@
-import { Mesh, TriangleStripDrawMode } from 'three';
+import { Color, Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
 import { Label } from '../../drawing/shape/label';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
@@ -30,6 +30,16 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
           name: 'texCoord',
           size: AttributeSize.THREE,
         },
+        {
+          defaults: [0, 0],
+          name: 'size',
+          size: AttributeSize.TWO,
+        },
+        {
+          defaults: [0, 0],
+          name: 'anchor',
+          size: AttributeSize.TWO,
+        },
       ];
 
       const verticesPerQuad = 6;
@@ -56,8 +66,13 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
     const numVerticesPerQuad = 6;
     const colorAttributeSize = 3;
     const texCoordAttributeSize = 3;
+    const sizeAttributSize = 2;
     let label;
     let texture;
+    let color: Color;
+    let alpha: number;
+
+    debug('labels %o', shapeBuffer);
 
     if (!shapeBuffer) {
       return false;
@@ -66,10 +81,25 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
     const updated = BufferUtil.updateBuffer(
       shapeBuffer, this.bufferItems,
       numVerticesPerQuad, shapeBuffer.length,
-      function(i: number, positions: Float32Array, ppos: number, colors: Float32Array, cpos: number, texCoords: Float32Array, tpos: number) {
+      function(i: number,
+               positions: Float32Array,
+               ppos: number,
+               colors: Float32Array,
+               cpos: number,
+               texCoords: Float32Array,
+               tpos: number,
+               sizes: Float32Array,
+               spos: number,
+               achors: Float32Array,
+               apos: number,
+              ) {
         label = shapeBuffer[i];
         texture = label.rasterizedLabel;
-        debug('texture is %o', texture);
+        color = label.color.base.color;
+        alpha = label.color.base.opacity;
+        debug('label %o  anchortype %o', label.text, label.getAnchorType());
+        debug('position %o anchor %o', label.getLocation(), label.getAnchor());
+        debug('color  %o', color);
         // Make sure the label is updated with it's latest metrics
         label.update();
 
@@ -77,9 +107,12 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
+        achors[apos] = label.getLocation().x + label.getSize().width;
+        achors[++apos] = label.getLocation().y;
         // Skip over degenerate tris color and tex
         cpos += colorAttributeSize;
         tpos += texCoordAttributeSize;
+        spos += sizeAttributSize;
 
         // TR
         positions[++ppos] = label.TR.x;
@@ -87,45 +120,63 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.depth;
         texCoords[tpos] = texture.atlasTR.x;
         texCoords[++tpos] = texture.atlasTR.y;
-        texCoords[++tpos] = label.a;
-        colors[cpos] = label.r;
-        colors[++cpos] = label.g;
-        colors[++cpos] = label.b;
+        texCoords[++tpos] = alpha;
+        colors[cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        sizes[spos] = label.getSize().width;
+        sizes[++spos] = label.getSize().height;
+        achors[++apos] = label.getLocation().x + label.getSize().width;
+        achors[++apos] = label.getLocation().y;
         // BR
         positions[++ppos] = label.BR.x;
         positions[++ppos] = label.BR.y;
         positions[++ppos] = label.depth;
         texCoords[++tpos] = texture.atlasBR.x;
         texCoords[++tpos] = texture.atlasBR.y;
-        texCoords[++tpos] = label.a;
-        colors[cpos] = label.r;
-        colors[++cpos] = label.g;
-        colors[++cpos] = label.b;
+        texCoords[++tpos] = alpha;
+        colors[++cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        sizes[++spos] = label.getSize().width;
+        sizes[++spos] = label.getSize().height;
+        achors[++apos] = label.getLocation().x + label.getSize().width;
+        achors[++apos] = label.getLocation().y;
         // TL
         positions[++ppos] = label.TL.x;
         positions[++ppos] = label.TL.y;
         positions[++ppos] = label.depth;
         texCoords[++tpos] = texture.atlasTL.x;
         texCoords[++tpos] = texture.atlasTL.y;
-        texCoords[++tpos] = label.a;
-        colors[++cpos] = label.r;
-        colors[++cpos] = label.g;
-        colors[++cpos] = label.b;
+        texCoords[++tpos] = alpha;
+        colors[++cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        sizes[++spos] = label.getSize().width;
+        sizes[++spos] = label.getSize().height;
+        achors[++apos] = label.getLocation().x + label.getSize().width;
+        achors[++apos] = label.getLocation().y;
         // BL
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
         texCoords[++tpos] = texture.atlasBL.x;
         texCoords[++tpos] = texture.atlasBL.y;
-        texCoords[++tpos] = label.a;
-        colors[++cpos] = label.r;
-        colors[++cpos] = label.g;
-        colors[++cpos] = label.b;
+        texCoords[++tpos] = alpha;
+        colors[++cpos] = color.r;
+        colors[++cpos] = color.g;
+        colors[++cpos] = color.b;
+        sizes[++spos] = label.getSize().width;
+        sizes[++spos] = label.getSize().height;
+        achors[++apos] = label.getLocation().x + label.getSize().width;
+        achors[++apos] = label.getLocation().y;
 
         // Copy last vertex again for degenerate tri
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
+        achors[++apos] = label.getLocation().x + label.getSize().width;
+        achors[++apos] = label.getLocation().y;
       },
     );
 
