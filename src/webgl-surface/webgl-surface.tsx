@@ -8,6 +8,7 @@ import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { FrameInfo } from './util/frame-info';
 import { eventElementPosition } from './util/mouse';
 import { IProjection } from './util/projection';
 import { QuadTree } from './util/quad-tree';
@@ -287,6 +288,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       return;
     }
 
+    FrameInfo.lastFrameTime = Date.now();
+    FrameInfo.framesPlayed.set(this, (FrameInfo.framesPlayed.get(this) || 0) + 1);
     requestAnimationFrame(() => this.animate());
 
     let response: IAnimatedMethodResponse;
@@ -808,6 +811,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.renderEl = null;
     this.renderer = null;
     this.scene = null;
+
+    this.atlasManager.destroyAtlas(this.atlasNames.colors);
+    this.atlasManager.destroyAtlas(this.atlasNames.labels);
+
+    FrameInfo.framesPlayed.delete(this);
   }
 
   /**
