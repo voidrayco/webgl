@@ -18,6 +18,7 @@ uniform vec3 camera;
 uniform float maxLabelSize;
 uniform float startFade;
 uniform float endFade;
+uniform float chortHeight;
 
 void main() {
   texCoordinate = vec2(texCoord.x, texCoord.y);
@@ -29,20 +30,21 @@ void main() {
   vec4 cameraVector2 = projectionMatrix * cameraVector1;
 
   float projectHeight = sizeVector2.y - cameraVector2.y;
+  float height = chortHeight * projectHeight * 4.0;
 
   /** Calculate the opacity for label */
   opacity = 1.0;
-  if ( projectHeight < startFade && projectHeight > endFade) {
-    opacity = ( projectHeight - endFade ) / ( startFade - endFade ); 
+  if ( height < startFade && height > endFade) {
+    opacity = ( height - endFade ) / ( startFade - endFade ); 
   }
-  else if ( projectHeight <= endFade ) {
+  else if ( height <= endFade ) {
     opacity = 0.0;
   }
 
 /** Calculate the new position in a label*/
   vec2 newPosition = position.xy;
-  if ( projectHeight > maxLabelSize ) {
-    float ratio = maxLabelSize / projectHeight;
+  if ( height > maxLabelSize ) {
+    float ratio = maxLabelSize / height;
     newPosition = anchor + ratio * ( newPosition - anchor);
   }
 

@@ -1,4 +1,4 @@
-import { Color, Mesh, TriangleStripDrawMode } from 'three';
+import { Color, IUniform, Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
 import { Label } from '../../drawing/shape/label';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
@@ -61,7 +61,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
    *
    * @param shapeBuffer
    */
-  update(shapeBuffer: Label<any>[]): boolean {
+  update(shapeBuffer: Label<any>[], startFade?: number, endFade?: number, labelMaxSize?: number): boolean {
     // Make some constants and props for our buffer update loop
     const numVerticesPerQuad = 6;
     const colorAttributeSize = 3;
@@ -71,8 +71,16 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
     let texture;
     let color: Color;
     let alpha: number;
+    let anchor;
 
     debug('labels %o', shapeBuffer);
+    if (shapeBuffer && shapeBuffer.length > 0 && (startFade || endFade || labelMaxSize)){
+      const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
+      const uniforms: { [k: string]: IUniform } = material.uniforms;
+      if (startFade) uniforms.startFade.value = startFade;
+      if (endFade) uniforms.endFade.value = endFade;
+      if (labelMaxSize) uniforms.maxLabelSize.value = labelMaxSize;
+    }
 
     if (!shapeBuffer) {
       return false;
@@ -97,6 +105,10 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         texture = label.rasterizedLabel;
         color = label.color.base.color;
         alpha = label.color.base.opacity;
+        anchor = {
+                  x: label.getLocation().x + label.getSize().width * Math.cos(label.getRotation()),
+                  y: label.getLocation().y + label.getSize().width * Math.sin(label.getRotation()),
+                 };
         // Make sure the label is updated with it's latest metrics
         label.update();
 
@@ -104,8 +116,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
-        anchors[apos] = label.getLocation().x + label.getSize().width;
-        anchors[++apos] = label.getLocation().y;
+        anchors[apos] = anchor.x;
+        anchors[++apos] = anchor.y;
         // Skip over degenerate tris color and tex
         cpos += colorAttributeSize;
         tpos += texCoordAttributeSize;
@@ -123,8 +135,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        anchors[++apos] = label.getLocation().x + label.getSize().width;
-        anchors[++apos] = label.getLocation().y;
+        anchors[++apos] = anchor.x;
+        anchors[++apos] = anchor.y;
         // BR
         positions[++ppos] = label.BR.x;
         positions[++ppos] = label.BR.y;
@@ -137,8 +149,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        anchors[++apos] = label.getLocation().x + label.getSize().width;
-        anchors[++apos] = label.getLocation().y;
+        anchors[++apos] = anchor.x;
+        anchors[++apos] = anchor.y;
         // TL
         positions[++ppos] = label.TL.x;
         positions[++ppos] = label.TL.y;
@@ -151,8 +163,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        anchors[++apos] = label.getLocation().x + label.getSize().width;
-        anchors[++apos] = label.getLocation().y;
+        anchors[++apos] = anchor.x;
+        anchors[++apos] = anchor.y;
         // BL
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
@@ -165,15 +177,15 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         colors[++cpos] = color.b;
         sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
-        anchors[++apos] = label.getLocation().x + label.getSize().width;
-        anchors[++apos] = label.getLocation().y;
+        anchors[++apos] = anchor.x;
+        anchors[++apos] = anchor.y;
 
         // Copy last vertex again for degenerate tri
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
-        anchors[++apos] = label.getLocation().x + label.getSize().width;
-        anchors[++apos] = label.getLocation().y;
+        anchors[++apos] = anchor.x;
+        anchors[++apos] = anchor.y;
       },
     );
 
