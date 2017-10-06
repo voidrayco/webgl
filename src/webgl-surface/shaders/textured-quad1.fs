@@ -11,7 +11,7 @@ varying vec4 labelColorPick;
 void main() {
   vec4 color = texture2D(atlasTexture, texCoordinate);
 
-  vec4 tint = texture2D(atlasTexture, vec2(labelColorPick.x, labelColorPick.y));
+  vec4 tint = labelColorPick;
   
   color *= (tint * opacity);
   
