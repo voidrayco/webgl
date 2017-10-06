@@ -4,24 +4,40 @@
  * processed
  */
 
+// These uniforms are information regarding the color atlas
+uniform sampler2D colorAtlas;
+uniform float colorsPerRow;
+uniform vec2 firstColor;
+uniform vec2 nextColor;
+
 /** The tex coordinate and opacity of the output texture {tx, ty, opacity} */
 attribute vec3 texCoord;
 attribute vec2 size;
 attribute vec2 anchor;
+attribute float colorPick;
 
 /** Passes the tex coord to the FS */
 varying vec2 texCoordinate;
 /** Passes the opacity of the image to the FS */
 varying float opacity;
+// This passes the calculated color of the vertex
+varying vec4 labelColorPick;
 
 uniform vec3 camera;
 uniform float maxLabelSize;
 uniform float startFade;
 uniform float endFade;
-uniform float chortHeight;
+
+vec4 pickColor(float index) {
+  float row = floor(index / colorsPerRow);
+  float col = index - (row * colorsPerRow);
+  return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
+}
 
 void main() {
   texCoordinate = vec2(texCoord.x, texCoord.y);
+
+  labelColorPick = mix(pickColor(colorPick),pickColor(colorPick),position.x);
 
   vec4 sizeVector1 = modelViewMatrix * vec4(size.x+camera.x, size.y+camera.y, 0.0, 1.0);
   vec4 sizeVector2 = projectionMatrix * sizeVector1;
@@ -29,8 +45,7 @@ void main() {
   vec4 cameraVector1 = modelViewMatrix * vec4(camera.x, camera.y, 0.0, 1.0);
   vec4 cameraVector2 = projectionMatrix * cameraVector1;
 
-  float projectHeight = sizeVector2.y - cameraVector2.y;
-  float height = chortHeight * projectHeight * 4.0;
+  float height = sizeVector2.y - cameraVector2.y;
 
   /** Calculate the opacity for label */
   opacity = 1.0;
@@ -41,7 +56,7 @@ void main() {
     opacity = 0.0;
   }
 
-/** Calculate the new position in a label*/
+  /** Calculate the new position in a label*/
   vec2 newPosition = position.xy;
   if ( height > maxLabelSize ) {
     float ratio = maxLabelSize / height;

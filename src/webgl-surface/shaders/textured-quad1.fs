@@ -5,11 +5,15 @@
 uniform sampler2D atlasTexture;
 varying vec2 texCoordinate;
 varying float opacity;
+varying vec4 labelColorPick;
+
 
 void main() {
   vec4 color = texture2D(atlasTexture, texCoordinate);
+
+  vec4 tint = texture2D(atlasTexture, vec2(labelColorPick.x, labelColorPick.y));
   
-  color *= opacity;
+  color *= (tint * opacity);
   
   gl_FragColor = color;
 }
