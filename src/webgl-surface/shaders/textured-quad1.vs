@@ -21,7 +21,7 @@ varying vec2 texCoordinate;
 /** Passes the opacity of the image to the FS */
 varying float opacity;
 // This passes the calculated color of the vertex
-varying vec4 labelColorPick;
+varying vec4 tint;
 
 uniform vec3 camera;
 uniform float maxLabelSize;
@@ -37,7 +37,7 @@ vec4 pickColor(float index) {
 void main() {
   texCoordinate = vec2(texCoord.x, texCoord.y);
 
-  labelColorPick = mix(pickColor(colorPick),pickColor(colorPick),position.x);
+  tint = pickColor(colorPick);
 
   vec4 sizeVector1 = modelViewMatrix * vec4(size.x+camera.x, size.y+camera.y, 0.0, 1.0);
   vec4 sizeVector2 = projectionMatrix * sizeVector1;

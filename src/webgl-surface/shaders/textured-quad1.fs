@@ -5,13 +5,11 @@
 uniform sampler2D atlasTexture;
 varying vec2 texCoordinate;
 varying float opacity;
-varying vec4 labelColorPick;
+varying vec4 tint;
 
 
 void main() {
   vec4 color = texture2D(atlasTexture, texCoordinate);
-
-  vec4 tint = labelColorPick;
   
   color *= (tint * opacity);
   
