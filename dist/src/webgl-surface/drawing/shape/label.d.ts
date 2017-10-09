@@ -1,7 +1,7 @@
-import { Color } from 'three';
 import { IPoint } from '../../primitives/point';
 import { RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
+import { ReferenceColor } from '../reference/reference-color';
 import { AtlasTexture } from '../texture/atlas-texture';
 export declare class Label<T> extends RotateableQuad<T> {
     depth: number;
@@ -43,11 +43,7 @@ export declare class Label<T> extends RotateableQuad<T> {
      * the label cut off.
      */
     rasterizationPadding: ISize;
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-    color: Color;
+    color?: ReferenceColor;
     /**
      * Creates an instance of Label.
      *
