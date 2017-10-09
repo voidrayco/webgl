@@ -150,6 +150,10 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.calculateAnchor(anchor);
   }
 
+  getAnchor(): IPoint {
+    return this.anchor;
+  }
+
   getAnchorType() {
     return this.anchorType;
   }
