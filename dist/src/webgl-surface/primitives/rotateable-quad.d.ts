@@ -64,6 +64,7 @@ export declare class RotateableQuad<T> extends Bounds<T> {
      *                        than the calculated version.
      */
     setAnchor(anchor?: AnchorPosition, custom?: IPoint): void;
+    getAnchor(): IPoint;
     getAnchorType(): AnchorPosition;
     /**
      * This sets the location of this quad to a given position where the anchor
