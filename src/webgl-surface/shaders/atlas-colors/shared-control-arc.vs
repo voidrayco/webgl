@@ -5,8 +5,9 @@ uniform vec2 firstColor;
 uniform vec2 nextColor;
 // This is the shared control point for all of the vertices
 uniform vec2 controlPoint;
-// This is the current time the rendering is at
-uniform float currentTime;
+
+float PI = 3.1415926535897932384626433832795;
+float PI_2 = 6.2831853072;
 
 /**
   Position contains this information:
@@ -25,37 +26,46 @@ attribute float normalDirection;
 attribute vec4 endPoints;
 attribute float halfLinewidth;
 
-/**
-  This is the information necessary to render marching ants
-  {
-    x: start time,
-    y: speed,
-    z: gap,
-    w: length,
-  }
-**/
-attribute vec4 marching;
-
-/**
-  This is the information necessary to render marching ants
-  {
-    x: start time,
-    y: speed,
-    z: length - gap,
-    w: length,
-  }
-**/
-// Pass the marching ant info to the fragment shader
-varying vec4 marchingAnts;
 // This passes the calculated color of the vertex
 varying vec4 vertexColor;
-// Passes the 0 - 1 value of where we are on the line to the fragment shader
-varying float interpolTime;
 
-vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
+/**
+  Calculates position of a point via circular interpolation
+
+  float t - The current time (0-1) for the interpolation value
+  float rt - Current time reverse (1.0 - t)
+  vec2 p1 - The start point of the arc
+  vec2 p2 - The end point of the arc
+  vec2 c1 - The center of the circle for the arc
+**/
+vec2 makeCircular(float t, float rt, vec2 p1, vec2 p2, vec2 c1) {
+  // Get the direction vector from the circle center to the first end point
+  vec2 direction1 = p1 - c1;
+  // Get the angle of the first vector
+  float theta1 = atan(direction1.y, direction1.x);
+  // Get the direction vector from the circle center to the second end point
+  vec2 direction2 = p2 - c1;
+  // Get the angle of the second vector
+  float theta2 = atan(direction2.y, direction2.x);
+  // Ensure our theta's are definitely between 0 to Math.PI * 2 after the atan
+  // Calculation
+  theta1 -= floor(theta1 / PI_2) * PI_2;
+  theta2 -= floor(theta2 / PI_2) * PI_2;
+
+  // Ensure our path around the arc is always the shortest distance
+  float dTheta = min(theta2 - theta1, theta1 - theta2);
+
+  // We use this to calculate how far we are between the two points in radians
+  // Based on the time parameter provided for the interpolation
+  dTheta *= t;
+
+  // We must have the radial distance of both points to properly calculate
+  // An easing between the two radii
+  float radius = length(direction1);
+
   return vec2(
-    (1.0 - t) * (1.0 - t) * p1.x + 2.0 * t * (1.0 - t) * c1.x + t * t * p2.x,
-    (1.0 - t) * (1.0 - t) * p1.y + 2.0 * t * (1.0 - t) * c1.y + t * t * p2.y
+    cos(theta1 + dTheta) * radius + c1.x,
+    sin(theta1 + dTheta) * radius + c1.y,
   );
 }
 
@@ -71,9 +81,9 @@ void main() {
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
 
-  vec2 currentPosition = makeBezier2(position.x, p1, p2, controlPoint);
-  vec2 prePosition = makeBezier2(position.x - (1.0 / position.y), p1, p2, controlPoint);
-  vec2 nextPosition = makeBezier2(position.x + (1.0 / position.y), p1, p2, controlPoint);
+  vec2 currentPosition = makeCircular(position.x, p1, p2, controlPoint);
+  vec2 prePosition = makeCircular(position.x - (1.0 / position.y), p1, p2, controlPoint);
+  vec2 nextPosition = makeCircular(position.x + (1.0 / position.y), p1, p2, controlPoint);
 
   vec2 preLine = prePosition - currentPosition;
   vec2 nextLine = nextPosition - currentPosition;
@@ -94,6 +104,4 @@ void main() {
 
   vec4 mvPosition = modelViewMatrix * vec4(x, y, position.z, 1.0);
   gl_Position = projectionMatrix * mvPosition;
-  marchingAnts = vec4(marching.xy, marching.w - marching.z, marching.w);
-  interpolTime = position.x;
 }

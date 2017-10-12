@@ -1,4 +1,5 @@
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { AnimatedCurvedLineShape } from '../../drawing';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AtlasColor } from '../../drawing/texture/atlas-color';
@@ -13,7 +14,7 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineShape < any >, Mesh > {
+export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineShape<any>, Mesh> {
   /**
    * @override
    * See interface definition
@@ -28,13 +29,18 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
         size: AttributeSize.THREE,
       },
       {
-        defaults: [0],
-        name: 'startColorPick',
-        size: AttributeSize.ONE,
+        defaults: [0, 0, 0, 0],
+        name: 'colorPicks',
+        size: AttributeSize.FOUR,
       },
       {
         defaults: [0],
-        name: 'endColorPick',
+        name: 'startTime',
+        size: AttributeSize.ONE,
+      },
+      {
+        defaults: [1000],
+        name: 'duration',
         size: AttributeSize.ONE,
       },
       {
@@ -51,11 +57,6 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
         defaults: [0],
         name: 'halfLinewidth',
         size: AttributeSize.ONE,
-      },
-      {
-        defaults: [0, 0, 0, 0],
-        name: 'marching',
-        size: AttributeSize.FOUR,
       },
     ];
 
@@ -84,7 +85,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
    * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
    *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, sharedControl?: IPoint) {
+  update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager, sharedControl?: IPoint) {
     if (!shapeBuffer) {
       return false;
     }
@@ -111,56 +112,49 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
     }
 
     // Commit static curved lines
-    const colorAttributeSize = 1;
-    const marchingAttributeSize = 4;
+    const colorAttributeSize = 4;
     const numVerticesPerSegment = 6;
+    const startTimeAttributeSize = 1;
+    const durationAttributeSize = 1;
     let halfWidthSize = 1;
     let length = 15;
     let needsUpdate = false;
     let p1: IPoint;
     let p2: IPoint;
-    let colorStart: AtlasColor;
-    let colorEnd: AtlasColor;
+    let colorStart: number;
+    let colorStartStop: number;
+    let colorEnd: number;
+    let colorEndStop: number;
     let alpha: number;
-    let antLength: number;
-    let antGap: number;
-    let antSpeed: number;
-    // We can not accurately send very large numbers via float point into the attributes
-    // So we trim down our time sent to the attribute down to a number that is less than
-    // 16,777,217 which means we can only reliably grab the last 7 digits of the date's time
-    const antStartTime: number = 0;
+    let startTime: number;
+    let duration: number;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
-      // We will not render the curved line with this buffer if the marching ants are not provided
-      if (!curvedLine.marchingAnts) {
-        console.error('Attempted to render a curved line shape with a marching ant buffer but provided no marching ant metrics. This curved line shape will be skipped', curvedLine);
-        continue;
-      }
-
       alpha = curvedLine.startColor.base.opacity;
-      colorStart = curvedLine.startColor.base;
-      colorEnd = curvedLine.endColor.base;
+      colorEnd = curvedLine.endColor.base.colorIndex;
+      colorEndStop = curvedLine.endColorStop.base.colorIndex;
+      colorStart = curvedLine.startColor.base.colorIndex;
+      colorStartStop = curvedLine.startColorStop.base.colorIndex;
+      duration = curvedLine.duration;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
       p1 = curvedLine.start;
       p2 = curvedLine.end;
-      antGap = curvedLine.marchingAnts.gapLength;
-      antSpeed = curvedLine.marchingAnts.speed;
-      antLength = curvedLine.marchingAnts.strokeLength + curvedLine.marchingAnts.gapLength;
+      startTime = curvedLine.startTime;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
         numVerticesPerSegment, length,
         function(i: number,
           positions: Float32Array, ppos: number,
-          startColor: Float32Array, scpos: number,
-          endColor: Float32Array, ecpos: number,
+          colorPicks: Float32Array, cpos: number,
+          startTimes: Float32Array, stpos: number,
+          durations: Float32Array, dpos: number,
           normals: Float32Array, npos: number,
           endPoints: Float32Array, epos: number,
           halfWidth: Float32Array, wpos: number,
-          marching: Float32Array, mpos: number,
         ) {
 
           // Copy first vertex twice for intro degenerate tri
@@ -169,9 +163,9 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           positions[++ppos] = curvedLine.depth;
           halfWidth[wpos] = halfWidthSize;
           // Skip over degenerate tris color
-          scpos += colorAttributeSize;
-          ecpos += colorAttributeSize;
-          mpos += marchingAttributeSize;
+          cpos += colorAttributeSize;
+          stpos += startTimeAttributeSize;
+          dpos += durationAttributeSize;
           normals[npos] = 1;
           endPoints[epos] = p1.x;
           endPoints[++epos] = p1.y;
@@ -188,12 +182,12 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          startColor[scpos] = colorStart.colorIndex;
-          endColor[ecpos] = colorEnd.colorIndex;
-          marching[mpos] = antStartTime;
-          marching[++mpos] = antSpeed;
-          marching[++mpos] = antGap;
-          marching[++mpos] = antLength;
+          colorPicks[cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          startTimes[stpos] = startTime;
+          durations[dpos] = duration;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -205,12 +199,12 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          startColor[++scpos] = colorStart.colorIndex;
-          endColor[++ecpos] = colorEnd.colorIndex;
-          marching[++mpos] = antStartTime;
-          marching[++mpos] = antSpeed;
-          marching[++mpos] = antGap;
-          marching[++mpos] = antLength;
+          colorPicks[++cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          startTimes[++stpos] = startTime;
+          durations[++dpos] = duration;
 
           // TL
           positions[++ppos] = i / length;
@@ -222,12 +216,12 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          startColor[++scpos] = colorStart.colorIndex;
-          endColor[++ecpos] = colorEnd.colorIndex;
-          marching[++mpos] = antStartTime;
-          marching[++mpos] = antSpeed;
-          marching[++mpos] = antGap;
-          marching[++mpos] = antLength;
+          colorPicks[++cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          startTimes[++stpos] = startTime;
+          durations[++dpos] = duration;
 
           // BL
           positions[++ppos] = i / length;
@@ -239,12 +233,12 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          startColor[++scpos] = colorStart.colorIndex;
-          endColor[++ecpos] = colorEnd.colorIndex;
-          marching[++mpos] = antStartTime;
-          marching[++mpos] = antSpeed;
-          marching[++mpos] = antGap;
-          marching[++mpos] = antLength;
+          colorPicks[++cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          startTimes[++stpos] = startTime;
+          durations[++dpos] = duration;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -252,9 +246,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           positions[++ppos] = curvedLine.depth;
           halfWidth[++wpos] = halfWidthSize;
           // Skip over degenerate tris for color
-          scpos += colorAttributeSize;
-          ecpos += colorAttributeSize;
-          mpos += marchingAttributeSize;
+          cpos += colorAttributeSize;
           normals[++npos] = -1;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;

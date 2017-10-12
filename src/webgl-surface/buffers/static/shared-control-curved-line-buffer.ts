@@ -125,8 +125,8 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       colorEnd = curvedLine.endColor.base;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
-      p1 = curvedLine.p1;
-      p2 = curvedLine.p2;
+      p1 = curvedLine.start;
+      p2 = curvedLine.end;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
