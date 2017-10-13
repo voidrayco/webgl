@@ -18,7 +18,7 @@ export class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
   /**
    * This is the internal control for managing execution of the animate method
    */
-  private doAnimate() {
+  private doAnimate = () => {
     if (this.playState === PlayState.PLAY) {
       requestAnimationFrame(this.doAnimate);
     }
@@ -45,6 +45,7 @@ export class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
 
       if (this.playState === PlayState.INIT) {
         this.start();
+        requestAnimationFrame(this.doAnimate);
       }
     }
   }

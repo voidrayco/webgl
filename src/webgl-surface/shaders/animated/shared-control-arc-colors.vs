@@ -51,30 +51,40 @@ varying vec4 vertexColor;
   vec2 p2 - The end point of the arc
   vec2 c1 - The center of the circle for the arc
 **/
-vec2 makeCircular(float t, float rt, vec2 p1, vec2 p2, vec2 c1) {
+vec2 makeCircular(float t, vec2 p1, vec2 p2, vec2 c1) {
   // Get the direction vector from the circle center to the first end point
   vec2 direction1 = p1 - c1;
   // Get the angle of the first vector
   float theta1 = atan(direction1.y, direction1.x);
-  // Get the direction vector from the circle center to the second end point
-  vec2 direction2 = p2 - c1;
   // Get the angle of the second vector
-  float theta2 = atan(direction2.y, direction2.x);
+  float theta2 = atan(p2.y - c1.y, p2.x - c1.x);
   // Ensure our theta's are definitely between 0 to Math.PI * 2 after the atan
   // Calculation
   theta1 -= floor(theta1 / PI_2) * PI_2;
   theta2 -= floor(theta2 / PI_2) * PI_2;
 
   // Ensure our path around the arc is always the shortest distance
-  float dTheta = min(theta2 - theta1, theta1 - theta2);
+  float smaller = min(theta1, theta2);
+  float larger = max(theta1, theta2);
+  float dTheta1 = (smaller + PI_2) - larger;
+  float dTheta2 = larger - smaller;
 
   // We use this to calculate how far we are between the two points in radians
   // Based on the time parameter provided for the interpolation
-  dTheta *= t;
+  float dTheta = min(dTheta1, dTheta2) * -t;
 
   // We must have the radial distance of both points to properly calculate
   // An easing between the two radii
   float radius = length(direction1);
+
+  // Now we decide the start point of the circle in respect to the dtheta
+  if (dTheta1 < dTheta2) {
+    theta1 = smaller;
+  }
+
+  else {
+    theta1 = larger;
+  }
 
   return vec2(cos(theta1 + dTheta) * radius + c1.x, sin(theta1 + dTheta) * radius + c1.y);
 }
@@ -86,7 +96,11 @@ vec4 pickColor(float index) {
 }
 
 void main() {
-  float time = (currentTime - startTime) / duration;
+  float time = min((currentTime - startTime) / duration, 1.0);
+
+  if (time < 0.0) {
+    time = 1.0;
+  }
 
   // Calculate the color for the vertex
   vec4 startColor = mix(pickColor(colorPicks.x), pickColor(colorPicks.y), time);
@@ -97,16 +111,13 @@ void main() {
   vec2 p2 = vec2(endPoints.z, endPoints.w);
 
   // Calculate the position of this bezier point for the curve
-  float reverseTime = 1.0 - position.x;
-  vec2 currentPosition = makeCircular(position.x, reverseTime, p1, p2, controlPoint);
+  vec2 currentPosition = makeCircular(position.x, p1, p2, controlPoint);
   // Calculate the position of the previous point on the bezier curve
   time = position.x - (1.0 / position.y);
-  reverseTime = 1.0 - time;
-  vec2 prePosition = makeCircular(time, reverseTime, p1, p2, controlPoint);
+  vec2 prePosition = makeCircular(time, p1, p2, controlPoint);
   // Calculate the next point of the bezier curve
   time = position.x + (1.0 / position.y);
-  reverseTime = 1.0 - time;
-  vec2 nextPosition = makeCircular(time, reverseTime, p1, p2, controlPoint);
+  vec2 nextPosition = makeCircular(time, p1, p2, controlPoint);
 
   vec2 preLine = prePosition - currentPosition;
   vec2 nextLine = nextPosition - currentPosition;
