@@ -18,8 +18,6 @@ attribute float colorPick;
 
 /** Passes the tex coord to the FS */
 varying vec2 texCoordinate;
-/** Passes the opacity of the image to the FS */
-varying float opacity;
 // This passes the calculated color of the vertex
 varying vec4 tint;
 
@@ -48,17 +46,19 @@ void main() {
   float height = sizeVector2.y - cameraVector2.y;
 
   /** Calculate the opacity for label */
-  opacity = 1.0;
-  if ( height < startFade && height > endFade) {
-    opacity = ( height - endFade ) / ( startFade - endFade ); 
+  float opacity = 1.0;
+  if (height < startFade && height > endFade) {
+    opacity = (height - endFade) / (startFade - endFade);
   }
-  else if ( height <= endFade ) {
+  else if (height <= endFade) {
     opacity = 0.0;
   }
 
+  tint *= opacity;
+
   /** Calculate the new position in a label*/
   vec2 newPosition = position.xy;
-  if ( height > maxLabelSize ) {
+  if (height > maxLabelSize && false) {
     float ratio = maxLabelSize / height;
     newPosition = anchor + ratio * ( newPosition - anchor);
   }
