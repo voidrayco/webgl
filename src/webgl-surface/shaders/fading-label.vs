@@ -58,7 +58,7 @@ void main() {
 
   /** Calculate the new position in a label*/
   vec2 newPosition = position.xy;
-  if (height > maxLabelSize && false) {
+  if (height > maxLabelSize) {
     float ratio = maxLabelSize / height;
     newPosition = anchor + ratio * ( newPosition - anchor);
   }
