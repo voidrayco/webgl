@@ -7,8 +7,6 @@ import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-const debug = require('debug')('simple-label-buffer');
-
 export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
   /**
    * @override
