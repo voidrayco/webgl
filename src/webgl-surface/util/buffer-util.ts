@@ -331,10 +331,11 @@ export class BufferUtil {
    * @param {number} vertexBatch The number of vertices to include per update batch
    * @param {number} numBatches The number of batches to execute
    * @param {Function} updateAccessor The accessor for performing the data update to the buffer
+   * @param {boolean} force This bypasses the typical checks that determines if the buffer SHOULD update.
    *
    * @return {boolean} True if the buffer was updated with this call
    */
-  static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function): boolean {
+  static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function, force?: boolean): boolean {
     const attributes = bufferItems.attributes;
     const buffer = bufferItems.geometry;
 
@@ -343,7 +344,7 @@ export class BufferUtil {
     const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
 
     // We check if there is a reference change in the data indicating a buffer push needs to happen
-    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed) {
+    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed || force) {
       // If we aren't streaming updates, then we always start at the beginning
       if (!isStreamUpdatingRegister) {
         // Reset out last batch register as this is an entriely new update

@@ -89,10 +89,28 @@ export interface IAnimatedMethodResponse {
 }
 
 // Types for making method assignment and organizatione easier
+export type AnimatedMethodOptions = { labelsReady?: boolean, colorsReady?: boolean };
+export type AnimatedMethodWithOptions = { options: AnimatedMethodOptions, method(): IAnimatedMethodResponse };
 export type AnimatedMethod = () => IAnimatedMethodResponse;
 export type AnimatedMethodLookup = {[key: number]: AnimatedMethod};
 export type ApplyPropsMethod<T> = (props: T) => IApplyPropsMethodResponse;
 export type ApplyPropsMethodLookup<T> = {[key: number]: ApplyPropsMethod<T>};
+
+function isAnimatedWithOptions(value: any): value is AnimatedMethodWithOptions {
+  if (value.options) {
+    return true;
+  }
+
+  return false;
+}
+
+function isAnimated(value: any): value is AnimatedMethod {
+  if (!value.options) {
+    return true;
+  }
+
+  return false;
+}
 
 /** This is the smallest increment the zoom can make. Anything less and nothing will happen */
 const MIN_ZOOM_INCREMENT = 0.001;
@@ -180,7 +198,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * simpler to manage, as well as gives a clear and optimized way of overriding existing methods
    * or reordering their execution
    */
-  animatedMethodList: AnimatedMethod[] = [];
+  animatedMethodList: (AnimatedMethod | AnimatedMethodWithOptions)[] = [];
   /**
    * If this is set to true during an animated method's lifecycle, then all subsequent animated methods
    * will not be executed for the current frame. Upon reaching the end of the frame, the break will reset
@@ -295,8 +313,30 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     let response: IAnimatedMethodResponse;
     let doDraw: boolean | undefined = false;
 
-    const didBreak = this.animatedMethodList.some((method: AnimatedMethod): boolean => {
-      response = method();
+    const didBreak = this.animatedMethodList.some((method: AnimatedMethod | AnimatedMethodOptions): boolean => {
+      if (isAnimatedWithOptions(method)) {
+        if (method.options.labelsReady && method.options.colorsReady) {
+          if (this.labelsReady && this.colorsReady) {
+            response = method.method();
+          }
+        }
+
+        else if (method.options.labelsReady) {
+          if (this.labelsReady) {
+            response = method.method();
+          }
+        }
+
+        else if (method.options.colorsReady) {
+          if (this.colorsReady) {
+            response = method.method();
+          }
+        }
+      }
+
+      else if (isAnimated(method)) {
+        response = method();
+      }
 
       // Update our draw status based on response
       if (!doDraw) {

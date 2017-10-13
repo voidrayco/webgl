@@ -11,3 +11,4 @@ export * from './animated-shape-buffer-cache';
 export * from './interpolation';
 export * from './mouse';
 export * from './frame-info';
+export * from './easing';

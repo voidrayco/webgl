@@ -4,7 +4,8 @@ uniform float colorsPerRow;
 uniform vec2 firstColor;
 uniform vec2 nextColor;
 // This is the shared control point for all of the vertices
-uniform vec2 controlPoint;
+// Allows up to 10 unique control points
+uniform float controlPoints[20];
 uniform float currentTime;
 
 float PI = 3.1415926535897932384626433832795;
@@ -28,11 +29,17 @@ float PI_2 = 6.2831853072;
   }
 **/
 attribute vec4 colorPicks;
+/** This lets the line select a control point from the array of control point values in the uniform */
+attribute float controlPick;
 // THis is used to compare against the currentTime uniform to determine how far
 // along our interpolation we are
-attribute float startTime;
-// This is used to help determine how far along our
-attribute float duration;
+/**
+  {
+    x: start time,
+    y: duration,
+  }
+**/
+attribute vec2 timing;
 // 1 or -1, used to indicate the direction
 attribute float normalDirection;
 // (x,y) is the first point, (z,w) is the second point
@@ -57,7 +64,8 @@ vec2 makeCircular(float t, vec2 p1, vec2 p2, vec2 c1) {
   // Get the angle of the first vector
   float theta1 = atan(direction1.y, direction1.x);
   // Get the angle of the second vector
-  float theta2 = atan(p2.y - c1.y, p2.x - c1.x);
+  vec2 direction2 = p2 - c1;
+  float theta2 = atan(direction2.y, direction2.x);
   // Ensure our theta's are definitely between 0 to Math.PI * 2 after the atan
   // Calculation
   theta1 -= floor(theta1 / PI_2) * PI_2;
@@ -96,7 +104,7 @@ vec4 pickColor(float index) {
 }
 
 void main() {
-  float time = min((currentTime - startTime) / duration, 1.0);
+  float time = min((currentTime - timing.x) / timing.y, 1.0);
 
   if (time < 0.0) {
     time = 1.0;
@@ -106,6 +114,9 @@ void main() {
   vec4 startColor = mix(pickColor(colorPicks.x), pickColor(colorPicks.y), time);
   vec4 endColor = mix(pickColor(colorPicks.z), pickColor(colorPicks.w), time);
   vertexColor = mix(startColor, endColor, position.x);
+
+  // Get the control point for the line
+  vec2 controlPoint = vec2(controlPoints[int(controlPick)], controlPoints[int(controlPick + 1.0)]);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);

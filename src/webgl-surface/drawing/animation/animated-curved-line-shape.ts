@@ -2,6 +2,7 @@ import { Color } from 'three';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { IPoint } from '../../primitives/point';
 import { EasingMethod, linear } from '../../util/easing';
+import { FrameInfo } from '../../util/frame-info';
 import { circular } from '../../util/interpolation';
 import { CurvedLineShape, ICurvedLineShapeOptions } from '../shape/curved-line-shape';
 
@@ -9,8 +10,8 @@ export interface IAnimatedCurvedLineShapeOptions extends ICurvedLineShapeOptions
   duration?: number;
   easing?: EasingMethod;
   endColorStop?: ReferenceColor;
-  p1Stop?: IPoint;
-  p2Stop?: IPoint;
+  startStop?: IPoint;
+  endStop?: IPoint;
   startColorStop?: ReferenceColor;
   startTime?: number;
 }
@@ -76,8 +77,8 @@ export class AnimatedCurvedLineShape<T> extends CurvedLineShape<T> {
     super(options);
 
     if (options) {
-      this.startStop = options.p1Stop || {x: 0, y: 0};
-      this.endStop = options.p2Stop || {x: 0, y: 0};
+      this.startStop = options.startStop || {x: 0, y: 0};
+      this.endStop = options.endStop || {x: 0, y: 0};
 
       if (options.startColorStop) {
         this.startColorStop = options.startColorStop;
@@ -95,7 +96,7 @@ export class AnimatedCurvedLineShape<T> extends CurvedLineShape<T> {
    */
   private _currentStartColor: Color = new Color(0, 0, 0);
   get currentStartColor(): Color {
-    const time = Date.now() - this.startTime;
+    const time = Math.min(FrameInfo.lastFrameTime - this.startTime, this.duration);
     const startBase = this.startColor.base.color;
 
     this._currentStartColor.r = this.easing(time, startBase.r, this._startColorChange.r, this.duration);
@@ -111,7 +112,7 @@ export class AnimatedCurvedLineShape<T> extends CurvedLineShape<T> {
    */
   private _currentEndColor: Color = new Color(0, 0, 0);
   get currentEndColor(): Color {
-    const time = Date.now() - this.startTime;
+    const time = Math.min(FrameInfo.lastFrameTime - this.startTime, this.duration);
     const endBase = this.endColor.base.color;
 
     this._currentEndColor.r = this.easing(time, endBase.r, this._endColorChange.r, this.duration);
@@ -121,23 +122,24 @@ export class AnimatedCurvedLineShape<T> extends CurvedLineShape<T> {
     return this._currentEndColor;
   }
 
-  get currentP1(): IPoint {
-    const time = Date.now() - this.startTime;
+  get currentStart(): IPoint {
+    const time = Math.min(FrameInfo.lastFrameTime - this.startTime, this.duration);
     // Since we must use a circular interpolation to calculate the animated position
     // Of the end point, we must apply the easing to the path the point will take
     // Which gets applied to the interpolations t value of 0 - 1
     const easedTime = this.easing(time, 0, 1, this.duration);
+    const newStart = circular(easedTime, this.start, this.startStop, this.controlPoints[1]);
 
-    return circular(easedTime, this.start, this.startStop, this.controlPoints[0]);
+    return newStart;
   }
 
-  get currentP2(): IPoint {
-    const time = Date.now() - this.startTime;
+  get currentEnd(): IPoint {
+    const time = Math.min(FrameInfo.lastFrameTime - this.startTime, this.duration);
     // Since we must use a circular interpolation to calculate the animated position
     // Of the end point, we must apply the easing to the path the point will take
     // Which gets applied to the interpolations t value of 0 - 1
     const easedTime = this.easing(time, 0, 1, this.duration);
     // Apply the circular interpolation to the points
-    return circular(easedTime, this.end, this.endStop, this.controlPoints[0]);
+    return circular(easedTime, this.end, this.endStop, this.controlPoints[1]);
   }
 }
