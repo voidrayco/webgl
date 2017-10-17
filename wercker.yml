@@ -2,9 +2,17 @@ box: kkarczmarczyk/node-yarn
 build:
   steps:
     - script:
-      name: Yarn Install
-      code: |
-        yarn install
+        name: Setup greenkeeper
+        code: yarn global add greenkeeper-lockfile@1
+    - script:
+        name: Update the lockfile
+        code: greenkeeper-lockfile-update
+    - script:
+        name: Yarn Install
+        code: yarn install
     - script:
         name: Test the build
         code: npm run build
+    - script:
+        name: Save the yarn lockfile
+        code: greenkeeper-lockfile-upload
