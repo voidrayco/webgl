@@ -2,6 +2,8 @@ This is a WebGL foundation library that VoidRay uses in our visualizations.
 
 ## Running
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/voidrayco/webgl.svg?token=ff0e3680fec01bfacbac4346e332401d4f65f4d29316223bc4c48306bb959487&ts=1508260009323)](https://greenkeeper.io/)
+
 This project is using the node version from package.json. At the time of writing
 this, that version is `7.10.1`
 
