@@ -651,12 +651,15 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
 
-        // We call the label buffering when the labels are ready to render
-        if (this.labelsReady) {
+        // We call the label buffering when the labels are ready to render.
+        // Labels now utilize the color atlas as well, thus requiring colors
+        // To be loaded
+        if (this.labelsReady && this.colorsReady) {
           debugLabels('labels changed %o', props);
           this.applyLabelBufferChanges(props);
         }
 
+        // For resources that only need the color atlas to be ready
         if (this.colorsReady) {
           this.applyColorBufferChanges(props);
         }
