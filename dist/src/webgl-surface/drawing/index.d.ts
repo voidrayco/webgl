@@ -1,4 +1,5 @@
 export * from './reference/reference-color';
+export * from './animation/animated-curved-line-shape';
 export * from './shape/circle-shape';
 export * from './shape/curved-line-shape';
 export * from './shape/edge-shape';

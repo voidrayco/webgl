@@ -314,7 +314,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     let response: IAnimatedMethodResponse;
     let doDraw: boolean | undefined = false;
 
-    const didBreak = this.animatedMethodList.some((method: AnimatedMethod | AnimatedMethodOptions): boolean => {
+    const didBreak = this.animatedMethodList.some((method: AnimatedMethod | AnimatedMethodWithOptions): boolean => {
       if (isAnimatedWithOptions(method)) {
         if (method.options.labelsReady && method.options.colorsReady) {
           if (this.labelsReady && this.colorsReady) {
@@ -387,7 +387,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    *
    * @return {AnimatedMethods[]} The list of animated methods in the order they are expected to be executed
    */
-  animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: AnimatedMethod[]): AnimatedMethod[] {
+  animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: (AnimatedMethod | AnimatedMethodWithOptions)[]): (AnimatedMethod | AnimatedMethodWithOptions)[] {
     // Default functionality is to use the simple preordered list
     return orderedBaseAnimatedMethods;
   }

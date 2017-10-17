@@ -1,4 +1,9 @@
-import { BufferGeometry } from 'three';
+import { BufferGeometry, Mesh } from 'three';
+export declare enum TriangleOrientation {
+    CW = 0,
+    CCW = 1,
+    DEGENERATE = 2,
+}
 export declare enum AttributeSize {
     ONE = 0,
     TWO = 1,
@@ -37,6 +42,14 @@ export declare class BufferUtil {
      * will always just start at the beginning of the buffer.
      */
     static endUpdates(): number;
+    /**
+     * It is often needed to examine a given buffer and see how the triangles are packed in.
+     * This is a common debugging need and will speed up debugging significantly.
+     *
+     * @param {IBufferItems<T, U>} bufferItems This is the buffer whose structure we want
+     *                                         to examine.
+     */
+    static examineBuffer<T, U extends Mesh>(bufferItems: IBufferItems<T, U>, message: string, debugNamespace: string): void;
     /**
      * @static
      * This handles many of the common tasks associated with constructing a new buffer
@@ -83,10 +96,11 @@ export declare class BufferUtil {
      * @param {number} vertexBatch The number of vertices to include per update batch
      * @param {number} numBatches The number of batches to execute
      * @param {Function} updateAccessor The accessor for performing the data update to the buffer
+     * @param {boolean} force This bypasses the typical checks that determines if the buffer SHOULD update.
      *
      * @return {boolean} True if the buffer was updated with this call
      */
-    static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function): boolean;
+    static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function, force?: boolean): boolean;
     /**
      * This makes all of the typical items used in creating and managing a buffer of items rendered to the screen
      *
