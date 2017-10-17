@@ -1,5 +1,22 @@
-import { BufferAttribute, BufferGeometry } from 'three';
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Mesh,
+  ShaderMaterial,
+  TrianglesDrawMode,
+  TriangleStripDrawMode,
+} from 'three';
+const debugGenerator = require('debug');
 const debug = require('debug')('WebGLSurface:BufferUtil');
+
+export enum TriangleOrientation {
+  // The triangles points are clockwise
+  CW,
+  // The triangles points are Counter clockwise
+  CCW,
+  // The triangles points are linear, thus degenerate
+  DEGENERATE,
+}
 
 export enum AttributeSize {
   ONE,
@@ -231,6 +248,12 @@ const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: F
   7: updateBuffer7,
 };
 
+function orientation(p1: IPoint, p2: IPoint, p3: IPoint): number {
+  const val = (p2.y - p1.y) * (p3.x - p2.x) - (p2.x - p1.x) * (p3.y - p2.y);
+  if (val === 0) { return TriangleOrientation.DEGENERATE; }
+  return (val > 0) ? TriangleOrientation.CW : TriangleOrientation.CCW;
+}
+
 /**
  * This provides methods for handling common buffer tasks such as construction
  * and population.
@@ -257,6 +280,105 @@ export class BufferUtil {
     lastBatchRegister = 0;
 
     return totalBatches;
+  }
+
+  /**
+   * It is often needed to examine a given buffer and see how the triangles are packed in.
+   * This is a common debugging need and will speed up debugging significantly.
+   *
+   * @param {IBufferItems<T, U>} bufferItems This is the buffer whose structure we want
+   *                                         to examine.
+   */
+  static examineBuffer<T, U extends Mesh>(bufferItems: IBufferItems<T, U>, message: string, debugNamespace: string) {
+    // Get the appropriate debug namespace
+    const debugBuffer = debugGenerator(debugNamespace);
+
+    // Quick quit if the debugger is not enabled
+    if (!debugBuffer.enabled) {
+      return;
+    }
+
+    const attributes = bufferItems.attributes;
+    const buffer = bufferItems.geometry;
+    // Get the attributes by name out of the three js buffer
+    const bufferAttributes: any[] = attributes.map((attr: IAttributeInfo) => (buffer.attributes as any)[attr.name]);
+    // Get the raw number buffers
+    const attributeBuffers: number[][] = bufferAttributes.map((attr: any) => attr.array as number[]);
+
+    // This will store all of the examined triangles for easy viewing
+    const triangles = [];
+
+    if (bufferItems.system.drawMode === TrianglesDrawMode) {
+      let currentVertex = 0;
+      let attrSize = 0;
+      let currentIndex = 0;
+      const length = buffer.drawRange.start + buffer.drawRange.count;
+
+      while (currentVertex < length) {
+        const tri: any = {
+          vertex_0: {},
+          vertex_1: {},
+          vertex_2: {},
+        };
+
+        // Each new triangle is a culmination of three vertices which are packed in
+        // The buffer with no vertex sharing
+        for (let i = 0; i < 3; ++i) {
+          attributes.forEach((attr, index) => {
+            attrSize = attr.size + 1;
+            currentIndex = currentVertex * attrSize;
+            tri[`vertex_${i}`][attr.name] = attributeBuffers[index].slice(currentIndex, currentIndex + attrSize);
+          });
+
+          // Move to the next vertex
+          currentVertex++;
+        }
+
+        // Store the calculated tri
+        triangles.push(tri);
+      }
+    }
+
+    else if (bufferItems.system.drawMode === TriangleStripDrawMode) {
+      let currentVertex = 0;
+      let attrSize = 0;
+      let currentIndex = 0;
+      const length = buffer.drawRange.start + buffer.drawRange.count;
+
+      while (currentVertex < length) {
+        const tri: any = {
+          vertex_0: {},
+          vertex_1: {},
+          vertex_2: {},
+        };
+
+        // Each new triangle is three vertices, where the first two are shared with
+        // The previous triangle's last two vertices
+        for (let i = 0; i < 3; ++i) {
+          attributes.forEach((attr, index) => {
+            attrSize = attr.size + 1;
+            currentIndex = currentVertex * attrSize;
+            tri[`vertex_${i}`][attr.name] = attributeBuffers[index].slice(currentIndex, currentIndex + attrSize);
+          });
+
+          // Move to the next vertex
+          currentVertex++;
+        }
+
+        // Go back two vertices as the next tri will use them + the next vertex to
+        // Make the next triangle
+        currentVertex -= 2;
+
+        // Store the calculated tri
+        triangles.push(tri);
+      }
+    }
+
+    // Log the debug info to the console using the debug utility
+    debugBuffer(message, {
+      drawRange: buffer.drawRange,
+      triangles,
+    }, (bufferItems.system.material as ShaderMaterial).uniforms);
   }
 
   /**

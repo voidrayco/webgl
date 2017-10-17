@@ -16,6 +16,7 @@ import { IScreenContext } from './util/screen-context';
 const debug = require('debug')('webgl-surface:GPU');
 const debugCam = require('debug')('webgl-surface:Camera');
 const debugLabels = require('debug')('webgl-surface:Labels');
+const debugColors = require('debug')('webgl-surface:Colors');
 
 /**
  * This enum names the base methods that are passed into the applyPropsMethods
@@ -642,7 +643,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           debugLabels('Creating the atlas for labels based on these textures %o', textures);
           this.atlasManager.createAtlas(this.atlasNames.labels, textures)
           .then(() => {
-            debugLabels('Labels rasterized within the atlas!');
+            debugLabels('Labels rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.labels));
             this.forceDraw = true;
             this.labelsCurrentLoadedId++;
 
@@ -665,7 +666,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         // If we have a new labels reference we must regenerate the labels in our image lookup
         if (props.colors && props.colors !== this.colors) {
-          debugLabels('Colors are being comitted to an Atlas %o', props.colors);
+          debugColors('Colors are being comitted to an Atlas %o', props.colors);
           // Flag the labels as incapable of rendering
           this.colorsReady = false;
           // Store the set of labels we are rendering so that they do not get re-generated
@@ -676,10 +677,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
             this.atlasManager.destroyAtlas(this.atlasNames.colors);
           }
 
-          debugLabels('Creating the atlas for colors based on these colors %o', this.colors);
+          debugColors('Creating the atlas for colors based on these colors %o', this.colors);
           this.atlasManager.createAtlas(this.atlasNames.colors, null, this.colors)
           .then(() => {
-            debugLabels('Colors rasterized within the atlas!');
+            debugColors('Colors rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.colors));
             this.forceDraw = true;
             this.colorsReady = true;
             // Reapply the props so any buffers that were not updating can update now

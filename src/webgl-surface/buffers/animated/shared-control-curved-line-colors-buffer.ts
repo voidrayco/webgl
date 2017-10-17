@@ -13,7 +13,7 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineShape<any>, Mesh> {
+export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <AnimatedCurvedLineShape<any>, Mesh> {
   /**
    * @override
    * See interface definition
@@ -89,6 +89,7 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
       return false;
     }
 
+    let uniforms: { [k: string]: IUniform };
     const controlPoints: number[] = [];
     const controlReference = new Map<IPoint, number>();
     let controlUniform: IUniform;
@@ -103,7 +104,7 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
       // Update all uniforms for this material to utilize the atlas metrics for
       // Picking colors
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      const uniforms: { [k: string]: IUniform } = material.uniforms;
+      uniforms = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
       uniforms.colorAtlas.value = atlas;
       uniforms.colorsPerRow.value = colorBase.colorsPerRow;
@@ -151,8 +152,8 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
       controlRef = controlReference.get(controlPoint);
 
       if (controlRef === undefined) {
-        const length = controlPoints.push(controlPoint.x, controlPoint.y);
-        controlRef = length - 2;
+        const controlLength = controlPoints.push(controlPoint.x, controlPoint.y);
+        controlRef = controlLength - 2;
         controlReference.set(controlPoint, controlRef);
       }
 
@@ -168,7 +169,6 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
           endPoints: Float32Array, epos: number,
           halfWidth: Float32Array, wpos: number,
         ) {
-
           // Copy first vertex twice for intro degenerate tri
           controlPick[ctpos] = controlRef;
           cpos += colorAttributeSize;
@@ -232,8 +232,8 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
           halfWidth[++wpos] = halfWidthSize;
           normals[++npos] = 1;
           positions[++ppos] = i / length;
-          positions[++ppos] = curvedLine.depth;
           positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
           timing[++tpos] = startTime;
           timing[++tpos] = duration;
 
@@ -250,8 +250,8 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
           halfWidth[++wpos] = halfWidthSize;
           normals[++npos] = -1;
           positions[++ppos] = i / length;
-          positions[++ppos] = curvedLine.depth;
           positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
           timing[++tpos] = startTime;
           timing[++tpos] = duration;
 
@@ -270,8 +270,8 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
           controlPick[++ctpos] = controlRef;
         },
         // We force updates for this buffer since it has animated properties
-        // such as currentStartStop and currentEndStop which calculates
-        // animations on the CPU side.
+        // Such as currentStartStop and currentEndStop which calculates
+        // Animations on the CPU side.
         true,
       );
 
@@ -285,9 +285,6 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <CurvedLineS
 
     if (controlUniform) {
       controlUniform.value = controlPoints;
-
-      const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      const uniforms: { [k: string]: IUniform } = material.uniforms;
     }
 
     // Only if updates happened, should this change
