@@ -1,8 +1,8 @@
 import { omit } from 'ramda';
-import { Color } from 'three';
 import { IPoint } from '../../primitives/point';
 import { AnchorPosition, RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
+import { ReferenceColor } from '../reference/reference-color';
 import { AtlasTexture } from '../texture/atlas-texture';
 import { Sprite } from '../texture/sprite';
 
@@ -75,17 +75,7 @@ export class Label<T> extends RotateableQuad<T> {
    */
   rasterizationPadding: ISize = {width: 0, height: 0};
 
-  // Label coloring
-  r: number = 1;
-  g: number = 1;
-  b: number = 1;
-  a: number = 1;
-
-  set color(value: Color) {
-    this.r = value.r;
-    this.g = value.g;
-    this.b = value.b;
-  }
+  color?: ReferenceColor;
 
   /**
    * Creates an instance of Label.
