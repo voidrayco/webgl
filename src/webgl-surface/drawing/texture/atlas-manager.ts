@@ -438,7 +438,8 @@ export class AtlasManager {
         // Set the dimensions of the canvas/texture space we will be using to rasterize
         // The label. Use the label's rasterization controls to aid in rendering the label
         canvas.width = labelSize.width + texture.label.rasterizationPadding.width;
-        canvas.height = labelSize.height + texture.label.rasterizationPadding.height;
+        canvas.height = labelSize.height + texture.label.rasterizationPadding.height - 10;
+        canvas.style.backgroundColor = 'rgba(158,45,38,1)';
 
         if (ctx) {
           const fontSize = label.fontSize;
