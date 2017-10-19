@@ -67,9 +67,6 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
   update(shapeBuffer: Label<any>[], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean {
     // Make some constants and props for our buffer update loop
     const numVerticesPerQuad = 6;
-    const colorAttributeSize = 1;
-    const texCoordAttributeSize = 3;
-    const sizeAttributSize = 2;
     let label;
     let texture;
     let color: AtlasColor;
@@ -127,22 +124,24 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
-        anchors[apos] = anchor.x;
-        anchors[++apos] = anchor.y;
-        // Skip over degenerate tris color and tex
-        cpos += colorAttributeSize;
-        tpos += texCoordAttributeSize;
-        spos += sizeAttributSize;
-
-        // TR
-        positions[++ppos] = label.TR.x;
-        positions[++ppos] = label.TR.y;
-        positions[++ppos] = label.depth;
         texCoords[tpos] = texture.atlasTR.x;
         texCoords[++tpos] = texture.atlasTR.y;
         texCoords[++tpos] = alpha;
         colors[cpos] = color.colorIndex;
         sizes[spos] = label.getSize().width;
+        sizes[++spos] = label.getSize().height;
+        anchors[apos] = anchor.x;
+        anchors[++apos] = anchor.y;
+
+        // TR
+        positions[++ppos] = label.TR.x;
+        positions[++ppos] = label.TR.y;
+        positions[++ppos] = label.depth;
+        texCoords[++tpos] = texture.atlasTR.x;
+        texCoords[++tpos] = texture.atlasTR.y;
+        texCoords[++tpos] = alpha;
+        colors[++cpos] = color.colorIndex;
+        sizes[++spos] = label.getSize().width;
         sizes[++spos] = label.getSize().height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
@@ -187,6 +186,12 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
+        texCoords[++tpos] = texture.atlasBL.x;
+        texCoords[++tpos] = texture.atlasBL.y;
+        texCoords[++tpos] = alpha;
+        colors[++cpos] = color.colorIndex;
+        sizes[++spos] = label.getSize().width;
+        sizes[++spos] = label.getSize().height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
       },
