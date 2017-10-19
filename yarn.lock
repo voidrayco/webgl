@@ -51,10 +51,11 @@
   version "0.24.17"
   resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.24.17.tgz#9a399c69d102588dea1c6817e4401e8fa780e40b"
 
-"@types/react-dom@^15.5.0":
-  version "15.5.3"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-15.5.3.tgz#4f26d09c5a92bc76728051ab5ee7116617d72f39"
+"@types/react-dom@16.0.2":
+  version "16.0.2"
+  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-16.0.2.tgz#2da9de21fd83f0140b64794ad9c47930230aedae"
   dependencies:
+    "@types/node" "*"
     "@types/react" "*"
 
 "@types/react@*", "@types/react@^15.0.22":
