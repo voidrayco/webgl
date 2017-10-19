@@ -9,7 +9,7 @@ import { Sprite } from '../texture/sprite';
 const measurement = new Sprite(200, 200, 1, 1);
 
 export class Label<T> extends RotateableQuad<T> {
-  depth: number = 0;
+  depth: number = 40;
   direction: string = 'inherit';
   font: string = 'serif';
   fontSize: number = 10;

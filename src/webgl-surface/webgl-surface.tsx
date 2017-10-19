@@ -1066,6 +1066,39 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // NOTE: For subclasses
   }
 
+  makeDraggable(element: HTMLDivElement, stage: WebGLSurface<any, any>) {
+    element.onmousedown = function(event) {
+      debug('DRAG~');
+
+      document.onmousemove = function(event) {
+
+        if (stage.isPanning === false) {
+          const mouseX = event.clientX;
+          const mouseY = event.clientY;
+
+          const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
+          const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
+          stage.destinationX -= distanceX;
+          stage.destinationY += distanceY;
+          stage.lastMousePosition.x = mouseX;
+          stage.lastMousePosition.y = mouseY;
+        }
+      };
+      document.onmouseup = function() {
+        document.onmousemove = null;
+        stage.isPanning = false;
+
+        if (element.releasePointerCapture) { element.releasePointerCapture(0); }
+      };
+
+      if (element.setPointerCapture) { element.setPointerCapture(0); }
+    };
+
+    element.onmouseover = function() {
+      stage.isPanning = true;
+    };
+  }
+
   /**
    * Handles mouse interactions when the mouse is pressed on the canvas. This
    * engages panning.
@@ -1074,6 +1107,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
+
     if (this.disableMouseInteraction > 0) {
       return;
     }
@@ -1166,6 +1200,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     const mouse = eventElementPosition(e);
     const world = this.screenToWorld(mouse.x, mouse.y);
     this.distance++;
+
+    debug('mouse X %o Y %o', mouse.x, mouse.y);
 
     // Handle panning
     if (this.isPanning) {
