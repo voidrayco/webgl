@@ -275,6 +275,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
 
+  /** Mouse in stage or not */
+  inStage: boolean = true;
+
   /** Flag for detecting whether or not webgl is supported at all */
 
   /**
@@ -1066,6 +1069,37 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // NOTE: For subclasses
   }
 
+  makeDraggable(element: HTMLDivElement, stage: WebGLSurface<any, any>) {
+    element.onmouseout = function(event) {
+      debug('DRAG~');
+
+      document.onmousemove = function(event) {
+
+        if (stage.isPanning === false) {
+          const mouseX = event.clientX;
+          const mouseY = event.clientY;
+
+          const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
+          const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
+          stage.destinationX -= distanceX;
+          stage.destinationY += distanceY;
+          stage.lastMousePosition.x = mouseX;
+          stage.lastMousePosition.y = mouseY;
+        }
+      };
+
+      document.onmouseup = function() {
+        document.onmousemove = null;
+        stage.isPanning = false;
+
+        if (element.releasePointerCapture) { element.releasePointerCapture(0); }
+      };
+
+      if (element.setPointerCapture) { element.setPointerCapture(0); }
+    };
+
+  }
+
   /**
    * Handles mouse interactions when the mouse is pressed on the canvas. This
    * engages panning.
@@ -1077,7 +1111,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     if (this.disableMouseInteraction > 0) {
       return;
     }
-
+    debug('DOWN~');
     this.isPanning = true;
     this.distance = 0;
 
@@ -1098,7 +1132,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     this.isPanning = false;
     this.distance = 0;
-
+    this.makeDraggable(e.currentTarget, this);
     this.onMouseOut();
   }
 
@@ -1169,6 +1203,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     // Handle panning
     if (this.isPanning) {
+      debug('down and moving ~~');
       let xDistance = (mouse.x - this.lastMousePosition.x) / this.targetZoom;
       let yDistance = -(mouse.y - this.lastMousePosition.y) / this.targetZoom;
 
