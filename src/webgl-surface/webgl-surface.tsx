@@ -1066,39 +1066,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // NOTE: For subclasses
   }
 
-  makeDraggable(element: HTMLDivElement, stage: WebGLSurface<any, any>) {
-    element.onmousedown = function(event) {
-      debug('DRAG~');
-
-      document.onmousemove = function(event) {
-
-        if (stage.isPanning === false) {
-          const mouseX = event.clientX;
-          const mouseY = event.clientY;
-
-          const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
-          const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
-          stage.destinationX -= distanceX;
-          stage.destinationY += distanceY;
-          stage.lastMousePosition.x = mouseX;
-          stage.lastMousePosition.y = mouseY;
-        }
-      };
-      document.onmouseup = function() {
-        document.onmousemove = null;
-        stage.isPanning = false;
-
-        if (element.releasePointerCapture) { element.releasePointerCapture(0); }
-      };
-
-      if (element.setPointerCapture) { element.setPointerCapture(0); }
-    };
-
-    element.onmouseover = function() {
-      stage.isPanning = true;
-    };
-  }
-
   /**
    * Handles mouse interactions when the mouse is pressed on the canvas. This
    * engages panning.
