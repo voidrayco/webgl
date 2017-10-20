@@ -276,7 +276,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   currentHoverItems: Bounds<any>[] = [];
 
   /** Mouse in stage or not */
-  inStage: boolean = true;
+  dragOver: boolean = true;
 
   /** Flag for detecting whether or not webgl is supported at all */
 
@@ -875,6 +875,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Set up DOM interaction with the renderer
     const container = el;
     container.appendChild(this.renderer.domElement);
+
+    this.makeDraggable(document.getElementById('div'), this);
   }
 
   /**
@@ -1069,15 +1071,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // NOTE: For subclasses
   }
 
-  makeDraggable(element: HTMLDivElement, stage: WebGLSurface<any, any>) {
-    element.onmouseout = function(event) {
+  makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>) {
+    element.onmousedown = function(event) {
       debug('DRAG~');
-
+      stage.dragOver = false;
       document.onmousemove = function(event) {
-
-        if (stage.isPanning === false) {
+        debug('Move');
           const mouseX = event.clientX;
-          const mouseY = event.clientY;
+          const mouseY = event.clientY + window.scrollY;
 
           const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
           const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
@@ -1085,17 +1086,27 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           stage.destinationY += distanceY;
           stage.lastMousePosition.x = mouseX;
           stage.lastMousePosition.y = mouseY;
-        }
       };
 
       document.onmouseup = function() {
+        debug('Up');
         document.onmousemove = null;
         stage.isPanning = false;
-
-        if (element.releasePointerCapture) { element.releasePointerCapture(0); }
+        stage.dragOver = true;
       };
 
-      if (element.setPointerCapture) { element.setPointerCapture(0); }
+      document.onmouseover = function() {
+        debug('Over');
+        if (stage.dragOver === false) stage.isPanning = true;
+      };
+
+      element.onmouseup = function() {
+        stage.dragOver = true;
+      };
+
+      // Text will not be selected when it is being dragged
+      element.onselectstart = function(){return false; };
+
     };
 
   }
@@ -1111,7 +1122,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     if (this.disableMouseInteraction > 0) {
       return;
     }
-    debug('DOWN~');
     this.isPanning = true;
     this.distance = 0;
 
@@ -1132,7 +1142,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     this.isPanning = false;
     this.distance = 0;
-    this.makeDraggable(e.currentTarget, this);
+
     this.onMouseOut();
   }
 
@@ -1461,6 +1471,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     return (
       <div
+        id="div"
         onMouseDown={this.handleMouseDown}
         onMouseOut={this.handleMouseOut}
         onMouseUp={this.handleMouseUp}
