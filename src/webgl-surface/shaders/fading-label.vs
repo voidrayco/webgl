@@ -63,6 +63,6 @@ void main() {
     newPosition = anchor + ratio * ( newPosition - anchor);
   }
 
-  vec4 mvPosition = modelViewMatrix * vec4(newPosition, 0.0, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(newPosition, position.z, 1.0);
   gl_Position = projectionMatrix * mvPosition;
 }

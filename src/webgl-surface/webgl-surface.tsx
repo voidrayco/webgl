@@ -1077,6 +1077,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
+
     if (this.disableMouseInteraction > 0) {
       return;
     }
@@ -1169,6 +1170,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     const mouse = eventElementPosition(e);
     const world = this.screenToWorld(mouse.x, mouse.y);
     this.distance++;
+
+    debug('mouse X %o Y %o', mouse.x, mouse.y);
 
     // Handle panning
     if (this.isPanning) {
