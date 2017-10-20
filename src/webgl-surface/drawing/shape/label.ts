@@ -9,7 +9,7 @@ import { Sprite } from '../texture/sprite';
 const measurement = new Sprite(200, 200, 1, 1);
 
 export class Label<T> extends RotateableQuad<T> {
-  depth: number = 0;
+  depth: number = 40;
   direction: string = 'inherit';
   font: string = 'serif';
   fontSize: number = 10;
@@ -66,7 +66,7 @@ export class Label<T> extends RotateableQuad<T> {
    * thus, this allows you to offset the rasterization if you get pieces of
    * the label cut off.
    */
-  rasterizationOffset: IPoint = {x: 0, y: 12};
+  rasterizationOffset: IPoint = {x: 20, y: 0};
   /**
    * This contains an adjustment to aid in the rasterization process. Getting
    * reliable dimensions for fonts and text can be incredibly challenging,
