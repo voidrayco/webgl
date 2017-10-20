@@ -7,8 +7,6 @@ import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-const debug = require('debug')('simple-label-buffer');
-
 export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
   /**
    * @override
@@ -73,26 +71,26 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
     let alpha: number;
     let anchor;
 
-    debug('labels %o', shapeBuffer);
     if (shapeBuffer && shapeBuffer.length > 0 && atlasManager) {
       const colorRef: ReferenceColor = shapeBuffer[0].color;
       const colorBase = colorRef.base;
 
-      const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      const uniforms: { [k: string]: IUniform } = material.uniforms;
+      let material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
+      let uniforms: { [k: string]: IUniform } = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
       uniforms.colorAtlas.value = atlas;
       uniforms.colorsPerRow.value = colorBase.colorsPerRow;
       uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
       uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-    }
+      atlas.needsUpdate = true;
 
-    if (shapeBuffer && shapeBuffer.length > 0 && (startFade || endFade || labelMaxSize)){
-      const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      const uniforms: { [k: string]: IUniform } = material.uniforms;
-      if (startFade) uniforms.startFade.value = startFade;
-      if (endFade) uniforms.endFade.value = endFade;
-      if (labelMaxSize) uniforms.maxLabelSize.value = labelMaxSize;
+      if (startFade || endFade || labelMaxSize) {
+        material = this.bufferItems.system.material as ShaderMaterial;
+        uniforms = material.uniforms;
+        if (startFade) uniforms.startFade.value = startFade;
+        if (endFade) uniforms.endFade.value = endFade;
+        if (labelMaxSize) uniforms.maxLabelSize.value = labelMaxSize;
+      }
     }
 
     if (!shapeBuffer) {
