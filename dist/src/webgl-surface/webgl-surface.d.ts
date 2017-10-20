@@ -223,6 +223,8 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     colorsReady: boolean;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
+    /** Mouse in stage or not */
+    dragOver: boolean;
     /** Flag for detecting whether or not webgl is supported at all */
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
@@ -412,6 +414,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * @param {IScreenContext} ctx
      */
     onViewport(visible: Bounds<any>[], projection: IProjection, ctx: IScreenContext): void;
+    makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>): void;
     /**
      * Handles mouse interactions when the mouse is pressed on the canvas. This
      * engages panning.
