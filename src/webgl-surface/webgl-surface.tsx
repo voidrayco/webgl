@@ -1488,7 +1488,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
             this.props.onDoubleClick(e);
           }
         }}
-        style={{ position: 'relative', width: width, height: height }}>
+        style={{ position: 'relative', width: width, height: height}}>
         <div ref={this.applyRef} />
       </div>
     );
