@@ -667,6 +667,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.applyColorBufferChanges(props);
         }
 
+        if (this.onRender && this.colorsReady && this.labelsReady) {
+          const imageData = this.renderer.domElement.toDataURL();
+          this.onRender(imageData);
+        }
+
         return {};
       },
 
@@ -822,6 +827,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   draw = () => {
     // Draw the 3D scene
+
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -867,7 +873,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Generate the renderer along with it's properties
     this.renderer = new WebGLRenderer({
       antialias: true,
+      preserveDrawingBuffer: true,
     });
+
+    debug('properties  %o', this.renderer);
 
     debug('Window Pixel Ratio: %o', window.devicePixelRatio);
     this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -998,6 +1007,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     );
 
     this.onViewport(visible, this.projection, this.ctx);
+  }
+
+  onRender(image: string) {
+    // NOTE: For subclasses
   }
 
   /**
