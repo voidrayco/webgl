@@ -22,9 +22,9 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
           size: AttributeSize.THREE,
         },
         {
-          defaults: [0, 0, 0],
+          defaults: [0],
           name: 'customColor',
-          size: AttributeSize.THREE,
+          size: AttributeSize.ONE,
         },
         {
           defaults: [0, 0, 1],
