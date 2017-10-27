@@ -86,6 +86,21 @@ export declare type ApplyPropsMethodLookup<T> = {
     [key: number]: ApplyPropsMethod<T>;
 };
 export interface IWebGLSurfaceProperties {
+    /**
+     * Sets the renderer's background color. If the opacity is less than one at initialization,
+     * it enables 'transparent' canvas rendering which is much less efficient. All color values
+     * are 0 - 1
+     */
+    backgroundColor: {
+        /** Red channel 0-1 */
+        r: number;
+        /** Green channel 0-1 */
+        g: number;
+        /** Blue channel 0-1 */
+        b: number;
+        /** Alpha channel 0-1 */
+        opacity: number;
+    };
     /** When true, will cause a camera recentering to take place when new base items are injected */
     centerOnNewItems?: boolean;
     /** All of the unique colors used in the system */
@@ -361,6 +376,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * to the subclass that needs detailed information regarding the viewport.
      */
     emitViewport: () => void;
+    onRender(image: string): void;
     /**
      * Hook for subclasses to when the mouse moves. Provides some information
      * about mouse location and interaction.
