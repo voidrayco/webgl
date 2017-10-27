@@ -46,9 +46,9 @@ void main() {
   float height = sizeVector2.y - cameraVector2.y;
 
   /** Calculate the opacity for label */
-  float opacity = 1.0;
+  float opacity = texCoord.z;
   if (height < startFade && height > endFade) {
-    opacity = (height - endFade) / (startFade - endFade);
+    opacity = (height - endFade) * texCoord.z / (startFade - endFade);
   }
   else if (height <= endFade) {
     opacity = 0.0;
