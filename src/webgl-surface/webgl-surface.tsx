@@ -865,6 +865,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.renderEl = null;
     this.renderer = null;
     this.scene = null;
+
+    this.atlasManager.destroyAtlas(this.atlasNames.colors);
+    this.atlasManager.destroyAtlas(this.atlasNames.labels);
   }
 
   /**
