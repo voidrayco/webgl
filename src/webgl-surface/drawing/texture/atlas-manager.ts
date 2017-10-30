@@ -457,6 +457,13 @@ export class AtlasManager {
           ctx.textBaseline = label.textBaseline;
           ctx.fillStyle = color.toString();
 
+          ctx.lineWidth = canvas.height;
+          ctx.beginPath();
+          ctx.moveTo(0, canvas.height / 2);
+          ctx.lineTo(canvas.width, canvas.height / 2);
+          ctx.strokeStyle = '#4e7792';
+          ctx.stroke();
+
           // Render the label to the canvas/texture space. This utilizes the label's
           // Rasterization metrics to aid in getting a clean render.
           ctx.fillText(
