@@ -18,7 +18,7 @@
   "dependencies": {
     "@types/d3-color": "^1.0.5",
     "@types/d3-scale": "^1.0.10",
-    "@types/ramda": "^0.24.2",
+    "@types/ramda": "^0.25.0",
     "@types/react": "^15.0.22",
     "@types/react-dom": "^16.0.2",
     "@types/three": "^0.84.15",
