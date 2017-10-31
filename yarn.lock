@@ -47,9 +47,9 @@
   version "8.0.47"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.0.47.tgz#968e596f91acd59069054558a00708c445ca30c2"
 
-"@types/ramda@^0.24.2":
-  version "0.24.17"
-  resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.24.17.tgz#9a399c69d102588dea1c6817e4401e8fa780e40b"
+"@types/ramda@0.25.0":
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/@types/ramda/-/ramda-0.25.0.tgz#f62d5a9f76b7bb40eb45cf69dac0ac548aca9222"
 
 "@types/react-dom@^16.0.2":
   version "16.0.2"
