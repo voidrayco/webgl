@@ -46,9 +46,9 @@ void main() {
   float height = sizeVector2.y - cameraVector2.y;
 
   /** Calculate the opacity for label */
-  float opacity = 1.0;
+  float opacity = texCoord.z;
   if (height < startFade && height > endFade) {
-    opacity = (height - endFade) / (startFade - endFade);
+    opacity = (height - endFade) * texCoord.z / (startFade - endFade);
   }
   else if (height <= endFade) {
     opacity = 0.0;
@@ -63,6 +63,6 @@ void main() {
     newPosition = anchor + ratio * ( newPosition - anchor);
   }
 
-  vec4 mvPosition = modelViewMatrix * vec4(newPosition, 0.0, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(newPosition, position.z, 1.0);
   gl_Position = projectionMatrix * mvPosition;
 }

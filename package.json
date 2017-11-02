@@ -5,10 +5,10 @@
     "url": "http://www.voidray.co"
   },
   "name": "@voidrayco/voidgl",
-  "version": "0.4.1",
+  "version": "0.4.5",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "node scripts/dev",
     "release-build": "node scripts/release",
@@ -20,7 +20,7 @@
     "@types/d3-scale": "^1.0.10",
     "@types/ramda": "^0.24.2",
     "@types/react": "^15.0.22",
-    "@types/react-dom": "^15.5.0",
+    "@types/react-dom": "^16.0.2",
     "@types/three": "^0.84.15",
     "bowser": "^1.7.0",
     "d3-color": "^1.0.3",
@@ -31,7 +31,7 @@
     "three": "^0.87.1"
   },
   "devDependencies": {
-    "@types/node": "8.0.44",
+    "@types/node": "8.0.47",
     "css-loader": "0.28.7",
     "dts-bundle": "0.7.3",
     "eslint-config-tarwich": "github:tarwich/eslint-config-tarwich#1.5.1",
@@ -44,13 +44,13 @@
     "random": "github:tarwich/node-random#1.0.0",
     "raw-loader": "^0.5.1",
     "style-loader": "0.19.0",
-    "ts-loader": "3.0.2",
+    "ts-loader": "3.0.3",
     "tslib": "^1.7.1",
     "tslint-loader": "^3.5.3",
-    "tslint": "5.7.0",
+    "tslint": "5.8.0",
     "typescript": "2.5.3",
-    "uglify-js": "3.1.4",
-    "webpack-dev-server": "2.9.2",
+    "uglify-js": "3.1.5",
+    "webpack-dev-server": "2.9.3",
     "webpack": "^3.0.0"
   }
 }

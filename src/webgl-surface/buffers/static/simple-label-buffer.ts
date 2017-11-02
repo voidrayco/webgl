@@ -22,9 +22,9 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
           size: AttributeSize.THREE,
         },
         {
-          defaults: [0, 0, 0],
+          defaults: [0],
           name: 'customColor',
-          size: AttributeSize.THREE,
+          size: AttributeSize.ONE,
         },
         {
           defaults: [0, 0, 1],
@@ -65,14 +65,12 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
   update(shapeBuffer: Label<any>[], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean {
     // Make some constants and props for our buffer update loop
     const numVerticesPerQuad = 6;
-    const colorAttributeSize = 1;
-    const texCoordAttributeSize = 3;
-    const sizeAttributSize = 2;
     let label;
     let texture;
     let color: AtlasColor;
     let alpha: number;
     let anchor;
+    let labelSize;
 
     if (shapeBuffer && shapeBuffer.length > 0 && atlasManager) {
       const colorRef: ReferenceColor = shapeBuffer[0].color;
@@ -119,6 +117,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
                   x: label.getLocation().x + label.getSize().width * Math.cos(label.getRotation()),
                   y: label.getLocation().y + label.getSize().width * Math.sin(label.getRotation()),
                  };
+        labelSize = label.getSize();
         // Make sure the label is updated with it's latest metrics
         label.update();
 
@@ -126,23 +125,25 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
+        texCoords[tpos] = texture.atlasTR.x;
+        texCoords[++tpos] = texture.atlasTR.y;
+        texCoords[++tpos] = alpha;
+        colors[cpos] = color.colorIndex;
+        sizes[spos] = labelSize.width;
+        sizes[++spos] = labelSize.height;
         anchors[apos] = anchor.x;
         anchors[++apos] = anchor.y;
-        // Skip over degenerate tris color and tex
-        cpos += colorAttributeSize;
-        tpos += texCoordAttributeSize;
-        spos += sizeAttributSize;
 
         // TR
         positions[++ppos] = label.TR.x;
         positions[++ppos] = label.TR.y;
         positions[++ppos] = label.depth;
-        texCoords[tpos] = texture.atlasTR.x;
+        texCoords[++tpos] = texture.atlasTR.x;
         texCoords[++tpos] = texture.atlasTR.y;
         texCoords[++tpos] = alpha;
-        colors[cpos] = color.colorIndex;
-        sizes[spos] = label.getSize().width;
-        sizes[++spos] = label.getSize().height;
+        colors[++cpos] = color.colorIndex;
+        sizes[++spos] = labelSize.width;
+        sizes[++spos] = labelSize.height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
         // BR
@@ -153,8 +154,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         texCoords[++tpos] = texture.atlasBR.y;
         texCoords[++tpos] = alpha;
         colors[++cpos] = color.colorIndex;
-        sizes[++spos] = label.getSize().width;
-        sizes[++spos] = label.getSize().height;
+        sizes[++spos] = labelSize.width;
+        sizes[++spos] = labelSize.height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
         // TL
@@ -165,8 +166,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         texCoords[++tpos] = texture.atlasTL.y;
         texCoords[++tpos] = alpha;
         colors[++cpos] = color.colorIndex;
-        sizes[++spos] = label.getSize().width;
-        sizes[++spos] = label.getSize().height;
+        sizes[++spos] = labelSize.width;
+        sizes[++spos] = labelSize.height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
         // BL
@@ -177,8 +178,8 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         texCoords[++tpos] = texture.atlasBL.y;
         texCoords[++tpos] = alpha;
         colors[++cpos] = color.colorIndex;
-        sizes[++spos] = label.getSize().width;
-        sizes[++spos] = label.getSize().height;
+        sizes[++spos] = labelSize.width;
+        sizes[++spos] = labelSize.height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
 
@@ -186,6 +187,12 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
         positions[++ppos] = label.BL.x;
         positions[++ppos] = label.BL.y;
         positions[++ppos] = label.depth;
+        texCoords[++tpos] = texture.atlasBL.x;
+        texCoords[++tpos] = texture.atlasBL.y;
+        texCoords[++tpos] = alpha;
+        colors[++cpos] = color.colorIndex;
+        sizes[++spos] = labelSize.width;
+        sizes[++spos] = labelSize.height;
         anchors[++apos] = anchor.x;
         anchors[++apos] = anchor.y;
       },
