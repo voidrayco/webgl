@@ -1,7 +1,6 @@
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { AnimatedCurvedLineShape } from '../../drawing';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
-import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';

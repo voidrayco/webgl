@@ -1,4 +1,3 @@
-import { clone } from 'ramda';
 import { bezier2, bezier3 } from '../util/interpolation';
 import { Bounds } from './bounds';
 import { Line } from './line';
@@ -139,11 +138,11 @@ function makeBezier2Segments(line: CurvedLine<any>): IPoint[] {
   const segments: IPoint[] = [];
   const dt = 1 / line.resolution;
   const start = line.start;
-  const end = line.end;
+  const lineEnd = line.end;
   const c1 = line.controlPoints[0];
 
   for (let i = 0, end = line.resolution; i <= end; ++i) {
-    segments.push(bezier2(dt * i, start, end, c1));
+    segments.push(bezier2(dt * i, start, lineEnd, c1));
   }
 
   if (line.cachesSegments) {
@@ -168,12 +167,12 @@ function makeBezier3Segments(line: CurvedLine<any>): IPoint[] {
   const segments: IPoint[] = [];
   const dt = 1 / line.resolution;
   const start = line.start;
-  const end = line.end;
+  const lineEnd = line.end;
   const c1 = line.controlPoints[0];
   const c2 = line.controlPoints[1];
 
   for (let i = 0, end = line.resolution; i <= end; ++i) {
-    segments.push(bezier3(dt * i, start, end, c1, c2));
+    segments.push(bezier3(dt * i, start, lineEnd, c1, c2));
   }
 
   if (line.cachesSegments) {
