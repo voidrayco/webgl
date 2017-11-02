@@ -1,5 +1,5 @@
 import { Mesh, ShaderMaterial } from 'three';
-import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
+import { AnimatedCurvedLineShape } from '../../drawing';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { BaseBuffer } from '../base-buffer';
 /**
@@ -8,7 +8,7 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export declare class SharedControlCurvedLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mesh> {
+export declare class SharedControlCurvedLineColorsBuffer extends BaseBuffer<AnimatedCurvedLineShape<any>, Mesh> {
     /**
      * @override
      * See interface definition
@@ -22,5 +22,5 @@ export declare class SharedControlCurvedLineBuffer extends BaseBuffer<CurvedLine
      * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
      *                                    needed for rendering with color picks.
      */
-    update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number): boolean;
+    update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number): boolean;
 }

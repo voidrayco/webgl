@@ -3,8 +3,11 @@ uniform sampler2D colorAtlas;
 uniform float colorsPerRow;
 uniform vec2 firstColor;
 uniform vec2 nextColor;
-// This is the shared control points for all of the vertices
+// This is the shared control point for all of the vertices
 uniform float controlPoints[20];
+
+float PI = 3.1415926535897932384626433832795;
+float PI_2 = 6.2831853072;
 
 /**
   Position contains this information:
@@ -27,11 +30,52 @@ attribute float controlPick;
 // This passes the calculated color of the vertex
 varying vec4 vertexColor;
 
-vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
-  return vec2(
-    (1.0 - t) * (1.0 - t) * p1.x + 2.0 * t * (1.0 - t) * c1.x + t * t * p2.x,
-    (1.0 - t) * (1.0 - t) * p1.y + 2.0 * t * (1.0 - t) * c1.y + t * t * p2.y
-  );
+/**
+  Calculates position of a point via circular interpolation
+
+  float t - The current time (0-1) for the interpolation value
+  float rt - Current time reverse (1.0 - t)
+  vec2 p1 - The start point of the arc
+  vec2 p2 - The end point of the arc
+  vec2 c1 - The center of the circle for the arc
+**/
+vec2 makeCircular(float t, vec2 p1, vec2 p2, vec2 c1) {
+  // Get the direction vector from the circle center to the first end point
+  vec2 direction1 = p1 - c1;
+  // Get the angle of the first vector
+  float theta1 = atan(direction1.y, direction1.x);
+  // Get the angle of the second vector
+  vec2 direction2 = p2 - c1;
+  float theta2 = atan(direction2.y, direction2.x);
+  // Ensure our theta's are definitely between 0 to Math.PI * 2 after the atan
+  // Calculation
+  theta1 -= floor(theta1 / PI_2) * PI_2;
+  theta2 -= floor(theta2 / PI_2) * PI_2;
+
+  // Ensure our path around the arc is always the shortest distance
+  float smaller = min(theta1, theta2);
+  float larger = max(theta1, theta2);
+  float dTheta1 = (smaller + PI_2) - larger;
+  float dTheta2 = larger - smaller;
+
+  // We use this to calculate how far we are between the two points in radians
+  // Based on the time parameter provided for the interpolation
+  float dTheta = min(dTheta1, dTheta2) * -t;
+
+  // We must have the radial distance of both points to properly calculate
+  // An easing between the two radii
+  float radius = length(direction1);
+
+  // Now we decide the start point of the circle in respect to the dtheta
+  if (dTheta1 < dTheta2) {
+    theta1 = smaller;
+  }
+
+  else {
+    theta1 = larger;
+  }
+
+  return vec2(cos(theta1 + dTheta) * radius + c1.x, sin(theta1 + dTheta) * radius + c1.y);
 }
 
 vec4 pickColor(float index) {
@@ -48,9 +92,9 @@ void main() {
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
 
-  vec2 currentPosition = makeBezier2(position.x, p1, p2, controlPoint);
-  vec2 prePosition = makeBezier2(position.x - (1.0 / position.y), p1, p2, controlPoint);
-  vec2 nextPosition = makeBezier2(position.x + (1.0 / position.y), p1, p2, controlPoint);
+  vec2 currentPosition = makeCircular(position.x, p1, p2, controlPoint);
+  vec2 prePosition = makeCircular(position.x - (1.0 / position.y), p1, p2, controlPoint);
+  vec2 nextPosition = makeCircular(position.x + (1.0 / position.y), p1, p2, controlPoint);
 
   vec2 preLine = prePosition - currentPosition;
   vec2 nextLine = nextPosition - currentPosition;

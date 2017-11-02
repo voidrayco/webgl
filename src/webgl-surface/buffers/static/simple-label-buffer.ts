@@ -95,6 +95,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
     }
 
     if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
 

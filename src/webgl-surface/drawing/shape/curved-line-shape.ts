@@ -48,7 +48,7 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
    */
   marchingAnts?: IMarchingAnts;
   /** The base color of the line. */
-  startColor: ReferenceColor;
+  startColor?: ReferenceColor;
   /** The base opacity of the line */
   startOpacity?: number;
 }
@@ -107,11 +107,11 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     const clone: CurvedLineShape<T> = new CurvedLineShape<T>({
       cacheSegments: this.cachesSegments,
       controlPoints: this.controlPoints,
-      end: this.p2,
+      end: this.end,
       endColor: this.endColor,
       lineWidth: this.lineWidth,
       resolution: this.resolution,
-      start: this.p1,
+      start: this.start,
       startColor: this.startColor,
       type: this.type,
     });
@@ -219,12 +219,12 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
    * @override
    * Adjusts the relevant points that defines the curve and recalculates all items necessary
    *
-   * @param {IPoint} p1
-   * @param {IPoint} p2
+   * @param {IPoint} start
+   * @param {IPoint} end
    * @param {IPoint[]} controlPoints
    */
-  setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]) {
-    super.setPoints(p1, p2, controlPoints);
+  setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]) {
+    super.setPoints(start, end, controlPoints);
     this.cachedQuadSegments = [];
   }
 }

@@ -1,7 +1,6 @@
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
+import { AnimatedCurvedLineShape } from '../../drawing';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
-import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
-import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
@@ -13,7 +12,7 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<any>, Mesh> {
+export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <AnimatedCurvedLineShape<any>, Mesh> {
   /**
    * @override
    * See interface definition
@@ -28,14 +27,19 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
         size: AttributeSize.THREE,
       },
       {
-        defaults: [0],
-        name: 'startColorPick',
-        size: AttributeSize.ONE,
+        defaults: [0, 0, 0, 0],
+        name: 'colorPicks',
+        size: AttributeSize.FOUR,
       },
       {
         defaults: [0],
-        name: 'endColorPick',
+        name: 'controlPick',
         size: AttributeSize.ONE,
+      },
+      {
+        defaults: [0, 0],
+        name: 'timing',
+        size: AttributeSize.TWO,
       },
       {
         defaults: [1],
@@ -50,11 +54,6 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       {
         defaults: [0],
         name: 'halfLinewidth',
-        size: AttributeSize.ONE,
-      },
-      {
-        defaults: [0],
-        name: 'controlPick',
         size: AttributeSize.ONE,
       },
     ];
@@ -84,7 +83,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
    * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
    *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number) {
+  update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number) {
     if (!shapeBuffer) {
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
@@ -96,6 +95,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       this.bufferItems.currentData = shapeBuffer;
     }
 
+    let uniforms: { [k: string]: IUniform };
     const controlPoints: number[] = [];
     const controlReference = new Map<IPoint, number>();
     let controlUniform: IUniform;
@@ -110,7 +110,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       // Update all uniforms for this material to utilize the atlas metrics for
       // Picking colors
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      const uniforms: { [k: string]: IUniform } = material.uniforms;
+      uniforms = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
       uniforms.colorAtlas.value = atlas;
       uniforms.colorsPerRow.value = colorBase.colorsPerRow;
@@ -122,30 +122,38 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
     }
 
     // Commit static curved lines
-    const colorAttributeSize = 1;
+    const colorAttributeSize = 4;
     const numVerticesPerSegment = 6;
+    const timingAttributeSize = 2;
     let halfWidthSize = 1;
     let length = 15;
     let needsUpdate = false;
     let p1: IPoint;
     let p2: IPoint;
-    let colorStart: AtlasColor;
-    let colorEnd: AtlasColor;
+    let colorStart: number;
+    let colorStartStop: number;
+    let colorEnd: number;
+    let colorEndStop: number;
     let alpha: number;
-    let controlPoint: IPoint;
+    let startTime: number;
+    let duration: number;
     let controlRef: number;
+    let controlPoint: IPoint;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
       alpha = curvedLine.startColor.base.opacity;
-      colorStart = curvedLine.startColor.base;
-      colorEnd = curvedLine.endColor.base;
+      colorEnd = curvedLine.endColor.base.colorIndex;
+      colorEndStop = curvedLine.endColorStop.base.colorIndex;
+      colorStart = curvedLine.startColor.base.colorIndex;
+      colorStartStop = curvedLine.startColorStop.base.colorIndex;
+      duration = curvedLine.duration;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
-      p1 = curvedLine.start;
-      p2 = curvedLine.end;
-
+      p1 = curvedLine.currentStart;
+      p2 = curvedLine.currentEnd;
+      startTime = curvedLine.startTime;
       controlPoint = curvedLine.controlPoints[controlPointSource];
       controlRef = controlReference.get(controlPoint);
 
@@ -160,83 +168,98 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
         numVerticesPerSegment, length,
         function(i: number,
           positions: Float32Array, ppos: number,
-          startColor: Float32Array, scpos: number,
-          endColor: Float32Array, ecpos: number,
+          colorPicks: Float32Array, cpos: number,
+          controlPick: Float32Array, ctpos: number,
+          timing: Float32Array, tpos: number,
           normals: Float32Array, npos: number,
           endPoints: Float32Array, epos: number,
           halfWidth: Float32Array, wpos: number,
-          controlPick: Float32Array, cpos: number,
         ) {
           // Copy first vertex twice for intro degenerate tri
-          positions[ppos] = (i + 1) / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
-          halfWidth[wpos] = halfWidthSize;
-          // Skip over degenerate tris color
-          scpos += colorAttributeSize;
-          ecpos += colorAttributeSize;
-          normals[npos] = 1;
+          controlPick[ctpos] = controlRef;
+          cpos += colorAttributeSize;
           endPoints[epos] = p1.x;
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPick[cpos] = controlRef;
+          halfWidth[wpos] = halfWidthSize;
+          normals[npos] = 1;
+          positions[ppos] = (i + 1) / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          tpos += timingAttributeSize;
 
           // TR
-          positions[++ppos] = (i + 1) / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
-          halfWidth[++wpos] = halfWidthSize;
-          normals[++npos] = 1;
+          colorPicks[cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          controlPick[++ctpos] = controlRef;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          startColor[scpos] = colorStart.colorIndex;
-          endColor[ecpos] = colorEnd.colorIndex;
-          controlPick[++cpos] = controlRef;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = 1;
+          positions[++ppos] = (i + 1) / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          timing[tpos] = startTime;
+          timing[++tpos] = duration;
 
           // BR
+          colorPicks[++cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          controlPick[++ctpos] = controlRef;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = -1;
           positions[++ppos] = (i + 1) / length;
           positions[++ppos] = length;
           positions[++ppos] = curvedLine.depth;
-          halfWidth[++wpos] = halfWidthSize;
-          normals[++npos] = -1;
-          endPoints[++epos] = p1.x;
-          endPoints[++epos] = p1.y;
-          endPoints[++epos] = p2.x;
-          endPoints[++epos] = p2.y;
-          startColor[++scpos] = colorStart.colorIndex;
-          endColor[++ecpos] = colorEnd.colorIndex;
-          controlPick[++cpos] = controlRef;
+          timing[++tpos] = startTime;
+          timing[++tpos] = duration;
 
           // TL
-          positions[++ppos] = i / length;
-          positions[++ppos] = length;
-          positions[++ppos] = curvedLine.depth;
+          colorPicks[++cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          controlPick[++ctpos] = controlRef;
+          endPoints[++epos] = p1.x;
+          endPoints[++epos] = p1.y;
+          endPoints[++epos] = p2.x;
+          endPoints[++epos] = p2.y;
           halfWidth[++wpos] = halfWidthSize;
           normals[++npos] = 1;
-          endPoints[++epos] = p1.x;
-          endPoints[++epos] = p1.y;
-          endPoints[++epos] = p2.x;
-          endPoints[++epos] = p2.y;
-          startColor[++scpos] = colorStart.colorIndex;
-          endColor[++ecpos] = colorEnd.colorIndex;
-          controlPick[++cpos] = controlRef;
-
-          // BL
           positions[++ppos] = i / length;
           positions[++ppos] = length;
           positions[++ppos] = curvedLine.depth;
-          halfWidth[++wpos] = halfWidthSize;
-          normals[++npos] = -1;
+          timing[++tpos] = startTime;
+          timing[++tpos] = duration;
+
+          // BL
+          colorPicks[++cpos] = colorStart;
+          colorPicks[++cpos] = colorStartStop;
+          colorPicks[++cpos] = colorEnd;
+          colorPicks[++cpos] = colorEndStop;
+          controlPick[++ctpos] = controlRef;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          startColor[++scpos] = colorStart.colorIndex;
-          endColor[++ecpos] = colorEnd.colorIndex;
-          controlPick[++cpos] = controlRef;
+          halfWidth[++wpos] = halfWidthSize;
+          normals[++npos] = -1;
+          positions[++ppos] = i / length;
+          positions[++ppos] = length;
+          positions[++ppos] = curvedLine.depth;
+          timing[++tpos] = startTime;
+          timing[++tpos] = duration;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -244,15 +267,18 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           positions[++ppos] = curvedLine.depth;
           halfWidth[++wpos] = halfWidthSize;
           // Skip over degenerate tris for color
-          scpos += colorAttributeSize;
-          ecpos += colorAttributeSize;
+          cpos += colorAttributeSize;
           normals[++npos] = -1;
           endPoints[++epos] = p1.x;
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
-          controlPick[++cpos] = controlRef;
+          controlPick[++ctpos] = controlRef;
         },
+        // We force updates for this buffer since it has animated properties
+        // Such as currentStartStop and currentEndStop which calculates
+        // Animations on the CPU side.
+        true,
       );
 
       // If no updating is happening, just quit the loop
