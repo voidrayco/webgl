@@ -28,7 +28,7 @@
     "ramda": "^0.25.0",
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
-    "three": "^0.87.1"
+    "three": "^0.88.0"
   },
   "devDependencies": {
     "@types/node": "8.0.47",
