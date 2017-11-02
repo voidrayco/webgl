@@ -4,7 +4,7 @@ uniform float colorsPerRow;
 uniform vec2 firstColor;
 uniform vec2 nextColor;
 // This is the shared control point for all of the vertices
-uniform vec2 controlPoint;
+uniform float controlPoints[20];
 uniform float currentTime;
 
 /**
@@ -35,6 +35,7 @@ attribute float normalDirection;
 // (x,y) is the first point, (z,w) is the second point
 attribute vec4 endPoints;
 attribute float halfLinewidth;
+attribute float controlPick;
 
 // This passes the calculated color of the vertex
 varying vec4 vertexColor;
@@ -59,6 +60,8 @@ vec4 pickColor(float index) {
 }
 
 void main() {
+  // Get the control point for the line
+  vec2 controlPoint = vec2(controlPoints[int(controlPick)], controlPoints[int(controlPick + 1.0)]);
   float time = (currentTime - startTime) / duration;
 
   // Calculate the color for the vertex

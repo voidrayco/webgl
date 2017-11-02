@@ -1,4 +1,5 @@
-import { ShapeBufferCache } from './shape-buffer-cache';
+import { CustomSelection } from './custom-selection';
+import { MultiShapeBufferCache } from './multi-shape-buffer-cache';
 
 export enum PlayState {
   INIT,
@@ -10,7 +11,7 @@ export enum PlayState {
  * This defines an object that helps facilitate parts of or complete shape buffers that
  * need regenerating.
  */
-export class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
+export class AnimatedShapeBufferCache<T> extends MultiShapeBufferCache<T> {
   playState: PlayState = PlayState.INIT;
   buffer: T[] = [];
   bustCache: boolean = true;
@@ -38,9 +39,12 @@ export class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
    * Tells this cache to generate what it needs to. If the cache isn't busted,
    * it will not regenerate
    */
-  generate(...args: any[]) {
+  generate(selection: CustomSelection, ...args: any[]) {
+    // Make sure the storage is established before trying to create modifications of any sort
+    this.getStorage(selection);
+
     if (this.bustCache) {
-      this.buildCache.apply(this, args);
+      this.buildCache.apply(this, arguments);
       this.bustCache = false;
 
       if (this.playState === PlayState.INIT) {
@@ -48,26 +52,19 @@ export class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
         requestAnimationFrame(this.doAnimate);
       }
     }
+
+    // We always invalidate and commit all of our buffers for animations
+    this.flagBuffersDirty();
+    // Make sure our buffers are updated so they will commit to vertex buffers
+    this.processDirtyBuffers();
   }
 
   /**
    * Sub classes will implement this stub to perform what is necessary to produce
    * a newly updated version of their cache.
    */
-  buildCache(...args: any[]) {
+  buildCache(selection: CustomSelection, ...args: any[]) {
     // Implemented by sub classes
-  }
-
-  /**
-   * Animated buffers are ALWAYS new every frame if playing
-   * Get the buffer the cache has generated
-   */
-  getBuffer(): T[] {
-    if (this.playState === PlayState.PLAY) {
-      return [].concat(this.buffer);
-    }
-
-    return this.buffer;
   }
 
   /**

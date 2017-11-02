@@ -199,30 +199,35 @@ function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
   // Generate a line so we can have a perpendicular calculation
   const straightLine: Line<never> = new Line<never>(line.start, line.end);
   let radius: number = Point.getDistance(line.start, line.controlPoints[0]);
-  // We get the midpoint of the line as we want to align the center of the circle with this point
-  const midPoint: IPoint = Point.getMidpoint(line.start, line.end);
-  const minRadius = Point.getDistance(midPoint, line.start);
+  let circleCenter: IPoint = line.controlPoints[1];
 
-  // The shortest the radius can be is the distance from the line to the mid point
-  // Anything shorter will just result in a hemisphere being rendered
-  if (radius < minRadius) {
-    radius = Point.getDistance(midPoint, line.start);
+  if (!circleCenter) {
+    // We get the midpoint of the line as we want to align the center of the circle with this point
+    const midPoint: IPoint = Point.getMidpoint(line.start, line.end);
+    const minRadius = Point.getDistance(midPoint, line.start);
+
+    // The shortest the radius can be is the distance from the line to the mid point
+    // Anything shorter will just result in a hemisphere being rendered
+    if (radius < minRadius) {
+      radius = Point.getDistance(midPoint, line.start);
+    }
+
+    // Get the perpendicular direction to the line so we can calculate the center of our circle
+    // From the mid point
+    const perpendicular: IPoint = straightLine.perpendicular;
+    const distance = Math.sqrt(radius * radius - minRadius * minRadius);
+
+    // Calculate the location of the center of the circle
+    circleCenter = {
+      x: perpendicular.x * distance + midPoint.x,
+      y: perpendicular.y * distance + midPoint.y,
+    };
+
+    // Store the circle center as an extra control point in case the value is needed
+    // (which it often is)
+    line.controlPoints[1] = circleCenter;
   }
 
-  // Get the perpendicular direction to the line so we can calculate the center of our circle
-  // From the mid point
-  const perpendicular: IPoint = straightLine.perpendicular;
-  const distance = Math.sqrt(radius * radius - minRadius * minRadius);
-
-  // Calculate the location of the center of the circle
-  const circleCenter: IPoint = {
-    x: perpendicular.x * distance + midPoint.x,
-    y: perpendicular.y * distance + midPoint.y,
-  };
-
-  // Store the circle center as an extra control point in case the value is needed
-  // (which it often is)
-  line.controlPoints[1] = circleCenter;
   debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
   // Get the direction vector from the circle center to the first end point
   const direction1 = Point.getDirection(circleCenter, line.start);
@@ -265,25 +270,28 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
 
   const straightLine: Line<never> = new Line<never>(line.start, line.end);
   let radius: number = Point.getDistance(line.start, line.controlPoints[0]);
+  let circleCenter: IPoint = line.controlPoints[1];
 
-  const midPoint: IPoint = Point.getMidpoint(line.start, line.end);
-  const minRadius = Point.getDistance(midPoint, line.start);
+  if (!circleCenter) {
+    const midPoint: IPoint = Point.getMidpoint(line.start, line.end);
+    const minRadius = Point.getDistance(midPoint, line.start);
 
-  if (radius < minRadius){
-    radius = Point.getDistance(midPoint, line.start);
+    if (radius < minRadius){
+      radius = Point.getDistance(midPoint, line.start);
+    }
+
+    const perpendicular: IPoint = straightLine.perpendicular;
+
+    const distance = Math.sqrt(radius * radius - minRadius * minRadius);
+    circleCenter = {
+      x: -perpendicular.x * distance + midPoint.x,
+      y: -perpendicular.y * distance + midPoint.y,
+    };
+
+    // Store the circle center as an extra control point in case the value is needed
+    // (which it often is)
+    line.controlPoints[1] = circleCenter;
   }
-
-  const perpendicular: IPoint = straightLine.perpendicular;
-
-  const distance = Math.sqrt(radius * radius - minRadius * minRadius);
-  const circleCenter: IPoint = {
-    x: -perpendicular.x * distance + midPoint.x,
-    y: -perpendicular.y * distance + midPoint.y,
-  };
-
-  // Store the circle center as an extra control point in case the value is needed
-  // (which it often is)
-  line.controlPoints[1] = circleCenter;
 
   const direction1 =  Point.getDirection(circleCenter, line.start);
 
@@ -481,7 +489,7 @@ export class CurvedLine<T> extends Bounds<T> {
 
     // If we adjust the control points we need to re-evaluate the type of segment creation method we use
     if (controlPoints) {
-      this.controlPoints = clone(controlPoints);
+      this.controlPoints = controlPoints;
       // Get the number of control points we want to base the curve off of
       let numControlPoints = controlPoints.length;
 

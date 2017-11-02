@@ -84,9 +84,16 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <AnimatedCur
    * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
    *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager) {
+  update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number) {
     if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
+    }
+
+    // This is a special case where we need to update our current item dataset to prevent
+    // Re-updates for the same empty shape buffer
+    if (shapeBuffer.length === 0) {
+      this.bufferItems.currentData = shapeBuffer;
     }
 
     let uniforms: { [k: string]: IUniform };
@@ -148,7 +155,7 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <AnimatedCur
       p1 = curvedLine.currentStart;
       p2 = curvedLine.currentEnd;
       startTime = curvedLine.startTime;
-      controlPoint = curvedLine.controlPoints[1];
+      controlPoint = curvedLine.controlPoints[controlPointSource];
       controlRef = controlReference.get(controlPoint);
 
       if (controlRef === undefined) {

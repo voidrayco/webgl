@@ -1,4 +1,5 @@
-import { ShapeBufferCache } from './shape-buffer-cache';
+import { CustomSelection } from './custom-selection';
+import { MultiShapeBufferCache } from './multi-shape-buffer-cache';
 export declare enum PlayState {
     INIT = 0,
     PLAY = 1,
@@ -8,7 +9,7 @@ export declare enum PlayState {
  * This defines an object that helps facilitate parts of or complete shape buffers that
  * need regenerating.
  */
-export declare class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
+export declare class AnimatedShapeBufferCache<T> extends MultiShapeBufferCache<T> {
     playState: PlayState;
     buffer: T[];
     bustCache: boolean;
@@ -25,17 +26,12 @@ export declare class AnimatedShapeBufferCache<T> extends ShapeBufferCache<T> {
      * Tells this cache to generate what it needs to. If the cache isn't busted,
      * it will not regenerate
      */
-    generate(...args: any[]): void;
+    generate(selection: CustomSelection, ...args: any[]): void;
     /**
      * Sub classes will implement this stub to perform what is necessary to produce
      * a newly updated version of their cache.
      */
-    buildCache(...args: any[]): void;
-    /**
-     * Animated buffers are ALWAYS new every frame if playing
-     * Get the buffer the cache has generated
-     */
-    getBuffer(): T[];
+    buildCache(selection: CustomSelection, ...args: any[]): void;
     /**
      * Begins executing the animate method every frame
      */

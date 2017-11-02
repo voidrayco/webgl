@@ -22,5 +22,5 @@ export declare class SharedControlCurvedLineColorsBuffer extends BaseBuffer<Anim
      * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
      *                                    needed for rendering with color picks.
      */
-    update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager): boolean;
+    update(shapeBuffer: AnimatedCurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number): boolean;
 }

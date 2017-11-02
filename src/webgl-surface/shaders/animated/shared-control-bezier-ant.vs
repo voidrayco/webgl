@@ -4,7 +4,8 @@ uniform float colorsPerRow;
 uniform vec2 firstColor;
 uniform vec2 nextColor;
 // This is the shared control point for all of the vertices
-uniform vec2 controlPoint;
+// Allows up to 10 unique control points
+uniform float controlPoints[20];
 // This is the current time the rendering is at
 uniform float currentTime;
 
@@ -35,6 +36,8 @@ attribute float halfLinewidth;
   }
 **/
 attribute vec4 marching;
+// This picks which control point to utilize
+attribute float controlPick;
 
 /**
   This is the information necessary to render marching ants
@@ -66,6 +69,9 @@ vec4 pickColor(float index) {
 }
 
 void main() {
+  // Get the control point for the line
+  vec2 controlPoint = vec2(controlPoints[int(controlPick)], controlPoints[int(controlPick + 1.0)]);
+  // Determine the color for the line
   vertexColor = mix(pickColor(startColorPick), pickColor(endColorPick), position.x);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);

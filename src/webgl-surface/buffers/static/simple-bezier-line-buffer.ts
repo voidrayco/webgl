@@ -77,6 +77,7 @@ Mesh > {
    */
   update(shapeBuffer: CurvedLineShape<any>[]) {
     if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
 

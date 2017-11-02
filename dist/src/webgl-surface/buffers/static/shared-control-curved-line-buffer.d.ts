@@ -1,7 +1,6 @@
 import { Mesh, ShaderMaterial } from 'three';
 import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
-import { IPoint } from '../../primitives/point';
 import { BaseBuffer } from '../base-buffer';
 /**
  * This renders a curved line by injecting all attributes needed to render it.
@@ -23,5 +22,5 @@ export declare class SharedControlCurvedLineBuffer extends BaseBuffer<CurvedLine
      * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
      *                                    needed for rendering with color picks.
      */
-    update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, sharedControl?: IPoint): boolean;
+    update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number): boolean;
 }
