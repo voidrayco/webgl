@@ -13,3 +13,4 @@ export * from './projection';
 export * from './quad-tree';
 export * from './screen-context';
 export * from './shape-buffer-cache';
+export * from './webgl-stat';

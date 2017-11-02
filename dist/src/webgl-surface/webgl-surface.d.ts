@@ -163,8 +163,6 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * that the viewport will only be applied once if it doesn't change again.
      */
     appliedViewport: Bounds<any>;
-    /** Used to aid in mouse interactions */
-    distance: number;
     /**
      * The camera that 'looks' at our world and gives us the ability to convert
      * screen coordinates to world coordinates, and vice versa
@@ -172,6 +170,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     camera: OrthographicCamera | null;
     /** A camera that is used for projecting sizes to and from the screen to the world */
     circleMaterial: ShaderMaterial;
+    /** Stores screen dimension info */
     ctx: IScreenContext;
     /**
      * While this number is positive it will be decremented every frame.
@@ -182,9 +181,19 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * start taking place.
      */
     disableMouseInteraction: number;
+    /** Used to aid in mouse interactions */
+    distance: number;
+    /** When set, forces a draw next animation frame */
     forceDraw: boolean;
+    /**
+     * This stores the gl rendering context for reference when it's available
+     */
+    gl: WebGLRenderingContext;
+    /** Contains the methods for projecting between screen and world spaces */
     projection: IProjection;
+    /** The top level HTML element for this component */
     renderEl: HTMLElement;
+    /** The threejs renderer */
     renderer: WebGLRenderer;
     scene: Scene;
     sizeCamera: OrthographicCamera | null;
