@@ -13,6 +13,7 @@ import { eventElementPosition } from './util/mouse';
 import { IProjection } from './util/projection';
 import { QuadTree } from './util/quad-tree';
 import { IScreenContext } from './util/screen-context';
+import { WebGLStat } from './util/webgl-stat';
 const debug = require('debug')('webgl-surface:GPU');
 const debugCam = require('debug')('webgl-surface:Camera');
 const debugLabels = require('debug')('webgl-surface:Labels');
@@ -183,21 +184,6 @@ function sign(value: number): number {
   return 0;
 }
 
-function isWebGLSupported() {
-  try{
-    const canvas = document.createElement('canvas');
-    return !! (window as any).WebGLRenderingContext && (
-      canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' )
-    );
-  }
-
-  catch (e) {
-    return false;
-  }
-}
-
-const WEBGL_SUPPORTED = isWebGLSupported();
-
 /**
  * The base component for the communications view
  */
@@ -227,8 +213,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * that the viewport will only be applied once if it doesn't change again.
    */
   appliedViewport: Bounds<any>;
-  /** Used to aid in mouse interactions */
-  distance = 0;
   /**
    * The camera that 'looks' at our world and gives us the ability to convert
    * screen coordinates to world coordinates, and vice versa
@@ -236,6 +220,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   camera: OrthographicCamera | null = null;
   /** A camera that is used for projecting sizes to and from the screen to the world */
   circleMaterial: ShaderMaterial;
+  /** Stores screen dimension info */
   ctx: IScreenContext;
   /**
    * While this number is positive it will be decremented every frame.
@@ -246,9 +231,19 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * start taking place.
    */
   disableMouseInteraction: number = 0;
+  /** Used to aid in mouse interactions */
+  distance = 0;
+  /** When set, forces a draw next animation frame */
   forceDraw: boolean;
+  /**
+   * This stores the gl rendering context for reference when it's available
+   */
+  gl: WebGLRenderingContext;
+  /** Contains the methods for projecting between screen and world spaces */
   projection: IProjection;
+  /** The top level HTML element for this component */
   renderEl: HTMLElement;
+  /** The threejs renderer */
   renderer: WebGLRenderer;
   scene: Scene;
   sizeCamera: OrthographicCamera | null = null;
@@ -972,12 +967,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       preserveDrawingBuffer: true,
     });
 
-    debug('properties  %o', this.renderer);
-
-    debug('Window Pixel Ratio: %o', window.devicePixelRatio);
+    // This sets the pixel ratio to handle differing pixel densities in screens
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(w, h);
 
+    // Applies the background color and establishes whether or not the context supports
+    // Alpha or not
     if (this.props.backgroundColor) {
       this.renderer.setClearColor(
         new Color(
@@ -993,11 +988,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       this.renderer.setClearColor(BACKGROUND_COLOR);
     }
 
+    // We render shapes. We care not for culling.
     this.renderer.setFaceCulling(CullFaceNone);
 
     // Set up DOM interaction with the renderer
     const container = el;
     container.appendChild(this.renderer.domElement);
+    // Get the gl context for queries and advanced operations
+    this.gl = this.renderer.domElement.getContext('webgl');
 
     this.makeDraggable(document.getElementById('div'), this);
   }
@@ -1610,7 +1608,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   render() {
     const { width, height } = this.props;
 
-    if (!WEBGL_SUPPORTED) {
+    if (!WebGLStat.WEBGL_SUPPORTED) {
       return <div>{this.props.children || 'Web GL not supported'}</div>;
     }
 
