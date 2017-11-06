@@ -1,5 +1,5 @@
 import { Mesh } from 'three';
-import { Camera, IUniform, OrthographicCamera, Points, ShaderMaterial } from 'three';
+import { IUniform, OrthographicCamera, Points, ShaderMaterial } from 'three';
 import { AtlasManager, CircleShape, ReferenceColor } from '../../drawing/index';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
