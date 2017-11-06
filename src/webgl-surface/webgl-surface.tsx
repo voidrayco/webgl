@@ -1443,7 +1443,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   positionCamera(x: number, y: number) {
     if (this.camera) {
-      this.camera.position.set(Math.floor(x), Math.floor(y), this.camera.position.z);
+      this.camera.position.set(x, y, this.camera.position.z);
     }
   }
 
