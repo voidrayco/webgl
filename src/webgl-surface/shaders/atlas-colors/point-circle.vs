@@ -14,6 +14,10 @@ attribute float colorPick;
 
 // This passes the calculated color of the vertex
 varying vec4 vertexColor;
+// The larger this gets the more blurred the edge gets
+// Recommended to approach the value of 0.01 the larger
+// the circle gets and be somewhere around 0.5 for < 15 sizes
+varying float edgeSharpness;
 
 vec4 pickColor(float index) {
   float row = floor(index / colorsPerRow);
@@ -24,10 +28,12 @@ vec4 pickColor(float index) {
 void main() {
   // Set the color of the circle
   vertexColor = pickColor(colorPick);
-
   // Set the circle size based on radius and the camera's current zoom level
-  gl_PointSize = radius * 2.0;
-
+  gl_PointSize = radius * 2.0 * zoom;
+  // We want the edge to get clurrier the small the size is. This prevents our
+  // circle from looking like a square when small AND prevents the edge from
+  // looking like fuzz when large
+  edgeSharpness = mix(0.8, 0.01, min(gl_PointSize / 45.0, 1.0));
   // Set the position of the circle
   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mvPosition;
