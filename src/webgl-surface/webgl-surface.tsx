@@ -713,7 +713,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.applyColorBufferChanges(props);
         }
 
-        if (this.onRender && this.colorsReady && this.labelsReady) {
+        if (this.onRender && this.colorsReady && (this.labelsReady || this.labels.length === 0)) {
           const imageData = this.renderer.domElement.toDataURL();
           this.onRender(imageData);
         }
