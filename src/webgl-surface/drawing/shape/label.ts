@@ -1,15 +1,15 @@
 import { omit } from 'ramda';
-import { Color } from 'three';
 import { IPoint } from '../../primitives/point';
 import { AnchorPosition, RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
+import { ReferenceColor } from '../reference/reference-color';
 import { AtlasTexture } from '../texture/atlas-texture';
 import { Sprite } from '../texture/sprite';
 
 const measurement = new Sprite(200, 200, 1, 1);
 
 export class Label<T> extends RotateableQuad<T> {
-  depth: number = 0;
+  depth: number = 40;
   direction: string = 'inherit';
   font: string = 'serif';
   fontSize: number = 10;
@@ -66,7 +66,7 @@ export class Label<T> extends RotateableQuad<T> {
    * thus, this allows you to offset the rasterization if you get pieces of
    * the label cut off.
    */
-  rasterizationOffset: IPoint = {x: 0, y: 12};
+  rasterizationOffset: IPoint = {x: 20, y: 0};
   /**
    * This contains an adjustment to aid in the rasterization process. Getting
    * reliable dimensions for fonts and text can be incredibly challenging,
@@ -75,17 +75,7 @@ export class Label<T> extends RotateableQuad<T> {
    */
   rasterizationPadding: ISize = {width: 0, height: 0};
 
-  // Label coloring
-  r: number = 1;
-  g: number = 1;
-  b: number = 1;
-  a: number = 1;
-
-  set color(value: Color) {
-    this.r = value.r;
-    this.g = value.g;
-    this.b = value.b;
-  }
+  color?: ReferenceColor;
 
   /**
    * Creates an instance of Label.
@@ -97,16 +87,8 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Set props
     Object.assign(this, options);
-
-    // Calculate the text's measurements
-    measurement.context.font = this.makeCSSFont();
-    const measuredSize = measurement.context.measureText(this.text);
-
-    // Adjust the dimensions to the measurement
-    this.setSize({
-      height: this.fontSize + 10,
-      width: measuredSize.width,
-    });
+    // Make sure our dimensions are set
+    this.setFontSize(options.fontSize || 12);
   }
 
   /**
@@ -124,6 +106,17 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Use this to set the text to make sure all of the metrics are re-calculated
     this.setText(label.text);
+  }
+
+  /**
+   * This gets the actual text this label is capable of rendering
+   */
+  getText(): string {
+    if (this._baseLabel) {
+      return this._baseLabel.getText();
+    }
+
+    return this.text;
   }
 
   /**
@@ -145,16 +138,45 @@ export class Label<T> extends RotateableQuad<T> {
   }
 
   /**
+   * This sets the font size for the label based on the base text dimensions
+   *
+   * @param {number} fontSize
+   */
+  setFontSize(fontSize: number) {
+    const lbl = this.getText();
+    const size = this.getSize();
+    let width = size.width;
+    let height = size.height;
+
+    if (this.baseLabel) {
+      const baseSize = this.baseLabel.getSize();
+      const scale = fontSize / this.baseLabel.fontSize;
+      height = baseSize.height * scale;
+      width = baseSize.width * scale;
+    }
+
+    else {
+      measurement.context.font = this.makeCSSFont();
+      const size = measurement.context.measureText(lbl);
+      // Set our properties based on the calculated size
+      height = fontSize;
+      width = size.width;
+    }
+
+    this.fontSize = fontSize;
+    this.setSize({width, height});
+  }
+
+  /**
    * Change the text and the calculated bounding box for this label
    */
   setText(lbl: string) {
-    // Recalculate text size
-    measurement.context.font = this.makeCSSFont();
-    const size = measurement.context.measureText(lbl);
-
-    // Set our properties based on the calculated size
-    this.height = this.fontSize;
     this.text = lbl;
-    this.width = size.width;
+    this.setFontSize(this.fontSize);
+  }
+
+  update() {
+    this.setFontSize(this.fontSize);
+    super.update();
   }
 }

@@ -1,5 +1,45 @@
-import { BufferAttribute, BufferGeometry } from 'three';
+/**
+ * This class and set of methods is provided to attempt to create as efficient as possible
+ * methods for updating large vertex buffers with values. The first portion of the file is
+ * a list of methods and registers. This is to prevent any instantiation needed for the methods
+ * and registers to exist. Also, the methods have no useable parent scope to ensure nothing like
+ * a 'this' is used. These methods utilize the registers and their own simple loops to pound
+ * through large amounts of information while providing capabilities to edit vertices in batches.
+ *
+ * You will also notice there are many many similar methods with just a single extra parameter
+ * here and there. This is to prevent ANY calculations on trying to determine a proper parameter set
+ * while also making method calls directly without any .call or .apply.
+ *
+ * The number of update methods is how many differing attributes are supported. If you need more supported
+ * attributes add an updateBufferN method and provide the required attributes. Insert the logic in the EXACT
+ * pattern seen in the other methods. DO NOT attempt to add additional logic lest the performance be something
+ * terrible.
+ *
+ * The BufferUtil class makes use of these methods and registers. It also provides some very handy methods
+ * for working with your large buffers.
+ */
+
+import {
+  BufferAttribute,
+  BufferGeometry,
+  Mesh,
+  ShaderMaterial,
+  TrianglesDrawMode,
+  TriangleStripDrawMode,
+} from 'three';
+import { BaseBuffer } from '../buffers';
+import { MultiShapeBufferCache } from './multi-shape-buffer-cache';
+const debugGenerator = require('debug');
 const debug = require('debug')('WebGLSurface:BufferUtil');
+
+export enum TriangleOrientation {
+  // The triangles points are clockwise
+  CW,
+  // The triangles points are Counter clockwise
+  CCW,
+  // The triangles points are linear, thus degenerate
+  DEGENERATE,
+}
 
 export enum AttributeSize {
   ONE,
@@ -25,6 +65,9 @@ export interface IBufferItems<T, U> {
   currentData: T[],
 }
 
+export type InitVertexBufferMethod<T, U> = () => BaseBuffer<T, U>;
+export type UpdateVertexBufferMethod<T, U> = (vertexBuffer: BaseBuffer<T, U>, shapeBuffer: T[]) => boolean;
+
 /**
  * These are for fast look ups of the default values provided
  * Doing this fashion avoids array look ups in the defaults values
@@ -46,6 +89,10 @@ let attrRegister3: number[] = [];
 let attrRegister4: number[] = [];
 let attrRegister5: number[] = [];
 let attrRegister6: number[] = [];
+let attrRegister7: number[] = [];
+let attrRegister8: number[] = [];
+let attrRegister9: number[] = [];
+let attrRegister10: number[] = [];
 
 let attrIndex0: number = 0;
 let attrIndex1: number = 0;
@@ -54,6 +101,10 @@ let attrIndex3: number = 0;
 let attrIndex4: number = 0;
 let attrIndex5: number = 0;
 let attrIndex6: number = 0;
+let attrIndex7: number = 0;
+let attrIndex8: number = 0;
+let attrIndex9: number = 0;
+let attrIndex10: number = 0;
 
 let attrIndexIncr0: number = 0;
 let attrIndexIncr1: number = 0;
@@ -62,6 +113,10 @@ let attrIndexIncr3: number = 0;
 let attrIndexIncr4: number = 0;
 let attrIndexIncr5: number = 0;
 let attrIndexIncr6: number = 0;
+let attrIndexIncr7: number = 0;
+let attrIndexIncr8: number = 0;
+let attrIndexIncr9: number = 0;
+let attrIndexIncr10: number = 0;
 
 /** This is used to define a starting batch location to aid in continuing batch updates */
 let lastBatchRegister: number = 0;
@@ -81,6 +136,10 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
   attrRegister4 = attributeBuffers[4];
   attrRegister5 = attributeBuffers[5];
   attrRegister6 = attributeBuffers[6];
+  attrRegister7 = attributeBuffers[7];
+  attrRegister8 = attributeBuffers[8];
+  attrRegister9 = attributeBuffers[9];
+  attrRegister10 = attributeBuffers[10];
 
   attrIndexIncr0 = incrementValues[0];
   attrIndexIncr1 = incrementValues[1];
@@ -89,6 +148,10 @@ function applyAttributeRegisters(attributeBuffers: number[][], incrementValues: 
   attrIndexIncr4 = incrementValues[4];
   attrIndexIncr5 = incrementValues[5];
   attrIndexIncr6 = incrementValues[6];
+  attrIndexIncr7 = incrementValues[7];
+  attrIndexIncr8 = incrementValues[8];
+  attrIndexIncr9 = incrementValues[9];
+  attrIndexIncr10 = incrementValues[10];
 }
 
 /**
@@ -168,6 +231,114 @@ function updateBuffer7(numBatches: number, updateAccessor: Function) {
   }
 }
 
+function updateBuffer8(numBatches: number, updateAccessor: Function) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    attrIndex6 = i * attrIndexIncr6;
+    attrIndex7 = i * attrIndexIncr7;
+    updateAccessor(
+      i - lastBatchRegister,
+      attrRegister0, attrIndex0,
+      attrRegister1, attrIndex1,
+      attrRegister2, attrIndex2,
+      attrRegister3, attrIndex3,
+      attrRegister4, attrIndex4,
+      attrRegister5, attrIndex5,
+      attrRegister6, attrIndex6,
+      attrRegister7, attrIndex7,
+    );
+  }
+}
+
+function updateBuffer9(numBatches: number, updateAccessor: Function) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    attrIndex6 = i * attrIndexIncr6;
+    attrIndex7 = i * attrIndexIncr7;
+    attrIndex8 = i * attrIndexIncr8;
+    updateAccessor(
+      i - lastBatchRegister,
+      attrRegister0, attrIndex0,
+      attrRegister1, attrIndex1,
+      attrRegister2, attrIndex2,
+      attrRegister3, attrIndex3,
+      attrRegister4, attrIndex4,
+      attrRegister5, attrIndex5,
+      attrRegister6, attrIndex6,
+      attrRegister7, attrIndex7,
+      attrRegister8, attrIndex8,
+    );
+  }
+}
+
+function updateBuffer10(numBatches: number, updateAccessor: Function) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    attrIndex6 = i * attrIndexIncr6;
+    attrIndex7 = i * attrIndexIncr7;
+    attrIndex8 = i * attrIndexIncr8;
+    attrIndex9 = i * attrIndexIncr9;
+    updateAccessor(
+      i - lastBatchRegister,
+      attrRegister0, attrIndex0,
+      attrRegister1, attrIndex1,
+      attrRegister2, attrIndex2,
+      attrRegister3, attrIndex3,
+      attrRegister4, attrIndex4,
+      attrRegister5, attrIndex5,
+      attrRegister6, attrIndex6,
+      attrRegister7, attrIndex7,
+      attrRegister8, attrIndex8,
+      attrRegister9, attrIndex9,
+    );
+  }
+}
+
+function updateBuffer11(numBatches: number, updateAccessor: Function) {
+  for (let i = lastBatchRegister; i < numBatches; ++i) {
+    attrIndex0 = i * attrIndexIncr0;
+    attrIndex1 = i * attrIndexIncr1;
+    attrIndex2 = i * attrIndexIncr2;
+    attrIndex3 = i * attrIndexIncr3;
+    attrIndex4 = i * attrIndexIncr4;
+    attrIndex5 = i * attrIndexIncr5;
+    attrIndex6 = i * attrIndexIncr6;
+    attrIndex7 = i * attrIndexIncr7;
+    attrIndex8 = i * attrIndexIncr8;
+    attrIndex9 = i * attrIndexIncr9;
+    attrIndex10 = i * attrIndexIncr10;
+    updateAccessor(
+      i - lastBatchRegister,
+      attrRegister0, attrIndex0,
+      attrRegister1, attrIndex1,
+      attrRegister2, attrIndex2,
+      attrRegister3, attrIndex3,
+      attrRegister4, attrIndex4,
+      attrRegister5, attrIndex5,
+      attrRegister6, attrIndex6,
+      attrRegister7, attrIndex7,
+      attrRegister8, attrIndex8,
+      attrRegister9, attrIndex9,
+      attrRegister10, attrIndex10,
+    );
+  }
+}
+
 /**
  * This takes the defaults array provided and loads them into our default
  * lookup values
@@ -229,6 +400,10 @@ const updateBufferLookUp: {[key: number]: (numBatches: number, updateAccessor: F
   5: updateBuffer5,
   6: updateBuffer6,
   7: updateBuffer7,
+  8: updateBuffer8,
+  9: updateBuffer9,
+  10: updateBuffer10,
+  11: updateBuffer11,
 };
 
 /**
@@ -248,6 +423,23 @@ export class BufferUtil {
   }
 
   /**
+   * This takes the buffer items and cleans up their use within memory as best as possible.
+   *
+   * @param bufferItems
+   */
+  static dispose<T, U>(buffers: IBufferItems<T, U>[]) {
+    if (buffers) {
+      buffers.forEach(bufferItems => {
+        bufferItems.attributes = null;
+        bufferItems.currentData = null;
+        bufferItems.geometry.dispose();
+        bufferItems.geometry = null;
+        bufferItems.system = null;
+      });
+    }
+  }
+
+  /**
    * This stops updates streaming into the buffers and makes it where an update
    * will always just start at the beginning of the buffer.
    */
@@ -257,6 +449,204 @@ export class BufferUtil {
     lastBatchRegister = 0;
 
     return totalBatches;
+  }
+
+  /**
+   * It is often needed to examine a given buffer and see how the triangles are packed in.
+   * This is a common debugging need and will speed up debugging significantly.
+   *
+   * @param {IBufferItems<T, U>} bufferItems This is the buffer whose structure we want
+   *                                         to examine.
+   */
+  static examineBuffer<T, U extends Mesh>(bufferItems: IBufferItems<T, U>, message: string, debugNamespace: string) {
+    // Get the appropriate debug namespace
+    const debugBuffer = debugGenerator(debugNamespace);
+
+    // Quick quit if the debugger is not enabled
+    if (!debugBuffer.enabled) {
+      return;
+    }
+
+    const attributes = bufferItems.attributes;
+    const buffer = bufferItems.geometry;
+    // Get the attributes by name out of the three js buffer
+    const bufferAttributes: any[] = attributes.map((attr: IAttributeInfo) => (buffer.attributes as any)[attr.name]);
+    // Get the raw number buffers
+    const attributeBuffers: number[][] = bufferAttributes.map((attr: any) => attr.array as number[]);
+
+    // This will store all of the examined triangles for easy viewing
+    const triangles = [];
+
+    if (bufferItems.system.drawMode === TrianglesDrawMode) {
+      let currentVertex = 0;
+      let attrSize = 0;
+      let currentIndex = 0;
+      const length = buffer.drawRange.start + buffer.drawRange.count;
+
+      while (currentVertex < length) {
+        const tri: any = {
+          vertex_0: {},
+          vertex_1: {},
+          vertex_2: {},
+        };
+
+        // Each new triangle is a culmination of three vertices which are packed in
+        // The buffer with no vertex sharing
+        for (let i = 0; i < 3; ++i) {
+          attributes.forEach((attr, index) => {
+            attrSize = attr.size + 1;
+            currentIndex = currentVertex * attrSize;
+            tri[`vertex_${i}`][attr.name] = attributeBuffers[index].slice(currentIndex, currentIndex + attrSize);
+          });
+
+          // Move to the next vertex
+          currentVertex++;
+        }
+
+        // Store the calculated tri
+        triangles.push(tri);
+      }
+    }
+
+    else if (bufferItems.system.drawMode === TriangleStripDrawMode) {
+      let currentVertex = 0;
+      let attrSize = 0;
+      let currentIndex = 0;
+      const length = buffer.drawRange.start + buffer.drawRange.count;
+
+      while (currentVertex < length) {
+        const tri: any = {
+          vertex_0: {},
+          vertex_1: {},
+          vertex_2: {},
+        };
+
+        // Each new triangle is three vertices, where the first two are shared with
+        // The previous triangle's last two vertices
+        for (let i = 0; i < 3; ++i) {
+          attributes.forEach((attr, index) => {
+            attrSize = attr.size + 1;
+            currentIndex = currentVertex * attrSize;
+            tri[`vertex_${i}`][attr.name] = attributeBuffers[index].slice(currentIndex, currentIndex + attrSize);
+          });
+
+          // Move to the next vertex
+          currentVertex++;
+        }
+
+        // Go back two vertices as the next tri will use them + the next vertex to
+        // Make the next triangle
+        currentVertex -= 2;
+
+        // Store the calculated tri
+        triangles.push(tri);
+      }
+    }
+
+    // Log the debug info to the console using the debug utility
+    debugBuffer(message, {
+      drawRange: buffer.drawRange,
+      triangles,
+    }, (bufferItems.system.material as ShaderMaterial).uniforms);
+  }
+
+  /**
+   * Aids in taking in multiple multibuffers and flattening it to a single list
+   *
+   * @param multiShapeBuffers
+   */
+  static flattenMultiBuffers<T>(multiShapeBuffers: MultiShapeBufferCache<T>[]) {
+    let all: T[] = [];
+
+    multiShapeBuffers.forEach(multiBuffer => {
+      multiBuffer.getBuffers().forEach(buffer => all = all.concat(buffer));
+    });
+
+    return all;
+  }
+
+  /**
+   * @static
+   * This helps aid in updating a complex multi buffer. It will establish when a new
+   * buffer needs to be created and initialized and it will automatically call a BaseBuffer's
+   * update when an update is detected as a need for the buffer.
+   *
+   * @param multiShapeBuffer
+   * @param buffers
+   * @param init
+   *
+   * @return {boolean} True if a buffer was updated
+   */
+  static updateMultiBuffer<T, U>(multiShapeBuffer: MultiShapeBufferCache<T>, buffers: BaseBuffer<T, U>[], init: InitVertexBufferMethod<T, U>, update: UpdateVertexBufferMethod<T, U>, forceUpdates?: boolean): boolean {
+    // This flag indicates whether an update occurred or not
+    let didUpdate = false;
+    // Get the shape buffers we need rendered into vertex buffers
+    const shapeBuffers = multiShapeBuffer.getBuffers();
+    // Make a lookup to identify the buffers that already exists for the given multi shape buffers
+    const bufferLookup = new Map<T[], BaseBuffer<T, U>>();
+    buffers.forEach(buffer => bufferLookup.set(buffer.bufferItems.currentData, buffer));
+
+    // This will store all of the shape buffers that needs to be rendered into a vertex buffer
+    let needsBuffer: T[][] = [];
+
+    // If we're forcing updates then we should be ensuring all shapeBuffers needs a buffer
+    // And leave all of the bufferLookup so they will all be updated with the provided needed shape buffer updates
+    if (forceUpdates) {
+      needsBuffer = [].concat(shapeBuffers);
+    }
+
+    // If a buffer for the shape buffer exists the buffer does not need an update, as it did not change
+    // Then remove the buffer for that shape buffer
+    // Otherwise, the shape buffer needs an update
+    else {
+      shapeBuffers.forEach(shapes => {
+        if (bufferLookup.get(shapes)) {
+          bufferLookup.delete(shapes);
+        }
+
+        else {
+          needsBuffer.push(shapes);
+        }
+      });
+    }
+
+    // All buffers remaining in the buffer lookup are available for re-rendering the
+    // Shape buffers that still needs updates
+
+    // If the shape buffers needing updates is greater than the vertex buffers available
+    // Then we update with what we have and initialize any additional vertex buffers needed
+    if (needsBuffer.length >= bufferLookup.size) {
+      // Take any buffer that is not found with an existing shape buffer and update it
+      // With a buffer that needs an update
+      bufferLookup.forEach((value: BaseBuffer<T, U>) => {
+        didUpdate = update(value, needsBuffer.shift()) || didUpdate;
+      });
+
+      // Any remaining buffers that need updates will have to initialize a buffer
+      // To cram it in
+      needsBuffer.forEach(shapeBuffer => {
+        const vertexBuffer = init();
+        buffers.push(vertexBuffer);
+        didUpdate = update(vertexBuffer, shapeBuffer) || didUpdate;
+      });
+    }
+
+    // If the buffers available are greater than the shape buffers to be rendered
+    // Then we update the vertex buffers needed, and we update the remaining vertex
+    // Buffers with zero draw ranges
+    else {
+      const vertexBuffers = Array.from(bufferLookup.values());
+      needsBuffer.forEach(shapeBuffer => {
+        const vertexBuffer = vertexBuffers.shift();
+        didUpdate = update(vertexBuffer, shapeBuffer) || didUpdate;
+      });
+
+      vertexBuffers.forEach(buffer => {
+        buffer.bufferItems.geometry.setDrawRange(0, 0);
+      });
+    }
+
+    return didUpdate;
   }
 
   /**
@@ -273,10 +663,12 @@ export class BufferUtil {
   static makeBuffer(numVertices: number, attributes: IAttributeInfo[]): BufferGeometry {
     const iMax = attributes.length;
     const geometry = new BufferGeometry();
+    let totalAttributeSize = 0;
 
     for (let i = 0; i < iMax; ++i) {
       const attribute = attributes[i];
       const attributeSize = attribute.size + 1;
+      totalAttributeSize += attributeSize;
       const buffer = new Float32Array(attributeSize * numVertices);
       const fillMethod = fillMethodLookUp[attribute.size];
       const name = attribute.name;
@@ -292,6 +684,10 @@ export class BufferUtil {
       // Apply the buffer to our geometry buffer
       geometry.addAttribute(name, new BufferAttribute(buffer, attributeSize));
       debug('Made Buffer Attribute:', name, attributeSize);
+    }
+
+    if (totalAttributeSize > 16) {
+      console.warn('A Buffer has specified more attributes than available. The max is 16 and the buffer provided:', totalAttributeSize);
     }
 
     return geometry;
@@ -331,10 +727,11 @@ export class BufferUtil {
    * @param {number} vertexBatch The number of vertices to include per update batch
    * @param {number} numBatches The number of batches to execute
    * @param {Function} updateAccessor The accessor for performing the data update to the buffer
+   * @param {boolean} force This bypasses the typical checks that determines if the buffer SHOULD update.
    *
    * @return {boolean} True if the buffer was updated with this call
    */
-  static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function): boolean {
+  static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function, force?: boolean): boolean {
     const attributes = bufferItems.attributes;
     const buffer = bufferItems.geometry;
 
@@ -343,7 +740,7 @@ export class BufferUtil {
     const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
 
     // We check if there is a reference change in the data indicating a buffer push needs to happen
-    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed) {
+    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed || force) {
       // If we aren't streaming updates, then we always start at the beginning
       if (!isStreamUpdatingRegister) {
         // Reset out last batch register as this is an entriely new update
@@ -365,7 +762,13 @@ export class BufferUtil {
       // Execute the update method
       updateMethod(numBatches + lastBatchRegister, updateAccessor);
       // Flag each buffer attribute for needing an update
-      bufferAttributes.forEach(attr => attr.needsUpdate = true);
+      bufferAttributes.forEach((attr: BufferAttribute) => {
+        if (attr.updateRange) {
+          attr.updateRange.offset = 0;
+          attr.updateRange.count = vertexBatch * numBatches;
+        }
+        attr.needsUpdate = true;
+      });
       // Move our register forward in case we are in a stream update
       lastBatchRegister += numBatches;
 

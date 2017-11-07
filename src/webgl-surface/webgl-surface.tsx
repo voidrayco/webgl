@@ -8,13 +8,16 @@ import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { FrameInfo } from './util/frame-info';
 import { eventElementPosition } from './util/mouse';
 import { IProjection } from './util/projection';
 import { QuadTree } from './util/quad-tree';
 import { IScreenContext } from './util/screen-context';
+import { WebGLStat } from './util/webgl-stat';
 const debug = require('debug')('webgl-surface:GPU');
 const debugCam = require('debug')('webgl-surface:Camera');
 const debugLabels = require('debug')('webgl-surface:Labels');
+const debugColors = require('debug')('webgl-surface:Colors');
 
 /**
  * This enum names the base methods that are passed into the applyPropsMethods
@@ -88,10 +91,28 @@ export interface IAnimatedMethodResponse {
 }
 
 // Types for making method assignment and organizatione easier
+export type AnimatedMethodOptions = { labelsReady?: boolean, colorsReady?: boolean };
+export type AnimatedMethodWithOptions = { options: AnimatedMethodOptions, method(): IAnimatedMethodResponse };
 export type AnimatedMethod = () => IAnimatedMethodResponse;
 export type AnimatedMethodLookup = {[key: number]: AnimatedMethod};
 export type ApplyPropsMethod<T> = (props: T) => IApplyPropsMethodResponse;
 export type ApplyPropsMethodLookup<T> = {[key: number]: ApplyPropsMethod<T>};
+
+function isAnimatedWithOptions(value: any): value is AnimatedMethodWithOptions {
+  if (value.options) {
+    return true;
+  }
+
+  return false;
+}
+
+function isAnimated(value: any): value is AnimatedMethod {
+  if (!value.options) {
+    return true;
+  }
+
+  return false;
+}
 
 /** This is the smallest increment the zoom can make. Anything less and nothing will happen */
 const MIN_ZOOM_INCREMENT = 0.001;
@@ -100,6 +121,21 @@ const BACKGROUND_COLOR = new Color().setRGB(38 / BYTE_MAX, 50 / BYTE_MAX, 78 / B
 
 // Local component properties interface
 export interface IWebGLSurfaceProperties {
+  /**
+   * Sets the renderer's background color. If the opacity is less than one at initialization,
+   * it enables 'transparent' canvas rendering which is much less efficient. All color values
+   * are 0 - 1
+   */
+  backgroundColor: {
+    /** Red channel 0-1 */
+    r: number,
+    /** Green channel 0-1 */
+    g: number,
+    /** Blue channel 0-1 */
+    b: number,
+    /** Alpha channel 0-1 */
+    opacity: number,
+  }
   /** When true, will cause a camera recentering to take place when new base items are injected */
   centerOnNewItems?: boolean
   /** All of the unique colors used in the system */
@@ -148,21 +184,6 @@ function sign(value: number): number {
   return 0;
 }
 
-function isWebGLSupported() {
-  try{
-    const canvas = document.createElement('canvas');
-    return !! (window as any).WebGLRenderingContext && (
-      canvas.getContext( 'webgl' ) || canvas.getContext( 'experimental-webgl' )
-    );
-  }
-
-  catch (e) {
-    return false;
-  }
-}
-
-const WEBGL_SUPPORTED = isWebGLSupported();
-
 /**
  * The base component for the communications view
  */
@@ -179,7 +200,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * simpler to manage, as well as gives a clear and optimized way of overriding existing methods
    * or reordering their execution
    */
-  animatedMethodList: AnimatedMethod[] = [];
+  animatedMethodList: (AnimatedMethod | AnimatedMethodWithOptions)[] = [];
   /**
    * If this is set to true during an animated method's lifecycle, then all subsequent animated methods
    * will not be executed for the current frame. Upon reaching the end of the frame, the break will reset
@@ -192,8 +213,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * that the viewport will only be applied once if it doesn't change again.
    */
   appliedViewport: Bounds<any>;
-  /** Used to aid in mouse interactions */
-  distance = 0;
   /**
    * The camera that 'looks' at our world and gives us the ability to convert
    * screen coordinates to world coordinates, and vice versa
@@ -201,6 +220,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   camera: OrthographicCamera | null = null;
   /** A camera that is used for projecting sizes to and from the screen to the world */
   circleMaterial: ShaderMaterial;
+  /** Stores screen dimension info */
   ctx: IScreenContext;
   /**
    * While this number is positive it will be decremented every frame.
@@ -211,9 +231,19 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * start taking place.
    */
   disableMouseInteraction: number = 0;
+  /** Used to aid in mouse interactions */
+  distance = 0;
+  /** When set, forces a draw next animation frame */
   forceDraw: boolean;
+  /**
+   * This stores the gl rendering context for reference when it's available
+   */
+  gl: WebGLRenderingContext;
+  /** Contains the methods for projecting between screen and world spaces */
   projection: IProjection;
+  /** The top level HTML element for this component */
   renderEl: HTMLElement;
+  /** The threejs renderer */
   renderer: WebGLRenderer;
   scene: Scene;
   sizeCamera: OrthographicCamera | null = null;
@@ -275,6 +305,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
 
+  /** Mouse in stage or not */
+  dragOver: boolean = true;
+
   /** Flag for detecting whether or not webgl is supported at all */
 
   /**
@@ -287,13 +320,37 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       return;
     }
 
+    FrameInfo.lastFrameTime = Date.now();
+    FrameInfo.framesPlayed.set(this, (FrameInfo.framesPlayed.get(this) || 0) + 1);
     requestAnimationFrame(() => this.animate());
 
     let response: IAnimatedMethodResponse;
     let doDraw: boolean | undefined = false;
 
-    const didBreak = this.animatedMethodList.some((method: AnimatedMethod): boolean => {
-      response = method();
+    const didBreak = this.animatedMethodList.some((method: AnimatedMethod | AnimatedMethodWithOptions): boolean => {
+      if (isAnimatedWithOptions(method)) {
+        if (method.options.labelsReady && method.options.colorsReady) {
+          if (this.labelsReady && this.colorsReady) {
+            response = method.method();
+          }
+        }
+
+        else if (method.options.labelsReady) {
+          if (this.labelsReady) {
+            response = method.method();
+          }
+        }
+
+        else if (method.options.colorsReady) {
+          if (this.colorsReady) {
+            response = method.method();
+          }
+        }
+      }
+
+      else if (isAnimated(method)) {
+        response = method();
+      }
 
       // Update our draw status based on response
       if (!doDraw) {
@@ -343,7 +400,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    *
    * @return {AnimatedMethods[]} The list of animated methods in the order they are expected to be executed
    */
-  animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: AnimatedMethod[]): AnimatedMethod[] {
+  animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: (AnimatedMethod | AnimatedMethodWithOptions)[]): (AnimatedMethod | AnimatedMethodWithOptions)[] {
     // Default functionality is to use the simple preordered list
     return orderedBaseAnimatedMethods;
   }
@@ -554,6 +611,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     return {
       [BaseApplyPropsMethods.INITIALIZE]: (props: T): IApplyPropsMethodResponse => {
         const {
+          backgroundColor,
           height,
           width,
         } = props;
@@ -571,6 +629,36 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           const world = this.screenToWorld(this.lastMousePosition.x, this.lastMousePosition.y);
           this.zoomTargetX = world.x;
           this.zoomTargetY = world.y;
+        }
+
+        if (this.renderer && backgroundColor) {
+          const oldColor = this.props.backgroundColor || {
+            b: BACKGROUND_COLOR.b,
+            g: BACKGROUND_COLOR.g,
+            opacity: 1.0,
+            r: BACKGROUND_COLOR.r,
+          };
+
+          const same =
+            oldColor.r === backgroundColor.r &&
+            oldColor.g === backgroundColor.g &&
+            oldColor.b === backgroundColor.b &&
+            oldColor.opacity === backgroundColor.opacity
+          ;
+
+          if (!same) {
+            this.renderer.setClearColor(
+              new Color(
+                backgroundColor.r,
+                backgroundColor.g,
+                backgroundColor.b,
+              ),
+              // Only if a transparent background is specified should we
+              // Allow the parameter. We avoid the parameter to ensure
+              // Transparent mode it not activated unless absolutely necessary
+              backgroundColor.opacity < 1 ? backgroundColor.opacity : undefined,
+            );
+          }
         }
 
         debug('props', props);
@@ -599,7 +687,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           debugLabels('Creating the atlas for labels based on these textures %o', textures);
           this.atlasManager.createAtlas(this.atlasNames.labels, textures)
           .then(() => {
-            debugLabels('Labels rasterized within the atlas!');
+            debugLabels('Labels rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.labels));
             this.forceDraw = true;
             this.labelsCurrentLoadedId++;
 
@@ -622,7 +710,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         // If we have a new labels reference we must regenerate the labels in our image lookup
         if (props.colors && props.colors !== this.colors) {
-          debugLabels('Colors are being comitted to an Atlas %o', props.colors);
+          debugColors('Colors are being comitted to an Atlas %o', props.colors);
           // Flag the labels as incapable of rendering
           this.colorsReady = false;
           // Store the set of labels we are rendering so that they do not get re-generated
@@ -633,10 +721,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
             this.atlasManager.destroyAtlas(this.atlasNames.colors);
           }
 
-          debugLabels('Creating the atlas for colors based on these colors %o', this.colors);
+          debugColors('Creating the atlas for colors based on these colors %o', this.colors);
           this.atlasManager.createAtlas(this.atlasNames.colors, null, this.colors)
           .then(() => {
-            debugLabels('Colors rasterized within the atlas!');
+            debugColors('Colors rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.colors));
             this.forceDraw = true;
             this.colorsReady = true;
             // Reapply the props so any buffers that were not updating can update now
@@ -651,12 +739,15 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
 
-        // We call the label buffering when the labels are ready to render
-        if (this.labelsReady) {
+        // We call the label buffering when the labels are ready to render.
+        // Labels now utilize the color atlas as well, thus requiring colors
+        // To be loaded
+        if (this.labelsReady && this.colorsReady) {
           debugLabels('labels changed %o', props);
           this.applyLabelBufferChanges(props);
         }
 
+        // For resources that only need the color atlas to be ready
         if (this.colorsReady) {
           this.applyColorBufferChanges(props);
         }
@@ -808,6 +899,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.renderEl = null;
     this.renderer = null;
     this.scene = null;
+
+    this.atlasManager.destroyAtlas(this.atlasNames.colors);
+    this.atlasManager.destroyAtlas(this.atlasNames.labels);
+
+    FrameInfo.framesPlayed.delete(this);
   }
 
   /**
@@ -817,6 +913,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   draw = () => {
     // Draw the 3D scene
     this.renderer.render(this.scene, this.camera);
+
+    if (this.onRender && this.colorsReady && this.labelsReady) {
+      const imageData = this.renderer.domElement.toDataURL();
+      this.onRender(imageData);
+    }
   }
 
   /**
@@ -860,18 +961,42 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     // Generate the renderer along with it's properties
     this.renderer = new WebGLRenderer({
+      alpha: this.props.backgroundColor && (this.props.backgroundColor.opacity < 1.0),
       antialias: true,
+      preserveDrawingBuffer: true,
     });
 
-    debug('Window Pixel Ratio: %o', window.devicePixelRatio);
+    // This sets the pixel ratio to handle differing pixel densities in screens
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(w, h);
-    this.renderer.setClearColor(BACKGROUND_COLOR);
+
+    // Applies the background color and establishes whether or not the context supports
+    // Alpha or not
+    if (this.props.backgroundColor) {
+      this.renderer.setClearColor(
+        new Color(
+          this.props.backgroundColor.r,
+          this.props.backgroundColor.g,
+          this.props.backgroundColor.b,
+        ),
+        this.props.backgroundColor.opacity,
+      );
+    }
+
+    else {
+      this.renderer.setClearColor(BACKGROUND_COLOR);
+    }
+
+    // We render shapes. We care not for culling.
     this.renderer.setFaceCulling(CullFaceNone);
 
     // Set up DOM interaction with the renderer
     const container = el;
     container.appendChild(this.renderer.domElement);
+    // Get the gl context for queries and advanced operations
+    this.gl = this.renderer.domElement.getContext('webgl');
+
+    this.makeDraggable(document.getElementById('div'), this);
   }
 
   /**
@@ -965,8 +1090,23 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setSize(w, h);
-    this.renderer.setClearColor(new Color().setRGB(38 / 255, 50 / 255, 78 / 255));
     this.renderer.setFaceCulling(CullFaceNone);
+
+    if (this.props.backgroundColor) {
+      const { backgroundColor: color } = this.props;
+      this.renderer.setClearColor(
+        new Color(
+          color.r,
+          color.g,
+          color.b,
+        ),
+        color.opacity < 1.0 ? color.opacity : undefined,
+      );
+    }
+
+    else {
+      this.renderer.setClearColor(BACKGROUND_COLOR);
+    }
 
     return true;
   }
@@ -990,6 +1130,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     );
 
     this.onViewport(visible, this.projection, this.ctx);
+  }
+
+  onRender(image: string) {
+    // NOTE: For subclasses
   }
 
   /**
@@ -1066,6 +1210,46 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // NOTE: For subclasses
   }
 
+  makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>) {
+    element.onmousedown = function(event) {
+      debug('DRAG~');
+      stage.dragOver = false;
+      document.onmousemove = function(event) {
+        debug('Move');
+          const mouseX = event.clientX;
+          const mouseY = event.clientY + window.scrollY;
+
+          const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
+          const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
+          stage.destinationX -= distanceX;
+          stage.destinationY += distanceY;
+          stage.lastMousePosition.x = mouseX;
+          stage.lastMousePosition.y = mouseY;
+      };
+
+      document.onmouseup = function() {
+        debug('Up');
+        document.onmousemove = null;
+        stage.isPanning = false;
+        stage.dragOver = true;
+      };
+
+      document.onmouseover = function() {
+        debug('Over');
+        if (stage.dragOver === false) stage.isPanning = true;
+      };
+
+      element.onmouseup = function() {
+        stage.dragOver = true;
+      };
+
+      // Text will not be selected when it is being dragged
+      element.onselectstart = function(){return false; };
+
+    };
+
+  }
+
   /**
    * Handles mouse interactions when the mouse is pressed on the canvas. This
    * engages panning.
@@ -1074,10 +1258,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
+
     if (this.disableMouseInteraction > 0) {
       return;
     }
-
     this.isPanning = true;
     this.distance = 0;
 
@@ -1167,8 +1351,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     const world = this.screenToWorld(mouse.x, mouse.y);
     this.distance++;
 
+    debug('mouse X %o Y %o', mouse.x, mouse.y);
+
     // Handle panning
     if (this.isPanning) {
+      debug('down and moving ~~');
       let xDistance = (mouse.x - this.lastMousePosition.x) / this.targetZoom;
       let yDistance = -(mouse.y - this.lastMousePosition.y) / this.targetZoom;
 
@@ -1256,7 +1443,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   positionCamera(x: number, y: number) {
     if (this.camera) {
-      this.camera.position.set(Math.floor(x), Math.floor(y), this.camera.position.z);
+      this.camera.position.set(x, y, this.camera.position.z);
     }
   }
 
@@ -1420,12 +1607,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   render() {
     const { width, height } = this.props;
 
-    if (!WEBGL_SUPPORTED) {
+    if (!WebGLStat.WEBGL_SUPPORTED) {
       return <div>{this.props.children || 'Web GL not supported'}</div>;
     }
 
     return (
       <div
+        id="div"
         onMouseDown={this.handleMouseDown}
         onMouseOut={this.handleMouseOut}
         onMouseUp={this.handleMouseUp}
@@ -1436,7 +1624,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
             this.props.onDoubleClick(e);
           }
         }}
-        style={{ position: 'relative', width: width, height: height }}>
+        style={{ position: 'relative', width: width, height: height}}>
         <div ref={this.applyRef} />
       </div>
     );

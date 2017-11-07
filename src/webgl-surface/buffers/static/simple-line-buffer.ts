@@ -42,6 +42,11 @@ export class SimpleStaticLineBuffer extends BaseBuffer<CurvedLineShape<any>, Mes
    * @param shapeBuffer
    */
   update(shapeBuffer: CurvedLineShape<any>[]): boolean {
+    if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
+      return false;
+    }
+
     let needsUpdate = false;
     const numVerticesPerSegment = 6;
     const colorAttributeSize = 4;

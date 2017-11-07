@@ -1,5 +1,13 @@
 import { Bounds } from './bounds';
 import { IPoint } from './point';
+export interface ICircleOptions {
+    /** Center x position of the circle */
+    centerX: number;
+    /** Center y position of the circle */
+    centerY: number;
+    /** The radius of the circle */
+    radius: number;
+}
 export declare class Circle<T> extends Bounds<T> {
     /** a UID of the circle */
     _id: number;
@@ -25,7 +33,7 @@ export declare class Circle<T> extends Bounds<T> {
      * @param r The radius of the circle
      * @param d A data object to associate with the circle
      */
-    constructor(x: number, y: number, r: number, d?: any);
+    constructor(options: ICircleOptions);
     /**
      * Tests if the specified bounds is inside this circle
      *

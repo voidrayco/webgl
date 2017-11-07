@@ -1,7 +1,7 @@
-import { Color } from 'three';
 import { IPoint } from '../../primitives/point';
 import { RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
+import { ReferenceColor } from '../reference/reference-color';
 import { AtlasTexture } from '../texture/atlas-texture';
 export declare class Label<T> extends RotateableQuad<T> {
     depth: number;
@@ -43,11 +43,7 @@ export declare class Label<T> extends RotateableQuad<T> {
      * the label cut off.
      */
     rasterizationPadding: ISize;
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-    color: Color;
+    color?: ReferenceColor;
     /**
      * Creates an instance of Label.
      *
@@ -61,6 +57,10 @@ export declare class Label<T> extends RotateableQuad<T> {
      */
     copyLabel(label: Label<T>): void;
     /**
+     * This gets the actual text this label is capable of rendering
+     */
+    getText(): string;
+    /**
      * Takes all of the current settings and makes a CSS font string
      */
     makeCSSFont(fontSize?: number): string;
@@ -72,7 +72,14 @@ export declare class Label<T> extends RotateableQuad<T> {
      */
     position(x: number, y: number): void;
     /**
+     * This sets the font size for the label based on the base text dimensions
+     *
+     * @param {number} fontSize
+     */
+    setFontSize(fontSize: number): void;
+    /**
      * Change the text and the calculated bounding box for this label
      */
     setText(lbl: string): void;
+    update(): void;
 }
