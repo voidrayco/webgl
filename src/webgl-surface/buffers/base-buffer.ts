@@ -1,5 +1,5 @@
 import { ShaderMaterial } from 'three';
-import { IBufferItems } from '../util/buffer-util';
+import { BufferUtil, IBufferItems } from '../util/buffer-util';
 
 /**
  * This deinfes the minimal set of methods that should be implemented to create
@@ -8,6 +8,15 @@ import { IBufferItems } from '../util/buffer-util';
 export class BaseBuffer<T, U> {
   /** Will store the base default buffer items to work with */
   bufferItems: IBufferItems<T, U>;
+
+  /**
+   * This disposes the resources associated with a buffer.
+   */
+  dispose() {
+    if (this.bufferItems) {
+      BufferUtil.dispose([this.bufferItems]);
+    }
+  }
 
   /**
    * This initializes the buffer and generates the buffer items object.

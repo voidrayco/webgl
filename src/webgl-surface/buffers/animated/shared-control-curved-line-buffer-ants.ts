@@ -57,6 +57,11 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
         name: 'marching',
         size: AttributeSize.FOUR,
       },
+      {
+        defaults: [0],
+        name: 'controlPick',
+        size: AttributeSize.ONE,
+      },
     ];
 
     const verticesPerQuad = 6;
@@ -84,10 +89,21 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
    * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
    *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, sharedControl?: IPoint) {
+  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number) {
     if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
+
+    // This is a special case where we need to update our current item dataset to prevent
+    // Re-updates for the same empty shape buffer
+    if (shapeBuffer.length === 0) {
+      this.bufferItems.currentData = shapeBuffer;
+    }
+
+    const controlPoints: number[] = [];
+    const controlReference = new Map<IPoint, number>();
+    let controlUniform: IUniform;
 
     // As this is a single material, we have to assume that the color atlas
     // For our shapes will be the same atlas for all colors. Thus, the atlas
@@ -105,8 +121,8 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
       uniforms.colorsPerRow.value = colorBase.colorsPerRow;
       uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
       uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-      // This is the shared control point for all of the vertices
-      uniforms.controlPoint.value = [sharedControl.x, sharedControl.y];
+      // This is the shared control points for all of the vertices
+      controlUniform = uniforms.controlPoints;
       atlas.needsUpdate = true;
     }
 
@@ -125,6 +141,8 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
     let antLength: number;
     let antGap: number;
     let antSpeed: number;
+    let controlPoint: IPoint;
+    let controlRef: number;
     // We can not accurately send very large numbers via float point into the attributes
     // So we trim down our time sent to the attribute down to a number that is less than
     // 16,777,217 which means we can only reliably grab the last 7 digits of the date's time
@@ -144,11 +162,20 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
       colorEnd = curvedLine.endColor.base;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
-      p1 = curvedLine.p1;
-      p2 = curvedLine.p2;
+      p1 = curvedLine.start;
+      p2 = curvedLine.end;
       antGap = curvedLine.marchingAnts.gapLength;
       antSpeed = curvedLine.marchingAnts.speed;
       antLength = curvedLine.marchingAnts.strokeLength + curvedLine.marchingAnts.gapLength;
+
+      controlPoint = curvedLine.controlPoints[controlPointSource];
+      controlRef = controlReference.get(controlPoint);
+
+      if (controlRef === undefined) {
+        const controlLength = controlPoints.push(controlPoint.x, controlPoint.y);
+        controlRef = controlLength - 2;
+        controlReference.set(controlPoint, controlRef);
+      }
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
@@ -161,6 +188,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints: Float32Array, epos: number,
           halfWidth: Float32Array, wpos: number,
           marching: Float32Array, mpos: number,
+          controlPick: Float32Array, cpos: number,
         ) {
 
           // Copy first vertex twice for intro degenerate tri
@@ -177,6 +205,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
+          controlPick[cpos] = controlRef;
 
           // TR
           positions[++ppos] = (i + 1) / length;
@@ -194,6 +223,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           marching[++mpos] = antSpeed;
           marching[++mpos] = antGap;
           marching[++mpos] = antLength;
+          controlPick[++cpos] = controlRef;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -211,6 +241,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           marching[++mpos] = antSpeed;
           marching[++mpos] = antGap;
           marching[++mpos] = antLength;
+          controlPick[++cpos] = controlRef;
 
           // TL
           positions[++ppos] = i / length;
@@ -228,6 +259,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           marching[++mpos] = antSpeed;
           marching[++mpos] = antGap;
           marching[++mpos] = antLength;
+          controlPick[++cpos] = controlRef;
 
           // BL
           positions[++ppos] = i / length;
@@ -245,6 +277,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           marching[++mpos] = antSpeed;
           marching[++mpos] = antGap;
           marching[++mpos] = antLength;
+          controlPick[++cpos] = controlRef;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -260,6 +293,7 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
+          controlPick[++cpos] = controlRef;
         },
       );
 
@@ -270,6 +304,10 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer < CurvedLineSh
     }
 
     const numBatches = BufferUtil.endUpdates();
+
+    if (controlUniform) {
+      controlUniform.value = controlPoints;
+    }
 
     // Only if updates happened, should this change
     if (needsUpdate) {

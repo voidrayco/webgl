@@ -8,6 +8,10 @@ export declare class BaseBuffer<T, U> {
     /** Will store the base default buffer items to work with */
     bufferItems: IBufferItems<T, U>;
     /**
+     * This disposes the resources associated with a buffer.
+     */
+    dispose(): void;
+    /**
      * This initializes the buffer and generates the buffer items object.
      */
     init(material: ShaderMaterial, unitCount: number): void;

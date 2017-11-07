@@ -77,6 +77,14 @@ export interface IAnimatedMethodResponse {
      */
     stop?: boolean;
 }
+export declare type AnimatedMethodOptions = {
+    labelsReady?: boolean;
+    colorsReady?: boolean;
+};
+export declare type AnimatedMethodWithOptions = {
+    options: AnimatedMethodOptions;
+    method(): IAnimatedMethodResponse;
+};
 export declare type AnimatedMethod = () => IAnimatedMethodResponse;
 export declare type AnimatedMethodLookup = {
     [key: number]: AnimatedMethod;
@@ -142,7 +150,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * simpler to manage, as well as gives a clear and optimized way of overriding existing methods
      * or reordering their execution
      */
-    animatedMethodList: AnimatedMethod[];
+    animatedMethodList: (AnimatedMethod | AnimatedMethodWithOptions)[];
     /**
      * If this is set to true during an animated method's lifecycle, then all subsequent animated methods
      * will not be executed for the current frame. Upon reaching the end of the frame, the break will reset
@@ -155,8 +163,6 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * that the viewport will only be applied once if it doesn't change again.
      */
     appliedViewport: Bounds<any>;
-    /** Used to aid in mouse interactions */
-    distance: number;
     /**
      * The camera that 'looks' at our world and gives us the ability to convert
      * screen coordinates to world coordinates, and vice versa
@@ -164,6 +170,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     camera: OrthographicCamera | null;
     /** A camera that is used for projecting sizes to and from the screen to the world */
     circleMaterial: ShaderMaterial;
+    /** Stores screen dimension info */
     ctx: IScreenContext;
     /**
      * While this number is positive it will be decremented every frame.
@@ -174,9 +181,19 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * start taking place.
      */
     disableMouseInteraction: number;
+    /** Used to aid in mouse interactions */
+    distance: number;
+    /** When set, forces a draw next animation frame */
     forceDraw: boolean;
+    /**
+     * This stores the gl rendering context for reference when it's available
+     */
+    gl: WebGLRenderingContext;
+    /** Contains the methods for projecting between screen and world spaces */
     projection: IProjection;
+    /** The top level HTML element for this component */
     renderEl: HTMLElement;
+    /** The threejs renderer */
     renderer: WebGLRenderer;
     scene: Scene;
     sizeCamera: OrthographicCamera | null;
@@ -256,7 +273,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      *
      * @return {AnimatedMethods[]} The list of animated methods in the order they are expected to be executed
      */
-    animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: AnimatedMethod[]): AnimatedMethod[];
+    animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: (AnimatedMethod | AnimatedMethodWithOptions)[]): (AnimatedMethod | AnimatedMethodWithOptions)[];
     /**
      * This generates the base animated methods lookup.
      * We do not make these methods a part of the class as this is the base class

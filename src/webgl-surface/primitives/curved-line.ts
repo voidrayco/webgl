@@ -1,4 +1,3 @@
-import { clone } from 'ramda';
 import { bezier2, bezier3 } from '../util/interpolation';
 import { Bounds } from './bounds';
 import { Line } from './line';
@@ -119,7 +118,7 @@ function circularDistance(line: CurvedLine<any>, testPoint: IPoint): number {
  * @returns {number} The nearest distance from the curve to the test point
  */
 function straightDistance(line: CurvedLine<any>, testPoint: IPoint): number {
-  return new Line(line.p1, line.p2).distanceTo(testPoint);
+  return new Line(line.start, line.end).distanceTo(testPoint);
 }
 
 // -------[ Segment Generating Methods ]----------------------------
@@ -138,12 +137,12 @@ function makeBezier2Segments(line: CurvedLine<any>): IPoint[] {
 
   const segments: IPoint[] = [];
   const dt = 1 / line.resolution;
-  const p1 = line.p1;
-  const p2 = line.p2;
+  const start = line.start;
+  const lineEnd = line.end;
   const c1 = line.controlPoints[0];
 
   for (let i = 0, end = line.resolution; i <= end; ++i) {
-    segments.push(bezier2(dt * i, p1, p2, c1));
+    segments.push(bezier2(dt * i, start, lineEnd, c1));
   }
 
   if (line.cachesSegments) {
@@ -167,13 +166,13 @@ function makeBezier3Segments(line: CurvedLine<any>): IPoint[] {
 
   const segments: IPoint[] = [];
   const dt = 1 / line.resolution;
-  const p1 = line.p1;
-  const p2 = line.p2;
+  const start = line.start;
+  const lineEnd = line.end;
   const c1 = line.controlPoints[0];
   const c2 = line.controlPoints[1];
 
   for (let i = 0, end = line.resolution; i <= end; ++i) {
-    segments.push(bezier3(dt * i, p1, p2, c1, c2));
+    segments.push(bezier3(dt * i, start, lineEnd, c1, c2));
   }
 
   if (line.cachesSegments) {
@@ -197,40 +196,45 @@ function makeCircularCWSegments(line: CurvedLine<any>): IPoint[] {
   }
   debug('CW');
   // Generate a line so we can have a perpendicular calculation
-  const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
-  let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
-  // We get the midpoint of the line as we want to align the center of the circle with this point
-  const midPoint: IPoint = Point.getMidpoint(line.p1, line.p2);
-  const minRadius = Point.getDistance(midPoint, line.p1);
+  const straightLine: Line<never> = new Line<never>(line.start, line.end);
+  let radius: number = Point.getDistance(line.start, line.controlPoints[0]);
+  let circleCenter: IPoint = line.controlPoints[1];
 
-  // The shortest the radius can be is the distance from the line to the mid point
-  // Anything shorter will just result in a hemisphere being rendered
-  if (radius < minRadius) {
-    radius = Point.getDistance(midPoint, line.p1);
+  if (!circleCenter) {
+    // We get the midpoint of the line as we want to align the center of the circle with this point
+    const midPoint: IPoint = Point.getMidpoint(line.start, line.end);
+    const minRadius = Point.getDistance(midPoint, line.start);
+
+    // The shortest the radius can be is the distance from the line to the mid point
+    // Anything shorter will just result in a hemisphere being rendered
+    if (radius < minRadius) {
+      radius = Point.getDistance(midPoint, line.start);
+    }
+
+    // Get the perpendicular direction to the line so we can calculate the center of our circle
+    // From the mid point
+    const perpendicular: IPoint = straightLine.perpendicular;
+    const distance = Math.sqrt(radius * radius - minRadius * minRadius);
+
+    // Calculate the location of the center of the circle
+    circleCenter = {
+      x: perpendicular.x * distance + midPoint.x,
+      y: perpendicular.y * distance + midPoint.y,
+    };
+
+    // Store the circle center as an extra control point in case the value is needed
+    // (which it often is)
+    line.controlPoints[1] = circleCenter;
   }
 
-  // Get the perpendicular direction to the line so we can calculate the center of our circle
-  // From the mid point
-  const perpendicular: IPoint = straightLine.perpendicular;
-  const distance = Math.sqrt(radius * radius - minRadius * minRadius);
-
-  // Calculate the location of the center of the circle
-  const circleCenter: IPoint = {
-    x: perpendicular.x * distance + midPoint.x,
-    y: perpendicular.y * distance + midPoint.y,
-  };
-
-  // Store the circle center as an extra control point in case the value is needed
-  // (which it often is)
-  line.controlPoints[1] = circleCenter;
   debug(' center of circle is %o  %o', circleCenter.x, circleCenter.y);
   // Get the direction vector from the circle center to the first end point
-  const direction1 = Point.getDirection(circleCenter, line.p1);
+  const direction1 = Point.getDirection(circleCenter, line.start);
   // Get the angle of the first vector
   let theta1 = Math.atan2(direction1.y, direction1.x);
   // Get the direction vector from the circle center to the second end point
 
-  const direction2 = Point.getDirection(circleCenter, line.p2);
+  const direction2 = Point.getDirection(circleCenter, line.end);
   // Get the angle of the second vector
   const theta2 = Math.atan2(direction2.y, direction2.x);
   // Calculate how much to increment theta in our parametric circular equation
@@ -263,33 +267,36 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
     return line.cachedSegments;
   }
 
-  const straightLine: Line<never> = new Line<never>(line.p1, line.p2);
-  let radius: number = Point.getDistance(line.p1, line.controlPoints[0]);
+  const straightLine: Line<never> = new Line<never>(line.start, line.end);
+  let radius: number = Point.getDistance(line.start, line.controlPoints[0]);
+  let circleCenter: IPoint = line.controlPoints[1];
 
-  const midPoint: IPoint = Point.getMidpoint(line.p1, line.p2);
-  const minRadius = Point.getDistance(midPoint, line.p1);
+  if (!circleCenter) {
+    const midPoint: IPoint = Point.getMidpoint(line.start, line.end);
+    const minRadius = Point.getDistance(midPoint, line.start);
 
-  if (radius < minRadius){
-    radius = Point.getDistance(midPoint, line.p1);
+    if (radius < minRadius){
+      radius = Point.getDistance(midPoint, line.start);
+    }
+
+    const perpendicular: IPoint = straightLine.perpendicular;
+
+    const distance = Math.sqrt(radius * radius - minRadius * minRadius);
+    circleCenter = {
+      x: -perpendicular.x * distance + midPoint.x,
+      y: -perpendicular.y * distance + midPoint.y,
+    };
+
+    // Store the circle center as an extra control point in case the value is needed
+    // (which it often is)
+    line.controlPoints[1] = circleCenter;
   }
 
-  const perpendicular: IPoint = straightLine.perpendicular;
-
-  const distance = Math.sqrt(radius * radius - minRadius * minRadius);
-  const circleCenter: IPoint = {
-    x: -perpendicular.x * distance + midPoint.x,
-    y: -perpendicular.y * distance + midPoint.y,
-  };
-
-  // Store the circle center as an extra control point in case the value is needed
-  // (which it often is)
-  line.controlPoints[1] = circleCenter;
-
-  const direction1 =  Point.getDirection(circleCenter, line.p1);
+  const direction1 =  Point.getDirection(circleCenter, line.start);
 
   const theta1 = Math.atan2(direction1.y, direction1.x);
 
-  const direction2 = Point.getDirection(circleCenter, line.p2);
+  const direction2 = Point.getDirection(circleCenter, line.end);
 
   let theta2 = Math.atan2(direction2.y, direction2.x);
 
@@ -299,7 +306,7 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
 
   const segments: IPoint[] = [];
 
-  // CCW, from p2 to p1
+  // CCW, from end to start
   for (let i = 0, end = line.resolution + 1; i < end; ++i){
     segments.push({
       x: Math.cos(theta1 + (dTheta * i)) * radius + circleCenter.x,
@@ -322,7 +329,7 @@ function makeCircularCCWSegments(line: CurvedLine<any>) {
  * @returns {IPoint[]}
  */
 function makeStraightSegments(line: CurvedLine<any>) {
-  return [line.p1, line.p2];
+  return [line.start, line.end];
 }
 
 /** A quick lookup for a proper segment creating method for a curved line  */
@@ -377,9 +384,9 @@ export class CurvedLine<T> extends Bounds<T> {
   /** This is the automatically set method that will be used in calculating the distance to a point from this line */
   distanceMethod: (line: CurvedLine<any>, point: IPoint) => number;
   /** This is an end point of the line */
-  p1: IPoint;
+  start: IPoint;
   /** This is an end point of the line */
-  p2: IPoint;
+  end: IPoint;
   /** This is how many segments can be used to generate the line. More segments = less performant but prettier */
   resolution: number;
   /** This is the automatically set method used to calculate the segments needed to piece together the curve */
@@ -410,8 +417,8 @@ export class CurvedLine<T> extends Bounds<T> {
   get values() {
     return {
       controlPoints: this.controlPoints,
-      p1: this.p1,
-      p2: this.p2,
+      end: this.end,
+      start: this.start,
     };
   }
 
@@ -465,23 +472,23 @@ export class CurvedLine<T> extends Bounds<T> {
   /**
    * Adjusts the relevant points that defines the curve and recalculates all items necessary
    *
-   * @param {IPoint} p1
-   * @param {IPoint} p2
+   * @param {IPoint} start
+   * @param {IPoint} end
    * @param {IPoint[]} controlPoints
    * @param {boolean} preventRebounding If set, this will prevent the bounds from being recalculated
    */
-  setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]) {
+  setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]) {
     // Apply the points
-    this.p1 = p1;
-    this.p2 = p2;
-    if (controlPoints.length === 0) debug('p1: %o, p2:%o', p1, p2);
+    this.start = start;
+    this.end = end;
+    if (controlPoints.length === 0) debug('start: %o, end:%o', start, end);
 
     // Get the available segment methods for the given type
     const segmentMethods = pickSegmentMethod[this.type];
 
     // If we adjust the control points we need to re-evaluate the type of segment creation method we use
     if (controlPoints) {
-      this.controlPoints = clone(controlPoints);
+      this.controlPoints = controlPoints;
       // Get the number of control points we want to base the curve off of
       let numControlPoints = controlPoints.length;
 
@@ -507,8 +514,8 @@ export class CurvedLine<T> extends Bounds<T> {
       }
     }
 
-    this.encapsulatePoint(p1);
-    this.encapsulatePoint(p2);
+    this.encapsulatePoint(start);
+    this.encapsulatePoint(end);
 
     // Invalidate caches if they exist
     this.cachedSegments = null;
