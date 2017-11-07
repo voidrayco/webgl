@@ -424,7 +424,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           doDraw: false,
         };
 
-        if (this.resizeContext()) {
+        if (this.resizeContext() ) {
           response.doDraw = true;
         }
 
@@ -914,7 +914,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Draw the 3D scene
     this.renderer.render(this.scene, this.camera);
 
-    if (this.onRender && this.colorsReady && (this.labelsReady || this.labels.length === 0)) {
+    if (this.onRender && ( this.colorsReady || this.colors.length === 0)
+    && (this.labelsReady || this.labels.length === 0)) {
       const imageData = this.renderer.domElement.toDataURL();
       this.onRender(imageData);
     }
