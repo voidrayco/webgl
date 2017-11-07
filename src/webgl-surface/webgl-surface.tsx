@@ -752,11 +752,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.applyColorBufferChanges(props);
         }
 
-        if (this.onRender && this.colorsReady && this.labelsReady) {
-          const imageData = this.renderer.domElement.toDataURL();
-          this.onRender(imageData);
-        }
-
         return {};
       },
 
@@ -917,8 +912,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   draw = () => {
     // Draw the 3D scene
-
     this.renderer.render(this.scene, this.camera);
+
+    if (this.onRender && this.colorsReady && this.labelsReady) {
+      const imageData = this.renderer.domElement.toDataURL();
+      this.onRender(imageData);
+    }
   }
 
   /**
@@ -1444,7 +1443,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   positionCamera(x: number, y: number) {
     if (this.camera) {
-      this.camera.position.set(Math.floor(x), Math.floor(y), this.camera.position.z);
+      this.camera.position.set(x, y, this.camera.position.z);
     }
   }
 
