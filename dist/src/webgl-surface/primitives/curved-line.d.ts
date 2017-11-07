@@ -58,9 +58,9 @@ export declare class CurvedLine<T> extends Bounds<T> {
     /** This is the automatically set method that will be used in calculating the distance to a point from this line */
     distanceMethod: (line: CurvedLine<any>, point: IPoint) => number;
     /** This is an end point of the line */
-    p1: IPoint;
+    start: IPoint;
     /** This is an end point of the line */
-    p2: IPoint;
+    end: IPoint;
     /** This is how many segments can be used to generate the line. More segments = less performant but prettier */
     resolution: number;
     /** This is the automatically set method used to calculate the segments needed to piece together the curve */
@@ -75,8 +75,8 @@ export declare class CurvedLine<T> extends Bounds<T> {
     constructor(options: ICurvedLineOptions);
     readonly values: {
         controlPoints: IPoint[];
-        p1: IPoint;
-        p2: IPoint;
+        end: IPoint;
+        start: IPoint;
     };
     /**
      * Calculates the nearest distance from the provided point to this curved line
@@ -107,10 +107,10 @@ export declare class CurvedLine<T> extends Bounds<T> {
     /**
      * Adjusts the relevant points that defines the curve and recalculates all items necessary
      *
-     * @param {IPoint} p1
-     * @param {IPoint} p2
+     * @param {IPoint} start
+     * @param {IPoint} end
      * @param {IPoint[]} controlPoints
      * @param {boolean} preventRebounding If set, this will prevent the bounds from being recalculated
      */
-    setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]): void;
+    setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]): void;
 }

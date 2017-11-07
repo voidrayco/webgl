@@ -77,6 +77,7 @@ Mesh > {
    */
   update(shapeBuffer: CurvedLineShape<any>[]) {
     if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
 
@@ -98,8 +99,8 @@ Mesh > {
       color = curvedLine.startColor.base.color;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
-      p1 = curvedLine.p1;
-      p2 = curvedLine.p2;
+      p1 = curvedLine.start;
+      p2 = curvedLine.end;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
