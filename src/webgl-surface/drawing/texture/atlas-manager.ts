@@ -367,6 +367,7 @@ export class AtlasManager {
 
         // Draw the color to the canvas
         canvas.fillStyle = `rgba(${Math.round(r * 255.0)}, ${Math.round(g * 255.0)}, ${Math.round(b * 255.0)}, ${color.opacity})`;
+
         canvas.fillRect(
           col * colorWidth + startX,
           row * colorHeight + startY,

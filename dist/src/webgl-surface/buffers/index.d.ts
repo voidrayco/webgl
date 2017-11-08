@@ -6,3 +6,4 @@ export * from './static/simple-bezier-line-buffer';
 export * from './static/simple-circle-buffer';
 export * from './static/simple-label-buffer';
 export * from './static/simple-line-buffer';
+export * from './static/simple-straight-line-buffer';
