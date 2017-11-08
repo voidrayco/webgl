@@ -1,24 +1,36 @@
 import { Line } from '../../primitives/line';
 import { IPoint } from '../../primitives/point';
+import { ReferenceColor } from '../reference/reference-color';
+export interface ILineShapeOptions {
+    /** Sorting order of the line */
+    depth?: number;
+    /** Color of the line at the end point */
+    endColor?: ReferenceColor;
+    /** The start point of the line */
+    p1: IPoint;
+    /** THe end point of the line */
+    p2: IPoint;
+    /** The color of the line at the start point */
+    startColor?: ReferenceColor;
+    /** The thickness of the line */
+    thickness?: number;
+}
 /**
  * Defines a line that can be drawn
  */
 export declare class LineShape<T> extends Line<T> {
-    a: number;
-    b: number;
-    g: number;
-    r: number;
-    a2: number;
-    b2: number;
-    g2: number;
-    r2: number;
-    cull: boolean;
-    selectedIndex: number;
+    /** Sorting order */
+    depth: number;
+    /** The color of the line at the start point */
+    startColor: ReferenceColor;
+    /** The color of the line at the end point */
+    endColor: ReferenceColor;
+    /** The thickness of the line */
     thickness: number;
     /**
      * Generate a new line that can be drawn
      */
-    constructor(p1: IPoint, p2: IPoint, d: T, r: number, g: number, b: number, a: number, r2: number, g2: number, b2: number, a2: number, thickness?: number);
+    constructor(options: ILineShapeOptions);
     /**
      * Clones this instance of the line shape and creates a new instance of a line shape that
      * is identical to this one. The properties injected can be modifiers after the clone happens
