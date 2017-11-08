@@ -1,5 +1,5 @@
 import { flatten } from 'ramda';
-import { Color, Mesh, TriangleStripDrawMode } from 'three';
+import { Mesh, TriangleStripDrawMode } from 'three';
 import { IUniform, ShaderMaterial } from 'three';
 import { AtlasManager, ReferenceColor } from '../../drawing/index';
 import { LineShape } from '../../drawing/shape/line-shape';
