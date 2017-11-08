@@ -142,6 +142,12 @@ Mesh > {
 
     if (needsUpdate){
       this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
+      // Since we have the ability to flatten the shape buffer (thus causing a new array point to
+      // Come into existance) we must explicitly ensure the current data is set to the actual
+      // Shape buffer that came in. This makes clusters only efficient if using a multibuffer cache
+      if (isCluster(shapeBuffer)) {
+        this.bufferItems.currentData = shapeBuffer;
+      }
     }
 
     return needsUpdate;
