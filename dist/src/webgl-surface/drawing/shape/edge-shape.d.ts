@@ -1,7 +1,21 @@
-import { RGBColor } from 'd3-color';
 import { Line } from '../../primitives/line';
 import { IPoint } from '../../primitives/point';
+import { ReferenceColor } from '../reference/reference-color';
 import { LineShape } from './line-shape';
+export interface IEdgeShapeOptions {
+    /** The color of the edge at the end */
+    endColor: ReferenceColor;
+    /** The width of the edge at it's end */
+    endWidth: number;
+    /** The starting point of the line the edge represents */
+    p1: IPoint;
+    /** The ending point of the line the edge represents  */
+    p2: IPoint;
+    /** The starting color of the edge */
+    startColor: ReferenceColor;
+    /** The ending color of the edge */
+    startWidth: number;
+}
 /**
  * This defines an edge that can be drawn.
  * This type of edge is a quad with distorted ends. The quad will represent a
@@ -41,7 +55,7 @@ export declare class EdgeShape<T> extends LineShape<T> {
      *                the end part of the edge will fan out 2 on either side of the
      *                end point
      */
-    constructor(p1: IPoint, p2: IPoint, d: T, p1Col: RGBColor, p2Col: RGBColor, p1Width: number, p2Width: number);
+    constructor(options: IEdgeShapeOptions);
     /**
      * Clones this instance of the edge shape and creates a new instance of an edge shape that
      * is identical to this one. The properties injected can be modifiers after the clone happens
