@@ -150,6 +150,8 @@ export interface IWebGLSurfaceProperties {
   onDoubleClick?(e: React.MouseEvent<Element>): void
   /** Provides feedback when the mouse has moved */
   onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void
+  /** When provided provides image data every frame for the screen */
+  onRender?(image: string): void
   /**
    * This is a handler that handles zoom changes the gpu-chart may request.
    * This includes moments such as initializing the camera to focus on a
@@ -914,10 +916,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Draw the 3D scene
     this.renderer.render(this.scene, this.camera);
 
-    if (this.onRender && ( this.colorsReady || this.colors.length === 0)
+    if (this.props.onRender && ( this.colorsReady || this.colors.length === 0)
     && (this.labelsReady || this.labels.length === 0)) {
       const imageData = this.renderer.domElement.toDataURL();
-      this.onRender(imageData);
+      this.props.onRender(imageData);
     }
   }
 
@@ -1131,10 +1133,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     );
 
     this.onViewport(visible, this.projection, this.ctx);
-  }
-
-  onRender(image: string) {
-    // NOTE: For subclasses
   }
 
   /**
