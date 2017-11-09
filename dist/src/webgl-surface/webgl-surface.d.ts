@@ -123,6 +123,8 @@ export interface IWebGLSurfaceProperties {
     onDoubleClick?(e: React.MouseEvent<Element>): void;
     /** Provides feedback when the mouse has moved */
     onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void;
+    /** When provided provides image data every frame for the screen */
+    onRender?(image: string): void;
     /**
      * This is a handler that handles zoom changes the gpu-chart may request.
      * This includes moments such as initializing the camera to focus on a
@@ -393,7 +395,6 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * to the subclass that needs detailed information regarding the viewport.
      */
     emitViewport: () => void;
-    onRender(image: string): void;
     /**
      * Hook for subclasses to when the mouse moves. Provides some information
      * about mouse location and interaction.
