@@ -37,10 +37,10 @@ void main() {
 
   tint = pickColor(colorPick);
 
-  vec4 sizeVector1 = modelViewMatrix * vec4(size.x+cameraPosition.x, size.y+cameraPosition.y, 0.0, 1.0);
+  vec4 sizeVector1 = modelViewMatrix * vec4(size.x+camera.x, size.y+camera.y, 0.0, 1.0);
   vec4 sizeVector2 = projectionMatrix * sizeVector1;
 
-  vec4 cameraVector1 = modelViewMatrix * vec4(cameraPosition.x, cameraPosition.y, 0.0, 1.0);
+  vec4 cameraVector1 = modelViewMatrix * vec4(camera.x, camera.y, 0.0, 1.0);
   vec4 cameraVector2 = projectionMatrix * cameraVector1;
 
   float height = sizeVector2.y - cameraVector2.y;
