@@ -51,12 +51,12 @@ Mesh > {
    * @param shapeBuffer
    */
   update(shapeBuffer: LineShape<any>[] | LineShape<any>[][], atlasManager?: AtlasManager): boolean {
-    let buffer: LineShape<any>[];
-
     if (!shapeBuffer || shapeBuffer.length <= 0) {
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
+
+    let buffer: LineShape<any>[];
 
     if (isCluster(shapeBuffer)) {
       buffer = flatten<LineShape<any>>(shapeBuffer);

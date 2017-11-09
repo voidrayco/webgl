@@ -363,7 +363,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * This is the draw method executed from the animation loop. Everytime, this is
      * called, the webgl surface will be redrawn.
      */
-    draw: () => void;
+    draw(): void;
     /**
      * This initializes the surface and calls for sub class classes to initialize
      * their buffers

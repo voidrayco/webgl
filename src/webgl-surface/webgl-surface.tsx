@@ -910,7 +910,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * This is the draw method executed from the animation loop. Everytime, this is
    * called, the webgl surface will be redrawn.
    */
-  draw = () => {
+  draw() {
     // Draw the 3D scene
     this.renderer.render(this.scene, this.camera);
 
