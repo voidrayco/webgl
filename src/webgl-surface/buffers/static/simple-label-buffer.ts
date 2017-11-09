@@ -1,7 +1,6 @@
 import { flatten } from 'ramda';
 import { IUniform, Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
-import { LineShape } from '../../drawing';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { Label } from '../../drawing/shape/label';
 import { AtlasColor } from '../../drawing/texture/atlas-color';
