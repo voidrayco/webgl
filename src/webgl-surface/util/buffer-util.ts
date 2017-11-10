@@ -686,7 +686,9 @@ export class BufferUtil {
       }
 
       // Apply the buffer to our geometry buffer
-      geometry.addAttribute(name, new BufferAttribute(buffer, attributeSize));
+      const attr = new BufferAttribute(buffer, attributeSize);
+      attr.setDynamic(true);
+      geometry.addAttribute(name, attr);
       debug('Made Buffer Attribute:', name, attributeSize);
     }
 
