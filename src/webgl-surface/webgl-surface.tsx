@@ -219,7 +219,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * The camera that 'looks' at our world and gives us the ability to convert
    * screen coordinates to world coordinates, and vice versa
    */
-  camera: OrthographicCamera | null = null;
+  camera: OrthographicCamera = new OrthographicCamera(0, 0, 0, 0, 0, 0);
   /** A camera that is used for projecting sizes to and from the screen to the world */
   circleMaterial: ShaderMaterial;
   /** Stores screen dimension info */
