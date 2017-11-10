@@ -457,6 +457,10 @@ export class BufferUtil {
    *
    * @param {IBufferItems<T, U>} bufferItems This is the buffer whose structure we want
    *                                         to examine.
+   * @param {string} message This is the message for the debug statement. There are two
+   *                         predefined %o. The first is the vertex information the second
+   *                         is the uniform info. Leave null for a default message.
+   * @param {string} debugNamespace The namespace for the debugging info.
    */
   static examineBuffer<T, U extends Mesh>(bufferItems: IBufferItems<T, U>, message: string, debugNamespace: string) {
     // Get the appropriate debug namespace
@@ -544,7 +548,7 @@ export class BufferUtil {
     }
 
     // Log the debug info to the console using the debug utility
-    debugBuffer(message, {
+    debugBuffer(message || 'vertices: %o uniforms: %o', {
       drawRange: buffer.drawRange,
       triangles,
     }, (bufferItems.system.material as ShaderMaterial).uniforms);

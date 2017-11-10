@@ -123,6 +123,8 @@ export interface IWebGLSurfaceProperties {
     onDoubleClick?(e: React.MouseEvent<Element>): void;
     /** Provides feedback when the mouse has moved */
     onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void;
+    /** When provided provides image data every frame for the screen */
+    onRender?(image: string): void;
     /**
      * This is a handler that handles zoom changes the gpu-chart may request.
      * This includes moments such as initializing the camera to focus on a
@@ -167,7 +169,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * The camera that 'looks' at our world and gives us the ability to convert
      * screen coordinates to world coordinates, and vice versa
      */
-    camera: OrthographicCamera | null;
+    camera: OrthographicCamera;
     /** A camera that is used for projecting sizes to and from the screen to the world */
     circleMaterial: ShaderMaterial;
     /** Stores screen dimension info */
@@ -363,7 +365,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * This is the draw method executed from the animation loop. Everytime, this is
      * called, the webgl surface will be redrawn.
      */
-    draw: () => void;
+    draw(): void;
     /**
      * This initializes the surface and calls for sub class classes to initialize
      * their buffers
@@ -393,7 +395,6 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * to the subclass that needs detailed information regarding the viewport.
      */
     emitViewport: () => void;
-    onRender(image: string): void;
     /**
      * Hook for subclasses to when the mouse moves. Provides some information
      * about mouse location and interaction.

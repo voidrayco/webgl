@@ -1,3 +1,4 @@
+import { flatten } from 'ramda';
 import { IUniform, Mesh, TriangleStripDrawMode } from 'three';
 import { ShaderMaterial } from 'three';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
@@ -7,7 +8,12 @@ import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
+function isCluster(value : any[]) : value is Label < any > [][]{
+  if (Array.isArray(value[0])) return true;
+  return false;
+}
+
+export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[], Mesh> {
   /**
    * @override
    * See interface definition
@@ -62,7 +68,22 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
    *
    * @param shapeBuffer
    */
-  update(shapeBuffer: Label<any>[], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean {
+  update(shapeBuffer: Label<any>[] | Label<any>[][], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean {
+    if (!shapeBuffer || shapeBuffer.length <= 0) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
+      return false;
+    }
+
+    let buffer: Label<any>[];
+
+    if (isCluster(shapeBuffer)) {
+      buffer = flatten<Label<any>>(shapeBuffer);
+    }
+
+    else {
+      buffer = shapeBuffer;
+    }
+
     // Make some constants and props for our buffer update loop
     const numVerticesPerQuad = 6;
     let label;
@@ -72,36 +93,34 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
     let anchor;
     let labelSize;
 
-    if (shapeBuffer && shapeBuffer.length > 0 && atlasManager) {
-      const colorRef: ReferenceColor = shapeBuffer[0].color;
+    if (atlasManager) {
+      const colorRef: ReferenceColor = buffer[0].color;
       const colorBase = colorRef.base;
 
       let material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       let uniforms: { [k: string]: IUniform } = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
-      uniforms.colorAtlas.value = atlas;
-      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
-      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
-      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-      atlas.needsUpdate = true;
+
+      if (uniforms.colorAtlas.value !== atlas) {
+        uniforms.colorAtlas.value = atlas;
+        uniforms.colorsPerRow.value = colorBase.colorsPerRow;
+        uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
+        uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
+        atlas.needsUpdate = true;
+      }
 
       if (startFade || endFade || labelMaxSize) {
         material = this.bufferItems.system.material as ShaderMaterial;
         uniforms = material.uniforms;
-        if (startFade) uniforms.startFade.value = startFade;
-        if (endFade) uniforms.endFade.value = endFade;
-        if (labelMaxSize) uniforms.maxLabelSize.value = labelMaxSize;
+        uniforms.startFade.value = startFade || 0;
+        uniforms.endFade.value = endFade || 0;
+        uniforms.maxLabelSize.value = labelMaxSize || 0;
       }
     }
 
-    if (!shapeBuffer) {
-      this.bufferItems.geometry.setDrawRange(0, 0);
-      return false;
-    }
-
     const updated = BufferUtil.updateBuffer(
-      shapeBuffer, this.bufferItems,
-      numVerticesPerQuad, shapeBuffer.length,
+      buffer, this.bufferItems,
+      numVerticesPerQuad, buffer.length,
       function(i: number,
                positions: Float32Array, ppos: number,
                colors: Float32Array, cpos: number,
@@ -109,7 +128,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
                sizes: Float32Array, spos: number,
                anchors: Float32Array, apos: number,
               ) {
-        label = shapeBuffer[i];
+        label = buffer[i];
         texture = label.rasterizedLabel;
         color = label.color.base;
         alpha = label.color.base.opacity;
@@ -198,7 +217,14 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
       },
     );
 
-    this.bufferItems.geometry.setDrawRange(0, numVerticesPerQuad * shapeBuffer.length);
+    this.bufferItems.geometry.setDrawRange(0, numVerticesPerQuad * buffer.length);
+
+    // Since we have the ability to flatten the shape buffer (thus causing a new array point to
+    // Come into existance) we must explicitly ensure the current data is set to the actual
+    // Shape buffer that came in. This makes clusters only efficient if using a multibuffer cache
+    if (isCluster(shapeBuffer)) {
+      this.bufferItems.currentData = shapeBuffer;
+    }
 
     return updated;
   }
