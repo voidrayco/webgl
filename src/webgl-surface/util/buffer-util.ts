@@ -382,6 +382,11 @@ function fillSize4(buffer: Float32Array, start: number) {
   buffer[++start] = defaultsHolder3;
 }
 
+function isList<T>(val: T | T[]): val is T[] {
+  if (Array.isArray(val)) return true;
+  return false;
+}
+
 /**
  * This is a quick lookup to find the correct filler method for the given attribute size
  */
@@ -581,11 +586,23 @@ export class BufferUtil {
    *
    * @return {boolean} True if a buffer was updated
    */
-  static updateMultiBuffer<T, U>(multiShapeBuffer: MultiShapeBufferCache<T>, buffers: BaseBuffer<T, U>[], init: InitVertexBufferMethod<T, U>, update: UpdateVertexBufferMethod<T, U>, forceUpdates?: boolean): boolean {
+  static updateMultiBuffer<T, U>(multiShapeBuffer: MultiShapeBufferCache<T> | MultiShapeBufferCache<T>[], buffers: BaseBuffer<T, U>[], init: InitVertexBufferMethod<T, U>, update: UpdateVertexBufferMethod<T, U>, forceUpdates?: boolean): boolean {
     // This flag indicates whether an update occurred or not
     let didUpdate = false;
     // Get the shape buffers we need rendered into vertex buffers
-    const shapeBuffers = multiShapeBuffer.getBuffers();
+    let shapeBuffers;
+
+    // If this is a list of multibuffers, we flatten out all of the sub buffers
+    // This is a one level deep flatten as we do not want to accidentally handle shape clustering here
+    if (isList(multiShapeBuffer)) {
+      shapeBuffers = multiShapeBuffer.reduce((flat, toFlatten) => flat.concat(toFlatten.getBuffers()), []);
+    }
+
+    // The input is simply a single multibuffer. Just get it's list of buffers
+    else {
+      shapeBuffers = multiShapeBuffer.getBuffers();
+    }
+
     // Make a lookup to identify the buffers that already exists for the given multi shape buffers
     const bufferLookup = new Map<T[], BaseBuffer<T, U>>();
     buffers.forEach(buffer => bufferLookup.set(buffer.bufferItems.currentData, buffer));
@@ -771,7 +788,7 @@ export class BufferUtil {
       bufferAttributes.forEach((attr: BufferAttribute) => {
         if (attr.updateRange) {
           attr.updateRange.offset = 0;
-          attr.updateRange.count = vertexBatch * numBatches;
+          attr.updateRange.count = vertexBatch * numBatches * attr.itemSize;
         }
         attr.needsUpdate = true;
       });
