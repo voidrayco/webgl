@@ -39,6 +39,8 @@ float PI_2 = 6.2831853072;
 // ---- ATTRIBUTES ----
 // The bezier interpolation time value for the current vertex
 attribute float time;
+// The number of segment points along the curve
+attribute float totalVertices;
 // 1 or -1, used to indicate the direction the vertex will push from the
 // middle of the line
 attribute float normalDirection;
