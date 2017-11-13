@@ -102,7 +102,7 @@ export declare class BufferUtil {
      *
      * @return {boolean} True if a buffer was updated
      */
-    static updateMultiBuffer<T, U>(multiShapeBuffer: MultiShapeBufferCache<T>, buffers: BaseBuffer<T, U>[], init: InitVertexBufferMethod<T, U>, update: UpdateVertexBufferMethod<T, U>, forceUpdates?: boolean): boolean;
+    static updateMultiBuffer<T, U>(multiShapeBuffer: MultiShapeBufferCache<T> | MultiShapeBufferCache<T>[], buffers: BaseBuffer<T, U>[], init: InitVertexBufferMethod<T, U>, update: UpdateVertexBufferMethod<T, U>, forceUpdates?: boolean): boolean;
     /**
      * @static
      * This handles many of the common tasks associated with constructing a new buffer
