@@ -22,6 +22,7 @@
 import {
   BufferAttribute,
   BufferGeometry,
+  IUniform,
   Mesh,
   ShaderMaterial,
   TrianglesDrawMode,
@@ -48,10 +49,23 @@ export enum AttributeSize {
   FOUR,
 }
 
+/**
+ * This specifies some intiialization info regarding vertex attributes.
+ */
 export interface IAttributeInfo {
   defaults: number[],
   name: string,
   size: AttributeSize,
+}
+
+/**
+ * This specifies some initialization info regarding attributes that are packed
+ * into a uniform instance buffer.
+ */
+export interface IUniformAttribute {
+  name: string,
+  size: AttributeSize,
+  block: number,
 }
 
 /**
@@ -60,9 +74,10 @@ export interface IAttributeInfo {
  */
 export interface IBufferItems<T, U> {
   attributes: IAttributeInfo[],
+  currentData: T[],
   geometry: BufferGeometry,
   system: U,
-  currentData: T[],
+  uniformBuffer: IUniformAttribute[],
 }
 
 export type InitVertexBufferMethod<T, U> = () => BaseBuffer<T, U>;
@@ -716,6 +731,10 @@ export class BufferUtil {
     return geometry;
   }
 
+  static makeUniformBuffer(uniforms: IUniformAttribute[]) {
+
+  }
+
   /**
    * @static
    * This handles many of the common tasks associated with updating a buffer. You specify how many vertices
@@ -809,6 +828,63 @@ export class BufferUtil {
   }
 
   /**
+   * This is an alternative way to specify data for rendering. This updates information within the
+   * uniform blocks to specify instancing data (the alternative is just updating a vertex buffer
+   * with all of the data needed for every piece of geometry for every instance). This update method
+   * CAN save massive amounts of committed data for large geometry items (ie curves). It requires a
+   * different pipeline to make work (your shader must specify a uniform vec4 instanceData[], and
+   * your shape buffer to vertex buffer conversion must have a static vertex buffer).
+   */
+  updateUniformBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, instanceBatchSize: number, updateAccessor: Function, force?: boolean) {
+    bufferItems.currentData = newData;
+
+    // If we passed the data check on the first pass, then all future streamed updates
+    // Should pass as well
+    const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
+
+    // We check if there is a reference change in the data indicating a buffer push needs to happen
+    if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed || force) {
+      // If we aren't streaming updates, then we always start at the beginning
+      if (!isStreamUpdatingRegister) {
+        // Reset out last batch register as this is an entriely new update
+        lastBatchRegister = 0;
+      }
+
+      const material: ShaderMaterial = (bufferItems.system as any).material as ShaderMaterial;
+      const uniforms: {[key: string]: IUniform} = material.uniforms;
+      const instanceData: IUniform = uniforms.instanceData;
+
+      // If the instance data uniform is available and it is the proper vec4 array type, then we
+      // Are able to update the uniform buffer
+      if (instanceData && (instanceData as any).type === 'v4v') {
+        let numBlocks = 0;
+        bufferItems.uniformBuffer.forEach(uniform => {
+          numBlocks += uniform.size + 1;
+        });
+
+        const dataInput = [];
+        for (let i = 0; i < instanceBatchSize; ++i) {
+
+        }
+      }
+
+      else {
+        console.warn('A uniform buffer update was specified on a material that lacks uniform buffer usage');
+      }
+
+      // Move our register forward in case we are in a stream update
+      lastBatchRegister += instanceBatchSize;
+    }
+
+    // Even if the data does not match, keep moving forward the appropriate amount in
+    // The buffer
+    else {
+      // Move our register forward in case we are in a stream update
+      lastBatchRegister += instanceBatchSize;
+    }
+  }
+
+  /**
    * This makes all of the typical items used in creating and managing a buffer of items rendered to the screen
    *
    * @returns {IBufferItems<T>} An empty object of the particular buffer items needed
@@ -819,6 +895,8 @@ export class BufferUtil {
       currentData: [],
       geometry: null,
       system: null,
+      uniformAttributes: [],
+      uniformBuffer: null,
     };
   }
 }
