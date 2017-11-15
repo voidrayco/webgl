@@ -18,7 +18,7 @@
  * The BufferUtil class makes use of these methods and registers. It also provides some very handy methods
  * for working with your large buffers.
  */
-import { BufferGeometry, Mesh } from 'three';
+import { BufferGeometry, Mesh, Vector4 } from 'three';
 import { BaseBuffer } from '../buffers';
 import { MultiShapeBufferCache } from './multi-shape-buffer-cache';
 export declare enum TriangleOrientation {
@@ -32,10 +32,33 @@ export declare enum AttributeSize {
     THREE = 2,
     FOUR = 3,
 }
+export declare enum UniformAttributeSize {
+    ONE = 0,
+    TWO = 1,
+    THREE = 2,
+    FOUR = 3,
+}
+/**
+ * This specifies some intiialization info regarding vertex attributes.
+ */
 export interface IAttributeInfo {
     defaults: number[];
     name: string;
     size: AttributeSize;
+}
+/**
+ * This specifies some initialization info regarding attributes that are packed
+ * into a uniform instance buffer.
+ */
+export interface IUniformAttribute {
+    name: string;
+    size: UniformAttributeSize;
+    block: number;
+}
+export interface IUniformBuffer {
+    blocksPerInstance: number;
+    buffer: Vector4[];
+    maxInstances: number;
 }
 /**
  * These are all of the items needed for rendering and determining if a re-render
@@ -43,9 +66,11 @@ export interface IAttributeInfo {
  */
 export interface IBufferItems<T, U> {
     attributes: IAttributeInfo[];
+    currentData: T[];
     geometry: BufferGeometry;
     system: U;
-    currentData: T[];
+    uniformAttributes: IUniformAttribute[];
+    uniformBuffer: IUniformBuffer;
 }
 export declare type InitVertexBufferMethod<T, U> = () => BaseBuffer<T, U>;
 export declare type UpdateVertexBufferMethod<T, U> = (vertexBuffer: BaseBuffer<T, U>, shapeBuffer: T[]) => boolean;
@@ -116,6 +141,13 @@ export declare class BufferUtil {
      */
     static makeBuffer(numVertices: number, attributes: IAttributeInfo[]): BufferGeometry;
     /**
+     * Generates the necessary metrics based on uniform attributes to generate a uniform buffer for
+     * rendering.
+     *
+     * @param uniforms
+     */
+    static makeUniformBuffer(uniforms: IUniformAttribute[]): IUniformBuffer;
+    /**
      * @static
      * This handles many of the common tasks associated with updating a buffer. You specify how many vertices
      * to update in a batch and you specify how many batches are present.
@@ -154,6 +186,23 @@ export declare class BufferUtil {
      * @return {boolean} True if the buffer was updated with this call
      */
     static updateBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, vertexBatch: number, numBatches: number, updateAccessor: Function, force?: boolean): boolean;
+    /**
+     * This is an alternative way to specify data for rendering. This updates information within the
+     * uniform blocks to specify instancing data (the alternative is just updating a vertex buffer
+     * with all of the data needed for every piece of geometry for every instance). This update method
+     * CAN save massive amounts of committed data for large geometry items (ie curves). It requires a
+     * different pipeline to make work (your shader must specify a uniform vec4 instanceData[], and
+     * your shape buffer to vertex buffer conversion must have a static vertex buffer).
+     *
+     * This is like a vertex buffer update except the updateAccessor will be of this format:
+     *
+     * updateAccessor(instanceIndex: number, uniformBlock0: Vector4, ..., uniformBlockN: Vector4);
+     *
+     * Where the uniform blocks provided will appear in the same order the IUniformAttributes were in
+     * when the uniform buffer was created.
+     *
+     */
+    static updateUniformBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, instanceBatchSize: number, updateAccessor: Function, force?: boolean): boolean;
     /**
      * This makes all of the typical items used in creating and managing a buffer of items rendered to the screen
      *

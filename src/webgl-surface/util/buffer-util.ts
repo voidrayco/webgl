@@ -27,9 +27,11 @@ import {
   ShaderMaterial,
   TrianglesDrawMode,
   TriangleStripDrawMode,
+  Vector4,
 } from 'three';
 import { BaseBuffer } from '../buffers';
 import { MultiShapeBufferCache } from './multi-shape-buffer-cache';
+import { WebGLStat } from './webgl-stat';
 const debugGenerator = require('debug');
 const debug = require('debug')('WebGLSurface:BufferUtil');
 
@@ -43,6 +45,13 @@ export enum TriangleOrientation {
 }
 
 export enum AttributeSize {
+  ONE,
+  TWO,
+  THREE,
+  FOUR,
+}
+
+export enum UniformAttributeSize {
   ONE,
   TWO,
   THREE,
@@ -64,8 +73,14 @@ export interface IAttributeInfo {
  */
 export interface IUniformAttribute {
   name: string,
-  size: AttributeSize,
+  size: UniformAttributeSize,
   block: number,
+}
+
+export interface IUniformBuffer {
+  blocksPerInstance: number;
+  buffer: Vector4[];
+  maxInstances: number;
 }
 
 /**
@@ -77,7 +92,8 @@ export interface IBufferItems<T, U> {
   currentData: T[],
   geometry: BufferGeometry,
   system: U,
-  uniformBuffer: IUniformAttribute[],
+  uniformAttributes: IUniformAttribute[],
+  uniformBuffer: IUniformBuffer,
 }
 
 export type InitVertexBufferMethod<T, U> = () => BaseBuffer<T, U>;
@@ -602,6 +618,11 @@ export class BufferUtil {
    * @return {boolean} True if a buffer was updated
    */
   static updateMultiBuffer<T, U>(multiShapeBuffer: MultiShapeBufferCache<T> | MultiShapeBufferCache<T>[], buffers: BaseBuffer<T, U>[], init: InitVertexBufferMethod<T, U>, update: UpdateVertexBufferMethod<T, U>, forceUpdates?: boolean): boolean {
+    // If no buffers provided, then we do not need to update anything
+    if (!multiShapeBuffer) {
+      return false;
+    }
+
     // This flag indicates whether an update occurred or not
     let didUpdate = false;
     // Get the shape buffers we need rendered into vertex buffers
@@ -731,8 +752,36 @@ export class BufferUtil {
     return geometry;
   }
 
-  static makeUniformBuffer(uniforms: IUniformAttribute[]) {
+  /**
+   * Generates the necessary metrics based on uniform attributes to generate a uniform buffer for
+   * rendering.
+   *
+   * @param uniforms
+   */
+  static makeUniformBuffer(uniforms: IUniformAttribute[]): IUniformBuffer {
+    let maxBlock = 0;
+    const buffer: Vector4[] = [];
+    const uniformBufferBlockMax = WebGLStat.MAX_VERTEX_INSTANCE_DATA;
+    const sizeCheck: {[key: number]: number} = {};
 
+    uniforms.forEach(uniform => {
+      maxBlock = Math.max(uniform.block, maxBlock);
+      const check = sizeCheck[uniform.block] = (sizeCheck[uniform.block] || 0) + (uniform.size + 1);
+
+      if (check > 4) {
+        console.warn('There were too many uniform attribute usages of a single block:', uniform);
+      }
+    });
+
+    for (let i = 0; i < uniformBufferBlockMax; ++i) {
+      buffer.push(new Vector4(0, 0, 0, 0));
+    }
+
+    return {
+      blocksPerInstance: maxBlock,
+      buffer,
+      maxInstances: Math.floor(uniformBufferBlockMax / maxBlock),
+    };
   }
 
   /**
@@ -834,13 +883,21 @@ export class BufferUtil {
    * CAN save massive amounts of committed data for large geometry items (ie curves). It requires a
    * different pipeline to make work (your shader must specify a uniform vec4 instanceData[], and
    * your shape buffer to vertex buffer conversion must have a static vertex buffer).
+   *
+   * This is like a vertex buffer update except the updateAccessor will be of this format:
+   *
+   * updateAccessor(instanceIndex: number, uniformBlock0: Vector4, ..., uniformBlockN: Vector4);
+   *
+   * Where the uniform blocks provided will appear in the same order the IUniformAttributes were in
+   * when the uniform buffer was created.
+   *
    */
-  updateUniformBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, instanceBatchSize: number, updateAccessor: Function, force?: boolean) {
-    bufferItems.currentData = newData;
-
+  static updateUniformBuffer<T, U>(newData: T[], bufferItems: IBufferItems<T, U>, instanceBatchSize: number, updateAccessor: Function, force?: boolean): boolean {
     // If we passed the data check on the first pass, then all future streamed updates
     // Should pass as well
     const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
+
+    console.log('ATTEMPTING UNIFORM BUFFER UPDATE', newData !== undefined, newData !== bufferItems.currentData);
 
     // We check if there is a reference change in the data indicating a buffer push needs to happen
     if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed || force) {
@@ -853,27 +910,56 @@ export class BufferUtil {
       const material: ShaderMaterial = (bufferItems.system as any).material as ShaderMaterial;
       const uniforms: {[key: string]: IUniform} = material.uniforms;
       const instanceData: IUniform = uniforms.instanceData;
+      bufferItems.currentData = newData;
+
+      console.log('ATTEMPTING UNIFORM BUFFER UPDATE', instanceData, (instanceData as any).type, 'v4v', bufferItems.uniformBuffer);
 
       // If the instance data uniform is available and it is the proper vec4 array type, then we
       // Are able to update the uniform buffer
-      if (instanceData && (instanceData as any).type === 'v4v') {
-        let numBlocks = 0;
-        bufferItems.uniformBuffer.forEach(uniform => {
-          numBlocks += uniform.size + 1;
-        });
+      if (instanceData && (instanceData as any).type === 'v4v' && bufferItems.uniformBuffer) {
+        const attributes = bufferItems.uniformAttributes;
+        const blocksPerInstance = bufferItems.uniformBuffer.blocksPerInstance;
+        const buffer = bufferItems.uniformBuffer.buffer;
+        const maxInstances = bufferItems.uniformBuffer.maxInstances;
+        let currentInstance = lastBatchRegister;
+        let currentInstanceStartBlock = lastBatchRegister;
 
-        const dataInput = [];
-        for (let i = 0; i < instanceBatchSize; ++i) {
+        // We loop and update as many instances as specified, only up to the
+        // Number of instances allowed for the uniform buffer
+        for (let i = 0; i < instanceBatchSize && currentInstance < maxInstances; ++i) {
+          // Our current instance depends on our lastBatchRegister we utilize
+          // When begin() is called
+          currentInstance = lastBatchRegister + i;
+          // We get the first block the instance will utilize
+          currentInstanceStartBlock = blocksPerInstance * currentInstance;
+          // This will contain all of our arguments the accessor will use
+          const updateArguments: any[] = [currentInstance];
 
+          // Loop through the attributes in the order they appear and gather the block they will
+          // Update
+          for (const attribute of attributes) {
+            updateArguments.push(buffer[attribute.block + currentInstanceStartBlock]);
+          }
+
+          // Call the update accessor for the instance using the gathered arguments
+          // TODO: This should be done with registers like vertex array buffer updates for Optimal
+          // Performance. A method apply is very slow compared to the register way.
+          updateAccessor.apply(null, updateArguments);
         }
+
+        // Tell the uniform to update with the new dataset
+        instanceData.value = [].concat(buffer);
       }
 
       else {
         console.warn('A uniform buffer update was specified on a material that lacks uniform buffer usage');
+        return false;
       }
 
       // Move our register forward in case we are in a stream update
       lastBatchRegister += instanceBatchSize;
+
+      return true;
     }
 
     // Even if the data does not match, keep moving forward the appropriate amount in
@@ -882,6 +968,8 @@ export class BufferUtil {
       // Move our register forward in case we are in a stream update
       lastBatchRegister += instanceBatchSize;
     }
+
+    return false;
   }
 
   /**

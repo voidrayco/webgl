@@ -19,12 +19,16 @@ uniform vec2 nextColor;
     attribute float startColorPick;
     attribute float endColorPick;
     attribute float halfLinewidth;
-    attribute float totalVertices;
+    attribute float resolution;
   }
-  // (x,y) is the first point, (z,w) is the second point
-  attribute vec4 endPoints;
-  attribute float depth;
-  attribute vec2 controlPoint;
+  {
+    // (x,y) is the first point, (z,w) is the second point
+    attribute vec4 endPoints;
+  }
+  {
+    attribute float depth;
+    attribute vec2 controlPoint;
+  }
 **/
 uniform vec4 instanceData[90];
 
@@ -38,7 +42,7 @@ float PI_2 = 6.2831853072;
 
 // ---- ATTRIBUTES ----
 // The bezier interpolation time value for the current vertex
-attribute float time;
+attribute float vertexIndex;
 // The number of segment points along the curve
 attribute float totalVertices;
 // 1 or -1, used to indicate the direction the vertex will push from the
@@ -105,17 +109,30 @@ vec4 pickColor(float index) {
   return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
 }
 
+float getData(int block, int index) {
+  return instanceData[int(instance * instanceSize + block)];
+}
+
 void main() {
-  // Get the control point for the line
-  vec2 controlPoint = vec2(controlPoints[int(controlPick)], controlPoints[int(controlPick + 1.0)]);
-  vertexColor = mix(pickColor(startColorPick), pickColor(endColorPick), position.x);
+  // Get the blocks of data present in the uniform instanceData buffer
+  vec4 block0 = getData(0);
+  vec4 block1 = getData(1);
+  vec4 block2 = getData(2);
+
+  // Break up the block data into the components that comprise it
+  vec2 controlPoint = block2.yz;
+  vec4 endPoints = block1;
+  float resolution = block0.w;
+  float t = min(vertexIndex, resolution) / resolution;
+
+  vertexColor = mix(pickColor(block0.x), pickColor(block0.y), time);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
 
-  vec2 currentPosition = makeCircular(position.x, p1, p2, controlPoint);
-  vec2 prePosition = makeCircular(position.x - (1.0 / position.y), p1, p2, controlPoint);
-  vec2 nextPosition = makeCircular(position.x + (1.0 / position.y), p1, p2, controlPoint);
+  vec2 currentPosition = makeCircular(time, p1, p2, controlPoint);
+  vec2 prePosition = makeCircular(time - (1.0 / resolution), p1, p2, controlPoint);
+  vec2 nextPosition = makeCircular(time + (1.0 / resolution), p1, p2, controlPoint);
 
   vec2 preLine = prePosition - currentPosition;
   vec2 nextLine = nextPosition - currentPosition;
@@ -123,8 +140,8 @@ void main() {
   vec2 currentNormal;
 
   // If we're at the start
-  if (position.x <= 0.0) currentNormal = normalize(vec2(preLine.y, -preLine.x));
-  else if (position.x >= 1.0) currentNormal = normalize(vec2(-nextLine.y, nextLine.x));
+  if (time <= 0.0) currentNormal = normalize(vec2(preLine.y, -preLine.x));
+  else if (time >= 1.0) currentNormal = normalize(vec2(-nextLine.y, nextLine.x));
   else {
     vec2 preNormal = vec2(preLine.y, -preLine.x);
     vec2 nextNormal = vec2(-nextLine.y, nextLine.x);

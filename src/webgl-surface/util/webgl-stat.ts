@@ -89,6 +89,12 @@ export class WebGLStat {
   static MAX_ATTRIBUTES = 0;
   static WEBGL_SUPPORTED: boolean = false;
 
+  // TODO: This remains static until we have a qay to inject variable parameters into the shader
+  //       Strings. 128 is the guaranteed saftey range for uniform sizes for WebGL. We could have
+  //       Significantly higher numbers on most devices if we have dynamic field replacement for
+  //       Shaders.
+  static MAX_VERTEX_INSTANCE_DATA = 128 - 32;
+
   static printCurrentProgramInfo(debug: any, surface: WebGLSurface<any, any>) {
     if (surface.gl) {
       const info = getProgramInfo(surface.gl, surface.gl.getParameter(surface.gl.CURRENT_PROGRAM));
@@ -130,6 +136,9 @@ function initStats() {
     WebGLStat.MAX_VERTEX_UNIFORMS = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
     WebGLStat.MAX_FRAGMENT_UNIFORMS = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
     WebGLStat.MAX_ATTRIBUTES = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+
+    // TODO: See TODO at declaration
+    WebGLStat.MAX_VERTEX_INSTANCE_DATA = 128 - 32;
   }
 }
 
