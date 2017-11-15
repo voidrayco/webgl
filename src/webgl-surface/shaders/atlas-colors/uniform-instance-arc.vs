@@ -52,7 +52,7 @@ attribute float normalDirection;
 attribute float instance;
 
 // This passes the calculated color of the vertex
-varying vec4 vertexColor;
+varying highp vec4 vertexColor;
 
 // ---- METHODS ----
 /**
@@ -127,7 +127,6 @@ void main() {
   float t = min(vertexIndex, resolution) / resolution;
 
   vertexColor = mix(pickColor(block0.x), pickColor(block0.y), t);
-  vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
@@ -155,4 +154,8 @@ void main() {
 
   vec4 mvPosition = modelViewMatrix * vec4(x, y, position.z, 1.0);
   gl_Position = projectionMatrix * mvPosition;
+
+  gl_Position = projectionMatrix * (modelViewMatrix * vec4(100.0, -100.0, 100.0, 1.0));
+  gl_PointSize = 100.0;
+  vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

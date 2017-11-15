@@ -1,5 +1,5 @@
 import { flatten } from 'ramda';
-import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode, Vector4 } from 'three';
+import { IUniform, Mesh, Points, ShaderMaterial, TriangleStripDrawMode, Vector4 } from 'three';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
@@ -91,13 +91,13 @@ export class UniformInstanceArcBuffer extends BaseBuffer <CurvedLineShape<any> |
     this.initVertexBuffer(shared);
 
     // Generate the mesh based on the shared or generated buffer
-    this.bufferItems.system = new Mesh(
+    this.bufferItems.system = (new Points(
       this.bufferItems.geometry,
       material,
-    );
+    ) as any);
 
     this.bufferItems.system.frustumCulled = false;
-    this.bufferItems.system.drawMode = TriangleStripDrawMode;
+    // This.bufferItems.system.drawMode = TriangleStripDrawMode;
   }
 
   initVertexBuffer(shared?: UniformInstanceArcBuffer) {
