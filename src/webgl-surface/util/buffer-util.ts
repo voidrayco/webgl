@@ -856,7 +856,7 @@ export class BufferUtil {
       bufferAttributes.forEach((attr: BufferAttribute) => {
         if (attr.updateRange) {
           attr.updateRange.offset = 0;
-          attr.updateRange.count = vertexBatch * numBatches * attr.itemSize;
+          attr.updateRange.count = vertexBatch * (lastBatchRegister + numBatches) * attr.itemSize;
         }
         attr.needsUpdate = true;
       });
