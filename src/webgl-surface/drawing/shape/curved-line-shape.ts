@@ -95,6 +95,7 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     this.lineWidth = options.lineWidth || 1;
     this.startColor = options.startColor;
     this.endColor = options.endColor;
+    this.marchingAnts = options.marchingAnts;
   }
 
   /**

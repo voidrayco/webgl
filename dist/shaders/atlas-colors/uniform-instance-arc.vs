@@ -30,11 +30,11 @@ uniform vec2 nextColor;
     attribute vec2 controlPoint;
   }
 **/
-uniform vec4 instanceData[90];
+uniform vec4 instanceData[96];
 
 // ---- CONSTANTS ----
 // This contains the number of uniform blocks an instance utilizes
-float instanceSize = 3;
+int instanceSize = 3;
 
 // These are constants the program will utilize
 float PI = 3.1415926535897932384626433832795;
@@ -52,7 +52,7 @@ attribute float normalDirection;
 attribute float instance;
 
 // This passes the calculated color of the vertex
-varying vec4 vertexColor;
+varying highp vec4 vertexColor;
 
 // ---- METHODS ----
 /**
@@ -109,8 +109,8 @@ vec4 pickColor(float index) {
   return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
 }
 
-float getData(int block, int index) {
-  return instanceData[int(instance * instanceSize + block)];
+vec4 getData(int block) {
+  return instanceData[int(instance) * instanceSize + block];
 }
 
 void main() {
@@ -123,16 +123,17 @@ void main() {
   vec2 controlPoint = block2.yz;
   vec4 endPoints = block1;
   float resolution = block0.w;
+  float halfLinewidth = block0.z;
   float t = min(vertexIndex, resolution) / resolution;
 
-  vertexColor = mix(pickColor(block0.x), pickColor(block0.y), time);
+  vertexColor = mix(pickColor(block0.x), pickColor(block0.y), t);
 
   vec2 p1 = vec2(endPoints.x, endPoints.y);
   vec2 p2 = vec2(endPoints.z, endPoints.w);
 
-  vec2 currentPosition = makeCircular(time, p1, p2, controlPoint);
-  vec2 prePosition = makeCircular(time - (1.0 / resolution), p1, p2, controlPoint);
-  vec2 nextPosition = makeCircular(time + (1.0 / resolution), p1, p2, controlPoint);
+  vec2 currentPosition = makeCircular(t, p1, p2, controlPoint);
+  vec2 prePosition = makeCircular(t - (1.0 / resolution), p1, p2, controlPoint);
+  vec2 nextPosition = makeCircular(t + (1.0 / resolution), p1, p2, controlPoint);
 
   vec2 preLine = prePosition - currentPosition;
   vec2 nextLine = nextPosition - currentPosition;
@@ -140,8 +141,8 @@ void main() {
   vec2 currentNormal;
 
   // If we're at the start
-  if (time <= 0.0) currentNormal = normalize(vec2(preLine.y, -preLine.x));
-  else if (time >= 1.0) currentNormal = normalize(vec2(-nextLine.y, nextLine.x));
+  if (t <= 0.0) currentNormal = normalize(vec2(preLine.y, -preLine.x));
+  else if (t >= 1.0) currentNormal = normalize(vec2(-nextLine.y, nextLine.x));
   else {
     vec2 preNormal = vec2(preLine.y, -preLine.x);
     vec2 nextNormal = vec2(-nextLine.y, nextLine.x);
@@ -153,4 +154,8 @@ void main() {
 
   vec4 mvPosition = modelViewMatrix * vec4(x, y, position.z, 1.0);
   gl_Position = projectionMatrix * mvPosition;
+
+  gl_Position = projectionMatrix * (modelViewMatrix * vec4(100.0, -100.0, 100.0, 1.0));
+  gl_PointSize = 100.0;
+  vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

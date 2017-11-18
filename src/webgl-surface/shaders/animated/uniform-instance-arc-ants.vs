@@ -6,7 +6,7 @@ uniform vec2 nextColor;
 // This is the shared control point for all of the vertices
 uniform vec4 instanceData[96];
 
-int instanceSize = 3;
+int instanceSize = 4;
 float PI = 3.1415926535897932384626433832795;
 float PI_2 = 6.2831853072;
 
@@ -21,6 +21,10 @@ float PI_2 = 6.2831853072;
 
 // This passes the calculated color of the vertex
 varying vec4 vertexColor;
+// This passes the info needed for marching ants
+varying vec4 marchingAnts;
+// Passes the 0 - 1 value of where we are on the line to the fragment shader
+varying float interpolTime;
 
 /**
   Calculates position of a point via circular interpolation
@@ -96,6 +100,7 @@ void main() {
   float endColor = block0.w;
   float vertexTime = vertexIndex / maxResolution;
   vec4 endPoint = block2;
+  vec4 marching = getBlock(3);
 
   // Get the control point for the line
   vec2 controlPoint = block0.xy;
@@ -127,4 +132,6 @@ void main() {
 
   vec4 mvPosition = modelViewMatrix * vec4(x, y, depth, 1.0);
   gl_Position = projectionMatrix * mvPosition;
+  marchingAnts = vec4(marching.xy, marching.w - marching.z, marching.w);
+  interpolTime = vertexTime;
 }

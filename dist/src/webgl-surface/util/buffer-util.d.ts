@@ -42,7 +42,9 @@ export declare enum UniformAttributeSize {
  * This specifies some intiialization info regarding vertex attributes.
  */
 export interface IAttributeInfo {
+    customFill?(buffer: Float32Array, vertex: number, start: number, defaults: number[]): void;
     defaults: number[];
+    injectBuffer?: Float32Array;
     name: string;
     size: AttributeSize;
 }

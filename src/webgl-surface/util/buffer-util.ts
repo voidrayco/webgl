@@ -62,7 +62,9 @@ export enum UniformAttributeSize {
  * This specifies some intiialization info regarding vertex attributes.
  */
 export interface IAttributeInfo {
+  customFill?(buffer: Float32Array, vertex: number, start: number, defaults: number[]): void;
   defaults: number[],
+  injectBuffer?: Float32Array;
   name: string,
   size: AttributeSize,
 }
@@ -721,21 +723,41 @@ export class BufferUtil {
     const iMax = attributes.length;
     const geometry = new BufferGeometry();
     let totalAttributeSize = 0;
+    let foundPosition: boolean = false;
 
     for (let i = 0; i < iMax; ++i) {
       const attribute = attributes[i];
       const attributeSize = attribute.size + 1;
       totalAttributeSize += attributeSize;
-      const buffer = new Float32Array(attributeSize * numVertices);
-      const fillMethod = fillMethodLookUp[attribute.size];
       const name = attribute.name;
+      const injectBuffer = attribute.injectBuffer;
+      const buffer = injectBuffer || new Float32Array(attributeSize * numVertices);
+      const fillMethod = fillMethodLookUp[attribute.size];
+      const customFill = attribute.customFill;
+      const defaults = attribute.defaults;
 
-      // We set up our default value registers before executing the fill method
-      applyDefaultsHolders(attribute.defaults);
+      if (name === 'position') {
+        foundPosition = true;
+      }
 
-      // Fill our buffer with the indicated default values
-      for (let k = 0; k < numVertices; ++k) {
-        fillMethod(buffer, k * attributeSize);
+      // If an explicit buffer was not provided, then we fill with the defaults
+      if (!injectBuffer) {
+        if (customFill) {
+          // Let the custom fill method populate the buffer with whatever so be desired
+          for (let k = 0; k < numVertices; ++k) {
+            customFill(buffer, k, k * attributeSize, defaults);
+          }
+        }
+
+        else {
+          // We set up our default value registers before executing the fill method
+          applyDefaultsHolders(defaults);
+
+          // Fill our buffer with the indicated default values
+          for (let k = 0; k < numVertices; ++k) {
+            fillMethod(buffer, k * attributeSize);
+          }
+        }
       }
 
       // Apply the buffer to our geometry buffer
@@ -745,11 +767,44 @@ export class BufferUtil {
       debug('Made Buffer Attribute:', name, attributeSize);
     }
 
+    if (!foundPosition) {
+      console.warn(
+        'It is recommended you ALWAYS use the position attribute as one of your attributes',
+        'There are features of threejs that REQUIRES this to be in place (even if not explicitly',
+        'documented). You don\'t have to use for exact position information, rather fill it with something',
+        'you need. Failure to do so will have you see consequences that are EXTREMELY hard to find.',
+      );
+    }
+
     if (totalAttributeSize > 16) {
       console.warn('A Buffer has specified more attributes than available. The max is 16 and the buffer provided:', totalAttributeSize);
     }
 
     return geometry;
+  }
+
+  /**
+   *
+   * @param attributes
+   * @param sharedBuffer
+   */
+  static shareBuffer(attributes: IAttributeInfo[], sharedBuffer: BufferGeometry) {
+    const bufferAttributes = sharedBuffer.attributes;
+    const newBuffer = new BufferGeometry();
+
+    for (const attr of attributes) {
+      const shareAttribute = (bufferAttributes as any)[attr.name] as BufferAttribute;
+
+      if (shareAttribute) {
+        newBuffer.addAttribute(attr.name, shareAttribute);
+      }
+
+      else {
+        console.warn('Could not find attribute', attr, 'in the buffer to be shared. Can not share buffers properly');
+      }
+    }
+
+    return newBuffer;
   }
 
   /**
@@ -778,7 +833,7 @@ export class BufferUtil {
     }
 
     return {
-      blocksPerInstance: maxBlock,
+      blocksPerInstance: maxBlock + 1,
       buffer,
       maxInstances: Math.floor(uniformBufferBlockMax / maxBlock),
     };
@@ -897,8 +952,6 @@ export class BufferUtil {
     // Should pass as well
     const testPerformed = lastBatchRegister !== 0 && isStreamUpdatingRegister;
 
-    console.log('ATTEMPTING UNIFORM BUFFER UPDATE', newData !== undefined, newData !== bufferItems.currentData);
-
     // We check if there is a reference change in the data indicating a buffer push needs to happen
     if ((newData !== undefined && newData !== bufferItems.currentData) || testPerformed || force) {
       // If we aren't streaming updates, then we always start at the beginning
@@ -912,17 +965,15 @@ export class BufferUtil {
       const instanceData: IUniform = uniforms.instanceData;
       bufferItems.currentData = newData;
 
-      console.log('ATTEMPTING UNIFORM BUFFER UPDATE', instanceData, (instanceData as any).type, 'v4v', bufferItems.uniformBuffer);
-
       // If the instance data uniform is available and it is the proper vec4 array type, then we
       // Are able to update the uniform buffer
-      if (instanceData && (instanceData as any).type === 'v4v' && bufferItems.uniformBuffer) {
+      if (instanceData && (instanceData as any).type === 'v4v' || (instanceData as any).type === 'bvec4' && bufferItems.uniformBuffer) {
         const attributes = bufferItems.uniformAttributes;
         const blocksPerInstance = bufferItems.uniformBuffer.blocksPerInstance;
         const buffer = bufferItems.uniformBuffer.buffer;
         const maxInstances = bufferItems.uniformBuffer.maxInstances;
         let currentInstance = lastBatchRegister;
-        let currentInstanceStartBlock = lastBatchRegister;
+        let currentInstanceStartBlock = lastBatchRegister * blocksPerInstance;
 
         // We loop and update as many instances as specified, only up to the
         // Number of instances allowed for the uniform buffer

@@ -1,3 +1,4 @@
+import { flatten } from 'ramda';
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
@@ -7,13 +8,17 @@ import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
+function isCluster(val: CurvedLineShape<any>[] | CurvedLineShape<any>[][]): val is CurvedLineShape<any>[][] {
+  return Array.isArray(val[0]);
+}
+
 /**
  * This renders a curved line by injecting all attributes needed to render it.
  * This naively includes all possible data in the vertex.
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<any>, Mesh> {
+export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<any> | CurvedLineShape<any>[], Mesh> {
   /**
    * @override
    * See interface definition
@@ -84,15 +89,25 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
    * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
    *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number) {
+  update(shapeBuffer: CurvedLineShape<any>[] | CurvedLineShape<any>[][], atlasManager?: AtlasManager, controlPointSource?: number) {
     if (!shapeBuffer) {
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
 
+    let buffer: CurvedLineShape<any>[];
+
+    if (isCluster(shapeBuffer)) {
+      buffer = flatten<CurvedLineShape<any>>(shapeBuffer);
+    }
+
+    else {
+      buffer = shapeBuffer;
+    }
+
     // This is a special case where we need to update our current item dataset to prevent
     // Re-updates for the same empty shape buffer
-    if (shapeBuffer.length === 0) {
+    if (buffer.length === 0) {
       this.bufferItems.currentData = shapeBuffer;
     }
 
@@ -103,8 +118,8 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
     // As this is a single material, we have to assume that the color atlas
     // For our shapes will be the same atlas for all colors. Thus, the atlas
     // Information for one color will be valid for all colors
-    if (shapeBuffer && shapeBuffer.length > 0 && atlasManager) {
-      const colorRef: ReferenceColor = shapeBuffer[0].startColor;
+    if (buffer.length > 0 && atlasManager) {
+      const colorRef: ReferenceColor = buffer[0].startColor;
       const colorBase = colorRef.base;
 
       // Update all uniforms for this material to utilize the atlas metrics for
@@ -137,7 +152,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
 
     BufferUtil.beginUpdates();
 
-    for (const curvedLine of shapeBuffer) {
+    for (const curvedLine of buffer) {
       alpha = curvedLine.startColor.base.opacity;
       colorStart = curvedLine.startColor.base;
       colorEnd = curvedLine.endColor.base;
@@ -156,7 +171,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       }
 
       needsUpdate = BufferUtil.updateBuffer(
-        shapeBuffer, this.bufferItems,
+        buffer, this.bufferItems,
         numVerticesPerSegment, length,
         function(i: number,
           positions: Float32Array, ppos: number,
@@ -274,6 +289,13 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
 
     else if (shapeBuffer.length === 0) {
       this.bufferItems.geometry.setDrawRange(0, 0);
+    }
+
+    // Since we have the ability to flatten the shape buffer (thus causing a new array point to
+    // Come into existance) we must explicitly ensure the current data is set to the actual
+    // Shape buffer that came in. This makes clusters only efficient if using a multibuffer cache
+    if (isCluster(shapeBuffer)) {
+      this.bufferItems.currentData = shapeBuffer;
     }
 
     return needsUpdate;
