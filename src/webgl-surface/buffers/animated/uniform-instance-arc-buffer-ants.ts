@@ -1,4 +1,3 @@
-import { WebGLStat } from 'index';
 import { flatten } from 'ramda';
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode, Vector4 } from 'three';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
