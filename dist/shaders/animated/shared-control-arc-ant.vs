@@ -4,9 +4,11 @@ uniform float colorsPerRow;
 uniform vec2 firstColor;
 uniform vec2 nextColor;
 // This is the shared control point for all of the vertices
-uniform vec4 instanceData[96];
+// Allows up to 10 unique control points
+uniform float controlPoints[20];
+// This is the current time the rendering is at
+uniform float currentTime;
 
-int instanceSize = 3;
 float PI = 3.1415926535897932384626433832795;
 float PI_2 = 6.2831853072;
 
@@ -18,9 +20,43 @@ float PI_2 = 6.2831853072;
     z: the z depth
   }
 **/
+// The picked color for the item
+attribute float startColorPick;
+attribute float endColorPick;
+// 1 or -1, used to indicate the direction
+attribute float normalDirection;
+// (x,y) is the first point, (z,w) is the second point
+attribute vec4 endPoints;
+attribute float halfLinewidth;
 
+/**
+  This is the information necessary to render marching ants
+  {
+    x: start time,
+    y: speed,
+    z: gap,
+    w: length,
+  }
+**/
+attribute vec4 marching;
+// This picks which control point to utilize
+attribute float controlPick;
+
+/**
+  This is the information necessary to render marching ants
+  {
+    x: start time,
+    y: speed,
+    z: length - gap,
+    w: length,
+  }
+**/
+// Pass the marching ant info to the fragment shader
+varying vec4 marchingAnts;
 // This passes the calculated color of the vertex
 varying vec4 vertexColor;
+// Passes the 0 - 1 value of where we are on the line to the fragment shader
+varying float interpolTime;
 
 /**
   Calculates position of a point via circular interpolation
@@ -76,37 +112,18 @@ vec4 pickColor(float index) {
   return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
 }
 
-vec4 getBlock(int index) {
-  return instanceData[(instanceSize * int(position.z)) + index];
-}
-
 void main() {
-  vec4 block0 = getBlock(0);
-  vec4 block1 = getBlock(1);
-  vec4 block2 = getBlock(2);
-
-  float normalDirection = position.x;
-  float vertexIndex = position.y;
-  float instance = position.z;
-
-  float maxResolution = block1.z;
-  float depth = block1.w;
-  float halfLine = block1.x;
-  float startColor = block0.z;
-  float endColor = block0.w;
-  float vertexTime = vertexIndex / maxResolution;
-  vec4 endPoint = block2;
-
   // Get the control point for the line
-  vec2 controlPoint = block0.xy;
-  vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexTime);
+  vec2 controlPoint = vec2(controlPoints[int(controlPick)], controlPoints[int(controlPick + 1.0)]);
+  // Determine the color for the line
+  vertexColor = mix(pickColor(startColorPick), pickColor(endColorPick), position.x);
 
-  vec2 p1 = vec2(endPoint.x, endPoint.y);
-  vec2 p2 = vec2(endPoint.z, endPoint.w);
+  vec2 p1 = vec2(endPoints.x, endPoints.y);
+  vec2 p2 = vec2(endPoints.z, endPoints.w);
 
-  vec2 currentPosition = makeCircular(vertexTime, p1, p2, controlPoint);
-  vec2 prePosition = makeCircular(vertexTime - (1.0 / maxResolution), p1, p2, controlPoint);
-  vec2 nextPosition = makeCircular(vertexTime + (1.0 / maxResolution), p1, p2, controlPoint);
+  vec2 currentPosition = makeCircular(position.x, p1, p2, controlPoint);
+  vec2 prePosition = makeCircular(position.x - (1.0 / position.y), p1, p2, controlPoint);
+  vec2 nextPosition = makeCircular(position.x + (1.0 / position.y), p1, p2, controlPoint);
 
   vec2 preLine = prePosition - currentPosition;
   vec2 nextLine = nextPosition - currentPosition;
@@ -114,17 +131,19 @@ void main() {
   vec2 currentNormal;
 
   // If we're at the start
-  if (vertexTime <= 0.0) currentNormal = normalize(vec2(preLine.y, -preLine.x));
-  else if (vertexTime >= 1.0) currentNormal = normalize(vec2(-nextLine.y, nextLine.x));
+  if (position.x <= 0.0) currentNormal = normalize(vec2(preLine.y, -preLine.x));
+  else if (position.x >= 1.0) currentNormal = normalize(vec2(-nextLine.y, nextLine.x));
   else {
     vec2 preNormal = vec2(preLine.y, -preLine.x);
     vec2 nextNormal = vec2(-nextLine.y, nextLine.x);
     currentNormal = normalize(preNormal + nextNormal);
   }
 
-  float x = currentPosition.x + currentNormal.x * normalDirection * halfLine;
-  float y = currentPosition.y + currentNormal.y * normalDirection * halfLine;
+  float x = currentPosition.x + currentNormal.x * normalDirection * halfLinewidth;
+  float y = currentPosition.y + currentNormal.y * normalDirection * halfLinewidth;
 
-  vec4 mvPosition = modelViewMatrix * vec4(x, y, depth, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(x, y, position.z, 1.0);
   gl_Position = projectionMatrix * mvPosition;
+  marchingAnts = vec4(marching.xy, marching.w - marching.z, marching.w);
+  interpolTime = position.x;
 }
