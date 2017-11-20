@@ -143,6 +143,12 @@ export declare class BufferUtil {
      */
     static makeBuffer(numVertices: number, attributes: IAttributeInfo[]): BufferGeometry;
     /**
+     *
+     * @param attributes
+     * @param sharedBuffer
+     */
+    static shareBuffer(attributes: IAttributeInfo[], sharedBuffer: BufferGeometry): BufferGeometry;
+    /**
      * Generates the necessary metrics based on uniform attributes to generate a uniform buffer for
      * rendering.
      *

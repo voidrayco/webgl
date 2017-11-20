@@ -1,5 +1,6 @@
 export * from './animated/shared-control-curved-line-buffer-ants';
 export * from './animated/shared-control-curved-line-colors-buffer';
+export * from './animated/uniform-instance-arc-buffer-ants';
 export * from './base-buffer';
 export * from './static/shared-control-curved-line-buffer';
 export * from './static/simple-bezier-line-buffer';

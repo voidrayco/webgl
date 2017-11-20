@@ -12,14 +12,8 @@ export declare class UniformInstanceArcBuffer extends BaseBuffer<CurvedLineShape
     /**
      * @override
      * See interface definition
-     *
-     * @param {UniformInstanceArcBuffer} shared This should be another instance that has already
-     *                                          been initialized. Providing this will greatly improve
-     *                                          performance by causing sharing of relevant resources across
-     *                                          buffers.
      */
-    init(material: ShaderMaterial, unitCount: number, shared?: UniformInstanceArcBuffer, bufferClass?: Function, pointClass?: Function): void;
-    initVertexBuffer(shared?: UniformInstanceArcBuffer): void;
+    init(material: ShaderMaterial, unitCount: number, shared?: UniformInstanceArcBuffer): void;
     /**
      * @override
      * See interface definition
@@ -28,5 +22,5 @@ export declare class UniformInstanceArcBuffer extends BaseBuffer<CurvedLineShape
      * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
      *                                    needed for rendering with color picks.
      */
-    update(shapeBuffer: CurvedLineShape<any>[][] | CurvedLineShape<any>[], atlasManager?: AtlasManager, controlPointSource?: number): boolean;
+    update(shapeBuffer: CurvedLineShape<any>[] | CurvedLineShape<any>[][], atlasManager?: AtlasManager, controlPointSource?: number): boolean;
 }
