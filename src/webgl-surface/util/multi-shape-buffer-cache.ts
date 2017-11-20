@@ -37,6 +37,8 @@ export interface IMultiShapeBufferCacheData<T> {
   itemToBuffer: Map<T, IBufferTracker<T>>;
   /** Maps the item by some form of identifier */
   idToItem: Map<any, T>;
+  /** Tracks which selection the store is a part of */
+  selection?: CustomSelection;
 }
 
 function getIDProp<T>(item: T) {
@@ -151,6 +153,16 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
     this.store.itemToBuffer.set(shape, buffers[0]);
     // Flag all of the touched buffers as dirty
     this.flagBuffersDirty(buffers);
+  }
+
+  /**
+   * Clears the multi buffer's storage
+   */
+  destroy() {
+    if (this.store) {
+      this.store.selection.clearSelection(this.selectionUID);
+      this.store = null;
+    }
   }
 
   /**
@@ -274,6 +286,7 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
         allBuffers: [],
         idToItem: new Map<any, T>(),
         itemToBuffer: new Map<T, IBufferTracker<T>>(),
+        selection,
       };
 
       // Generate the buffers indicated

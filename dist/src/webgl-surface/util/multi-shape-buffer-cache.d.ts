@@ -27,6 +27,8 @@ export interface IMultiShapeBufferCacheData<T> {
     itemToBuffer: Map<T, IBufferTracker<T>>;
     /** Maps the item by some form of identifier */
     idToItem: Map<any, T>;
+    /** Tracks which selection the store is a part of */
+    selection?: CustomSelection;
 }
 /**
  * This class helps facilitate breaking up a potentially large shape buffer into multiple buffers.
@@ -77,6 +79,10 @@ export declare class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
      * @param shape The shape to add to a buffer
      */
     addShape(shape: T): void;
+    /**
+     * Clears the multi buffer's storage
+     */
+    destroy(): void;
     /**
      * Sees if there is a shape associated with this id
      *
