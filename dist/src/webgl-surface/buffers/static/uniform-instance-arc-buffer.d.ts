@@ -8,12 +8,12 @@ import { BaseBuffer } from '../base-buffer';
  *
  * This only supports atlas colors.
  */
-export declare class SharedControlCurvedLineBuffer extends BaseBuffer<CurvedLineShape<any> | CurvedLineShape<any>[], Mesh> {
+export declare class UniformInstanceArcBuffer extends BaseBuffer<CurvedLineShape<any> | CurvedLineShape<any>[], Mesh> {
     /**
      * @override
      * See interface definition
      */
-    init(material: ShaderMaterial, unitCount: number): void;
+    init(material: ShaderMaterial, unitCount: number, shared?: UniformInstanceArcBuffer): void;
     /**
      * @override
      * See interface definition

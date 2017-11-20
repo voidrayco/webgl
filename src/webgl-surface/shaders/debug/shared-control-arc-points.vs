@@ -127,4 +127,6 @@ void main() {
 
   vec4 mvPosition = modelViewMatrix * vec4(x, y, depth, 1.0);
   gl_Position = projectionMatrix * mvPosition;
+  gl_PointSize = 5.0;
+  vertexColor = vec4(abs(instanceData[0].x), abs(instanceData[0].y) + abs(instanceData[0].w), abs(instanceData[0].z), 1.0);
 }
