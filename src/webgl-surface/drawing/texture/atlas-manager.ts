@@ -221,7 +221,7 @@ export class AtlasManager {
         const uy = insertedNode.nodeDimensions.y / this.textureHeight;
         const uw = insertedNode.nodeDimensions.width / this.textureWidth;
         const uh = insertedNode.nodeDimensions.height / this.textureHeight;
-        debugLabels('uy is %o', uy);
+
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,
           ux + uw,
@@ -438,8 +438,8 @@ export class AtlasManager {
 
         // Set the dimensions of the canvas/texture space we will be using to rasterize
         // The label. Use the label's rasterization controls to aid in rendering the label
-        canvas.width = labelSize.width + texture.label.rasterizationOffset.x;
-        canvas.height = labelSize.height;
+        canvas.width = labelSize.width + texture.label.rasterizationOffset.x + texture.label.rasterizationPadding.width;
+        canvas.height = labelSize.height + texture.label.rasterizationPadding.height;
 
         debug('label X %o', texture.label.rasterizationOffset.x);
 
