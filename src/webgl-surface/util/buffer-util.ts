@@ -663,7 +663,7 @@ export class BufferUtil {
           bufferLookup.delete(shapes);
         }
 
-        else {
+        else if (shapes.length > 0) {
           needsBuffer.push(shapes);
         }
       });
