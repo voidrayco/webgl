@@ -161,7 +161,7 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
   destroy() {
     if (this.store) {
       this.store.selection.clearSelection(this.selectionUID);
-      this.store = null;
+      delete this.store;
     }
   }
 
