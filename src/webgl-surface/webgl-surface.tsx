@@ -490,12 +490,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         };
 
         // Apply Zoom
-        // Const zoomToFitH = this.ctx.width / Math.max(this.quadTree.bounds.width, this.props.viewport.width);
-        // Const zoomToFitV = this.ctx.height / Math.max(this.quadTree.bounds.height, this.props.viewport.height);
-        // Const zoomToFit = Math.min(zoomToFitH, zoomToFitV);
-        const zoomToFit = 1;
-
-        const destZoom = this.destinationZoom * zoomToFit;
+        const destZoom = this.destinationZoom;
         const dZoom = Math.abs(destZoom - this.targetZoom);
         const minDZoom = MIN_ZOOM_INCREMENT;
         const zoomRate = 3;
@@ -762,15 +757,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         // On initialization this should start with some base camera metrics
         if (props.viewport && props.viewport !== this.appliedViewport && this.quadTree) {
-          debugCam('Applying viewport to camera: %o World Space Bounds: %o Screen context: %o', props.viewport, this.quadTree.bounds, {width: props.width, height: props.height});
-
           // Position the camera over the mid of the specified viewport
           const mid = props.viewport.mid;
           this.currentX = this.destinationX = mid.x;
           this.currentY = this.destinationY = mid.y;
-
-          // Calculate the zoom level when the input zoom is at 1
-          const zoomAtOne = 1;
 
           // Calculate the zoom needed for the viewport
           const zoomToFitViewH = props.width / props.viewport.width;
@@ -781,9 +771,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           const microAdjustment = 1.001;
 
           // Make our destination zoom a zoom that will fit the dimensions of the viewport
-          // Relative to the zoom at one level
-          this.destinationZoom = zoomToFit / zoomAtOne;
-          this.targetZoom = (this.destinationZoom * zoomAtOne) * microAdjustment;
+          this.destinationZoom = zoomToFit;
+          this.targetZoom = this.destinationZoom * microAdjustment;
 
           // Make sure any zooming that happens occurs over the middle of the initial viewport
           this.zoomTargetX = mid.x;
@@ -1349,8 +1338,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     const mouse = eventElementPosition(e);
     const world = this.screenToWorld(mouse.x, mouse.y);
     this.distance++;
-
-    debug('mouse X %o Y %o', mouse.x, mouse.y);
 
     // Handle panning
     if (this.isPanning) {
