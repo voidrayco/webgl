@@ -172,6 +172,14 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     camera: OrthographicCamera;
     /** A camera that is used for projecting sizes to and from the screen to the world */
     circleMaterial: ShaderMaterial;
+    /**
+     * This is the latest colors loading identifier, used to determine if the colors
+     * last loaded matches the colors currently needing to be rendered. Fixes asynchronous
+     * Issue where a new set of colors is requested before the previous set(s) have completed
+     */
+    colorsCurrentLoadedId: number;
+    /** This is the is of the current and most recent color group being loaded in */
+    colorsLoadId: number;
     /** Stores screen dimension info */
     ctx: IScreenContext;
     /**

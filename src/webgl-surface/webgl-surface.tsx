@@ -222,6 +222,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   camera: OrthographicCamera = new OrthographicCamera(0, 0, 0, 0, 0, 0);
   /** A camera that is used for projecting sizes to and from the screen to the world */
   circleMaterial: ShaderMaterial;
+  /**
+   * This is the latest colors loading identifier, used to determine if the colors
+   * last loaded matches the colors currently needing to be rendered. Fixes asynchronous
+   * Issue where a new set of colors is requested before the previous set(s) have completed
+   */
+  colorsCurrentLoadedId: number = 0;
+  /** This is the is of the current and most recent color group being loaded in */
+  colorsLoadId: number = 0;
   /** Stores screen dimension info */
   ctx: IScreenContext;
   /**
@@ -710,6 +718,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           debugColors('Colors are being comitted to an Atlas %o', props.colors);
           // Flag the labels as incapable of rendering
           this.colorsReady = false;
+          this.colorsLoadId++;
           // Store the set of labels we are rendering so that they do not get re-generated
           // In the atlas rapidly.
           this.colors = props.colors;
@@ -718,12 +727,19 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
             this.atlasManager.destroyAtlas(this.atlasNames.colors);
           }
 
-          debugColors('Creating the atlas for colors based on these colors %o', this.colors);
           this.atlasManager.createAtlas(this.atlasNames.colors, null, this.colors)
           .then(() => {
             debugColors('Colors rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.colors));
             this.forceDraw = true;
-            this.colorsReady = true;
+            this.colorsCurrentLoadedId++;
+
+            // If we are done loading AND we match up with the current load id, then colors
+            // For the latest colors update are indeed ready for display. This solves asynchronous
+            // Issues with multiple color pallette updates
+            if (this.colorsCurrentLoadedId === this.colorsLoadId) {
+              this.colorsReady = true;
+            }
+
             // Reapply the props so any buffers that were not updating can update now
             this.applyProps(this.props);
           });
