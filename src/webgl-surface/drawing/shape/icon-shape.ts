@@ -7,7 +7,7 @@ import { AtlasTexture } from '../texture/atlas-texture';
  * image only (no rotations) and may make optimizations to only render as a
  * point sprite.
  */
-export class ImageShape<T> extends Bounds<T> {
+export class IconShape<T> extends Bounds<T> {
   /** This is the level of opacity the image will be rendered with */
   opacity: number = 1.0;
   /** This is the image to be rendered */
