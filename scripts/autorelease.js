@@ -126,6 +126,7 @@ function exec(command, args, options = {}) {
   return result;
 }
 exec('mkdir', ['.ssh'], ['-m 700']);
+exec('touch', [SSH_CONFIG]);
 // Create the SSH deploy key
 writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'));
 chmodSync(ID_RSA, 0o400);
