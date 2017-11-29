@@ -125,7 +125,7 @@ function exec(command, args, options = {}) {
   if (result.status) process.exit(1);
   return result;
 }
-exec('mkdir', ['-m 700', '.ssh']);
+exec('mkdir', ['.ssh'], ['-m 700']);
 // Create the SSH deploy key
 writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'));
 chmodSync(ID_RSA, 0o400);
