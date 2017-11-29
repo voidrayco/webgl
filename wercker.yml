@@ -16,3 +16,6 @@ build:
     - script:
         name: Save the yarn lockfile
         code: greenkeeper-lockfile-upload
+    - script:
+      name: Autorelease
+      code: node scripts/autorelease
