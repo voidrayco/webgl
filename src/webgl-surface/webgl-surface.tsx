@@ -31,10 +31,12 @@ export enum BaseApplyPropsMethods {
   BUFFERCHANGES,
   /** Initializes camera properties to facilitate smoothe start up */
   CAMERA,
-  /** Generates the labels as images within the atlas manager */
-  LABELS,
   /** Generates the colors within the atlas manager */
   COLORS,
+  /** Generates the images within the atlas manager */
+  IMAGES,
+  /** Generates the labels as images within the atlas manager */
+  LABELS,
 }
 
 /**
@@ -142,6 +144,8 @@ export interface IWebGLSurfaceProperties {
   colors?: AtlasColor[]
   /** The forced size of the render surface */
   height?: number
+  /** All of the urls to unique images in the system */
+  images?: AtlasTexture[];
   /** This will be the view the camera focuses on when the camera is initialized */
   viewport?: Bounds<never>
   /** All of the labels to be rendered by the system */
@@ -195,6 +199,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** Tracks the names of the atlas' generated */
   atlasNames = {
     colors: 'colors',
+    images: 'images',
     labels: 'labels',
   };
   /**
@@ -311,6 +316,15 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** When this is set to true, the atlas with the colors is now ready to be referenced */
   colors: AtlasColor[] = [];
   colorsReady: boolean = false;
+
+  /** All of the currently loaded and ready to use images in the system */
+  images: AtlasTexture[];
+  /** Flags when the images are ready for use */
+  imagesReady: boolean = false;
+  /** Used to manage asynchronous loading of the images */
+  imagesCurrentLoadedId: number = 0;
+  /** Used to manage asynchronous loading of the images */
+  imagesLoadId: number = 0;
 
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
@@ -471,11 +485,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
       // Apply position
       [BaseAnimatedMethods.POSITION]: (): IAnimatedMethodResponse => {
-        // If values are transitioned rather than immediately applied, this is
-        // The value you would want the minimum change to be before cutting off
-        // The transition
-        // Const minAdjust = 1 / this.props.zoom
-
         // If there is change in X apply the new position to the old
         // This is where animated values were originally placed and can be placed
         // Again if a transition is desired
@@ -544,6 +553,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * on colors rendered into the atlas after the system has prepped the colors for render.
    */
   applyColorBufferChanges(props: T) {
+    // Note: For subclasses
+  }
+
+  /**
+   * This is a hook for subclasses to be able to apply buffer changes that rely
+   * on images rendered into the atlas after the system has prepped the images for render.
+   */
+  applyImageBufferChanged(props: T) {
     // Note: For subclasses
   }
 
@@ -710,6 +727,42 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         return response;
       },
 
+      [BaseApplyPropsMethods.IMAGES]: (props: T): IApplyPropsMethodResponse => {
+        const response = {};
+
+        // If we have a new labels reference we must regenerate the labels in our image lookup
+        if (props.images && props.images !== this.images) {
+          debugLabels('Images are being comitted to an Atlas %o', props.images);
+          // Flag the labels as incapable of rendering
+          this.imagesReady = false;
+          this.imagesLoadId++;
+          // Store the set of labels we are rendering so that they do not get re-generated
+          // In the atlas rapidly.
+          this.images = props.images;
+
+          if (this.atlasManager.getAtlasTexture(this.atlasNames.images)) {
+            this.atlasManager.destroyAtlas(this.atlasNames.images);
+          }
+
+          this.atlasManager.createAtlas(this.atlasNames.images, this.images)
+          .then(() => {
+            this.forceDraw = true;
+            this.imagesCurrentLoadedId++;
+
+            // If we are done loading AND we match up with the current load id, then images
+            // For the latest images update are indeed ready for display
+            if (this.imagesCurrentLoadedId === this.imagesLoadId) {
+              this.imagesReady = true;
+            }
+
+            // Reapply the props so any buffers that were not updating can update now
+            this.applyProps(this.props);
+          });
+        }
+
+        return response;
+      },
+
       [BaseApplyPropsMethods.COLORS]: (props: T): IApplyPropsMethodResponse => {
         const response = {};
 
@@ -863,6 +916,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.propsMethodList = this.applyPropsMethods(basePropsMethods, [
       basePropsMethods[BaseApplyPropsMethods.INITIALIZE],
       basePropsMethods[BaseApplyPropsMethods.LABELS],
+      basePropsMethods[BaseApplyPropsMethods.IMAGES],
       basePropsMethods[BaseApplyPropsMethods.COLORS],
       basePropsMethods[BaseApplyPropsMethods.BUFFERCHANGES],
       basePropsMethods[BaseApplyPropsMethods.CAMERA],

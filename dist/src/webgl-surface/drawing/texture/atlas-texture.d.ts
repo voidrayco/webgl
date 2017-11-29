@@ -6,7 +6,7 @@ import { Label } from '../shape/label';
 export declare class AtlasTexture {
     imagePath: string;
     label: Label<any>;
-    /** Stores the aspect ratio of the image for quick reference */
+    /** Stores the aspect ratio of the image for quick reference, which is (width / height) */
     aspectRatio: number;
     pixelWidth: number;
     pixelHeight: number;

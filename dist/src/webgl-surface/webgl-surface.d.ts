@@ -4,6 +4,7 @@ import { OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } fro
 import { Label } from './drawing/shape/label';
 import { AtlasColor } from './drawing/texture/atlas-color';
 import { AtlasManager } from './drawing/texture/atlas-manager';
+import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
@@ -22,10 +23,12 @@ export declare enum BaseApplyPropsMethods {
     BUFFERCHANGES = 1,
     /** Initializes camera properties to facilitate smoothe start up */
     CAMERA = 2,
-    /** Generates the labels as images within the atlas manager */
-    LABELS = 3,
     /** Generates the colors within the atlas manager */
-    COLORS = 4,
+    COLORS = 3,
+    /** Generates the images within the atlas manager */
+    IMAGES = 4,
+    /** Generates the labels as images within the atlas manager */
+    LABELS = 5,
 }
 /**
  * This enum names the base methods that are passed into the animatedMethods
@@ -115,6 +118,8 @@ export interface IWebGLSurfaceProperties {
     colors?: AtlasColor[];
     /** The forced size of the render surface */
     height?: number;
+    /** All of the urls to unique images in the system */
+    images?: AtlasTexture[];
     /** This will be the view the camera focuses on when the camera is initialized */
     viewport?: Bounds<never>;
     /** All of the labels to be rendered by the system */
@@ -145,6 +150,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** Tracks the names of the atlas' generated */
     atlasNames: {
         colors: string;
+        images: string;
         labels: string;
     };
     /**
@@ -263,6 +269,14 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** When this is set to true, the atlas with the colors is now ready to be referenced */
     colors: AtlasColor[];
     colorsReady: boolean;
+    /** All of the currently loaded and ready to use images in the system */
+    images: AtlasTexture[];
+    /** Flags when the images are ready for use */
+    imagesReady: boolean;
+    /** Used to manage asynchronous loading of the images */
+    imagesCurrentLoadedId: number;
+    /** Used to manage asynchronous loading of the images */
+    imagesLoadId: number;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
     /** Mouse in stage or not */
@@ -300,6 +314,11 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * on colors rendered into the atlas after the system has prepped the colors for render.
      */
     applyColorBufferChanges(props: T): void;
+    /**
+     * This is a hook for subclasses to be able to apply buffer changes that rely
+     * on images rendered into the atlas after the system has prepped the images for render.
+     */
+    applyImageBufferChanged(props: T): void;
     /**
      * This is a hook for subclasses to be able to apply label buffer changes after the system has
      * prepped the labels for render.
