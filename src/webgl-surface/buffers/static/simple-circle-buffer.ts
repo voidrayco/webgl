@@ -5,9 +5,8 @@ import { AtlasManager, CircleShape, ReferenceColor } from '../../drawing/index';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-function isCluster(value : any[]) : value is CircleShape < any > [][]{
-  if (Array.isArray(value[0])) return true;
-  return false;
+function isCluster(value : any[]) : value is CircleShape < any > [][] {
+  return Array.isArray(value[0]);
 }
 
 export class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | CircleShape<any>[], Mesh> {
