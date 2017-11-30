@@ -152,14 +152,11 @@ appendFileSync(
 );
 
 // Create a git identity
-exec('ssh', ['-vvvv', 'git@autorelease']);
-exec('cat', ['ssh', '/etc/ssh/ssh_config']);
-exec('cat', ['ssh', '/root/.ssh/config']);
 
 // Checkout the branch
 exec('git', ['--version']);
 exec('git', ['remote', 'set-url', 'origin',
-  `git@autorelease:${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}`]
+`git@autorelease:${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}`]
 );
 exec('git', ['config', '-l']);
 exec('git', ['fetch', 'origin']);
@@ -175,7 +172,7 @@ writeFileSync(
 if (SCRIPT) exec('node', SCRIPT);
 
 if (packageJson.scripts && packageJson.scripts.release)
-  exec('npm', ['run', 'release']);
+exec('npm', ['run', 'release']);
 
 // Configure git
 exec('git', ['config', 'user.name', 'Autorelease Script']);
