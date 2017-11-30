@@ -126,7 +126,7 @@ function exec(command, args, options = {}) {
   return result;
 }
 
-mkdirSync(dirname(SSH_CONFIG), ['0o700']);
+mkdirSync(dirname(SSH_CONFIG), [0o600]);
 
 // Create the SSH deploy key
 writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'));
@@ -135,7 +135,9 @@ appendFileSync(SSH_CONFIG, `
 Host autorelease
   User git
   HostName ${WERCKER_GIT_DOMAIN}
-  IdentityFile ${ID_RSA}`);
+  IdentityFile ${ID_RSA}`, {
+    mode: 0o600
+  });
 chmodSync(SSH_CONFIG, 0o600);
 
 // Add github.com to known_hosts
@@ -150,7 +152,9 @@ appendFileSync(
 );
 
 // Create a git identity
-exec('ssh', ['-vvvv', 'git@github.com']);
+exec('ssh', ['-vvvv', 'git@autorelease']);
+exec('cat', ['ssh', '/etc/ssh/ssh_config']);
+exec('cat', ['ssh', '/root/.ssh/config']);
 
 // Checkout the branch
 exec('git', ['--version']);
