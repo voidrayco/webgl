@@ -153,12 +153,10 @@ appendFileSync(
 // Create a git identity
 
 // Checkout the branch
-exec('git', ['--version']);
 exec('git', ['remote', 'set-url', 'origin',
   `git@autorelease:${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}`]
 );
 
-exec('git', ['config', '-l']);
 exec('git', ['fetch', 'origin']);
 exec('git', ['checkout', `${WERCKER_GIT_BRANCH}`]);
 
