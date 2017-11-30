@@ -143,12 +143,13 @@ chmodSync(SSH_CONFIG, 0o600);
 // Add github.com to known_hosts
 appendFileSync(
   KNOWN_HOSTS,
-  'github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6Tb' +
-  'Qa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsd' +
-  'lLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+S' +
-  'e8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOz' +
-  'QgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA' +
-  '8VJiS5ap43JXiUFFAaQ=='
+  'github.com,192.30.252.*,192.30.253.*,192.30.254.*,192.30.255.* ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQE' +
+  'Aq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp' +
+  '5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZ' +
+  'ETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTv' +
+  'KSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3R' +
+  'cT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbO' +
+  'DqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ=='
 );
 
 // Create a git identity
@@ -156,8 +157,9 @@ appendFileSync(
 // Checkout the branch
 exec('git', ['--version']);
 exec('git', ['remote', 'set-url', 'origin',
-`git@autorelease:${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}`]
+  `git@autorelease:${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}`]
 );
+
 exec('git', ['config', '-l']);
 exec('git', ['fetch', 'origin']);
 exec('git', ['checkout', `${WERCKER_GIT_BRANCH}`]);
@@ -172,7 +174,7 @@ writeFileSync(
 if (SCRIPT) exec('node', SCRIPT);
 
 if (packageJson.scripts && packageJson.scripts.release)
-exec('npm', ['run', 'release']);
+  exec('npm', ['run', 'release']);
 
 // Configure git
 exec('git', ['config', 'user.name', 'Autorelease Script']);
