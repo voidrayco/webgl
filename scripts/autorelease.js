@@ -149,6 +149,7 @@ appendFileSync(
 );
 
 // Create a git identity
+exec('ssh', ['-vvvv', 'git@github.com']);
 
 // Checkout the branch
 exec('git', ['--version']);
