@@ -35,11 +35,11 @@ AUTORELEASE_TOKEN: Create a personal access token by going to
 
 `;
 
-const { appendFileSync, chmodSync, mkdtempSync, writeFileSync, mkdirSync } = require('fs');
-const { join, resolve, dirname } = require('path');
-const { spawnSync } = require('child_process');
-const { tmpdir } = require('os');
-const { inc } = require('semver');
+const {appendFileSync, chmodSync, mkdtempSync, writeFileSync, mkdirSync} = require('fs');
+const {join, resolve, dirname} = require('path');
+const {spawnSync} = require('child_process');
+const {tmpdir} = require('os');
+const {inc} = require('semver');
 const https = require('https');
 
 // Import environment variables
@@ -135,10 +135,8 @@ appendFileSync(SSH_CONFIG, `
 Host autorelease
   User git
   HostName ${WERCKER_GIT_DOMAIN}
-  IdentityFile ${ID_RSA}`, {
-    mode: 0o600
-  });
-chmodSync(SSH_CONFIG, 0o600);
+  IdentityFile ${ID_RSA}`, {mode: 0o600}
+);
 
 // Add github.com to known_hosts
 appendFileSync(
