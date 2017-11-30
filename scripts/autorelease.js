@@ -35,7 +35,7 @@ AUTORELEASE_TOKEN: Create a personal access token by going to
 
 `;
 
-const { appendFileSync, chmodSync, mkdtempSync, writeFileSync } = require('fs');
+const { appendFileSync, chmodSync, mkdtempSync, writeFileSync, mkdirSync } = require('fs');
 const { join, resolve, dirname } = require('path');
 const { spawnSync } = require('child_process');
 const { tmpdir } = require('os');
@@ -125,8 +125,9 @@ function exec(command, args, options = {}) {
   if (result.status) process.exit(1);
   return result;
 }
-exec('mkdir', [dirname(SSH_CONFIG)], ['-m 700']);
-exec('touch', [SSH_CONFIG]);
+
+mkdirSync(dirname(SSH_CONFIG), ['0o700']);
+
 // Create the SSH deploy key
 writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'));
 chmodSync(ID_RSA, 0o400);
