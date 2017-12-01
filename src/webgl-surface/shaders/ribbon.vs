@@ -18,8 +18,9 @@ vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
   );
 }
 
+
 vec2 getMiddle(vec2 p1, vec2 p2) {
-  return vec2((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+  return vec2((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0);
 }
 
 void main() {
@@ -50,7 +51,7 @@ void main() {
     float l1 = r1 - d1;
 
     // angle between line(middle, center) and line(currentPosition, center)
-    float cosRadian = acos((distance - l1 * position.x) / r1);
+    float cosRadian = acos((r1 - l1 * position.x) / r1);
 
     // rotation angle of line(middle, center)
     float radian = atan((mid1.y - c1.y) / (mid1.x - c1.x));
@@ -83,9 +84,9 @@ void main() {
 
     float d2 = distance(c2, mid2);
 
-    float l2 = r1 - d2;
+    float l2 = r2 - d2;
 
-    float cosRadian = acos((distance - l2 * (1 - position.x)) / r1);
+    float cosRadian = acos((r2 - l2 * (1.0 - position.x)) / r2);
     float radian = atan((mid2.y - c2.y) / (mid2.x - c2.x));
 
     if (normalDirection == 1.0) {

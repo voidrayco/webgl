@@ -1,21 +1,25 @@
 import { Bounds } from '../../primitives/bounds';
-import { CurvedLine } from '../../primitives/curved-line';
+import { CurvedLine, ICurvedLineOptions } from '../../primitives/curved-line';
 import { IPoint, Point } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
+import { CurvedLineShape } from '../shape/curved-line-shape';
 
-export interface IRibbonOptions {
+export interface IRibbonOptions extends ICurvedLineOptions{
   cachedQuadSegments?: boolean;
   depth?: number;
   startColor?: ReferenceColor;
   endColor?: ReferenceColor;
-  line1: CurvedLine<any>;
-  line2: CurvedLine<any>;
+  start: IPoint;
+  start2: IPoint;
+  end: IPoint;
+  end2: IPoint;
   resolution?: number;
   center1: IPoint;
   center2: IPoint;
+  controlPoints: IPoint[];
 }
 
-export class RibbonShape<T> extends Bounds<T> {
+export class RibbonShape<T> extends CurvedLineShape<T> {
   /** When true, this line will cache the segments of the curve as rendered quads */
   cachesQuadSegments: boolean;
   /** If caching is set, then this stores the calculated quads that composes this line */
@@ -27,38 +31,35 @@ export class RibbonShape<T> extends Bounds<T> {
   /** The starting color components of this line. This must be a color reference */
   startColor: ReferenceColor;
   /** The first bezier line of ribbon */
-  line1: CurvedLine<T>;
-  /** The second bezier line of ribbon */
-  line2: CurvedLine<T>;
+  start2: IPoint;
+
+  end2: IPoint;
 
   center1: IPoint;
 
   center2: IPoint;
 
-  resolution: number;
-
   constructor(options: IRibbonOptions) {
-    super(
-      Number.MAX_VALUE,
-      -Number.MAX_VALUE,
-      -Number.MAX_VALUE,
-      Number.MAX_VALUE,
-    );
+    super(options);
 
-    this.encapsulatePoint(this.line1.start);
     this.cachesQuadSegments = options.cachedQuadSegments || true;
     this.depth = options.depth || 0;
 
-    this.startColor = options.startColor;
-    this.endColor = options.endColor;
+   // This.startColor = options.startColor;
+   // This.endColor = options.endColor;
 
-    this.line1 = options.line1;
-    this.line2 = options.line2;
+   // This.start = options.start;
+    this.start2 = options.start2;
+   // This.end = options.end;
+    this.end2 = options.end2;
 
     this.center1 = options.center1;
     this.center2 = options.center2;
 
-    this.resolution = options.resolution;
+   // This.controlPoints = options.controlPoints;
+
+  //  This.resolution = options.resolution;
+
   }
 
   clone() {
@@ -66,11 +67,15 @@ export class RibbonShape<T> extends Bounds<T> {
     const clone: RibbonShape<T> = new RibbonShape<T>({
       center1: this.center1,
       center2: this.center2,
+      controlPoints: this.controlPoints,
+      end: this.end,
+      end2: this.end2,
       endColor: this.endColor,
-      line1: this.line1,
-      line2 : this.line2,
       resolution: this.resolution,
+      start: this.start,
+      start2 : this.start2,
       startColor: this.startColor,
+      type: this.type,
     });
 
     clone.d = this.d;

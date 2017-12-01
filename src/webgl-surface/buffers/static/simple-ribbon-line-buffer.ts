@@ -6,6 +6,8 @@ import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
+const debug = require('debug')('webgl:ribbon-buffer');
+
 export class SimpleStaticRibbonBuffer extends BaseBuffer < RibbonShape < any >,
 Mesh > {
   /**
@@ -13,6 +15,7 @@ Mesh > {
    * See interface definition
    */
   init(material: ShaderMaterial, unitCount: number) {
+    debug('ribbon init~');
     this.bufferItems = BufferUtil.makeBufferItems();
 
     this.bufferItems.attributes = [
@@ -99,15 +102,16 @@ Mesh > {
     BufferUtil.beginUpdates();
 
     for (const ribbon of shapeBuffer) {
+      debug('ribbon %o', ribbon);
       alpha = ribbon.startColor.base.opacity;
       color = ribbon.startColor.base.color;
 
       length = ribbon.resolution;
-      p1 = ribbon.line1.start;
-      p2 = ribbon.line1.end;
+      p1 = ribbon.start;
+      p2 = ribbon.end;
 
-      p3 = ribbon.line2.start;
-      p4 = ribbon.line2.end;
+      p3 = ribbon.start2;
+      p4 = ribbon.end2;
 
       needsUpdate = BufferUtil.updateBuffer(
         shapeBuffer, this.bufferItems,
@@ -137,8 +141,8 @@ Mesh > {
           endPoints2[++epos2] = p3.y;
           endPoints2[++epos2] = p4.x;
           endPoints2[++epos2] = p4.y;
-          controlPoints[copos] = ribbon.line1.controlPoints[0].x;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].y;
+          controlPoints[copos] = ribbon.controlPoints[0].x;
+          controlPoints[++copos] = ribbon.controlPoints[0].y;
           centers[cepos] = ribbon.center1.x;
           centers[++cepos] = ribbon.center1.y;
           centers[++cepos] = ribbon.center2.x;
@@ -161,8 +165,8 @@ Mesh > {
           endPoints2[++epos2] = p3.y;
           endPoints2[++epos2] = p4.x;
           endPoints2[++epos2] = p4.y;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].x;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].y;
+          controlPoints[++copos] = ribbon.controlPoints[0].x;
+          controlPoints[++copos] = ribbon.controlPoints[0].y;
           centers[++cepos] = ribbon.center1.x;
           centers[++cepos] = ribbon.center1.y;
           centers[++cepos] = ribbon.center2.x;
@@ -185,8 +189,8 @@ Mesh > {
           endPoints2[++epos2] = p3.y;
           endPoints2[++epos2] = p4.x;
           endPoints2[++epos2] = p4.y;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].x;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].y;
+          controlPoints[++copos] = ribbon.controlPoints[0].x;
+          controlPoints[++copos] = ribbon.controlPoints[0].y;
           centers[++cepos] = ribbon.center1.x;
           centers[++cepos] = ribbon.center1.y;
           centers[++cepos] = ribbon.center2.x;
@@ -209,8 +213,8 @@ Mesh > {
           endPoints2[++epos2] = p3.y;
           endPoints2[++epos2] = p4.x;
           endPoints2[++epos2] = p4.y;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].x;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].y;
+          controlPoints[++copos] = ribbon.controlPoints[0].x;
+          controlPoints[++copos] = ribbon.controlPoints[0].y;
           centers[++cepos] = ribbon.center1.x;
           centers[++cepos] = ribbon.center1.y;
           centers[++cepos] = ribbon.center2.x;
@@ -233,8 +237,8 @@ Mesh > {
           endPoints2[++epos2] = p3.y;
           endPoints2[++epos2] = p4.x;
           endPoints2[++epos2] = p4.y;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].x;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].y;
+          controlPoints[++copos] = ribbon.controlPoints[0].x;
+          controlPoints[++copos] = ribbon.controlPoints[0].y;
           centers[++cepos] = ribbon.center1.x;
           centers[++cepos] = ribbon.center1.y;
           centers[++cepos] = ribbon.center2.x;
@@ -255,8 +259,8 @@ Mesh > {
           endPoints2[++epos2] = p3.y;
           endPoints2[++epos2] = p4.x;
           endPoints2[++epos2] = p4.y;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].x;
-          controlPoints[++copos] = ribbon.line1.controlPoints[0].y;
+          controlPoints[++copos] = ribbon.controlPoints[0].x;
+          controlPoints[++copos] = ribbon.controlPoints[0].y;
           centers[++cepos] = ribbon.center1.x;
           centers[++cepos] = ribbon.center1.y;
           centers[++cepos] = ribbon.center2.x;
