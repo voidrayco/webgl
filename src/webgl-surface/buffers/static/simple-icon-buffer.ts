@@ -10,7 +10,7 @@ function isCluster(value : any[]) : value is IconShape < any > [][]{
   return false;
 }
 
-export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconShape<any>[], Mesh> {
+export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShape<any>[], Mesh> {
   /**
    * @override
    * See interface definition
@@ -25,9 +25,9 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
         size: AttributeSize.THREE,
     },
     {
-        defaults: [0, 0, 0, 0],
+        defaults: [0, 0],
         name: 'uvCoordinate',
-        size: AttributeSize.FOUR,
+        size: AttributeSize.TWO,
     },
     {
         defaults: [1.0, 1.0],
@@ -36,7 +36,7 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
     },
     {
         defaults: [0.0, 0.0, 0.0, 1.0],
-        name: 'customColor',
+        name: 'tint',
         size: AttributeSize.FOUR,
       },
     ];
@@ -73,19 +73,17 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
-// NOTE: commented out below to avoid issues - not sure how to edit this to correctly dovetail with the simple-icons - this is the code from simple-circle
+
     if (atlasManager) {
-//      const colorRef: ReferenceColor = buffer[0].outerColor;      
-//      const colorBase = colorRef.base;
+      const colorRef: ReferenceColor = buffer[0].tint;      
+      const colorBase = colorRef.base;
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       const uniforms: { [k: string]: IUniform } = material.uniforms;
-//      const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
-//      uniforms.colorAtlas.value = atlas;
-//      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
-//      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
-//      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-//      atlas.needsUpdate = true;
-
+      const atlas = atlasManager.getAtlasTexture(buffer[0].texture.atlasReferenceID);
+      uniforms.imageAtlas.value = atlas;
+      uniforms.texture.value = atlas;
+      atlas.needsUpdate = true;
+        
       if (camera) {
         uniforms.zoom.value = camera.zoom;
       }
@@ -98,20 +96,21 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
       function(
         i: number,
         positions: Float32Array, ppos: number,
-        uvcoordinate: Float32Array, uvpos: number,
-        color: Float32Array, cpos: number,
+        uvcoordinates: Float32Array, uvpos: number,
+        sizes: Float32Array, spos: number, 
+        tints: Float32Array, cpos: number,
     ) {
         icon = buffer[i];
 
         // These are point sprites, so just update a single vertex
         positions[ppos] = icon.x;
         positions[++ppos] = icon.y;
-        uvcoordinate[uvpos] = 0;
-        uvcoordinate[++uvpos] = 0;
-        uvcoordinate[++uvpos] = 0;
-        uvcoordinate[++uvpos] = 0;      //  <-- NOTE: will need to be set to match properties in icon-shape.js
-        
-//        color[cpos] = circle.outerColor.base.colorIndex;
+        uvcoordinates[uvpos] = icon.texture.atlasTL.x;
+        uvcoordinates[++uvpos] = icon.texture.atlasTL.y;
+        uvcoordinates[++uvpos] = icon.texture.atlasBR.x;
+        uvcoordinates[++uvpos] = icon.texture.atlasBR.y;
+        sizes[spos] = icon.size;
+        tints[cpos] = icon.tint.base.colorIndex || 0;
       },
     );
 
