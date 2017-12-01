@@ -207,6 +207,8 @@ const request = https.request({
   response.on('data', function(chunk) {
     console.log('BODY: ' + chunk);
   });
+
+  if (String(response.statusCode)[0] !== '2') process.exit(1);
 });
 
 request.on('error', function(e) {
