@@ -119,10 +119,17 @@ if (FEATURE !== 'release') {
 }
 
 const packageJson = require(resolve('package.json'));
-const NEXT_VERSION = inc(packageJson.version, RELEASE_TYPE);
+const devJson = JSON.parse(
+  exec('git', ['show', `${AUTORELEASE_BASE}:package.json`])
+  .stdout.toString('ascii')
+);
 
-if (NEXT_VERSION)
+const NEXT_VERSION = inc(devJson.version, RELEASE_TYPE);
+
+if (NEXT_VERSION) {
   console.log(`Preparing ${RELEASE_TYPE} release from ${packageJson.version} to ${NEXT_VERSION}`);
+  packageJson.version = NEXT_VERSION;
+}
 else {
   console.log(
     `Cannot create ${RELEASE_TYPE} release from ${packageJson.version} to ${NEXT_VERSION}`
