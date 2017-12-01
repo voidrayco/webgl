@@ -20,12 +20,12 @@ function isCluster(val: CurvedEdgeShape<any>[] | CurvedEdgeShape<any>[][]): val 
  *
  * This only supports atlas colors.
  */
-export class UniformInstanceArcBuffer extends BaseBuffer <CurvedEdgeShape<any> | CurvedEdgeShape<any>[], Mesh> {
+export class UniformInstanceEdgeBuffer extends BaseBuffer <CurvedEdgeShape<any> | CurvedEdgeShape<any>[], Mesh> {
   /**
    * @override
    * See interface definition
    */
-  init(material: ShaderMaterial, unitCount: number, shared?: UniformInstanceArcBuffer) {
+  init(material: ShaderMaterial, unitCount: number, shared?: UniformInstanceEdgeBuffer) {
     this.bufferItems = BufferUtil.makeBufferItems();
 
     // Declare the structure of the uniform data in the instanceData uniform

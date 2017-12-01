@@ -102,7 +102,7 @@ void main() {
   vec2 controlPoint = block0.xy;
   vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexTime);
 
-  float halfLine = mix(startHalfWidth, endHalfWidth, vertexTime);
+  float haflLine = mix(startHalfWidth, endHalfWidth, vertexTime);
 
   vec2 p1 = vec2(endPoint.x, endPoint.y);
   vec2 p2 = vec2(endPoint.z, endPoint.w);
