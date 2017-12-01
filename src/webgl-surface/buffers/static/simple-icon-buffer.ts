@@ -73,18 +73,18 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
-
+// NOTE: commented out below to avoid issues - not sure how to edit this to correctly dovetail with the simple-icons - this is the code from simple-circle
     if (atlasManager) {
-      const colorRef: ReferenceColor = buffer[0].outerColor;      
-      const colorBase = colorRef.base;
+//      const colorRef: ReferenceColor = buffer[0].outerColor;      
+//      const colorBase = colorRef.base;
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       const uniforms: { [k: string]: IUniform } = material.uniforms;
-      const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
-      uniforms.colorAtlas.value = atlas;
-      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
-      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
-      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-      atlas.needsUpdate = true;
+//      const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
+//      uniforms.colorAtlas.value = atlas;
+//      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
+//      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
+//      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
+//      atlas.needsUpdate = true;
 
       if (camera) {
         uniforms.zoom.value = camera.zoom;
@@ -98,6 +98,7 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
       function(
         i: number,
         positions: Float32Array, ppos: number,
+        uvcoordinate: Float32Array, uvpos: number,
         color: Float32Array, cpos: number,
     ) {
         icon = buffer[i];
@@ -105,6 +106,11 @@ export class SimpleStaticSpriteBuffer extends BaseBuffer<IconShape<any> | IconSh
         // These are point sprites, so just update a single vertex
         positions[ppos] = icon.x;
         positions[++ppos] = icon.y;
+        uvcoordinate[uvpos] = 0;
+        uvcoordinate[++uvpos] = 0;
+        uvcoordinate[++uvpos] = 0;
+        uvcoordinate[++uvpos] = 0;      //  <-- NOTE: will need to be set to match properties in icon-shape.js
+        
 //        color[cpos] = circle.outerColor.base.colorIndex;
       },
     );
