@@ -145,8 +145,7 @@ const KNOWN_HOSTS = `${HOME}/.ssh/known_hosts`;
 mkdirSync(dirname(SSH_CONFIG), [0o600]);
 
 // Create the SSH deploy key
-writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'));
-chmodSync(ID_RSA, 0o400);
+writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'), {mode: 0o400});
 appendFileSync(SSH_CONFIG, `
 Host autorelease
   User git
