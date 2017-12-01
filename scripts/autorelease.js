@@ -82,6 +82,34 @@ const {
   return options;
 })();
 
+/**
+ * Run spawnSync
+ *
+ * @param {string} command The command to run
+ * @param {string[]} args Arguments for the command
+ * @param {object} options The options
+ *
+ * @return {object} The result of spawnSync
+ */
+function exec(command, args, options = {}) {
+  console.log(command, args);
+  const result = spawnSync(command, args, options);
+  console.log(result.stdout.toString('ascii'));
+  console.log(result.stderr.toString('ascii'));
+  if (result.error) throw result.error;
+  if (result.status) process.exit(1);
+  return result;
+}
+
+// Don't run if the commit was from this script
+const author = exec('git', ['log', '-n', '1', '--pretty=format:%an'])
+.stdout.toString('ascii');
+
+if (author === 'Autorelease Script') {
+  console.log('This commit was from Autorelease. Refusing to re-release.');
+  process.exit(0);
+}
+
 // Determine which release we're going to use
 const [FEATURE, RELEASE_TYPE = 'patch'] = WERCKER_GIT_BRANCH.split('/');
 
@@ -106,25 +134,6 @@ const AUTORELEASE_DIR = mkdtempSync(join(tmpdir(), 'autorelease-'));
 const ID_RSA = resolve(AUTORELEASE_DIR, 'id_rsa');
 const SSH_CONFIG = `${HOME}/.ssh/config`;
 const KNOWN_HOSTS = `${HOME}/.ssh/known_hosts`;
-
-/**
- * Run spawnSync
- *
- * @param {string} command The command to run
- * @param {string[]} args Arguments for the command
- * @param {object} options The options
- *
- * @return {object} The result of spawnSync
- */
-function exec(command, args, options = {}) {
-  console.log(command, args);
-  const result = spawnSync(command, args, options);
-  console.log(result.stdout.toString('ascii'));
-  console.log(result.stderr.toString('ascii'));
-  if (result.error) throw result.error;
-  if (result.status) process.exit(1);
-  return result;
-}
 
 mkdirSync(dirname(SSH_CONFIG), [0o600]);
 
@@ -178,7 +187,7 @@ exec('git', ['config', 'user.email', 'tarwich+autorelease@gmail.com']);
 
 // Create the git commit
 exec('git', ['add', '.']);
-exec('git', ['commit', '-m', `Release ${NEXT_VERSION}\n\n[skip ci]`]);
+exec('git', ['commit', '-m', `Release ${NEXT_VERSION}`]);
 exec('git', ['push', 'origin', WERCKER_GIT_BRANCH]);
 
 // Create the pull request
