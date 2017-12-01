@@ -1,19 +1,19 @@
 /**
  * Fragment Shader for rendering textured sprites
- * vec4 uv - .r = u  .g = v  .b = size X   .a = size Y
  */
 
 precision mediump float;
 uniform sampler2D texture;
-varying vec4 vTint;
-varying vec4 vUvCoordinate;
-varying float vWidth;
-varying float vHeight;
+varying vec4 tint;
+varying vec4 UV;
+varying float textureWidth;
+varying float textureHeight;
 
 void main(void) {
-    float textureWidth = vUvCoordinate.b - vUvCoordinate.r;
-    float textureHeight = vUvCoordinate.a - vUvCoordinate.g;
-    float aspectRatio = textureWidth / textureHeight;
+
+    float uvWidth = UV.b - UV.r;
+    float uvHeight = UV.a - UV.g;
+    float aspectRatio = uvWidth / uvHeight;
     float halfAspect;
 
     if(aspectRatio < 1.0)
@@ -24,14 +24,14 @@ void main(void) {
     if(aspectRatio < 1.0 && 
         ((gl_PointCoord.x < (0.5 - halfAspect)) ||
         (gl.PointCoord.x > (0.5 + halfAspect)
-        discard;
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         
     if(aspectRatio > 1.0 && 
         ((gl_PointCoord.y < (0.5 - halfAspect)) ||
         (gl.PointCoord.y > (0.5 + halfAspect)
-        discard;
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 
     
-    vec2 uv = vec2(((gl_PointCoord.x * vUvCoordinate.b) + vUvCoordinate.r), ((gl_PointCoord.y * vUvCoordinate.a) + vUvCoordinate.g));
-    gl_FragColor = texture2D(texture, uv) + vTint.rgba;
+    vec2 uv = vec2(((gl_PointCoord.x * uvWidth) + UV.r), ((gl_PointCoord.y * uvHeight) + UV.g));
+    gl_FragColor = texture2D(texture, uv) + tint.rgba;
 }

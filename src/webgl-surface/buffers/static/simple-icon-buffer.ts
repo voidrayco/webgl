@@ -25,9 +25,9 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         size: AttributeSize.THREE,
     },
     {
-        defaults: [0, 0],
+        defaults: [0.0, 0.0, 0.0, 0.0],
         name: 'uvCoordinate',
-        size: AttributeSize.TWO,
+        size: AttributeSize.FOUR,
     },
     {
         defaults: [1.0, 1.0],
@@ -35,9 +35,9 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         size: AttributeSize.TWO,
     },
     {
-        defaults: [0.0, 0.0, 0.0, 1.0],
+        defaults: [0],
         name: 'tint',
-        size: AttributeSize.FOUR,
+        size: AttributeSize.ONE,
       },
     ];
 
@@ -80,9 +80,15 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       const uniforms: { [k: string]: IUniform } = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(buffer[0].texture.atlasReferenceID);
-      uniforms.imageAtlas.value = atlas;
-      uniforms.texture.value = atlas;
+      uniforms.colorAtlas.value = atlas;
+      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
+      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
+      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
       atlas.needsUpdate = true;
+
+// NOTE: not sure about here - need to check on it - commented for now
+//      uniforms.imageAtlas.value = atlas;
+  //    uniforms.texture.value = atlas;
         
       if (camera) {
         uniforms.zoom.value = camera.zoom;
@@ -99,6 +105,8 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         uvcoordinates: Float32Array, uvpos: number,
         sizes: Float32Array, spos: number, 
         tints: Float32Array, cpos: number,
+        textureWidths: Float32Array, wpos: number,
+        textureHeights: Float32Array, hpos: number,
     ) {
         icon = buffer[i];
 
@@ -111,6 +119,8 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         uvcoordinates[++uvpos] = icon.texture.atlasBR.y;
         sizes[spos] = icon.size;
         tints[cpos] = icon.tint.base.colorIndex || 0;
+        textureWidths[wpos] = icon.width;
+        textureHeights[hpos] = icon.height;
       },
     );
 
