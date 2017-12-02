@@ -2,7 +2,7 @@ import { Mesh } from 'three';
 import { OrthographicCamera, ShaderMaterial } from 'three';
 import { AtlasManager, CircleShape } from '../../drawing/index';
 import { BaseBuffer } from '../base-buffer';
-export declare class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any>, Mesh> {
+export declare class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | CircleShape<any>[], Mesh> {
     /**
      * @override
      * See interface definition
@@ -14,5 +14,5 @@ export declare class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any
      *
      * @param shapeBuffer
      */
-    update(shapeBuffer: CircleShape<any>[], atlasManager?: AtlasManager, camera?: OrthographicCamera): boolean;
+    update(shapeBuffer: CircleShape<any>[] | CircleShape<any>[][], atlasManager?: AtlasManager, camera?: OrthographicCamera): boolean;
 }
