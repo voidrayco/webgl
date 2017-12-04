@@ -1,6 +1,5 @@
-import { Bounds } from '../../primitives/bounds';
-import { CurvedLine, ICurvedLineOptions } from '../../primitives/curved-line';
-import { IPoint, Point } from '../../primitives/point';
+import { ICurvedLineOptions } from '../../primitives/curved-line';
+import { IPoint } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
 import { CurvedLineShape } from '../shape/curved-line-shape';
 
