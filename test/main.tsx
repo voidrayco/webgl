@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Color } from 'three';
-import { AtlasColor, WebGLSurface } from '../src';
+import { AtlasColor, Bounds, WebGLSurface } from '../src';
 import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
 
 const colors = [
@@ -56,6 +56,7 @@ export class Main extends React.Component<any, IMainState> {
           onZoomRequest={(zoom: number) => zoom}
           width={800}
           zoom={1.0}
+          viewport={new Bounds(-200, 200, 200, -200)}
         />
       );
     }

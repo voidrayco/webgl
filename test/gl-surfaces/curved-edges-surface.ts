@@ -10,7 +10,7 @@ export class CurvedEdgesSurface extends WebGLSurface<ICurvedEdgesSurface, any> {
 
   // Apply properties
   applyColorBufferChanges() {
-    this.buffer.update([], this.atlasManager, 1);
+    this.buffer.update([/** Shapes go here */], this.atlasManager, 1);
   }
 
   // Set up materials
