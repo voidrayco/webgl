@@ -11,26 +11,35 @@ varying float textureHeight;
 
 void main(void) {
 
+  float addModX = UV.r;
+  float addModY = UV.g;
   float uvWidth = UV.b - UV.r;
   float uvHeight = UV.a - UV.g;
   float aspectRatio = uvWidth / uvHeight;
-  float halfAspect;
+  float multMod;
 
   if(aspectRatio < 1.0)
-    halfAspect = 0.5 * aspectRatio;
-  else
-    halfAspect = 0.5 * 1 / aspectRatio; 
+		addModX = (addModX - (((uvHeight - uvWidth)) * 0.5));
+	else if (aspectRatio > 1.0)
+		addModY = (addModY - (((uvWidth - uvHeight)) * 0.5));
 
   if(aspectRatio < 1.0 && 
-    ((gl_PointCoord.x < (0.5 - halfAspect)) ||
-    (gl.PointCoord.x > (0.5 + halfAspect)
+    ((gl_PointCoord.x < (0.5 - 0.5 * uvWidth / uvHeight)) ||
+    (gl_PointCoord.x > 1.0 - (0.5 - (0.5 * uvWidth / uvHeight))))) {
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-
-  if(aspectRatio > 1.0 && 
-    ((gl_PointCoord.y < (0.5 - halfAspect)) ||
-    (gl.PointCoord.y > (0.5 + halfAspect)
+  }
+  else if(aspectRatio > 1.0 && 
+    ((gl_PointCoord.y < (0.5 - 0.5 * uvHeight / uvWidth)) ||
+    (gl_PointCoord.y > 1.0 - (0.5 - 0.5 * uvHeight / uvWidth)))){
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-
-  vec2 uv = vec2(((gl_PointCoord.x * uvWidth) + UV.r), ((gl_PointCoord.y * uvHeight) + UV.g));
-  gl_FragColor = texture2D(texture, uv) + tint.rgba;
-}
+  }
+  else {
+		if(aspectRatio > 1.0) {
+			multMod = uvWidth;
+		}
+		else if(aspectRatio < 1.0) {
+			multMod = uvHeight;
+		}
+		vec2 uv = vec2(addModX + (gl_PointCoord.x * multMod), addModY + (gl_PointCoord.y * multMod));
+    gl_FragColor = texture2D(texture, uv) + tint.rgba;
+	}

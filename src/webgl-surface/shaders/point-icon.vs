@@ -4,7 +4,6 @@
 
 precision mediump float;
 
-
 uniform sampler2D colorAtlas;
 uniform float colorsPerRow;
 uniform vec2 firstColor;
@@ -13,14 +12,14 @@ uniform float zoom;
 
 attribute vec2 size;
 attribute float tintPick;
-attribute vec2 uvCoordinate;
-attribute float height;
+attribute vec4 uvCoordinate;
 attribute float width;
+attribute float height;
 
 varying vec4 tint;
 varying vec2 UV;
+varying float textureWidth;
 varying float textureHeight;
-varying float textureWWidth;
 
 vec4 pickColor(float index) {
   float row = floor(index / colorsPerRow);
@@ -37,3 +36,5 @@ void main(void) {
   gl_PointSize = size.x * zoom;
   gl_Position = projectionMatrix * mvPosition;
 }
+
+
