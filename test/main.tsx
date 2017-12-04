@@ -1,6 +1,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import * as VoidGL from '../src';
+import { Color } from 'three';
+import { AtlasColor, WebGLSurface } from '../src';
+import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
+
+const colors = [
+  new AtlasColor(new Color(1.0, 0.0, 0.0), 1.0),
+  new AtlasColor(new Color(1.0, 0.0, 1.0), 1.0),
+];
 
 /**
  * The state of the application
@@ -16,7 +23,7 @@ export interface IMainState {
 export class Main extends React.Component<any, IMainState> {
   // Set default state values
   state: IMainState = {
-    currentTab: 2,
+    currentTab: 0,
     zoom: 1,
   };
 
@@ -42,7 +49,14 @@ export class Main extends React.Component<any, IMainState> {
 
     if (this.state.currentTab === 0) {
       component = (
-        <VoidGL.WebGLSurface/>
+        <CurvedEdgesSurface
+          backgroundColor={{r: 1.0, g: 1.0, b: 1.0, opacity: 1.0}}
+          colors={colors}
+          height={600}
+          onZoomRequest={(zoom: number) => zoom}
+          width={800}
+          zoom={1.0}
+        />
       );
     }
 
@@ -52,7 +66,7 @@ export class Main extends React.Component<any, IMainState> {
           {component}
         </div>
         <div style={{marginTop: 4, padding: 4}}>
-          <button onClick={this.handleClickTab(0)}>View Quads</button>
+          <button onClick={this.handleClickTab(0)}>Demo Curved Edges</button>
         </div>
       </div>
     );
