@@ -1,5 +1,8 @@
+import { CurvedLineShape, CurveType } from 'index';
 import { Bounds } from '../primitives/bounds';
 import { IPoint } from '../primitives/point';
+
+const debug = require('debug')('quadtree');
 
 // A configuration that controls how readily a quadtree will split to another level
 // Adjusting this number can improve or degrade your performance significantly and
@@ -368,8 +371,10 @@ export class Node<T extends Bounds<any>> {
       return [];
     }
 
-    // Query a point
+    debug('this bounds %o', this.bounds);
+   // Query a point
     if (this.bounds.containsPoint(bounds)) {
+      debug('contains %o', this.queryPoint(bounds, [], visit));
       return this.queryPoint(bounds, [], visit);
     }
 
@@ -432,11 +437,31 @@ export class Node<T extends Bounds<any>> {
    */
   queryPoint(p: any, list: T[], visit?: IVisitFunction<T>): T[] {
     this.children.forEach((c, index) => {
-      if (c.containsPoint(p)) {
+      if (c instanceof CurvedLineShape
+        && (c.type === CurveType.CircularCW || c.type === CurveType.CircularCCW)
+      ) {
+        // Radius
+        const center = c.controlPoints[0];
+
+        const radius = Math.sqrt(Math.pow(c.start.x - center.x, 2) + Math.pow(c.start.y - center.y, 2));
+
+        const point: IPoint = p;
+        const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
+
+        if (distance <= radius + c.lineWidth / 2 && distance >= radius - c.lineWidth / 2) {
+          list.push(c);
+          debug('distance %o c %o', distance, c.d);
+        }
+        // Angles
+        // My angle
+
+      }
+      else if (c.containsPoint(p)) {
+        debug('curve', c);
         list.push(c);
       }
     });
-
+//////////////////////////////////
     if (visit) {
       visit(this);
     }

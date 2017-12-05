@@ -93,6 +93,12 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     this.cachesQuadSegments = options.cacheSegments;
     this.depth = options.depth || 0;
     this.lineWidth = options.lineWidth || 1;
+
+    /*this.x -= this.lineWidth / 2;
+    this.width +=  this.lineWidth;
+    this.y += this.lineWidth / 2;
+    this.height += this.lineWidth;*/
+
     this.startColor = options.startColor;
     this.endColor = options.endColor;
     this.marchingAnts = options.marchingAnts;
