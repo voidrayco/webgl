@@ -20,7 +20,7 @@ vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
 vec4 pickColor(float index) {
   float row = floor(index / colorsPerRow);
   float col = index - (row * colorsPerRow);
-  return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y*row));
+  return texture2D(colorAtlas, firstColor + vec2(nextColor.x * col, nextColor.y * row));
 }
 
 vec4 getBlock(int index) {
@@ -46,8 +46,8 @@ void main() {
   vec2 start1 = block1.xy;
   vec2 start2 = block1.zw;
 
-  vec2 end1 = block2.xy;
-  vec2 end2 = block2.zw;
+  vec2 end1 = block2.zw;
+  vec2 end2 = block2.xy;
 
   vec2 c1 = block3.xy;
   vec2 c2 = block3.zw;
@@ -60,68 +60,76 @@ void main() {
   float vertexIndex = position.y;
   float instance = position.z;
 
-  vertexColor = mix(pickColor(startColor),pickColor(endColor));
 
-  float vertextTime = vertexIndex / resolution;
   vec2 currentPosition;
+  
+  vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexIndex / resolution);
 
-  if (vertextTime < threshold.x / resolution) {
+  if (vertexIndex < threshold.x ) {
+    float realTime = vertexIndex / threshold.x;
+
     // radius of hemiSphere where endpoints are in 
     float r1 = distance(c1, start1);
 
-    // mid of two end lines
+    // mid of two end points
     vec2 mid1 = getMiddle(start1, start2);
 
     // distance from center to getMiddle;
-    float d1 = distance(c1, mid1);
+    float d1 = distance(mid1, c1);
   
     // radius - distance
     float l1 = r1 - d1;
 
     // angle between line(middle, center) and line(currentPosition, center)
-    float cosRadian = acos((r1 - l1 * vertextTime) / r1);
+    float cosRadian = acos((r1 - l1 * realTime) / r1);
 
     // rotation angle of line(middle, center)
-    float radian = atan((mid1.y - c1.y) / (mid1.x - c1.x));
+    float radian = acos((mid1.x - c1.x) / d1);
 
     if (normalDirection == 1.0) {
-      currentPosition = c1 + d1 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
-    }
-    else if (normalDirection == -1.0) {
-      currentPosition = c1 + d1 * vec2(cos(radian + cosRadian), sin(radian + cosRadian));
+      currentPosition = c1 + r1 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
     }
 
+    else if (normalDirection == -1.0) {
+      currentPosition = c1 + r1 * vec2(cos(radian + cosRadian), sin(radian + cosRadian));
+    }
   }
-  else if(vertextTime >= threshold.x / resolution && position.x <= 1 - threshold.y /resolution) {
-    float realTime = (position.y - threshold.x) / (resolution - threshold.x - threshold.y);
+
+  else if (vertexIndex >= threshold.x  && vertexIndex <= resolution - threshold.y ) {
+    float realTime = (vertexIndex - threshold.x) / (resolution - threshold.x - threshold.y);
     
     if (normalDirection == 1.0) {
       currentPosition = makeBezier2(realTime, start1, end1, controlPoint);
     }
+
     else if (normalDirection == -1.0) {
       currentPosition = makeBezier2(realTime, start2, end2, controlPoint);
     }
     
   }
-  else if(vertextTime > 1 - threshold.y / resolution) {
+
+  else if (vertexIndex > resolution - threshold.y ) {
+    float realTime = (vertexIndex - resolution + threshold.y) / threshold.y;
+
     float r2 = distance(c2, end1);
 
     vec2 mid2 = getMiddle(end1, end2);
 
-    float d2 = distance(c2, mid2);
+    float d2 = distance(mid2, c2);
 
     float l2 = r2 - d2;
 
-    float cosRadian = acos((r2 - l2 * (1.0 - vertextTime)) / r2);
-    float radian = atan((mid2.y - c2.y) / (mid2.x - c2.x));
+    float cosRadian = acos((d2 + l2 * realTime) / r2);
+
+    float radian = acos((mid2.x - c2.x) / d2);
 
     if (normalDirection == 1.0) {
-      currentPosition = c2 + d2 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
+      currentPosition = c2 + r2 * vec2(cos(radian + cosRadian), sin(radian + cosRadian));
     }
+    
     else if (normalDirection == -1.0) {
-      currentPosition = c2 + d2 * vec2(cos(radian + cosRadian), sin(radian + cosRadian));
+      currentPosition = c2 + r2 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
     }
-
   }
 
   vec4 mvPosition = modelViewMatrix * vec4(currentPosition, position.z, 1.0);
