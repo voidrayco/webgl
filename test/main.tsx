@@ -3,7 +3,6 @@ import * as ReactDOM from 'react-dom';
 import { Color } from 'three';
 import { AtlasColor, Bounds, WebGLSurface } from '../src';
 import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
-
 const colors = [
   new AtlasColor(new Color(1.0, 0.0, 0.0), 1.0),
   new AtlasColor(new Color(1.0, 0.0, 1.0), 1.0),
@@ -50,7 +49,7 @@ export class Main extends React.Component<any, IMainState> {
     if (this.state.currentTab === 0) {
       component = (
         <CurvedEdgesSurface
-          backgroundColor={{r: 1.0, g: 1.0, b: 1.0, opacity: 1.0}}
+          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
           colors={colors}
           height={600}
           onZoomRequest={(zoom: number) => zoom}
@@ -59,6 +58,7 @@ export class Main extends React.Component<any, IMainState> {
           viewport={new Bounds(-200, 200, 200, -200)}
         />
       );
+
     }
 
     return (
