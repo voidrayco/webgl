@@ -22,28 +22,29 @@ options:
 
 This script needs three environment variables:
 
-AUTORELEASE_BASE:  The base branch for pull requests. Defaults to 'master'
-AUTORELEASE_KEY:   Please create a deploy key with write access and
-                   paste the private key in this environment variable. You can
-                   separate multiple lines with a literal \n if necessary. You
-                   can create a key on linux / osx with "ssh-keygen -f ./key"
-                   and you can upload the public key to /settings/keys on your
-                   repo (https://github.com/:owner/:repo/settings/keys)
-AUTORELEASE_TOKEN: Create a personal access token by going to
-                   https://github.com/settings/tokens
-                   Check all repo
-
+AUTORELEASE_BASE:       The base branch for pull requests. Defaults to 'master'
+AUTORELEASE_KEY:        Please create a deploy key with write access and
+                        paste the private key in this environment variable. You can
+                        separate multiple lines with a literal \n if necessary. You
+                        can create a key on linux / osx with "ssh-keygen -f ./key"
+                        and you can upload the public key to /settings/keys on your
+                        repo (https://github.com/:owner/:repo/settings/keys)
+AUTORELEASE_TOKEN:      Create a personal access token by going to
+                        https://github.com/settings/tokens
+AUTORELEASE_ADD_BRANCH: This will be a comma delimited list of additional branches
+                        this scrpt will push to after the rlese script has completed.
 `;
 
-const {appendFileSync, chmodSync, mkdtempSync, writeFileSync, mkdirSync} = require('fs');
-const {join, resolve, dirname} = require('path');
-const {spawnSync} = require('child_process');
-const {tmpdir} = require('os');
-const {inc} = require('semver');
-const https = require('https');
+const { appendFileSync, existsSync, mkdtempSync, writeFileSync, mkdirSync } = require('fs');
+const { dirname, join, resolve } = require('path');
+const { spawnSync } = require('child_process');
+const { tmpdir } = require('os');
+const { inc } = require('semver');
+const fetch = require('node-fetch');
 
 // Import environment variables
 const {
+  AUTORELEASE_ADD_BRANCH,
   AUTORELEASE_BASE = 'master',
   AUTORELEASE_KEY,
   AUTORELEASE_TOKEN,
@@ -97,7 +98,7 @@ function exec(command, args, options = {}) {
   console.log(result.stdout.toString('ascii'));
   console.log(result.stderr.toString('ascii'));
   if (result.error) throw result.error;
-  if (result.status) process.exit(1);
+  if (result.status) throw new Error(result.stdout.toString('ascii'));
   return result;
 }
 
@@ -142,15 +143,24 @@ const ID_RSA = resolve(AUTORELEASE_DIR, 'id_rsa');
 const SSH_CONFIG = `${HOME}/.ssh/config`;
 const KNOWN_HOSTS = `${HOME}/.ssh/known_hosts`;
 
-mkdirSync(dirname(SSH_CONFIG), [0o600]);
+try {
+  // Only attempt creating if the file does not exist
+  if (!existsSync(dirname(SSH_CONFIG)))
+    mkdirSync(dirname(SSH_CONFIG), [0o600]);
+}
+
+catch (err) {
+  console.log('Issue with ensuring the ssh folder');
+  console.log(err && (err.stack || err.message));
+}
 
 // Create the SSH deploy key
-writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'), {mode: 0o400});
+writeFileSync(ID_RSA, AUTORELEASE_KEY.replace(/\\n/g, '\n'), { mode: 0o400 });
 appendFileSync(SSH_CONFIG, `
 Host autorelease
   User git
   HostName ${WERCKER_GIT_DOMAIN}
-  IdentityFile ${ID_RSA}`, {mode: 0o600}
+  IdentityFile ${ID_RSA}`, { mode: 0o600 }
 );
 
 // Add github.com to known_hosts
@@ -168,10 +178,11 @@ appendFileSync(
 // Create a git identity
 
 // Checkout the branch
+exec('git', ['--version']);
 exec('git', ['remote', 'set-url', 'origin',
   `git@autorelease:${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}`]
 );
-
+exec('git', ['config', '-l']);
 exec('git', ['fetch', 'origin']);
 exec('git', ['checkout', `${WERCKER_GIT_BRANCH}`]);
 
@@ -193,39 +204,107 @@ exec('git', ['config', 'user.email', 'tarwich+autorelease@gmail.com']);
 
 // Create the git commit
 exec('git', ['add', '.']);
-exec('git', ['commit', '-m', `Release ${NEXT_VERSION}`]);
-exec('git', ['push', 'origin', WERCKER_GIT_BRANCH]);
 
-// Create the pull request
-const request = https.request({
-  host: 'api.github.com',
-  path: `/repos/${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}/pulls`,
-  method: 'POST',
-  headers: {
-    'Accept': 'application/vnd.github.v3+json',
-    'Authorization': `token ${AUTORELEASE_TOKEN}`,
-    'User-Agent': 'Auto-upgrade bot by @tarwich',
-  },
-}, response => {
-  console.log('STATUS: ' + response.statusCode);
-  console.log('HEADERS: ' + JSON.stringify(response.headers));
-  response.setEncoding('utf8');
-  response.on('data', function(chunk) {
-    console.log('BODY: ' + chunk);
+try {
+  exec('git', ['commit', '-m', `Release ${NEXT_VERSION}`]);
+  exec('git', ['push', 'origin', WERCKER_GIT_BRANCH]);
+}
+catch (error) {
+  // Swallow this error message
+  if (!/nothing to commit/i.test(error.message)) throw error;
+}
+
+// Regardless if the release branch pushed or not, we should still push to the
+// additional branches to ensure they are in sync
+// This will attempt to push the release to all of the specified additional branches
+if (AUTORELEASE_ADD_BRANCH) {
+  const branches = AUTORELEASE_ADD_BRANCH.split(',');
+
+  branches.forEach(branch => {
+    const options = branch.split(':');
+    branch = options[0];
+    const additionalArgs = options[1];
+    let args = ['push'];
+
+    if (additionalArgs)
+      args.push(additionalArgs);
+
+    args = args.concat(['origin', `${WERCKER_GIT_BRANCH}:${branch}`]);
+
+    try {
+      exec('git', args);
+    }
+
+    catch (err) {
+      console.log('Could not push the additional branch:', branch);
+      console.log('ADD BRANCH value:', AUTORELEASE_ADD_BRANCH);
+      console.log(err.message);
+    }
   });
+}
 
-  if (String(response.statusCode)[0] !== '2') process.exit(1);
-});
+/**
+ * Makes the PR for this release
+ */
+async function makePullRequest() {
+  const PULL_URL = `https://api.github.com/repos/${WERCKER_GIT_OWNER}/${WERCKER_GIT_REPOSITORY}/pulls`;
+  const PR_TITLE = `Release ${NEXT_VERSION}`;
 
-request.on('error', function(e) {
-  console.log('problem with request: ' + e.message);
-});
+  const pullRequestQuery = {
+    title: PR_TITLE,
+    body: `Auto build of request ${NEXT_VERSION}`,
+    head: WERCKER_GIT_BRANCH,
+    base: AUTORELEASE_BASE,
+  };
 
-request.write(JSON.stringify({
-  title: `Release ${NEXT_VERSION}`,
-  body: `Auto build of request ${NEXT_VERSION}`,
-  head: WERCKER_GIT_BRANCH,
-  base: AUTORELEASE_BASE,
-}, null, '  '));
+  const pullRequestParams = {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/vnd.github.v3+json',
+      'Authorization': `token ${AUTORELEASE_TOKEN}`,
+      'User-Agent': 'Auto-upgrade bot by @tarwich',
+    },
+  };
 
-request.end();
+  console.log(
+    'Searching for PRs',
+    `${PULL_URL}?base=${pullRequestQuery.base}&head=${WERCKER_GIT_OWNER}:${pullRequestQuery.head}`
+  );
+
+  const getPRResponse = await fetch(
+    `${PULL_URL}?base=${pullRequestQuery.base}&head=${WERCKER_GIT_OWNER}:${pullRequestQuery.head}`,
+    pullRequestParams
+  );
+
+  if (!getPRResponse.ok) {
+    console.log('Could not fetch: GET existing PRs');
+    process.exit(1);
+  }
+
+  const foundPulls = await getPRResponse.json();
+  console.log('Existing PRs found:', foundPulls.length);
+
+  if (foundPulls.length === 0) {
+    // To make a PR you POST instead of GET
+    pullRequestParams.method = 'POST';
+    pullRequestParams.body = JSON.stringify(pullRequestQuery);
+    const makePRResponse = await fetch(PULL_URL, pullRequestParams);
+
+    if (makePRResponse.ok)
+      console.log('PR successfully created');
+
+    else {
+      console.log('Could not fetch: POST creating the PR');
+      process.exit(1);
+    }
+  }
+}
+
+try {
+  makePullRequest();
+}
+
+catch (error) {
+  console.log('Could not make pull request');
+  console.log(error && (error.stack || error.message));
+}

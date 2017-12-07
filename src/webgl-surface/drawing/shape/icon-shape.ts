@@ -5,7 +5,6 @@ import { AtlasTexture } from '../texture/atlas-texture';
 export interface IIconShapeOptions {
   texture: AtlasTexture,
   size: number,
-  tint: ReferenceColor,
 }
 
 /**
@@ -52,11 +51,9 @@ export class IconShape<T> extends Bounds<T> {
    *                      retaining aspect ratio.
    */
   constructor(options: IIconShapeOptions) {
-//    super(options);
     super(0, 1, 0, 1);
     this.texture = options.texture;
     this.size = options.size;
-    this.tint = options.tint;
   }
 
   /**

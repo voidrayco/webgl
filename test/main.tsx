@@ -1,12 +1,17 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Color } from 'three';
-import { AtlasColor, Bounds, WebGLSurface } from '../src';
+import { AtlasColor, AtlasTexture, Bounds, WebGLSurface } from '../src';
 import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
+import { PointIconSurface } from './gl-surfaces/point-icon-surface';
 import { SimpleCircleSurface } from './gl-surfaces/simple-circle-surface';
 const colors = [
   new AtlasColor(new Color(1.0, 0.0, 0.0), 1.0),
   new AtlasColor(new Color(1.0, 0.0, 1.0), 1.0),
+];
+const textureUrl = require('./textures/uvTest.png');
+const textures = [
+  new AtlasTexture(textureUrl),
 ];
 
 /**
@@ -65,7 +70,7 @@ export class Main extends React.Component<any, IMainState> {
       );
     }
 
-    else if (this.state.currentTab === 0) {
+    else if (this.state.currentTab === 2) {
       component = (
         <CurvedEdgesSurface
           backgroundColor={{r: 0.9, g: 0.9, b: 0.9, opacity: 1.0}}
@@ -79,11 +84,12 @@ export class Main extends React.Component<any, IMainState> {
       );
 
     }
-    /*
-    else if (this.state.currentTab === 2) {
+
+    else if (this.state.currentTab === 0) {
       component = (
         <PointIconSurface
           backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
+          textures={textures}
           colors={colors}
           height={600}
           onZoomRequest={(zoom: number) => zoom}
@@ -93,7 +99,6 @@ export class Main extends React.Component<any, IMainState> {
         />
       );
     }
-    */
 
     return (
       <div>

@@ -36,3 +36,5 @@ void main(void) {
   gl_PointSize = size.x * zoom;
   gl_Position = projectionMatrix * mvPosition;
 }
+
+
