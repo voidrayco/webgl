@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { Color } from 'three';
 import { AtlasColor, Bounds, WebGLSurface } from '../src';
 import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
+import { SimpleCircleSurface } from './gl-surfaces/simple-circle-surface';
 const colors = [
   new AtlasColor(new Color(1.0, 0.0, 0.0), 1.0),
   new AtlasColor(new Color(1.0, 0.0, 1.0), 1.0),
@@ -16,7 +17,7 @@ export interface IMainState {
   zoom: number,
 }
 
-/**
+/*
  * Entry class for the Application
  */
 export class Main extends React.Component<any, IMainState> {
@@ -37,7 +38,11 @@ export class Main extends React.Component<any, IMainState> {
    *
    * @param {number} tab
    */
-  handleClickTab = (tab: number) => () => this.setState({currentTab: tab});
+  handleClickTab = (tab: number) => () => {
+    const selectElement = document.getElementById('getChosenTestValueSelect');
+    tab = parseInt(selectElement.selectedOptions[0].value);
+    this.setState({currentTab: tab});
+  }
 
   /**
    * @override
@@ -46,10 +51,24 @@ export class Main extends React.Component<any, IMainState> {
   render() {
     let component;
 
-    if (this.state.currentTab === 0) {
+    if (this.state.currentTab === 1) {
+      component = (
+        <SimpleCircleSurface
+          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
+          colors={colors}
+          height={600}
+          onZoomRequest={(zoom: number) => zoom}
+          width={800}
+          zoom={1.0}
+          viewport={new Bounds(-200, 200, 200, -200)}
+        />
+      );
+    }
+
+    else if (this.state.currentTab === 0) {
       component = (
         <CurvedEdgesSurface
-          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
+          backgroundColor={{r: 0.9, g: 0.9, b: 0.9, opacity: 1.0}}
           colors={colors}
           height={600}
           onZoomRequest={(zoom: number) => zoom}
@@ -60,6 +79,21 @@ export class Main extends React.Component<any, IMainState> {
       );
 
     }
+    /*
+    else if (this.state.currentTab === 2) {
+      component = (
+        <PointIconSurface
+          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
+          colors={colors}
+          height={600}
+          onZoomRequest={(zoom: number) => zoom}
+          width={800}
+          zoom={1.0}
+          viewport={new Bounds(-200, 200, 200, -200)}
+        />
+      );
+    }
+    */
 
     return (
       <div>
@@ -67,9 +101,12 @@ export class Main extends React.Component<any, IMainState> {
           {component}
         </div>
         <div style={{marginTop: 4, padding: 4}}>
-          <button onClick={this.handleClickTab(0)}>Demo Curved Edges</button>
-        </div>
+         Select surface test: <select id = "getChosenTestValueSelect" onClick={this.handleClickTab(0)}>
+            <option value="0">CurvedEdgeSurface</option>
+            <option value="1">Point Circle</option>
+          </select>
       </div>
+    </div >
     );
   }
 }
