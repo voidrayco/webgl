@@ -2,7 +2,7 @@ import { CurvedLineShape, CurveType } from 'index';
 import { Bounds } from '../primitives/bounds';
 import { IPoint } from '../primitives/point';
 
-const debug = require('debug')('quadtree');
+const debug = require('debug')('webgl:quad-tree');
 
 // A configuration that controls how readily a quadtree will split to another level
 // Adjusting this number can improve or degrade your performance significantly and
@@ -437,31 +437,43 @@ export class Node<T extends Bounds<any>> {
    */
   queryPoint(p: any, list: T[], visit?: IVisitFunction<T>): T[] {
     this.children.forEach((c, index) => {
-      if (c instanceof CurvedLineShape
-        && (c.type === CurveType.CircularCW || c.type === CurveType.CircularCCW)
-      ) {
-        // Radius
-        const center = c.controlPoints[0];
+      if (c.containsPoint(p)) {
+        if (c instanceof CurvedLineShape) {
+          if (c.type === CurveType.CircularCW || c.type === CurveType.CircularCCW) {
+            // Center
+            const center = c.controlPoints[0];
+            // Radius
+            const radius = Math.sqrt(Math.pow(c.start.x - center.x, 2) + Math.pow(c.start.y - center.y, 2));
 
-        const radius = Math.sqrt(Math.pow(c.start.x - center.x, 2) + Math.pow(c.start.y - center.y, 2));
+            const point: IPoint = p;
 
-        const point: IPoint = p;
-        const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
+            // Distance from mouse to center
+            const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
 
-        if (distance <= radius + c.lineWidth / 2 && distance >= radius - c.lineWidth / 2) {
-          list.push(c);
-          debug('distance %o c %o', distance, c.d);
+            // Angle
+            const angle = Math.acos((p.x - center.x) / distance);
+            const startAngle = Math.acos((c.start.x - center.x) / radius);
+            const endAngle = Math.acos((c.end.x - center.x) / radius);
+
+            debug('angle %o start %o end %o', angle, startAngle, endAngle);
+
+            // Make sure point is in the endpoint
+            if (
+              distance <= radius + c.lineWidth / 2
+              && distance >= radius - c.lineWidth / 2
+              && angle >= (startAngle < endAngle ? startAngle : endAngle)
+              && angle <=  (startAngle < endAngle ? endAngle : startAngle)
+            ) {
+              list.push(c);
+            }
+          }
+          else if (c.type === CurveType.Bezier) {
+            list.push(c);
+          }
         }
-        // Angles
-        // My angle
-
-      }
-      else if (c.containsPoint(p)) {
-        debug('curve', c);
-        list.push(c);
       }
     });
-//////////////////////////////////
+
     if (visit) {
       visit(this);
     }

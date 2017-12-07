@@ -3,6 +3,8 @@ import { Line } from '../../primitives/line';
 import { IPoint, Point } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
 
+const debug = require('debug')('webgl:curved-line-shape');
+
 export interface IMarchingAnts {
   /**
    * This is how fast the ants will march along the line. A speed of 1 will
@@ -89,15 +91,12 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     // As we will be constructing our own segmentation requiring a new type of cache
     super(options);
 
-    this.encapsulatePoints(this.getTriangleStrip());
     this.cachesQuadSegments = options.cacheSegments;
     this.depth = options.depth || 0;
     this.lineWidth = options.lineWidth || 1;
-
-    /*this.x -= this.lineWidth / 2;
-    this.width +=  this.lineWidth;
-    this.y += this.lineWidth / 2;
-    this.height += this.lineWidth;*/
+    this.encapsulatePoints(this.getTriangleStrip());
+    debug('triangle %o', this.getTriangleStrip());
+    debug('this %o', this);
 
     this.startColor = options.startColor;
     this.endColor = options.endColor;
