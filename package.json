@@ -5,13 +5,13 @@
     "url": "http://www.voidray.co"
   },
   "name": "@voidrayco/voidgl",
-  "version": "0.7.2",
+  "version": "0.7.5",
   "main": "dist/index.js",
   "types": "dist/src/index.d.ts",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "node scripts/dev",
-    "release-build": "node scripts/release",
+    "release": "node scripts/release",
     "start": "node scripts/dev",
     "build": "tslint src && webpack"
   },

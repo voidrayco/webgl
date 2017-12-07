@@ -1270,30 +1270,28 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
   makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>) {
     element.onmousedown = function(event) {
-      debug('DRAG~');
       stage.dragOver = false;
-      document.onmousemove = function(event) {
-        debug('Move');
-          const mouseX = event.clientX;
-          const mouseY = event.clientY + window.scrollY;
 
-          const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
-          const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
-          stage.destinationX -= distanceX;
-          stage.destinationY += distanceY;
-          stage.lastMousePosition.x = mouseX;
-          stage.lastMousePosition.y = mouseY;
+      document.onmousemove = function(event) {
+        const mouse = eventElementPosition(event, element);
+        const mouseX = mouse.x;
+        const mouseY = mouse.y;
+
+        const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
+        const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
+        stage.destinationX -= distanceX;
+        stage.destinationY += distanceY;
+        stage.lastMousePosition.x = mouseX;
+        stage.lastMousePosition.y = mouseY;
       };
 
       document.onmouseup = function() {
-        debug('Up');
         document.onmousemove = null;
         stage.isPanning = false;
         stage.dragOver = true;
       };
 
       document.onmouseover = function() {
-        debug('Over');
         if (stage.dragOver === false) stage.isPanning = true;
       };
 
@@ -1302,10 +1300,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       };
 
       // Text will not be selected when it is being dragged
-      element.onselectstart = function(){return false; };
-
+      element.onselectstart = function() {
+        return false;
+      };
     };
-
   }
 
   /**
@@ -1316,10 +1314,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
-
     if (this.disableMouseInteraction > 0) {
       return;
     }
+
     this.isPanning = true;
     this.distance = 0;
 
