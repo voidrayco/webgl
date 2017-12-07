@@ -560,7 +560,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * This is a hook for subclasses to be able to apply buffer changes that rely
    * on images rendered into the atlas after the system has prepped the images for render.
    */
-  applyImageBufferChanged(props: T) {
+  applyImageBufferChanges(props: T) {
     // Note: For subclasses
   }
 
