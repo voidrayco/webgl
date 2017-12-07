@@ -19,22 +19,22 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
     this.bufferItems = BufferUtil.makeBufferItems();
 
     this.bufferItems.attributes = [
-    {
+      {
         defaults: [0, 0, 0],
         name: 'position',
         size: AttributeSize.THREE,
-    },
-    {
+      },
+      {
         defaults: [0.0, 0.0, 0.0, 0.0],
         name: 'uvCoordinate',
         size: AttributeSize.FOUR,
-    },
-    {
+      },
+      {
         defaults: [1.0, 1.0],
         name: 'size',
         size: AttributeSize.TWO,
-    },
-    {
+      },
+      {
         defaults: [0],
         name: 'tint',
         size: AttributeSize.ONE,
@@ -107,7 +107,7 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         tints: Float32Array, cpos: number,
         textureWidths: Float32Array, wpos: number,
         textureHeights: Float32Array, hpos: number,
-    ) {
+      ) {
         icon = buffer[i];
 
         // These are point sprites, so just update a single vertex
