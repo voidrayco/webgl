@@ -14,14 +14,14 @@ export class CurvedEdgesSurface extends WebGLSurface<ICurvedEdgesSurface, any> {
   // Apply properties
   applyColorBufferChanges(props: ICurvedEdgesSurface) {
     this.buffer.update([ new CurvedEdgeShape({
-      type: CurveType.CircularCCW,
-      startColor: new ReferenceColor(props.colors[0]),
-      endColor: new ReferenceColor(props.colors[0]),
-      start: {x: 0, y: 0},
-      end: {x: 0, y: -150},
       controlPoints: [{x: 100, y: -75}],
+      end: {x: 0, y: -150},
+      endColor: new ReferenceColor(props.colors[0]),
       endWidth: 5,
+      start: {x: 0, y: 0},
+      startColor: new ReferenceColor(props.colors[0]),
       startWidth: 5,
+      type: CurveType.CircularCCW,
     } ) ],
       this.atlasManager, 1);
   }

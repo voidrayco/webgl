@@ -75,7 +75,7 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
     }
 
     if (atlasManager) {
-      const colorRef: ReferenceColor = buffer[0].tint;      
+      const colorRef: ReferenceColor = buffer[0].tint;
       const colorBase = colorRef.base;
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       const uniforms: { [k: string]: IUniform } = material.uniforms;
@@ -103,7 +103,7 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         i: number,
         positions: Float32Array, ppos: number,
         uvcoordinates: Float32Array, uvpos: number,
-        sizes: Float32Array, spos: number, 
+        sizes: Float32Array, spos: number,
         tints: Float32Array, cpos: number,
         textureWidths: Float32Array, wpos: number,
         textureHeights: Float32Array, hpos: number,

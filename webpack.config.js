@@ -1,4 +1,4 @@
-const { resolve } = require('path');
+const {resolve} = require('path');
 const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpack = require('webpack');
@@ -64,6 +64,7 @@ module.exports = {
       {test: /\.tsx?/, use: {loader: 'ts-loader', options: {transpileOnly: IS_DEVELOPMENT}}},
       {test: /\.less$/, use: ['style-loader', 'css-loader', 'less-loader']},
       {test: /index.html$/, use: {loader: 'file-loader', options: {name: 'index.html'}}},
+      {test: /\.png$/, use: {loader: 'file-loader'}},
       {test: /\.[fv]s$/, use: ['raw-loader']}, // Currently used to load shaders into javascript files
     ],
   },
