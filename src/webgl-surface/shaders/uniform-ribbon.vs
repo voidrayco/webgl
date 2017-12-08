@@ -46,8 +46,8 @@ void main() {
   vec2 start1 = block1.xy;
   vec2 start2 = block1.zw;
 
-  vec2 end1 = block2.zw;
-  vec2 end2 = block2.xy;
+  vec2 end1 = block2.xy;
+  vec2 end2 = block2.zw;
 
   vec2 c1 = block3.xy;
   vec2 c2 = block3.zw;
@@ -86,6 +86,8 @@ void main() {
     // rotation angle of line(middle, center)
     float radian = acos((mid1.x - c1.x) / d1);
 
+    if ((mid1.y - c1.y) < 0.0) radian = - radian;
+
     if (normalDirection == 1.0) {
       currentPosition = c1 + r1 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
     }
@@ -122,6 +124,8 @@ void main() {
     float cosRadian = acos((d2 + l2 * realTime) / r2);
 
     float radian = acos((mid2.x - c2.x) / d2);
+
+    if ((mid2.y - c2.y) < 0.0) radian = - radian;
 
     if (normalDirection == 1.0) {
       currentPosition = c2 + r2 * vec2(cos(radian + cosRadian), sin(radian + cosRadian));

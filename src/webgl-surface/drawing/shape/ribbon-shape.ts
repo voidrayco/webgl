@@ -1,5 +1,6 @@
 import { ICurvedLineOptions } from '../../primitives/curved-line';
 import { IPoint } from '../../primitives/point';
+import { bezier2 } from '../../util/interpolation';
 import { ReferenceColor } from '../reference/reference-color';
 import { CurvedLineShape } from '../shape/curved-line-shape';
 
@@ -43,22 +44,11 @@ export class RibbonShape<T> extends CurvedLineShape<T> {
 
     this.cachesQuadSegments = options.cachedQuadSegments || true;
     this.depth = options.depth || 0;
-
-   // This.startColor = options.startColor;
-   // This.endColor = options.endColor;
-
-   // This.start = options.start;
     this.start2 = options.start2;
-   // This.end = options.end;
     this.end2 = options.end2;
-
+    this.encapsulatePoints(this.getRibbonStrip());
     this.center1 = options.center1;
     this.center2 = options.center2;
-
-   // This.controlPoints = options.controlPoints;
-
-  //  This.resolution = options.resolution;
-
   }
 
   clone() {
@@ -80,6 +70,44 @@ export class RibbonShape<T> extends CurvedLineShape<T> {
     clone.d = this.d;
 
     return clone;
+  }
+
+  distanceTo(point: IPoint): number {
+    if (this.pointInside(point)) return 0;
+    return super.distanceTo(point);
+  }
+
+  pointInside(point: IPoint): boolean {
+    const points = this.getRibbonStrip();
+    const nvert: number = points.length;
+    let i: number;
+    let j: number;
+    let c: boolean = false;
+    const testx = point.x;
+    const testy = point.y;
+
+    for (i = 0, j = nvert - 1; i < nvert; j = i++) {
+      if (((points[i].y > testy) !== (points[j].y > testy)) &&
+         (testx < (points[j].x - points[i].x) * (testy - points[i].y) /
+         (points[j].y - points[i].y) + points[i].x)) {
+        c = !c;
+      }
+    }
+
+    return c;
+  }
+
+  getRibbonStrip(): IPoint[]{
+    const strip: IPoint[] = [];
+    const dt = 1 / this.resolution;
+    const c1 = this.controlPoints[0];
+    for (let i = 0 ; i <= this.resolution; i++ ) {
+      strip.push(bezier2(dt * i, this.start, this.end, c1));
+    }
+    for (let i = this.resolution; i >= 0; i--){
+      strip.push(bezier2(dt * i, this.start2, this.end2, c1));
+    }
+    return strip;
   }
 
 }
