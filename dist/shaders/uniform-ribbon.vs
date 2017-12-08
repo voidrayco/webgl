@@ -46,8 +46,8 @@ void main() {
   vec2 start1 = block1.xy;
   vec2 start2 = block1.zw;
 
-  vec2 end1 = block2.xy;
-  vec2 end2 = block2.zw;
+  vec2 end1 = block2.zw;
+  vec2 end2 = block2.xy;
 
   vec2 c1 = block3.xy;
   vec2 c2 = block3.zw;
@@ -62,13 +62,13 @@ void main() {
 
 
   vec2 currentPosition;
-
+  
   vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexIndex / resolution);
 
   if (vertexIndex < threshold.x ) {
     float realTime = vertexIndex / threshold.x;
 
-    // radius of hemiSphere where endpoints are in
+    // radius of hemiSphere where endpoints are in 
     float r1 = distance(c1, start1);
 
     // mid of two end points
@@ -76,7 +76,7 @@ void main() {
 
     // distance from center to getMiddle;
     float d1 = distance(mid1, c1);
-
+  
     // radius - distance
     float l1 = r1 - d1;
 
@@ -85,8 +85,6 @@ void main() {
 
     // rotation angle of line(middle, center)
     float radian = acos((mid1.x - c1.x) / d1);
-
-    if ((mid1.y - c1.y) < 0.0) radian = - radian;
 
     if (normalDirection == 1.0) {
       currentPosition = c1 + r1 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
@@ -99,7 +97,7 @@ void main() {
 
   else if (vertexIndex >= threshold.x  && vertexIndex <= resolution - threshold.y ) {
     float realTime = (vertexIndex - threshold.x) / (resolution - threshold.x - threshold.y);
-
+    
     if (normalDirection == 1.0) {
       currentPosition = makeBezier2(realTime, start1, end1, controlPoint);
     }
@@ -107,22 +105,7 @@ void main() {
     else if (normalDirection == -1.0) {
       currentPosition = makeBezier2(realTime, start2, end2, controlPoint);
     }
-
-    float minMidFade = 0.76;
-    float stop1 = 0.17;
-    float stop2 = 0.83;
-
-    if (realTime > stop2) {
-      vertexColor *= mix(minMidFade, 1.0, (realTime - stop2) / stop1);
-    }
-
-    else if (realTime < stop1) {
-      vertexColor *= mix(minMidFade, 1.0, (stop1 - realTime) / stop1);
-    }
-
-    else {
-      vertexColor *= minMidFade;
-    }
+    
   }
 
   else if (vertexIndex > resolution - threshold.y ) {
@@ -140,12 +123,10 @@ void main() {
 
     float radian = acos((mid2.x - c2.x) / d2);
 
-    if ((mid2.y - c2.y) < 0.0) radian = - radian;
-
     if (normalDirection == 1.0) {
       currentPosition = c2 + r2 * vec2(cos(radian + cosRadian), sin(radian + cosRadian));
     }
-
+    
     else if (normalDirection == -1.0) {
       currentPosition = c2 + r2 * vec2(cos(radian - cosRadian), sin(radian - cosRadian));
     }
