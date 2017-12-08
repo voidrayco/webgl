@@ -1,17 +1,31 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Color } from 'three';
-import { AtlasColor, AtlasTexture, Bounds, WebGLSurface } from '../src';
+import { AtlasColor, Bounds, Label, ReferenceColor } from '../src';
 import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
-import { PointIconSurface } from './gl-surfaces/point-icon-surface';
-import { SimpleCircleSurface } from './gl-surfaces/simple-circle-surface';
+import { LabelSurface } from './gl-surfaces/label-surface';
+
 const colors = [
   new AtlasColor(new Color(1.0, 0.0, 0.0), 1.0),
   new AtlasColor(new Color(1.0, 0.0, 1.0), 1.0),
+  new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0),
 ];
-const textureUrl = require('./textures/uvTest.png');
-const textures = [
-  new AtlasTexture(textureUrl),
+
+const labels = [
+  new Label({
+    color: new ReferenceColor(colors[2]),
+    font: 'Lucida Sans Unicode',
+    fontSize: 14,
+    fontWeight: 400,
+    text: 'the quick brown fox jumped over the lazy dog.',
+  }),
+  new Label({
+    color: new ReferenceColor(colors[2]),
+    font: 'Lucida Sans Unicode',
+    fontSize: 14,
+    fontWeight: 400,
+    text: 'THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG.',
+  }),
 ];
 
 /**
@@ -26,6 +40,8 @@ export interface IMainState {
  * Entry class for the Application
  */
 export class Main extends React.Component<any, IMainState> {
+  selectDropdown: HTMLSelectElement;
+
   // Set default state values
   state: IMainState = {
     currentTab: 0,
@@ -44,8 +60,7 @@ export class Main extends React.Component<any, IMainState> {
    * @param {number} tab
    */
   handleClickTab = (tab: number) => () => {
-    const selectElement = document.getElementById('getChosenTestValueSelect');
-    tab = parseInt(selectElement.selectedOptions[0].value);
+    tab = parseInt(this.selectDropdown.selectedOptions[0].value);
     this.setState({currentTab: tab});
   }
 
@@ -56,40 +71,25 @@ export class Main extends React.Component<any, IMainState> {
   render() {
     let component;
 
-    if (this.state.currentTab === 1) {
+    if (this.state.currentTab === 0) {
       component = (
-        <SimpleCircleSurface
-          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
+        <LabelSurface
+          backgroundColor={{r: 0.7, g: 0.7, b: 0.7, opacity: 1.0}}
           colors={colors}
           height={600}
           onZoomRequest={(zoom: number) => zoom}
           width={800}
           zoom={1.0}
           viewport={new Bounds(-200, 200, 200, -200)}
+          labels={labels}
         />
       );
     }
 
-    else if (this.state.currentTab === 2) {
+    else if (this.state.currentTab === 1) {
       component = (
         <CurvedEdgesSurface
-          backgroundColor={{r: 0.9, g: 0.9, b: 0.9, opacity: 1.0}}
-          colors={colors}
-          height={600}
-          onZoomRequest={(zoom: number) => zoom}
-          width={800}
-          zoom={1.0}
-          viewport={new Bounds(-200, 200, 200, -200)}
-        />
-      );
-
-    }
-
-    else if (this.state.currentTab === 0) {
-      component = (
-        <PointIconSurface
-          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
-          textures={textures}
+          backgroundColor={{r: 0.7, g: 0.7, b: 0.7, opacity: 1.0}}
           colors={colors}
           height={600}
           onZoomRequest={(zoom: number) => zoom}
@@ -106,9 +106,10 @@ export class Main extends React.Component<any, IMainState> {
           {component}
         </div>
         <div style={{marginTop: 4, padding: 4}}>
-         Select surface test: <select id = "getChosenTestValueSelect" onClick={this.handleClickTab(0)}>
-            <option value="0">CurvedEdgeSurface</option>
-            <option value="1">Point Circle</option>
+          Select surface test:
+          <select ref={n => this.selectDropdown = n} onClick={this.handleClickTab(0)}>
+            <option value="0">LabelSurface</option>
+            <option value="1">CurvedEdgeSurface</option>
           </select>
       </div>
     </div >

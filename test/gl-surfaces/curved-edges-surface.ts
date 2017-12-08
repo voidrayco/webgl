@@ -1,7 +1,7 @@
 const vshader = require('../../src/webgl-surface/shaders/atlas-colors/uniform-instance-edge.vs');
 const fshader = require('../../src/webgl-surface/shaders/simple-line.fs');
 import { ShaderMaterial, Vector2, Vector4 } from 'three';
-import { BufferUtil, CurvedEdgeShape, CurveType, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
+import { CurvedEdgeShape, CurveType, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
  // Comment import { BufferUtil, CurvedEdgeShape, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceArcBuffer, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
 
 export interface ICurvedEdgesSurface extends IWebGLSurfaceProperties {
