@@ -5,6 +5,7 @@ import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { Label } from '../../drawing/shape/label';
 import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
+import { AtlasTexture } from '../../drawing/texture/atlas-texture';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
@@ -69,7 +70,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
    * @param shapeBuffer
    */
   update(shapeBuffer: Label<any>[] | Label<any>[][], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean {
-    if (!shapeBuffer || shapeBuffer.length <= 0) {
+  if (!shapeBuffer || shapeBuffer.length <= 0) {
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
@@ -87,7 +88,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
     // Make some constants and props for our buffer update loop
     const numVerticesPerQuad = 6;
     let label;
-    let texture;
+    let texture: AtlasTexture;
     let color: AtlasColor;
     let alpha: number;
     let anchor;
@@ -97,21 +98,34 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
       const colorRef: ReferenceColor = buffer[0].color;
       const colorBase = colorRef.base;
 
-      let material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      let uniforms: { [k: string]: IUniform } = material.uniforms;
-      const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
+      const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
+      const uniforms: { [k: string]: IUniform } = material.uniforms;
+      const atlasColor = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
 
-      if (uniforms.colorAtlas.value !== atlas) {
-        uniforms.colorAtlas.value = atlas;
+      if (uniforms.colorAtlas.value !== atlasColor) {
+        uniforms.colorAtlas.value = atlasColor;
         uniforms.colorsPerRow.value = colorBase.colorsPerRow;
         uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
         uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-        atlas.needsUpdate = true;
+        atlasColor.needsUpdate = true;
       }
 
+      const atlasTexture = atlasManager.atlasTexture.labels;
+
+      if (uniforms.atlasTexture.value !== atlasTexture) {
+        uniforms.atlasTexture.value = atlasTexture;
+        atlasTexture.needsUpdate = true;
+      }
+/*
+      if (labelMaxSize) {
+        const material = this.bufferItems.system.material as ShaderMaterial;
+        const uniforms = material.uniforms;
+        uniforms.maxLabelSize.value = labelMaxSize || 0;
+      }
+*/
       if (startFade || endFade || labelMaxSize) {
-        material = this.bufferItems.system.material as ShaderMaterial;
-        uniforms = material.uniforms;
+        const material = this.bufferItems.system.material as ShaderMaterial;
+        const uniforms = material.uniforms;
         uniforms.startFade.value = startFade || 0;
         uniforms.endFade.value = endFade || 0;
         uniforms.maxLabelSize.value = labelMaxSize || 0;
@@ -135,7 +149,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
         anchor = {
                   x: label.getLocation().x + label.getSize().width * Math.cos(label.getRotation()),
                   y: label.getLocation().y + label.getSize().width * Math.sin(label.getRotation()),
-                 };
+                };
         labelSize = label.getSize();
         // Make sure the label is updated with it's latest metrics
         label.update();

@@ -1,8 +1,9 @@
+import { ShaderMaterial, Vector2, Vector4 } from 'three';
+import { AnimatedMethod, AnimatedMethodLookup, CurvedEdgeShape, CurveType, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
+ // Comment import { BufferUtil, CurvedEdgeShape, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceArcBuffer, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
+
 const vshader = require('../../src/webgl-surface/shaders/atlas-colors/uniform-instance-edge.vs');
 const fshader = require('../../src/webgl-surface/shaders/simple-line.fs');
-import { ShaderMaterial, Vector2, Vector4 } from 'three';
-import { CurvedEdgeShape, CurveType, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
- // Comment import { BufferUtil, CurvedEdgeShape, IWebGLSurfaceProperties, ReferenceColor, UniformInstanceArcBuffer, UniformInstanceEdgeBuffer, WebGLStat, WebGLSurface } from '../../src/index';
 
 export interface ICurvedEdgesSurface extends IWebGLSurfaceProperties {
 
@@ -25,6 +26,14 @@ export class CurvedEdgesSurface extends WebGLSurface<ICurvedEdgesSurface, any> {
     } ) ],
       this.atlasManager, 1);
   }
+  animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: AnimatedMethod[]): AnimatedMethod[] {
+    orderedBaseAnimatedMethods.push(() =>
+      ({
+        doDraw: false,
+      }));
+
+    return orderedBaseAnimatedMethods;
+}
 
   // Set up materials
   initBuffers() {

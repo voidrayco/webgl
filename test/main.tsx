@@ -17,6 +17,14 @@ const labels = [
     font: 'Lucida Sans Unicode',
     fontSize: 14,
     fontWeight: 400,
+    rasterizationOffset: {
+      x: 0,
+      y: 10,
+    },
+    rasterizationPadding: {
+      height: 2,
+      width: 4,
+    },
     text: 'the quick brown fox jumped over the lazy dog.',
   }),
   new Label({
@@ -24,6 +32,14 @@ const labels = [
     font: 'Lucida Sans Unicode',
     fontSize: 14,
     fontWeight: 400,
+    rasterizationOffset: {
+      x: 0,
+      y: 10,
+    },
+    rasterizationPadding: {
+      height: 2,
+      width: 4,
+    },
     text: 'THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG.',
   }),
 ];
@@ -47,7 +63,6 @@ export class Main extends React.Component<any, IMainState> {
     currentTab: 0,
     zoom: 1,
   };
-
   handleZoomRequest = (zoom: number) => {
     this.setState({
       zoom,
@@ -74,13 +89,13 @@ export class Main extends React.Component<any, IMainState> {
     if (this.state.currentTab === 0) {
       component = (
         <LabelSurface
-          backgroundColor={{r: 0.7, g: 0.7, b: 0.7, opacity: 1.0}}
+          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
           colors={colors}
           height={600}
           onZoomRequest={(zoom: number) => zoom}
           width={800}
           zoom={1.0}
-          viewport={new Bounds(-200, 200, 200, -200)}
+          viewport={new Bounds(-400, 400, 400, -400)}
           labels={labels}
         />
       );
