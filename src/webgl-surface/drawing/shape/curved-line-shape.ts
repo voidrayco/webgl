@@ -1,9 +1,7 @@
-import { CurvedLine, ICurvedLineOptions } from '../../primitives/curved-line';
+import { CurvedLine, CurveType, ICurvedLineOptions } from '../../primitives/curved-line';
 import { Line } from '../../primitives/line';
 import { IPoint, Point } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
-
-const debug = require('debug')('webgl:curved-line-shape');
 
 export interface IMarchingAnts {
   /**
@@ -25,6 +23,29 @@ export interface IMarchingAnts {
    * 0 - 1 (see strokeLength)
    */
   gapLength: number;
+}
+
+/**
+ * This gets the radian of line from center to point
+ *
+ * @param point
+ * @param center
+ */
+function getAngle(point: IPoint, center: IPoint): number {
+  const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
+
+  if ( point.y > center.y) {
+    return Math.acos((point.x - center.x) / distance);
+  }
+
+  else if ( point.y === center.y) {
+    if (point.x > center.x) return 0;
+    else return Math.PI;
+  }
+
+  else {
+    return -Math.acos((point.x - center.x) / distance);
+  }
 }
 
 export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
@@ -95,9 +116,6 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     this.depth = options.depth || 0;
     this.lineWidth = options.lineWidth || 1;
     this.encapsulatePoints(this.getTriangleStrip());
-    debug('triangle %o', this.getTriangleStrip());
-    debug('this %o', this);
-
     this.startColor = options.startColor;
     this.endColor = options.endColor;
     this.marchingAnts = options.marchingAnts;
@@ -232,5 +250,46 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
   setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]) {
     super.setPoints(start, end, controlPoints);
     this.cachedQuadSegments = [];
+  }
+
+  containsPoint(point: IPoint) {
+      if (this.type === CurveType.CircularCW || this.type === CurveType.CircularCCW) {
+
+        // Center
+        const center = this.controlPoints[0];
+
+        // Radius
+        const radius = Math.sqrt(Math.pow(this.start.x - center.x, 2) + Math.pow(this.start.y - center.y, 2));
+
+        // Distance from mouse to center
+        const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
+
+        // Angle
+        let angle = getAngle(point, center);
+        const startAngle = getAngle(this.start, center);
+        let endAngle = getAngle(this.end, center);
+
+        if ( startAngle > 0 && endAngle < 0) {
+          if (angle < 0) angle += 2 * Math.PI;
+          endAngle += 2 * Math.PI;
+        }
+
+        // Make sure point is in the endpoint
+        if (
+          distance <= radius + this.lineWidth / 2
+          && distance >= radius - this.lineWidth / 2
+          && angle >= startAngle
+          && angle <= endAngle
+        ) {
+          return true;
+        }
+        return false;
+      }
+
+      else if (this.type === CurveType.Bezier) {
+        return super.containsPoint(point);
+      }
+
+      return false;
   }
 }
