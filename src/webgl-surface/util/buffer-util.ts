@@ -819,7 +819,6 @@ export class BufferUtil {
     const uniformBufferBlockMax = WebGLStat.MAX_VERTEX_INSTANCE_DATA;
     const sizeCheck: {[key: number]: number} = {};
 
-    debug('uniforms %o', uniforms);
     uniforms.forEach(uniform => {
       maxBlock = Math.max(uniform.block, maxBlock);
       const check = sizeCheck[uniform.block] = (sizeCheck[uniform.block] || 0) + (uniform.size + 1);
@@ -990,7 +989,6 @@ export class BufferUtil {
           // Loop through the attributes in the order they appear and gather the block they will
           // Update
           for (const attribute of attributes) {
-            debug('attribue %o blockPerInstance %o', attribute, blocksPerInstance);
             updateArguments.push(buffer[attribute.block + currentInstanceStartBlock]);
           }
 
