@@ -27,7 +27,6 @@ vec4 getBlock(int index) {
   return instanceData[(instanceSize * int(position.z)) + index];
 }
 
-
 vec2 getMiddle(vec2 p1, vec2 p2) {
   return vec2((p1.x + p2.x) / 2.0, (p1.y + p2.y) / 2.0);
 }
@@ -39,30 +38,32 @@ void main() {
   vec4 block3 = getBlock(3);
   vec4 block4 = getBlock(4);
 
+  // Get the control points for two lines
   vec2 controlPoint = block0.xy;
+
+  // Starting and ending color
   float startColor = block0.z;
   float endColor = block0.w;
 
+  // Starting points
   vec2 start1 = block1.xy;
   vec2 start2 = block1.zw;
 
+  // Ending points
   vec2 end1 = block2.zw;
   vec2 end2 = block2.xy;
 
+  // Centers
   vec2 c1 = block3.xy;
   vec2 c2 = block3.zw;
 
   float depth = block4.x;
   float resolution = block4.y;
   vec2 threshold = block4.zw;
-
   float normalDirection = position.x;
   float vertexIndex = position.y;
   float instance = position.z;
-
-
   vec2 currentPosition;
-  
   vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexIndex / resolution);
 
   if (vertexIndex < threshold.x ) {
@@ -110,17 +111,11 @@ void main() {
 
   else if (vertexIndex > resolution - threshold.y ) {
     float realTime = (vertexIndex - resolution + threshold.y) / threshold.y;
-
     float r2 = distance(c2, end1);
-
     vec2 mid2 = getMiddle(end1, end2);
-
     float d2 = distance(mid2, c2);
-
     float l2 = r2 - d2;
-
     float cosRadian = acos((d2 + l2 * realTime) / r2);
-
     float radian = acos((mid2.x - c2.x) / d2);
 
     if (normalDirection == 1.0) {
