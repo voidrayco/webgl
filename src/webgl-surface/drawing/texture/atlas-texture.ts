@@ -10,7 +10,7 @@ export class AtlasTexture {
   // Stores the string label this image has rendered rather than the path
   label: Label<any>;
 
-  /** Stores the aspect ratio of the image for quick reference */
+  /** Stores the aspect ratio of the image for quick reference, which is (width / height) */
   aspectRatio: number = 1.0;
 
   // The pixel width and height of the image, since most of our operations with the GPU and other relevant numbers

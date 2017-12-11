@@ -1,15 +1,24 @@
 import { Bounds } from '../../primitives/bounds';
+import { ReferenceColor } from '../reference/reference-color';
 import { AtlasTexture } from '../texture/atlas-texture';
 
+export interface IIconShapeOptions {
+  texture: AtlasTexture,
+  size: number,
+}
+
 /**
- * Defines an image that can be rendered by the gpu. This is an axis oriented
- * image only (no rotations)
+ * Defines an icon that can be rendered by the gpu. This is an axis oriented
+ * image only (no rotations) and may make optimizations to only render as a
+ * point sprite.
  */
-export class ImageShape<T> extends Bounds<T> {
-  /** This is the image to be rendered */
-  texture: AtlasTexture;
+export class IconShape<T> extends Bounds<T> {
   /** This is the level of opacity the image will be rendered with */
   opacity: number = 1.0;
+  /** This is the image to be rendered */
+  texture: AtlasTexture;
+  /** This is a tint to be applied to the image */
+  tint: ReferenceColor;
 
   /**
    * Returns the largest edge of the image
@@ -41,10 +50,10 @@ export class ImageShape<T> extends Bounds<T> {
    * @param {number} size This is the size of the longest edge of the image while
    *                      retaining aspect ratio.
    */
-  constructor(image: AtlasTexture, size: number) {
-    super(0, 0, size, size);
-    this.texture = image;
-    this.size = size;
+  constructor(options: IIconShapeOptions) {
+    super(0, 1, 0, 1);
+    this.texture = options.texture;
+    this.size = options.size;
   }
 
   /**

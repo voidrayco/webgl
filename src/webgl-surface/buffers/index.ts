@@ -7,6 +7,7 @@ export * from './static/simple-bezier-line-buffer';
 export * from './static/simple-circle-buffer';
 export * from './static/simple-label-buffer';
 export * from './static/simple-line-buffer';
+export * from './static/simple-icon-buffer';
 export * from './static/simple-straight-line-buffer';
 export * from './static/uniform-instance-arc-buffer';
 export * from './static/uniform-instance-edge-buffer';
