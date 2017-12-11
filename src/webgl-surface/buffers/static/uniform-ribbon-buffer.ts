@@ -6,8 +6,7 @@ import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { AttributeSize, BufferUtil, UniformAttributeSize } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
-const debug = require('debug')('webgl:uniform-ribbon-buffer');
-
+// CONSTANT
 const MAX_SEGMENTS_PER_CURVE = 100;
 const VERTICES_PER_SEGMENT = 6;
 const VERTICES_PER_CURVE = VERTICES_PER_SEGMENT * MAX_SEGMENTS_PER_CURVE;
@@ -20,7 +19,6 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
 
   init(material: ShaderMaterial, unitCount: number, shared?: UniformRibbonBuffer) {
     this.bufferItems = BufferUtil.makeBufferItems();
-    debug('init ribbon~');
     // Declare the structure of the uniform data in the instanceData uniform
     this.bufferItems.uniformAttributes = [
       {
@@ -186,7 +184,6 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
     if (buffer.length > 0 && atlasManager) {
       const colorRef: ReferenceColor = buffer[0].startColor;
       const colorBase = colorRef.base;
-
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       const uniforms: { [k: string]: IUniform} = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
