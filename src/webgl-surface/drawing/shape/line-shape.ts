@@ -4,7 +4,7 @@ import { ReferenceColor } from '../reference/reference-color';
 
 export interface ILineShapeOptions {
   /** This sets whether or not the line should respect scaling on it's thickness */
-  allowScaling: boolean;
+  allowScaling?: boolean;
   /** Sorting order of the line */
   depth?: number;
   /** Color of the line at the end point */
