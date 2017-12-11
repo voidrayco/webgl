@@ -64,5 +64,5 @@ void main() {
   }
 
   vec4 mvPosition = modelViewMatrix * vec4(newPosition, position.z, 1.0);
-  gl_Position = projectionMatrix * mvPosition);
+  gl_Position = projectionMatrix * mvPosition;
 }

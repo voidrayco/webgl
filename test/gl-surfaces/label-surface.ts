@@ -1,8 +1,8 @@
 import { ShaderMaterial, Vector2 } from 'three';
 import { AnchorPosition, IWebGLSurfaceProperties, Label, ReferenceColor, SimpleStaticLabelBuffer, WebGLSurface } from '../../src/index';
 
-const vshader = require('../../src/webgl-surface/shaders/debug/test.vs');
-const fshader = require('../../src/webgl-surface/shaders/fading-label.fs');
+const vshader = require('../../src/webgl-surface/shaders/simple-label.vs');
+const fshader = require('../../src/webgl-surface/shaders/simple-label.fs');
 
 export interface ILabelSurface extends IWebGLSurfaceProperties {
 
