@@ -75,7 +75,6 @@ void main() {
     }
 
     vertexColor.a *= abs((position.x * 2.0) - 1.0);
-    vertexColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
   else if(position.x > threshold.y / position.y) {
     vec2 c2 = vec2(centers.z, centers.w);
