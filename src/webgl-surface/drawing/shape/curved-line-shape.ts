@@ -32,19 +32,25 @@ export interface IMarchingAnts {
  * @param center
  */
 function getAngle(point: IPoint, center: IPoint): number {
-  const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
 
-  if ( point.y > center.y) {
-    return Math.acos((point.x - center.x) / distance);
+  if ( point.x > center.x) {
+    return Math.atan((point.y - center.y) / (point.x - center.x));
   }
 
-  else if ( point.y === center.y) {
-    if (point.x > center.x) return 0;
-    else return Math.PI;
+  else if ( point.x === center.x) {
+    if (point.y > center.y) return Math.PI / 2;
+    else return - Math.PI / 2;
   }
 
   else {
-    return -Math.acos((point.x - center.x) / distance);
+
+    if (point.y >= center.y) {
+      return Math.PI + Math.atan((point.y - center.y) / (point.x - center.x));
+    }
+
+    else {
+      return Math.atan((point.y - center.y) / (point.x - center.x)) - Math.PI;
+    }
   }
 }
 
@@ -256,15 +262,21 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
       if (this.type === CurveType.CircularCW || this.type === CurveType.CircularCCW) {
 
         // Center
-        const center = this.controlPoints[0];
+        const center = this.controlPoints[1];
 
-        // Radius
-        const radius = Math.sqrt(Math.pow(this.start.x - center.x, 2) + Math.pow(this.start.y - center.y, 2));
+        // Radius' suare value
+        const radiusSquare = Math.pow(this.start.x - center.x, 2) + Math.pow(this.start.y - center.y, 2);
 
-        // Distance from mouse to center
-        const distance = Math.sqrt(Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2));
+        // It is used to calculate squared value of (radius + lineWidth / 2)
+        const radius = Math.sqrt(radiusSquare);
 
-        // Angle
+        // Distance'square value from mouse to center
+        const distanceSquare = Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2);
+
+        // Linewidth's square value
+        const lineWidthSquare = this.lineWidth * this.lineWidth;
+
+        // Angles
         let angle = getAngle(point, center);
         const startAngle = getAngle(this.start, center);
         let endAngle = getAngle(this.end, center);
@@ -276,13 +288,14 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
 
         // Make sure point is in the endpoint
         if (
-          distance <= radius + this.lineWidth / 2
-          && distance >= radius - this.lineWidth / 2
+          distanceSquare <= radiusSquare + this.lineWidth * radius + lineWidthSquare / 4
+          && distanceSquare >= radiusSquare - this.lineWidth * radius + lineWidthSquare / 4
           && angle >= startAngle
           && angle <= endAngle
         ) {
           return true;
         }
+
         return false;
       }
 
