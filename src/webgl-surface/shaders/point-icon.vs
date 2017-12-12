@@ -2,8 +2,6 @@
  * Vertex Shader for rendering textured sprites
  */
 
-precision mediump float;
-
 uniform sampler2D colorAtlas;
 uniform float colorsPerRow;
 uniform vec2 firstColor;
@@ -13,13 +11,9 @@ uniform float zoom;
 attribute vec2 size;
 attribute float tintPick;
 attribute vec4 uvCoordinate;
-attribute float width;
-attribute float height;
 
 varying vec4 tint;
 varying vec4 UV;
-varying float textureWidth;
-varying float textureHeight;
 
 vec4 pickColor(float index) {
   float row = floor(index / colorsPerRow);
@@ -28,13 +22,13 @@ vec4 pickColor(float index) {
 }
 
 void main(void) {
-  tint = pickColor(tintPick);
-  textureHeight = height;
-  textureWidth = width;
-  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
   UV = uvCoordinate;
+
+  tint = pickColor(tintPick);
+
   gl_PointSize = size.x * zoom;
-  gl_Position = projectionMatrix * mvPosition;
+  vec2 newPosition = position.xy;
+
+  vec4 mvPosition = modelViewMatrix * vec4(newPosition, position.z, 1.0);
+  gl_Position = (projectionMatrix * mvPosition);
 }
-
-

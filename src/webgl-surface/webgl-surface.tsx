@@ -818,6 +818,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.applyColorBufferChanges(props);
         }
 
+        if (this.colorsReady && this.imagesReady) {
+          this.applyImageBufferChanges(props);
+        }
+
         return {};
       },
 

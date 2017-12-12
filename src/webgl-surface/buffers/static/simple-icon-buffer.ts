@@ -77,19 +77,26 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
     if (atlasManager) {
       const colorRef: ReferenceColor = buffer[0].tint;
       const colorBase = colorRef.base;
+
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
       const uniforms: { [k: string]: IUniform } = material.uniforms;
-      const atlas = atlasManager.getAtlasTexture(buffer[0].texture.atlasReferenceID);
-      uniforms.colorAtlas.value = atlas;
-      uniforms.colorsPerRow.value = colorBase.colorsPerRow;
-      uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
-      uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-      atlas.needsUpdate = true;
+      const atlasColor = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
 
-      /* NOTE: not sure about here - need to check on it - commented for now
-      uniforms.imageAtlas.value = atlas;
-      uniforms.texture.value = atlas;
-*/
+      if (uniforms.colorAtlas.value !== atlasColor) {
+        uniforms.colorAtlas.value = atlasColor;
+        uniforms.colorsPerRow.value = colorBase.colorsPerRow;
+        uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
+        uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
+        atlasColor.needsUpdate = true;
+      }
+
+      const atlasTexture = atlasManager.atlasTexture.images;
+
+      if (uniforms.atlasTexture.value !== atlasTexture) {
+        uniforms.atlasTexture.value = atlasTexture;
+        atlasTexture.needsUpdate = true;
+      }
+
       if (camera) {
         uniforms.zoom.value = camera.zoom;
       }
@@ -105,22 +112,19 @@ export class SimpleStaticIconBuffer extends BaseBuffer<IconShape<any> | IconShap
         uvcoordinates: Float32Array, uvpos: number,
         sizes: Float32Array, spos: number,
         tints: Float32Array, cpos: number,
-        textureWidths: Float32Array, wpos: number,
-        textureHeights: Float32Array, hpos: number,
       ) {
         icon = buffer[i];
 
         // These are point sprites, so just update a single vertex
         positions[ppos] = icon.x;
         positions[++ppos] = icon.y;
-        uvcoordinates[uvpos] = icon.texture.atlasTL.x;
-        uvcoordinates[++uvpos] = icon.texture.atlasTL.y;
-        uvcoordinates[++uvpos] = icon.texture.atlasBR.x;
-        uvcoordinates[++uvpos] = icon.texture.atlasBR.y;
+        positions[++ppos] = 0;
+        uvcoordinates[uvpos] = icon.atlasTexture.atlasTL.x;
+        uvcoordinates[++uvpos] = icon.atlasTexture.atlasTL.y;
+        uvcoordinates[++uvpos] = icon.atlasTexture.atlasBR.x;
+        uvcoordinates[++uvpos] = icon.atlasTexture.atlasBR.y;
         sizes[spos] = icon.size;
         tints[cpos] = icon.tint.base.colorIndex || 0;
-        textureWidths[wpos] = icon.width;
-        textureHeights[hpos] = icon.height;
       },
     );
 

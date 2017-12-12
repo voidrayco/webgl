@@ -3,18 +3,16 @@
  */
 
 precision mediump float;
-uniform sampler2D texture;
+uniform sampler2D atlasTexture;
 varying vec4 tint;
 varying vec4 UV;
-varying float textureWidth;
-varying float textureHeight;
 
 void main(void) {
 
   float additiveModX = UV.r;
-  float additiveModY = UV.g;
+  float additiveModY = UV.a;
   float uvWidth = UV.b - UV.r;
-  float uvHeight = UV.a - UV.g;
+  float uvHeight = UV.g - UV.a;
   float aspectRatio = uvWidth / uvHeight;
   float multiplicativeMod;
 
@@ -40,7 +38,7 @@ void main(void) {
 		else if(aspectRatio < 1.0) {
 			multiplicativeMod = uvHeight;
 		}
-		vec2 uv = vec2(additiveModX + (gl_PointCoord.x * multiplicativeMod), additiveModY + (gl_PointCoord.y * multiplicativeMod));
-    gl_FragColor = texture2D(texture, uv) + tint.rgba;
+		vec2 uv = vec2(additiveModX + (gl_PointCoord.x * multiplicativeMod), additiveModY + ((1.0 - gl_PointCoord.y) * multiplicativeMod));
+    gl_FragColor = texture2D(atlasTexture, uv) + tint.rgba;
 	}
 }

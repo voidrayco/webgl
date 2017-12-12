@@ -1,11 +1,18 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Color } from 'three';
-import { AtlasColor, Bounds, Label, ReferenceColor } from '../src';
+import { AtlasColor, AtlasTexture, Bounds, Label, ReferenceColor } from '../src';
 import { CurvedEdgesSurface } from './gl-surfaces/curved-edges-surface';
 import { LabelSurface } from './gl-surfaces/label-surface';
+import { PointIconSurface } from './gl-surfaces/point-icon-surface';
 
+const textures = [
+  new AtlasTexture('./test/textures/testTextureSquare.png'),
+  new AtlasTexture('./test/textures/testTextureLong.png'),
+  new AtlasTexture('./test/textures/testTextureTall.png'),
+];
 const colors = [
+  new AtlasColor(new Color(0.0, 0.0, 0.0), 0.0),
   new AtlasColor(new Color(1.0, 0.0, 0.0), 1.0),
   new AtlasColor(new Color(1.0, 0.0, 1.0), 1.0),
   new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0),
@@ -88,6 +95,21 @@ export class Main extends React.Component<any, IMainState> {
 
     if (this.state.currentTab === 0) {
       component = (
+        <PointIconSurface
+          backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
+          colors={colors}
+          height={600}
+          onZoomRequest={(zoom: number) => zoom}
+          width={800}
+          images={textures}
+          viewport={new Bounds(-400, 400, 400, -400)}
+          zoom={1.0}
+        />
+      );
+    }
+
+    if (this.state.currentTab === 1) {
+      component = (
         <LabelSurface
           backgroundColor={{r: 0.5, g: 0.5, b: 0.5, opacity: 1.0}}
           colors={colors}
@@ -101,7 +123,7 @@ export class Main extends React.Component<any, IMainState> {
       );
     }
 
-    else if (this.state.currentTab === 1) {
+    else if (this.state.currentTab === 2) {
       component = (
         <CurvedEdgesSurface
           backgroundColor={{r: 0.7, g: 0.7, b: 0.7, opacity: 1.0}}
@@ -123,8 +145,9 @@ export class Main extends React.Component<any, IMainState> {
         <div style={{marginTop: 4, padding: 4}}>
           Select surface test:
           <select ref={n => this.selectDropdown = n} onClick={this.handleClickTab(0)}>
-            <option value="0">LabelSurface</option>
-            <option value="1">CurvedEdgeSurface</option>
+            <option value="0">PointIconSurface</option>
+            <option value="1">LabelSurface</option>
+            <option value="2">CurvedEdgeSurface</option>
           </select>
       </div>
     </div >

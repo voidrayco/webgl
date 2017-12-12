@@ -2,7 +2,7 @@ import { Bounds } from '../../primitives/bounds';
 import { ReferenceColor } from '../reference/reference-color';
 import { AtlasTexture } from '../texture/atlas-texture';
 
-export interface IconShapeOptions {
+export interface IPointIconShapeOptions {
   atlasTexture: AtlasTexture,
   size: number,
   tint: ReferenceColor,
@@ -13,14 +13,13 @@ export interface IconShapeOptions {
  * image only (no rotations) and may make optimizations to only render as a
  * point sprite.
  */
-export class IconShape<T> extends Bounds<T> {
+export class PointIconShape<T> extends Bounds<T> {
   /** This is the level of opacity the image will be rendered with */
   opacity: number = 1.0;
   /** This is the image to be rendered */
   atlasTexture: AtlasTexture;
   /** This is a tint to be applied to the image */
   tint: ReferenceColor;
-  z: number;
 
   /**
    * Returns the largest edge of the image
@@ -34,9 +33,6 @@ export class IconShape<T> extends Bounds<T> {
    * correlates to the largest edge of the image
    */
   set size(val: number) {
-    this.width = val;
-    this.height = val;
-    /*
     if (this.atlasTexture.aspectRatio > 1) {
       this.width = val;
       this.height = val / this.atlasTexture.aspectRatio;
@@ -46,7 +42,6 @@ export class IconShape<T> extends Bounds<T> {
       this.width = val * this.atlasTexture.aspectRatio;
       this.height = val;
     }
-    */
   }
 
   /**
@@ -56,7 +51,7 @@ export class IconShape<T> extends Bounds<T> {
    * @param {number} size This is the size of the longest edge of the image while
    *                      retaining aspect ratio.
    */
-  constructor(options: IconShapeOptions) {
+  constructor(options: IPointIconShapeOptions) {
     super(0, 1, 0, 1);
     this.atlasTexture = options.atlasTexture;
     this.size = options.size;
@@ -68,11 +63,9 @@ export class IconShape<T> extends Bounds<T> {
    *
    * @param {number} x The x coordinate in world space
    * @param {number} y The y coordinate in world space
-   * @param {number} z The z or depth coordinate
    */
-  centerOn(x: number, y: number, z: number) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+  centerOn(x: number, y: number) {
+    this.x = x - (this.width / 2.0);
+    this.y = y - (this.height / 2.0);
   }
 }

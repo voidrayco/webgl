@@ -136,12 +136,12 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
       buffer, this.bufferItems,
       numVerticesPerQuad, buffer.length,
       function(i: number,
-               positions: Float32Array, ppos: number,
-               colors: Float32Array, cpos: number,
-               texCoords: Float32Array, tpos: number,
-               sizes: Float32Array, spos: number,
-               anchors: Float32Array, apos: number,
-              ) {
+        positions: Float32Array, ppos: number,
+        colors: Float32Array, cpos: number,
+        texCoords: Float32Array, tpos: number,
+        sizes: Float32Array, spos: number,
+        anchors: Float32Array, apos: number,
+      ) {
         label = buffer[i];
         texture = label.rasterizedLabel;
         color = label.color.base;
