@@ -1,4 +1,3 @@
-import { CurvedLineShape, CurveType } from 'index';
 import { Bounds } from '../primitives/bounds';
 import { IPoint } from '../primitives/point';
 
@@ -371,10 +370,8 @@ export class Node<T extends Bounds<any>> {
       return [];
     }
 
-    debug('this bounds %o', this.bounds);
    // Query a point
     if (this.bounds.containsPoint(bounds)) {
-      debug('contains %o', this.queryPoint(bounds, [], visit));
       return this.queryPoint(bounds, [], visit);
     }
 
