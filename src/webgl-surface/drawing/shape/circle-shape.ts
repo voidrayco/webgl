@@ -1,29 +1,32 @@
+import { Vector4 } from 'three';
 import { Circle, ICircleOptions } from '../../primitives/circle';
-import { ReferenceColor } from '../reference/reference-color';
 
 export interface ICircleShapeOptions extends ICircleOptions {
   /** Determines rendering order for the  */
   depth: number;
   /** Color of the circle for the area that is less than the innerRadius */
-  innerColor?: ReferenceColor;
+  color?: Vector4;
   /** Specifies an inner colored area of the circle */
+  innerColor?: Vector4;
+
   innerRadius?: number;
   /** Color of the circle for the area that is greater than the innerRadius */
-  outerColor?: ReferenceColor;
+  size: number;
 }
 
 /**
  * Defines a circular shape that can be drawn
  */
 export class CircleShape<T> extends Circle<T> {
+  /** Color of the circle for the area that is greater than the innerRadius */
+  color?: Vector4;
   /** The rendering depth of the circle */
   depth: number;
   /** Color of the circle for the area that is less than the innerRadius */
-  innerColor?: ReferenceColor;
+  innerColor?: Vector4;
   /** Specifies an inner colored area of the circle */
   innerRadius?: number;
-  /** Color of the circle for the area that is greater than the innerRadius */
-  outerColor?: ReferenceColor;
+  size: number;
 
   /**
    * Sets the properties of the shape to be drawn
@@ -34,9 +37,10 @@ export class CircleShape<T> extends Circle<T> {
     super(options);
 
     this.depth = options.depth || 0;
+    this.color = options.color;
     this.innerColor = options.innerColor;
     this.innerRadius = options.innerRadius;
-    this.outerColor = options.outerColor;
+    this.size = options.size;
   }
 
   /**

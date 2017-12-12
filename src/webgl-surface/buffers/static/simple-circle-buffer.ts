@@ -1,7 +1,7 @@
 import { flatten } from 'ramda';
 import { Mesh } from 'three';
 import { IUniform, OrthographicCamera, Points, ShaderMaterial } from 'three';
-import { AtlasManager, CircleShape, ReferenceColor } from '../../drawing/index';
+import { AtlasManager, CircleShape } from '../../drawing/index';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
@@ -25,22 +25,22 @@ export class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | Circ
       },
       {
         defaults: [0],
-        name: 'radius',
-        size: AttributeSize.ONE,
+        name: 'radii',
+        size: AttributeSize.TWO,
       },
       {
         defaults: [0],
-        name: 'innerRadius',
-        size: AttributeSize.ONE,
+        name: 'color',
+        size: AttributeSize.FOUR,
       },
       {
         defaults: [0],
-        name: 'colorPick',
-        size: AttributeSize.ONE,
+        name: 'innerColor',
+        size: AttributeSize.FOUR,
       },
       {
         defaults: [0],
-        name: 'innerColorPick',
+        name: 'size',
         size: AttributeSize.ONE,
       },
     ];
@@ -77,12 +77,11 @@ export class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | Circ
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
-
+/*
     if (atlasManager) {
       const colorRef: ReferenceColor = buffer[0].outerColor;
       const colorBase = colorRef.base;
       const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      const uniforms: { [k: string]: IUniform } = material.uniforms;
       const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
       uniforms.colorAtlas.value = atlas;
       uniforms.colorsPerRow.value = colorBase.colorsPerRow;
@@ -90,9 +89,12 @@ export class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | Circ
       uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
       atlas.needsUpdate = true;
 
-      if (camera) {
-        uniforms.zoom.value = camera.zoom;
-      }
+    }
+    */
+    const material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
+    const uniforms: { [k: string]: IUniform } = material.uniforms;
+    if (camera) {
+      uniforms.zoom.value = camera.zoom;
     }
 
     let needsUpdate = false;
@@ -102,10 +104,10 @@ export class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | Circ
       function(
         i: number,
         positions: Float32Array, ppos: number,
-        radius: Float32Array, rpos: number,
-        innerRadius: Float32Array, irpos: number,
+        radii: Float32Array, rpos: number,
         color: Float32Array, cpos: number,
         innerColor: Float32Array, icpos: number,
+        size: Float32Array, spos: number,
     ) {
         circle = buffer[i];
 
@@ -113,10 +115,17 @@ export class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | Circ
         positions[ppos] = circle._centerX;
         positions[++ppos] = circle._centerY;
         positions[++ppos] = circle.depth;
-        radius[rpos] = circle._radius;
-        innerRadius[irpos] = circle.innerRadius || 0.0;
-        color[cpos] = circle.outerColor.base.colorIndex;
-        innerColor[icpos] = circle.innerColor ? circle.innerColor.base.colorIndex : 0;
+        radii[rpos] = circle.radius;
+        radii[++rpos] = circle.innerRadius || 0.0;
+        size[spos] = circle.size || 10.0;
+        color[cpos] = circle.color.x;
+        color[++cpos] = circle.color.y;
+        color[++cpos] = circle.color.z;
+        color[++cpos] = circle.color.w;
+        innerColor[icpos] = circle.innerColor.x;
+        innerColor[++icpos] = circle.innerColor.y;
+        innerColor[++icpos] = circle.innerColor.z;
+        innerColor[++icpos] = circle.innerColor.w;
       },
     );
 
