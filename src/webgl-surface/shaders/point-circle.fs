@@ -27,7 +27,7 @@ void main() {
     if(vColor.a == 0.0) {
       discard;
     } else {
-      gl_FragColor = vColor;
+      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0) + vColor;
     }
   }
 }
