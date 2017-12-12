@@ -1,4 +1,4 @@
-import { NormalBlending, ShaderMaterial, Vector2, Vector4 } from 'three';
+import { CustomBlending, ShaderMaterial, SrcAlphaFactor, Vector2, Vector4 } from 'three';
 import { AnimatedMethod, AnimatedMethodLookup, IconShape, IWebGLSurfaceProperties, ReferenceColor, SimpleStaticIconBuffer, WebGLStat, WebGLSurface } from '../../src/index';
 
 const vshader = require('../../src/webgl-surface/shaders/point-icon.vs');
@@ -55,10 +55,12 @@ export class PointIconSurface extends WebGLSurface<IPointIconSurface, any> {
     // Start up initialization. Make materials
 
     const mat = new ShaderMaterial({
+      blending: CustomBlending,
+      depthTest: true,
       fragmentShader: fshader,
+      transparent: true,
       uniforms: {
         atlasTexture: { type: 't', value: this.atlasManager.getAtlasTexture(this.atlasNames.images)},
-        blending: {type: 'enum', value: NormalBlending},
         colorAtlas: { type: 't', value: this.atlasManager.getAtlasTexture(this.atlasNames.colors) },
         colorsPerRow: { type: 'f', value: 0 },
         firstColor: { type: 'v2', value: new Vector2(0, 0) },
@@ -68,7 +70,7 @@ export class PointIconSurface extends WebGLSurface<IPointIconSurface, any> {
       },
       vertexShader: vshader,
     });
-
+    mat.blendSrc = SrcAlphaFactor;
     this.buffer.init(mat, 10000);
     this.scene.add(this.buffer.bufferItems.system);
   }

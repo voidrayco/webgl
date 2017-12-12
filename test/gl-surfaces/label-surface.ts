@@ -30,6 +30,7 @@ export class LabelSurface extends WebGLSurface<ILabelSurface, any> {
 
       labels[1].setAnchor(AnchorPosition.TopLeft);
       labels[1].setLocation({x: -150, y: -150});
+      labels[1].color = new ReferenceColor(props.colors[2]);
       this.buffer.update(
         labels,
         this.atlasManager,
