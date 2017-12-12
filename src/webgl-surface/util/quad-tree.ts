@@ -1,8 +1,6 @@
 import { Bounds } from '../primitives/bounds';
 import { IPoint } from '../primitives/point';
 
-const debug = require('debug')('webgl:quad-tree');
-
 // A configuration that controls how readily a quadtree will split to another level
 // Adjusting this number can improve or degrade your performance significantly and
 // Must be tested for specific use cases
