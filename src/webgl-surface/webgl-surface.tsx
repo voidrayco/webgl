@@ -1226,7 +1226,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
         const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
 
-        const pan = self.willPan(distanceX, distanceY);
+        // Provide the same hook the normal mouse pan does to allow for panning adjustments
+        const pan = this.willPan(distanceX, distanceY);
 
         stage.destinationX -= pan.x;
         stage.destinationY += pan.y;
