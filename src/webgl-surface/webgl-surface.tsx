@@ -1215,6 +1215,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>) {
+    const self = this;
+
     element.onmousedown = function(event) {
       stage.dragOver = false;
 
@@ -1225,8 +1227,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
         const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
-        stage.destinationX -= distanceX;
-        stage.destinationY += distanceY;
+
+        const pan = self.willPan(distanceX, distanceY);
+
+        stage.destinationX -= pan.x;
+        stage.destinationY += pan.y;
         stage.lastMousePosition.x = mouseX;
         stage.lastMousePosition.y = mouseY;
       };
