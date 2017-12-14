@@ -61,7 +61,7 @@ void main() {
 
   if (vertexIndex < threshold.x ) {
     float realTime;
-    float subRatio = 0.5;
+    float subRatio = 0.3;
     float subThreshold = subRatio * threshold.x;
     float smallStep = 0.25;
     
@@ -131,13 +131,13 @@ void main() {
   }
 
   else if (vertexIndex > resolution - threshold.y ) {
-    float subRatio = 0.5;
-    float subThreshold = subRatio * threshold.y + (resolution - threshold.y);
+    float subRatio = 0.3;
+    float subThreshold = (1.0 - subRatio) * threshold.y + (resolution - threshold.y);
     float smallStep = 0.25;
     float realTime;
 
     if(vertexIndex < subThreshold) {
-      realTime = (1.0 - subRatio * smallStep) * (vertexIndex - resolution + threshold.y) / (subRatio * threshold.y);
+      realTime = (1.0 - subRatio * smallStep) * (vertexIndex - resolution + threshold.y) / (subThreshold + threshold.y - resolution);
     }
 
     else {
