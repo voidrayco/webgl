@@ -107,4 +107,5 @@ export declare class CurvedLineShape<T> extends CurvedLine<T> {
      * @param {IPoint[]} controlPoints
      */
     setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]): void;
+    containsPoint(point: IPoint): boolean;
 }
