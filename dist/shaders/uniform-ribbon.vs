@@ -52,7 +52,7 @@ void main() {
   float vertexIndex = position.y;
   float instance = position.z;
   vec2 currentPosition;
-  
+
   // Control point for two lines
   vec2 controlPoint = block0.xy;
 
@@ -64,18 +64,15 @@ void main() {
     float subRatio = 0.3;
     float subThreshold = subRatio * threshold.x;
     float smallStep = 0.25;
-    
+
     if (vertexIndex < subThreshold) {
       realTime = subRatio * smallStep * vertexIndex / subThreshold;
     }
 
-<<<<<<< HEAD
-=======
     else {
       realTime = smallStep * subRatio + (vertexIndex - subThreshold) * (1.0 - smallStep * subRatio) / (threshold.x - subThreshold);
     }
 
->>>>>>> 28f728aefc36a8149b18eb5c8f3ab5aa05580259
     // radius of hemiSphere where endpoints are in
     float r1 = distance(c1, start1);
 
@@ -153,7 +150,7 @@ void main() {
     float l2 = r2 - d2;
     float cosRadian = acos((d2 + l2 * realTime) / r2);
     float radian = acos((mid2.x - c2.x) / d2);
-    
+
     if ((mid2.y - c2.y) < 0.0) radian = - radian;
 
     if (normalDirection == 1.0) {
