@@ -454,6 +454,19 @@ export class AtlasManager {
           );
 
           ctx.font = label.makeCSSFont(fontSize);
+
+          const threeDotsWide = ctx.measureText('...').width;
+          let str = label.text;
+          if (label.maxWidth !== undefined) {
+            let beyondMax = false;
+            while ((ctx.measureText(str).width + threeDotsWide) > label.maxWidth) {
+              str = str.substring(0, str.length - 2);
+              beyondMax = true;
+            }
+            if (beyondMax) {
+              str += '...';
+            }
+          }
           ctx.textAlign = label.textAlign;
           ctx.textBaseline = label.textBaseline;
           ctx.fillStyle = color.toString();
@@ -461,7 +474,7 @@ export class AtlasManager {
           // Render the label to the canvas/texture space. This utilizes the label's
           // Rasterization metrics to aid in getting a clean render.
           ctx.fillText(
-            label.text,
+            str,
             texture.label.rasterizationOffset.x,
             texture.label.rasterizationOffset.y,
           );
