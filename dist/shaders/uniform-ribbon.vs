@@ -60,8 +60,22 @@ void main() {
   vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexIndex / resolution);
 
   if (vertexIndex < threshold.x ) {
-    float realTime = vertexIndex / threshold.x;
+    float realTime;
+    float subRatio = 0.3;
+    float subThreshold = subRatio * threshold.x;
+    float smallStep = 0.25;
+    
+    if (vertexIndex < subThreshold) {
+      realTime = subRatio * smallStep * vertexIndex / subThreshold;
+    }
 
+<<<<<<< HEAD
+=======
+    else {
+      realTime = smallStep * subRatio + (vertexIndex - subThreshold) * (1.0 - smallStep * subRatio) / (threshold.x - subThreshold);
+    }
+
+>>>>>>> 28f728aefc36a8149b18eb5c8f3ab5aa05580259
     // radius of hemiSphere where endpoints are in
     float r1 = distance(c1, start1);
 
@@ -120,7 +134,19 @@ void main() {
   }
 
   else if (vertexIndex > resolution - threshold.y ) {
-    float realTime = (vertexIndex - resolution + threshold.y) / threshold.y;
+    float subRatio = 0.3;
+    float subThreshold = (1.0 - subRatio) * threshold.y + (resolution - threshold.y);
+    float smallStep = 0.25;
+    float realTime;
+
+    if(vertexIndex < subThreshold) {
+      realTime = (1.0 - subRatio * smallStep) * (vertexIndex - resolution + threshold.y) / (subThreshold + threshold.y - resolution);
+    }
+
+    else {
+      realTime = (1.0 - subRatio * smallStep) + subRatio * smallStep * (vertexIndex - subThreshold) / (resolution - subThreshold);
+    }
+
     float r2 = distance(c2, end1);
     vec2 mid2 = getMiddle(end1, end2);
     float d2 = distance(mid2, c2);

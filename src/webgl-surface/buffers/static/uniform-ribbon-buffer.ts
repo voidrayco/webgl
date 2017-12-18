@@ -7,9 +7,15 @@ import { AttributeSize, BufferUtil, UniformAttributeSize } from '../../util/buff
 import { BaseBuffer } from '../base-buffer';
 
 // CONSTANT
-const MAX_SEGMENTS_PER_CURVE = 100;
+const MAX_SEGMENTS_PER_CURVE = 200;
 const VERTICES_PER_SEGMENT = 6;
 const VERTICES_PER_CURVE = VERTICES_PER_SEGMENT * MAX_SEGMENTS_PER_CURVE;
+
+/**
+ * THRESHOLD sets the number of instance to render both ends of ribbon
+ * In order to make both ends round
+ */
+const THRESHOLD = 30;
 
 function isCluster(val: RibbonShape<any>[] | RibbonShape<any>[][]): val is RibbonShape<any>[][] {
   return Array.isArray(val[0]);
@@ -232,8 +238,8 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
 
         depth.x = ribbon.depth;
         resolution.y = MAX_SEGMENTS_PER_CURVE;
-        threshold.z = 10;
-        threshold.w = 10;
+        threshold.z = THRESHOLD;
+        threshold.w = THRESHOLD;
       },
     );
 
