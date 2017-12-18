@@ -312,6 +312,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   colors: AtlasColor[] = [];
   colorsReady: boolean = false;
 
+  /** This is a flag that allows some extra control over when an onRender can fire */
+  isRenderReady: boolean = true;
+
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
 
@@ -921,8 +924,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Draw the 3D scene
     this.renderer.render(this.scene, this.camera);
 
-    if (this.props.onRender && ( this.colorsReady || this.colors.length === 0)
-    && (this.labelsReady || this.labels.length === 0)) {
+    if (
+      this.props.onRender && ( this.colorsReady || this.colors.length === 0) &&
+      (this.labelsReady || this.labels.length === 0) &&
+      this.isRenderReady
+    ) {
       const imageData = this.renderer.domElement.toDataURL();
       this.props.onRender(imageData);
     }
@@ -1215,33 +1221,37 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>) {
-    element.onmousedown = function(event) {
+    element.onmousedown = (event) => {
       stage.dragOver = false;
 
-      document.onmousemove = function(event) {
+      document.onmousemove = (event) => {
         const mouse = eventElementPosition(event, element);
         const mouseX = mouse.x;
         const mouseY = mouse.y;
 
         const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
         const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
-        stage.destinationX -= distanceX;
-        stage.destinationY += distanceY;
+
+        // Provide the same hook the normal mouse pan does to allow for panning adjustments
+        const pan = this.willPan(distanceX, distanceY);
+
+        stage.destinationX -= pan.x;
+        stage.destinationY += pan.y;
         stage.lastMousePosition.x = mouseX;
         stage.lastMousePosition.y = mouseY;
       };
 
-      document.onmouseup = function() {
+      document.onmouseup = () => {
         document.onmousemove = null;
         stage.isPanning = false;
         stage.dragOver = true;
       };
 
-      document.onmouseover = function() {
+      document.onmouseover = () => {
         if (stage.dragOver === false) stage.isPanning = true;
       };
 
-      element.onmouseup = function() {
+      element.onmouseup = () => {
         stage.dragOver = true;
       };
 
