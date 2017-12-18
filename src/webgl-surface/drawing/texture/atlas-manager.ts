@@ -457,16 +457,20 @@ export class AtlasManager {
 
           const threeDotsWide = ctx.measureText('...').width;
           let str = label.text;
-          if (label.maxWidth !== undefined) {
+
+          if (label.maxWidth) {
             let beyondMax = false;
+
             while ((ctx.measureText(str).width + threeDotsWide) > label.maxWidth) {
               str = str.substring(0, str.length - 2);
               beyondMax = true;
             }
+
             if (beyondMax) {
               str += '...';
             }
           }
+
           ctx.textAlign = label.textAlign;
           ctx.textBaseline = label.textBaseline;
           ctx.fillStyle = color.toString();
