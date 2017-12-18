@@ -263,6 +263,8 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** When this is set to true, the atlas with the colors is now ready to be referenced */
     colors: AtlasColor[];
     colorsReady: boolean;
+    /** This is a flag that allows some extra control over when an onRender can fire */
+    isRenderReady: boolean;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
     /** Mouse in stage or not */
