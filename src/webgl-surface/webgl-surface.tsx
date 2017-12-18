@@ -312,6 +312,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   colors: AtlasColor[] = [];
   colorsReady: boolean = false;
 
+  /** This is a flag that allows some extra control over when an onRender can fire */
+  isRenderReady: boolean = true;
+
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
 
@@ -921,8 +924,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     // Draw the 3D scene
     this.renderer.render(this.scene, this.camera);
 
-    if (this.props.onRender && ( this.colorsReady || this.colors.length === 0)
-    && (this.labelsReady || this.labels.length === 0)) {
+    if (
+      this.props.onRender && ( this.colorsReady || this.colors.length === 0) &&
+      (this.labelsReady || this.labels.length === 0) &&
+      this.isRenderReady
+    ) {
       const imageData = this.renderer.domElement.toDataURL();
       this.props.onRender(imageData);
     }
