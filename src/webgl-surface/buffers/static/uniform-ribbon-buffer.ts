@@ -17,8 +17,6 @@ const VERTICES_PER_CURVE = VERTICES_PER_SEGMENT * MAX_SEGMENTS_PER_CURVE;
  */
 const THRESHOLD = 30;
 
-const debug = require('debug')('urb');
-
 function isCluster(val: RibbonShape<any>[] | RibbonShape<any>[][]): val is RibbonShape<any>[][] {
   return Array.isArray(val[0]);
 }
