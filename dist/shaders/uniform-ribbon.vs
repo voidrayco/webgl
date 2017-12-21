@@ -104,13 +104,32 @@ void main() {
 
   else if (vertexIndex >= threshold.x  && vertexIndex <= resolution - threshold.y ) {
     float realTime = (vertexIndex - threshold.x) / (resolution - threshold.x - threshold.y);
+    float d1 = distance(start1, end1);
+    float d2 = distance(start2, end2);
+
+    vec2 c1, c2;
+    
+    // This variable can be set as a uniform
+    float t = 0.95;
+
+    if (d1 < d2) {
+      vec2 mid = getMiddle(start1, end1);
+      c1 = t * controlPoint + (1.0 - t) * mid;
+      c2 = controlPoint;
+    }
+
+    else {
+      vec2 mid = getMiddle(start2, end2);
+      c1 = controlPoint;
+      c2 = t * controlPoint + (1.0 - t) * mid;
+    }
 
     if (normalDirection == 1.0) {
-      currentPosition = makeBezier2(realTime, start1, end1, controlPoint);
+      currentPosition = makeBezier2(realTime, start1, end1, c1);
     }
 
     else if (normalDirection == -1.0) {
-      currentPosition = makeBezier2(realTime, start2, end2, controlPoint);
+      currentPosition = makeBezier2(realTime, start2, end2, c2);
     }
 
     float minMidFade = 0.76;
