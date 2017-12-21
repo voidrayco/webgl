@@ -19,7 +19,7 @@ export class Label<T> extends RotateableQuad<T> {
   id: string = '';
   textAlign: 'start' | 'center' | 'right' = 'start';
   textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging' = 'alphabetic';
-  zoomable: boolean = false;
+  allowScaling: boolean = true;
 
   /**
    * For rasterizing a label, we don't want to have duplicate labels rendered to our atlas
