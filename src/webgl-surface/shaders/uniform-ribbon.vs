@@ -6,7 +6,7 @@ uniform vec2 nextColor;
 
 //  This is the shared control point for all of the vertices
 uniform vec4 instanceData[96];
-int instanceSize = 4;
+int instanceSize = 5;
 varying vec4 vertexColor;
 
 vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
@@ -52,7 +52,7 @@ void main() {
   float vertexIndex = position.y;
   float instance = position.z;
   vec2 currentPosition;
-  
+
   // Control point for two lines
   vec2 controlPoint = block0.xy;
 
@@ -64,7 +64,7 @@ void main() {
     float subRatio = 0.3;
     float subThreshold = subRatio * threshold.x;
     float smallStep = 0.25;
-    
+
     if (vertexIndex < subThreshold) {
       realTime = subRatio * smallStep * vertexIndex / subThreshold;
     }
@@ -108,7 +108,7 @@ void main() {
     float d2 = distance(start2, end2);
 
     vec2 c1, c2;
-    
+
     // This variable can be set as a uniform
     float t = 0.95;
 
@@ -169,7 +169,7 @@ void main() {
     float l2 = r2 - d2;
     float cosRadian = acos((d2 + l2 * realTime) / r2);
     float radian = acos((mid2.x - c2.x) / d2);
-    
+
     if ((mid2.y - c2.y) < 0.0) radian = - radian;
 
     if (normalDirection == 1.0) {
