@@ -7,7 +7,7 @@ import { AttributeSize, BufferUtil, UniformAttributeSize } from '../../util/buff
 import { BaseBuffer } from '../base-buffer';
 
 // CONSTANT
-const MAX_SEGMENTS_PER_CURVE = 200;
+const MAX_SEGMENTS_PER_CURVE = 100;
 const VERTICES_PER_SEGMENT = 6;
 const VERTICES_PER_CURVE = VERTICES_PER_SEGMENT * MAX_SEGMENTS_PER_CURVE;
 
