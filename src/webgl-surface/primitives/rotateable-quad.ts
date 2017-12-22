@@ -29,12 +29,12 @@ const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint}
 
   [AnchorPosition.Custom]: (quad: RotateableQuad<any>) => ({
     x: 0,
-    y: quad.getSize().height,
+    y: -quad.getSize().height,
   }),
 
   [AnchorPosition.Middle]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width / 2,
-    y: quad.getSize().height / 2,
+    y: -quad.getSize().height / 2,
   }),
 
   [AnchorPosition.MiddleBottom]: (quad: RotateableQuad<any>) => ({
@@ -44,17 +44,17 @@ const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint}
 
   [AnchorPosition.MiddleLeft]: (quad: RotateableQuad<any>) => ({
     x: 0,
-    y: quad.getSize().height / 2,
+    y: -quad.getSize().height / 2,
   }),
 
   [AnchorPosition.MiddleRight]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width,
-    y: quad.getSize().height / 2,
+    y: -quad.getSize().height / 2,
   }),
 
   [AnchorPosition.MiddleTop]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width / 2,
-    y: quad.getSize().height,
+    y: -quad.getSize().height,
   }),
 
   [AnchorPosition.TopLeft]: (quad: RotateableQuad<any>) => ({
@@ -64,7 +64,7 @@ const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint}
 
   [AnchorPosition.TopRight]: (quad: RotateableQuad<any>) => ({
     x: quad.getSize().width,
-    y: quad.getSize().height,
+    y: -quad.getSize().height,
   }),
 };
 
@@ -107,8 +107,6 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.setAnchor(anchor);
     this.setLocation(location);
     this.setRotation(rotation);
-    // Update the transform and the corner vertices
-    this.update();
   }
 
   /**
@@ -225,7 +223,7 @@ export class RotateableQuad<T> extends Bounds<T> {
    */
   update() {
     // Calculate the pieces of the transformation
-    const anchorMat: Matrix4 = new Matrix4().makeTranslation(this.anchor.x, -this.anchor.y, 0);
+    const anchorMat: Matrix4 = new Matrix4().makeTranslation(-this.anchor.x, this.anchor.y, 0);
     const rotationMat: Matrix4 = new Matrix4().makeRotationZ(this.rotation);
     const locationMat: Matrix4 = new Matrix4().makeTranslation(this.location.x, this.location.y, 0);
 

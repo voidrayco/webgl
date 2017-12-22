@@ -33,7 +33,7 @@ vec4 pickColor(float index) {
 }
 
 void main() {
-  texCoordinate = vec2(texCoord.x, texCoord.y);
+  texCoordinate = texCoord.xy;
 
   tint = pickColor(colorPick);
 
