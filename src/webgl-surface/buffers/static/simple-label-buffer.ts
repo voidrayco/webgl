@@ -29,7 +29,7 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
       },
       {
         defaults: [0],
-        name: 'customColor',
+        name: 'colorPick',
         size: AttributeSize.ONE,
       },
       {
@@ -96,9 +96,9 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
     if (atlasManager && buffer.length > 0) {
       const colorRef: ReferenceColor = buffer[0].color;
       const labelBase: Label<any> = buffer[0].baseLabel;
-      const colorBase = colorRef.base;
 
       if (colorRef && labelBase) {
+        const colorBase = colorRef.base;
         let material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
         let uniforms: { [k: string]: IUniform } = material.uniforms;
         const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
