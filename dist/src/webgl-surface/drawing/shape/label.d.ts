@@ -11,6 +11,7 @@ export declare class Label<T> extends RotateableQuad<T> {
     fontWeight: number;
     maxWidth: number;
     text: string;
+    truncatedText: string;
     id: string;
     textAlign: 'start' | 'center' | 'right';
     textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging';
