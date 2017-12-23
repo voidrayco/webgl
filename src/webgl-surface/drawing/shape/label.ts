@@ -165,7 +165,7 @@ export class Label<T> extends RotateableQuad<T> {
 
       // We must analyze the label for truncation based on the max width
       const threeDotsWide = ctx.measureText('...').width;
-      let str = this.text;
+      let text = this.text;
       let truncatedWidth = width;
 
       // If we're beyond our max width limit, we must truncate
@@ -173,9 +173,9 @@ export class Label<T> extends RotateableQuad<T> {
         let beyondMax = false;
 
         while (truncatedWidth > this.maxWidth) {
-          str = str.substring(0, str.length - 2);
+          text = text.substring(0, text.length - 2);
           truncatedWidth =
-            ctx.measureText(str).width +
+            ctx.measureText(text).width +
             threeDotsWide +
             this.rasterizationOffset.x +
             this.rasterizationPadding.width
@@ -184,10 +184,10 @@ export class Label<T> extends RotateableQuad<T> {
         }
 
         if (beyondMax) {
-          str += '...';
+          text += '...';
         }
 
-        this.truncatedText = str;
+        this.truncatedText = text;
         width = truncatedWidth;
       }
 
