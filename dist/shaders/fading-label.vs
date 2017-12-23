@@ -9,6 +9,10 @@ uniform sampler2D colorAtlas;
 uniform float colorsPerRow;
 uniform vec2 firstColor;
 uniform vec2 nextColor;
+uniform vec3 camera;
+uniform float maxLabelSize;
+uniform float startFade;
+uniform float endFade;
 
 /** The tex coordinate and opacity of the output texture {tx, ty, opacity} */
 attribute vec3 texCoord;
@@ -21,10 +25,6 @@ varying vec2 texCoordinate;
 // This passes the calculated color of the vertex
 varying vec4 tint;
 
-uniform vec3 camera;
-uniform float maxLabelSize;
-uniform float startFade;
-uniform float endFade;
 
 vec4 pickColor(float index) {
   float row = floor(index / colorsPerRow);
@@ -33,7 +33,7 @@ vec4 pickColor(float index) {
 }
 
 void main() {
-  texCoordinate = vec2(texCoord.x, texCoord.y);
+  texCoordinate = texCoord.xy;
 
   tint = pickColor(colorPick);
 
