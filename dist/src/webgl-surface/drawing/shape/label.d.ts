@@ -1,3 +1,4 @@
+import { Bounds } from 'webgl-surface/primitives';
 import { IPoint } from '../../primitives/point';
 import { RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
@@ -57,6 +58,11 @@ export declare class Label<T> extends RotateableQuad<T> {
      * @param {Label} label The labels whose properties we wish to copy
      */
     copyLabel(label: Label<T>): void;
+    /**
+     * This gives the bounds of the label that has encapsulated the anchor point.
+     * Useful for special cases where the anchor point is not a part of the label
+     */
+    getBoundsWithAnchor(): Bounds<T>;
     /**
      * This gets the actual text this label is capable of rendering
      */

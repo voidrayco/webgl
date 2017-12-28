@@ -139,17 +139,15 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
         sizes: Float32Array, spos: number,
         anchors: Float32Array, apos: number,
       ) {
+        // Make sure the label is updated with it's latest metrics
         label = buffer[i];
+        label.update();
+
         texture = label.rasterizedLabel;
         color = label.color.base;
         alpha = label.color.base.opacity;
-        anchor = {
-          x: label.getLocation().x,
-          y: label.getLocation().y,
-        };
+        anchor = label.getAnchor(true);
         labelSize = label.getSize();
-        // Make sure the label is updated with it's latest metrics
-        label.update();
 
         // Copy first vertex twice for intro degenerate tri
         positions[ppos] = label.TR.x;

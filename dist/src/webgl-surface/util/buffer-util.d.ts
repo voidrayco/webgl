@@ -116,7 +116,7 @@ export declare class BufferUtil {
      *
      * @param multiShapeBuffers
      */
-    static flattenMultiBuffers<T>(multiShapeBuffers: MultiShapeBufferCache<T>[]): T[];
+    static flattenMultiBuffers<T>(multiShapeBuffers: MultiShapeBufferCache<T | T[]>[]): T[];
     /**
      * @static
      * This helps aid in updating a complex multi buffer. It will establish when a new

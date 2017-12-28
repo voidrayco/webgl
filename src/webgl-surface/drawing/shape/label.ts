@@ -1,4 +1,5 @@
 import { omit } from 'ramda';
+import { Bounds } from 'webgl-surface/primitives';
 import { IPoint } from '../../primitives/point';
 import { AnchorPosition, RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
@@ -106,6 +107,18 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Use this to set the text to make sure all of the metrics are re-calculated
     this.setText(label.text);
+  }
+
+  /**
+   * This gives the bounds of the label that has encapsulated the anchor point.
+   * Useful for special cases where the anchor point is not a part of the label
+   */
+  getBoundsWithAnchor() {
+    const combined = new Bounds<T>(0, 0, 0, 0);
+    combined.copyBounds(this);
+    combined.encapsulatePoint(this.getAnchor(true));
+
+    return combined;
   }
 
   /**

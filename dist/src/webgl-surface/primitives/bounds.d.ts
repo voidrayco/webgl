@@ -1,4 +1,5 @@
 import { IPoint } from './point';
+import { ISize } from './size';
 /**
  * Class to manage the x, y, width, and height of an object
  *
@@ -114,6 +115,20 @@ export declare class Bounds<T> {
      * @return True if value is a bounds object
      */
     static isBounds(value: any): value is Bounds<any>;
+    /**
+     * Scales bounds. Allows the scaling to happen but clamps if max or min bounds
+     * are provided.
+     *
+     * @param bounds The bounds to scale
+     * @param anchor The orientation point where the bounds will be resized
+     *               relative to. Be aware: the anchor position will be in the
+     *               same coordinate space as the bounds dimensions. Thus the
+     *               anchor is NOT relative to the top left of the bounds.
+     * @param scale The amount to scale by
+     * @param max The max size height or width the bounds can attain via scaling
+     * @param min The min size height or width the bounds can attain via scaling
+     */
+    static scaleBounds(bounds: Bounds<any>, anchor: IPoint, scale: number, max?: ISize, min?: ISize): Bounds<{}>;
     /**
      * Check if this instance is completely inside the provided bounds
      *

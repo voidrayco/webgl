@@ -597,11 +597,23 @@ export class BufferUtil {
    *
    * @param multiShapeBuffers
    */
-  static flattenMultiBuffers<T>(multiShapeBuffers: MultiShapeBufferCache<T>[]) {
+  static flattenMultiBuffers<T>(multiShapeBuffers: MultiShapeBufferCache<T | T[]>[]) {
     let all: T[] = [];
 
+    function isCluster(value: (T | T[])[]): value is T[][] {
+      return value[0] && Array.isArray(value[0]);
+    }
+
     multiShapeBuffers.forEach(multiBuffer => {
-      multiBuffer.getBuffers().forEach(buffer => all = all.concat(buffer));
+      multiBuffer.getBuffers().forEach(buffer => {
+        if (isCluster(buffer)) {
+          buffer.forEach(cluster => all = all.concat(cluster));
+        }
+
+        else {
+          all = all.concat(buffer as T[]);
+        }
+      });
     });
 
     return all;
