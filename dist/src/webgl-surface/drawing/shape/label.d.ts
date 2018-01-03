@@ -1,4 +1,4 @@
-import { Bounds } from 'webgl-surface/primitives';
+import { Bounds } from '../../primitives';
 import { IPoint } from '../../primitives/point';
 import { RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
