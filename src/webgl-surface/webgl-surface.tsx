@@ -8,6 +8,7 @@ import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { ISharedRenderContext } from './types';
 import { FrameInfo } from './util/frame-info';
 import { eventElementPosition } from './util/mouse';
 import { IProjection } from './util/projection';
@@ -135,33 +136,38 @@ export interface IWebGLSurfaceProperties {
     b: number,
     /** Alpha channel 0-1 */
     opacity: number,
-  }
+  };
   /** When true, will cause a camera recentering to take place when new base items are injected */
-  centerOnNewItems?: boolean
+  centerOnNewItems?: boolean;
   /** All of the unique colors used in the system */
-  colors?: AtlasColor[]
+  colors?: AtlasColor[];
   /** The forced size of the render surface */
-  height?: number
-  /** This will be the view the camera focuses on when the camera is initialized */
-  viewport?: Bounds<never>
+  height?: number;
   /** All of the labels to be rendered by the system */
-  labels?: Label<any>[]
+  labels?: Label<any>[];
   /** Provides feedback when the surface is double clicked */
-  onDoubleClick?(e: React.MouseEvent<Element>): void
+  onDoubleClick?(e: React.MouseEvent<Element>): void;
   /** Provides feedback when the mouse has moved */
-  onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void
+  onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void;
   /** When provided provides image data every frame for the screen */
-  onRender?(image: string): void
+  onRender?(image: string): void;
   /**
    * This is a handler that handles zoom changes the gpu-chart may request.
    * This includes moments such as initializing the camera to focus on a
    * provided viewport.
    */
-  onZoomRequest(zoom: number): void
+  onZoomRequest(zoom: number): void;
+  /**
+   * If this is provided, then this will render within the rendering context provided,
+   * however, this will retain it's own camera and own scene.
+   */
+  renderContext: ISharedRenderContext;
+  /** This will be the view the camera focuses on when the camera is initialized */
+  viewport?: Bounds<never>;
   /** The forced size of the render surface */
-  width?: number
+  width?: number;
   /** The zoom level that the camera should apply */
-  zoom: number
+  zoom: number;
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -321,7 +327,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** Mouse in stage or not */
   dragOver: boolean = true;
 
-  /** Flag for detecting whether or not webgl is supported at all */
+  /**
+   * If this is true, we are waiting for the rendering context to become available
+   * within this.props.renderContext
+   */
+  waitForContext: boolean = false;
 
   /**
    * This is the update loop that operates at the requestAnimationFrame speed.
@@ -436,6 +446,29 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           break: false,
           doDraw: false,
         };
+
+        if (this.waitForContext) {
+          if (this.props.renderContext) {
+            if (this.props.renderContext.context) {
+              if (this.props.renderContext.context.renderer) {
+                this.renderer = this.props.renderContext.context.renderer;
+                // Get the gl context for queries and advanced operations
+                this.gl = this.renderer.domElement.getContext('webgl');
+                this.makeDraggable(document.getElementById('div'), this);
+                this.waitForContext = false;
+              }
+            }
+          }
+
+          else {
+            this.scene = null;
+            this.init(this.renderEl, this.props.width, this.props.height);
+          }
+
+          response.break = true;
+          response.doDraw = false;
+          return response;
+        }
 
         if (this.resizeContext() ) {
           response.doDraw = true;
@@ -639,7 +672,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.zoomTargetY = world.y;
         }
 
-        if (this.renderer && backgroundColor) {
+        if (this.renderer && backgroundColor && !props.renderContext) {
           const oldColor = this.props.backgroundColor || {
             b: BACKGROUND_COLOR.b,
             g: BACKGROUND_COLOR.g,
@@ -902,7 +935,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       this.quadTree.destroy();
     }
 
-    this.renderer.dispose();
+    if (!this.props.renderContext) {
+      this.renderer.dispose();
+    }
 
     this.quadTree = null;
     this.camera = null;
@@ -923,8 +958,26 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * called, the webgl surface will be redrawn.
    */
   draw() {
+    const { renderContext } = this.props;
+
     // Draw the 3D scene
-    this.renderer.render(this.scene, this.camera);
+    if (renderContext) {
+      const offset = renderContext.position;
+      const size = renderContext.size;
+      const camera = renderContext.context.camera;
+      const w = camera.right - camera.left;
+      const h = camera.bottom - camera.top;
+
+      this.renderer.setViewport(offset.x, offset.y, size.width, size.height);
+      this.renderer.autoClear = false;
+      this.renderer.render(this.scene, this.camera);
+      this.renderer.autoClear = true;
+      this.renderer.setViewport(0, 0, w, -h);
+    }
+
+    else {
+      this.renderer.render(this.scene, this.camera);
+    }
 
     if (
       this.props.onRender && ( this.colorsReady || this.colors.length === 0) &&
@@ -975,44 +1028,50 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     // FINALIZE SET UP
 
-    // Generate the renderer along with it's properties
-    this.renderer = new WebGLRenderer({
-      alpha: this.props.backgroundColor && (this.props.backgroundColor.opacity < 1.0),
-      antialias: true,
-      preserveDrawingBuffer: true,
-    });
-
-    // This sets the pixel ratio to handle differing pixel densities in screens
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(w, h);
-
-    // Applies the background color and establishes whether or not the context supports
-    // Alpha or not
-    if (this.props.backgroundColor) {
-      this.renderer.setClearColor(
-        new Color(
-          this.props.backgroundColor.r,
-          this.props.backgroundColor.g,
-          this.props.backgroundColor.b,
-        ),
-        this.props.backgroundColor.opacity,
-      );
+    if (this.props.renderContext) {
+      this.waitForContext = true;
     }
 
     else {
-      this.renderer.setClearColor(BACKGROUND_COLOR);
+      // Generate the renderer along with it's properties
+      this.renderer = new WebGLRenderer({
+        alpha: this.props.backgroundColor && (this.props.backgroundColor.opacity < 1.0),
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+
+      // This sets the pixel ratio to handle differing pixel densities in screens
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setSize(w, h);
+
+      // Applies the background color and establishes whether or not the context supports
+      // Alpha or not
+      if (this.props.backgroundColor) {
+        this.renderer.setClearColor(
+          new Color(
+            this.props.backgroundColor.r,
+            this.props.backgroundColor.g,
+            this.props.backgroundColor.b,
+          ),
+          this.props.backgroundColor.opacity,
+        );
+      }
+
+      else {
+        this.renderer.setClearColor(BACKGROUND_COLOR);
+      }
+
+      // We render shapes. We care not for culling.
+      this.renderer.setFaceCulling(CullFaceNone);
+
+      // Set up DOM interaction with the renderer
+      const container = el;
+      container.appendChild(this.renderer.domElement);
+      // Get the gl context for queries and advanced operations
+      this.gl = this.renderer.domElement.getContext('webgl');
+
+      this.makeDraggable(document.getElementById('div'), this);
     }
-
-    // We render shapes. We care not for culling.
-    this.renderer.setFaceCulling(CullFaceNone);
-
-    // Set up DOM interaction with the renderer
-    const container = el;
-    container.appendChild(this.renderer.domElement);
-    // Get the gl context for queries and advanced operations
-    this.gl = this.renderer.domElement.getContext('webgl');
-
-    this.makeDraggable(document.getElementById('div'), this);
   }
 
   /**
@@ -1088,8 +1147,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       return false;
     }
 
-    debug('RENDERER RESIZE');
-
     this.ctx = {
       height: h,
       heightHalf: h / 2,
@@ -1104,24 +1161,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.camera.position.set(position.x, position.y, position.z);
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(w, h);
-    this.renderer.setFaceCulling(CullFaceNone);
+    // If this is the owner of the renderer, then we can resize
+    // Otherwise we only need to update the internal properties
+    if (!this.props.renderContext) {
+      debug('RENDERER RESIZE');
 
-    if (this.props.backgroundColor) {
-      const { backgroundColor: color } = this.props;
-      this.renderer.setClearColor(
-        new Color(
-          color.r,
-          color.g,
-          color.b,
-        ),
-        color.opacity < 1.0 ? color.opacity : undefined,
-      );
-    }
-
-    else {
-      this.renderer.setClearColor(BACKGROUND_COLOR);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setSize(w, h);
+      this.renderer.setFaceCulling(CullFaceNone);
     }
 
     return true;
