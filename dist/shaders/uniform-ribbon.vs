@@ -1,3 +1,4 @@
+// Uniforms
 // These uniforms are information regarding the color atlas
 uniform sampler2D colorAtlas;
 uniform float colorsPerRow;
@@ -7,8 +8,17 @@ uniform vec2 nextColor;
 //  This is the shared control point for all of the vertices
 uniform vec4 instanceData[96];
 int instanceSize = 5;
+
+// Varyings
 varying vec4 vertexColor;
 
+// Constants
+float minMidFade = 0.76;
+float stop1 = 0.17;
+float stop2 = 0.83;
+float t = 0.95;
+
+// Methods
 vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
   return vec2(
     (1.0 - t) * (1.0 - t) * p1.x + 2.0 * t * (1.0 - t) * c1.x + t * t * p2.x,
@@ -56,10 +66,8 @@ void main() {
   // Control point for two lines
   vec2 controlPoint = block0.xy;
 
-  // Get the vertexColor
-  vertexColor = mix(pickColor(startColor), pickColor(endColor), vertexIndex / resolution);
-
   if (vertexIndex < threshold.x ) {
+    vertexColor = pickColor(startColor);
     float realTime;
     float subRatio = 0.3;
     float subThreshold = subRatio * threshold.x;
@@ -104,13 +112,11 @@ void main() {
 
   else if (vertexIndex >= threshold.x  && vertexIndex <= resolution - threshold.y ) {
     float realTime = (vertexIndex - threshold.x) / (resolution - threshold.x - threshold.y);
+    vertexColor = mix(pickColor(startColor), pickColor(endColor), realTime);
     float d1 = distance(start1, end1);
     float d2 = distance(start2, end2);
 
     vec2 c1, c2;
-
-    // This variable can be set as a uniform
-    float t = 0.95;
 
     if (d1 < d2) {
       vec2 mid = getMiddle(start1, end1);
@@ -132,10 +138,6 @@ void main() {
       currentPosition = makeBezier2(realTime, start2, end2, c2);
     }
 
-    float minMidFade = 0.76;
-    float stop1 = 0.17;
-    float stop2 = 0.83;
-
     if (realTime > stop2) {
       vertexColor *= mix(minMidFade, 1.0, (realTime - stop2) / stop1);
     }
@@ -150,6 +152,7 @@ void main() {
   }
 
   else if (vertexIndex > resolution - threshold.y ) {
+    vertexColor = pickColor(endColor);
     float subRatio = 0.3;
     float subThreshold = (1.0 - subRatio) * threshold.y + (resolution - threshold.y);
     float smallStep = 0.25;
