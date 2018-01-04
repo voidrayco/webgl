@@ -1,5 +1,5 @@
 import { omit } from 'ramda';
-import { Bounds } from 'webgl-surface/primitives';
+import { Bounds } from '../../primitives';
 import { IPoint } from '../../primitives/point';
 import { AnchorPosition, RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';

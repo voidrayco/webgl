@@ -902,6 +902,8 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       this.quadTree.destroy();
     }
 
+    this.renderer.dispose();
+
     this.quadTree = null;
     this.camera = null;
     this.sizeCamera = null;
