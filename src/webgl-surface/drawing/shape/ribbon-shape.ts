@@ -139,13 +139,14 @@ export class RibbonShape<T> extends CurvedLineShape<T> {
     const strip: IPoint[] = [];
     const dt = 1 / this.resolution;
     const c1 = this.controlPoints[0];
+    const c2 = this.controlPoints[1];
 
     for (let i = 0 ; i <= this.resolution; i++ ) {
       strip.push(bezier2(dt * i, this.start, this.end, c1));
     }
 
     for (let i = this.resolution; i >= 0; i--){
-      strip.push(bezier2(dt * i, this.start2, this.end2, c1));
+      strip.push(bezier2(dt * i, this.start2, this.end2, c2));
     }
     return strip;
   }
