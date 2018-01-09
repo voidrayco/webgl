@@ -158,12 +158,17 @@ export interface IWebGLSurfaceProperties {
    */
   onZoomRequest(zoom: number): void;
   /**
+   * When specified, this context will pan by the indicated amount once. A new object must be
+   * injected in order for the pan to happen again.
+   */
+  pan?: Vector3;
+  /**
    * If this is provided, then this will render within the rendering context provided,
    * however, this will retain it's own camera and own scene.
    */
-  renderContext: ISharedRenderContext;
+  renderContext?: ISharedRenderContext;
   /** This will be the view the camera focuses on when the camera is initialized */
-  viewport?: Bounds<never>;
+  viewport?: Bounds<any>;
   /** The forced size of the render surface */
   width?: number;
   /** The zoom level that the camera should apply */
@@ -215,6 +220,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * and the animated methods will attempt executing again
    */
   animatedMethodBreak: boolean = false;
+  /**
+   * This is the last external panning operation applied to the camera. When a new pan
+   * is applied that is not this pan object
+   */
+  appliedPan: IPoint;
   /**
    * This viewport is the last viewport applied to the camera.
    * If the props inject a new viewport, this is updated with that value so
@@ -451,10 +461,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           if (this.props.renderContext) {
             if (this.props.renderContext.context) {
               if (this.props.renderContext.context.renderer) {
+                // Share the renderer
                 this.renderer = this.props.renderContext.context.renderer;
+                // Share the atlas manager for magical resource sharing
+                // This.atlasManager = this.props.renderContext.context.atlasManager;
                 // Get the gl context for queries and advanced operations
                 this.gl = this.renderer.domElement.getContext('webgl');
-                this.makeDraggable(document.getElementById('div'), this);
+                this.makeDraggable(this.props.renderContext.context.renderEl, this);
                 this.waitForContext = false;
               }
             }
@@ -659,6 +672,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         this.init(this.renderEl, width, height);
 
+        if (this.waitForContext) {
+          return {
+            break: true,
+          };
+        }
+
         if (!this.renderEl || width === 0 || height === 0) {
           return {
             break: true,
@@ -806,6 +825,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
       [BaseApplyPropsMethods.CAMERA]: (props: T): IApplyPropsMethodResponse => {
         this.destinationZoom = props.zoom;
+
+        // If a pan was specified, we should pan the view
+        if (props.pan && props.pan !== this.appliedPan) {
+          this.destinationX -= props.pan.x;
+          this.destinationY += props.pan.y;
+          this.appliedPan = props.pan;
+        }
 
         // On initialization this should start with some base camera metrics
         if (props.viewport && props.viewport !== this.appliedViewport && this.quadTree) {
@@ -958,21 +984,39 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * called, the webgl surface will be redrawn.
    */
   draw() {
-    const { renderContext } = this.props;
+    const { backgroundColor, renderContext } = this.props;
 
     // Draw the 3D scene
     if (renderContext) {
       const offset = renderContext.position;
       const size = renderContext.size;
-      const camera = renderContext.context.camera;
-      const w = camera.right - camera.left;
-      const h = camera.bottom - camera.top;
+      const camera = renderContext.context && renderContext.context.camera;
+      const rendererSize = this.renderer.getSize();
+
+      // If a background is established, we should clear the background color
+      // Specified for this context
+      if (backgroundColor) {
+        // Get the current clear color in use
+        const clearColor = this.gl.getParameter(this.gl.COLOR_CLEAR_VALUE);
+        // Turn on the scissor test to keep the rendering clipped within the
+        // Render region of the context
+        this.gl.enable(this.gl.SCISSOR_TEST);
+        // Set the scissor rectangle.
+        this.gl.scissor(offset.x, rendererSize.height - offset.y - size.height, size.width, size.height);
+        // Clear the rect of color and depth so the region is totally it's own
+        this.gl.clearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.opacity);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        // Turn off the scissor test so you can render like normal again.
+        this.gl.disable(this.gl.SCISSOR_TEST);
+        // Reset the clear color
+        this.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+      }
 
       this.renderer.setViewport(offset.x, offset.y, size.width, size.height);
       this.renderer.autoClear = false;
       this.renderer.render(this.scene, this.camera);
       this.renderer.autoClear = true;
-      this.renderer.setViewport(0, 0, w, -h);
+      this.renderer.setViewport(0, 0, rendererSize.width, rendererSize.height);
     }
 
     else {
@@ -1070,7 +1114,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       // Get the gl context for queries and advanced operations
       this.gl = this.renderer.domElement.getContext('webgl');
 
-      this.makeDraggable(document.getElementById('div'), this);
+      this.makeDraggable(this.renderEl, this);
     }
   }
 

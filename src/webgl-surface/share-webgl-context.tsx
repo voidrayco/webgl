@@ -1,33 +1,33 @@
 import * as React from 'react';
-import { WebGLRenderer } from 'three';
-import { WebGLSurfaceProvider } from 'webgl-surface/webgl-surface-provider';
+import { ISharedRenderContext } from './types';
 import { WebGLSurface } from './webgl-surface';
+import { WebGLSurfaceProvider } from './webgl-surface-provider';
 
 export interface IShareWebGLContextProps {
   /** This allows a ref to be applied to the child contexts */
-  childRefs: ((n: WebGLSurface<any, any> | WebGLSurfaceProvider<any, any>) => void)[];
+  childRefs?: ((n: WebGLSurface<any, any> | WebGLSurfaceProvider<any, any>) => void)[];
   /**
    * This is a rendering context that should be passed to child WebGLSurfaces OR
    * to ShareWebGLContext components. When this is available, the intent is to be
    * rendering to a specific rendering context
    */
-  renderContext: WebGLSurface<any, any>;
+  renderContext?: WebGLSurface<any, any>;
   /**
    * When the rendering context is established, this will be called with the context
    * that this shared context will use.
    */
-  onRenderContext(renderContext: WebGLSurface<any, any>): void;
+  onRenderContext?(renderContext: WebGLSurface<any, any>): void;
 }
 
 export interface IShareWebGLContextState {
 }
 
 function isSurface(val: any): val is WebGLSurface<any, any> {
-  return Boolean(val.renderer);
+  return val.renderer !== undefined;
 }
 
 function isProvider(val: any): val is WebGLSurfaceProvider<any, any> {
-  return Boolean(val.webGLSurface);
+  return val.webGLSurface !== undefined;
 }
 
 /**
@@ -39,43 +39,55 @@ function isProvider(val: any): val is WebGLSurfaceProvider<any, any> {
  * elements using the special 'renderOffset' to position where the context should
  * render. Width and height are still dictated by the width and height properties.
  */
-export default class ShareWebGLContext extends React.Component<IShareWebGLContextProps, IShareWebGLContextState> {
+export class ShareWebGLContext extends React.Component<IShareWebGLContextProps, IShareWebGLContextState> {
   sourceContext: WebGLSurface<any, any>;
 
   componentWillMount() {
     this.sourceContext = this.props.renderContext;
+
+    if (this.sourceContext && this.props.onRenderContext) {
+      this.props.onRenderContext(this.sourceContext);
+    }
   }
 
-  componentWillReceiveProps(nextProps: IShareWebGLContextProps) {
-    this.sourceContext = nextProps.renderContext;
-  }
-
-  handleRef = (node: any, index: number) => {
+  handleRef = (index: number) => (node: any) => {
     const { childRefs } = this.props;
 
-    if (isSurface(node)) {
-      if (!this.sourceContext && index === 0) {
-        this.sourceContext = node;
+    if (node) {
+      if (isSurface(node)) {
+        if (!this.sourceContext && index === 0) {
+          this.sourceContext = node;
+          // When the source context is set via a ref, we must force update to now
+          // Ensure all of the children are rendered. When the source context is set
+          // Via props, then the children will be rendered already.
+          setTimeout(() => this.forceUpdate(), 1);
+        }
       }
 
-      if (childRefs[index]) {
-        childRefs[index](node);
+      else {
+        if (!this.sourceContext && index === 0) {
+          // We must wait for all mountings to settle to ensure the context has
+          // Been established
+          setTimeout(() => {
+            if (isProvider(node)) {
+              this.sourceContext = node.webGLSurface;
+              // When the source context is set via a ref, we must force update to now
+              // Ensure all of the children are rendered. When the source context is set
+              // Via props, then the children will be rendered already.
+              this.forceUpdate();
+            }
+          }, 5);
+        }
       }
-    }
 
-    if (isProvider(node)) {
-      if (!this.sourceContext && index === 0) {
-        this.sourceContext = node.webGlSurface;
-      }
-
-      if (childRefs[index]) {
+      if (childRefs && childRefs[index]) {
         childRefs[index](node);
       }
     }
   }
 
   render() {
-    const { children } = this.props;
+    const { children, renderContext } = this.props;
 
     const toRender = React.Children.map(children, (child, index) => {
       // We only render the first element initially. Once the first element is
@@ -87,13 +99,17 @@ export default class ShareWebGLContext extends React.Component<IShareWebGLContex
 
       // We clone and we do NOT preserve refs as we want to controll reffing
       // With this component
-      if (React.isValidElement(child)) {
+      if (React.isValidElement<any>(child)) {
         return (
           <child.type
             {...child.props}
             {...{
-              ref: this.handleRef,
-              renderContext: index > 0 ? this.sourceContext : undefined,
+              ref: this.handleRef(index),
+              renderContext: index > 0 || renderContext ? {
+                context: this.sourceContext,
+                position: child.props.renderContext && child.props.renderContext.position,
+                size: child.props.renderContext && child.props.renderContext.size,
+              } as ISharedRenderContext : undefined,
             }}
           />
         );
@@ -103,7 +119,7 @@ export default class ShareWebGLContext extends React.Component<IShareWebGLContex
     });
 
     return (
-      <div>
+      <div className="sharing-context">
         {toRender}
       </div>
     );

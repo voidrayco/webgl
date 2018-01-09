@@ -159,9 +159,26 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
    * Clears the multi buffer's storage
    */
   destroy() {
+    this.clearStorage();
+  }
+
+  /**
+   * Empties all of the shapes this buffer manages.
+   *
+   * @param renew If set to true, this will make a new storage for the buffer
+   *              to operate with.
+   * @param selected If renew is true, you have to specify a selection to renew the
+   *                 storage within.
+   */
+  clearStorage(renew?: boolean, selection?: CustomSelection) {
     if (this.store) {
       this.store.selection.clearSelection(this.selectionUID);
       delete this.store;
+
+    }
+
+    if (renew && selection) {
+      this.getStorage(selection);
     }
   }
 

@@ -221,6 +221,8 @@ export class AtlasManager {
         const uy = insertedNode.nodeDimensions.y / this.textureHeight;
         const uw = insertedNode.nodeDimensions.width / this.textureWidth;
         const uh = insertedNode.nodeDimensions.height / this.textureHeight;
+        const onePixelX = 1 / this.textureWidth;
+        const onePixelY = 1 / this.textureHeight;
 
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,
@@ -231,9 +233,9 @@ export class AtlasManager {
 
         image.atlasReferenceID = atlasName;
         image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
-        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
+        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width - onePixelX, y: atlasDimensions.y - atlasDimensions.height};
         image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y};
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width - onePixelX, y: atlasDimensions.y};
 
         // Now draw the image to the indicated canvas
         canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);
@@ -253,7 +255,13 @@ export class AtlasManager {
 
     else {
       // Log an error and load a default image
-      console.error(`Could not load image ${image.imagePath}`);
+      if (image.imagePath) {
+        console.error(`Could not load image: ${image.imagePath}`);
+      }
+
+      else {
+        console.error(`Could not load label: ${image.label.text}`);
+      }
       image = this.setDefaultImage(image, atlasName);
       return false;
     }
@@ -278,7 +286,7 @@ export class AtlasManager {
     const colorHeight = 2;
     // Set a max per row limit. We default to rendering across the width of a 512x512
     // Max texture
-    const maxPerRow = 1024 / colorWidth;
+    const maxPerRow = (this.textureWidth - 2) / colorWidth;
     // We get the width of a row of colors
     const rowWidth = Math.min(this.textureWidth, maxPerRow * colorWidth);
     // Get how many rows it will take to render the colors
