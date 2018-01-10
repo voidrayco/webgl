@@ -222,7 +222,6 @@ export class AtlasManager {
         const uw = insertedNode.nodeDimensions.width / this.textureWidth;
         const uh = insertedNode.nodeDimensions.height / this.textureHeight;
         const onePixelX = 1 / this.textureWidth;
-        const onePixelY = 1 / this.textureHeight;
 
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,

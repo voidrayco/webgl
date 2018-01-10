@@ -990,7 +990,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     if (renderContext) {
       const offset = renderContext.position;
       const size = renderContext.size;
-      const camera = renderContext.context && renderContext.context.camera;
       const rendererSize = this.renderer.getSize();
 
       // If a background is established, we should clear the background color
