@@ -47,7 +47,7 @@
     "ts-loader": "3.0.x",
     "tslib": "1.7.x",
     "tslint-loader": "3.5.x",
-    "tslint": "5.8.x",
+    "tslint": "~5.9.0",
     "typescript": "2.5.x",
     "uglify-js": "3.1.x",
     "webpack-dev-server": "2.9.x",
