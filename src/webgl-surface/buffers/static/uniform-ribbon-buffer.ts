@@ -30,17 +30,7 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
       {
         block: 0,
         name: 'controlPoint',
-        size: UniformAttributeSize.TWO,
-      },
-      {
-        block: 0,
-        name: 'startColorPick',
-        size: UniformAttributeSize.ONE,
-      },
-      {
-        block: 0,
-        name: 'endColorPick',
-        size: UniformAttributeSize.ONE,
+        size: UniformAttributeSize.FOUR,
       },
       {
         block: 1,
@@ -71,6 +61,16 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
         block: 4,
         name: 'threshold',
         size: UniformAttributeSize.TWO,
+      },
+      {
+        block: 5,
+        name: 'startColorPick',
+        size: UniformAttributeSize.ONE,
+      },
+      {
+        block: 5,
+        name: 'endColorPick',
+        size: UniformAttributeSize.ONE,
       },
     ];
 
@@ -155,7 +155,7 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
     this.bufferItems.system.drawMode = TriangleStripDrawMode;
   }
 
-  update(shapeBuffer: RibbonShape<any>[] | RibbonShape<any>[][], atlasManager?: AtlasManager, controlPointSource?: number) {
+  update(shapeBuffer: RibbonShape<any>[] | RibbonShape<any>[][], atlasManager?: AtlasManager) {
     if (!shapeBuffer) {
       this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
@@ -205,21 +205,21 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
       (
         instance: number,
         controlPoints: Vector4,
-        startColor: Vector4,
-        endColor: Vector4,
         endPoints1: Vector4,
         endPoints2: Vector4,
         centers: Vector4,
         depth: Vector4,
         resolution: Vector4,
         threshold: Vector4,
+        startColor: Vector4,
+        endColor: Vector4,
       ) => {
         const ribbon = buffer[instance];
 
-        controlPoints.x = ribbon.controlPoints[controlPointSource].x;
-        controlPoints.y = ribbon.controlPoints[controlPointSource].y;
-        startColor.z = ribbon.startColor.base.colorIndex;
-        endColor.w = ribbon.endColor.base.colorIndex;
+        controlPoints.x = ribbon.controlPoints[0].x;
+        controlPoints.y = ribbon.controlPoints[0].y;
+        controlPoints.z = ribbon.controlPoints[1].x;
+        controlPoints.w = ribbon.controlPoints[1].y;
 
         endPoints1.x = ribbon.start.x;
         endPoints1.y = ribbon.start.y;
@@ -240,6 +240,9 @@ export class UniformRibbonBuffer extends BaseBuffer <RibbonShape<any> | RibbonSh
         resolution.y = MAX_SEGMENTS_PER_CURVE;
         threshold.z = THRESHOLD;
         threshold.w = THRESHOLD;
+
+        startColor.x = ribbon.startColor.base.colorIndex;
+        endColor.y = ribbon.endColor.base.colorIndex;
       },
     );
 
