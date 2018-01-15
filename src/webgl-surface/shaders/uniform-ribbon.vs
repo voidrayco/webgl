@@ -7,7 +7,7 @@ uniform vec2 nextColor;
 
 //  This is the shared control point for all of the vertices
 uniform vec4 instanceData[96];
-int instanceSize = 5;
+int instanceSize = 6;
 
 // Varyings
 varying vec4 vertexColor;
@@ -16,7 +16,6 @@ varying vec4 vertexColor;
 float minMidFade = 0.76;
 float stop1 = 0.17;
 float stop2 = 0.83;
-float t = 0.95;
 
 // Methods
 vec2 makeBezier2(float t, vec2 p1, vec2 p2, vec2 c1) {
@@ -47,8 +46,8 @@ void main() {
   vec4 block2 = getBlock(2);
   vec4 block3 = getBlock(3);
   vec4 block4 = getBlock(4);
-  float startColor = block0.z;
-  float endColor = block0.w;
+  vec4 block5 = getBlock(5);
+
   vec2 start1 = block1.xy;
   vec2 start2 = block1.zw;
   vec2 end1 = block2.xy;
@@ -58,13 +57,15 @@ void main() {
   float depth = block4.x;
   float resolution = block4.y;
   vec2 threshold = block4.zw;
+  float startColor = block5.x;
+  float endColor = block5.y;
   float normalDirection = position.x;
   float vertexIndex = position.y;
   float instance = position.z;
   vec2 currentPosition;
 
   // Control point for two lines
-  vec2 controlPoint = block0.xy;
+  vec4 controlPoint = block0;
 
   if (vertexIndex < threshold.x ) {
     vertexColor = pickColor(startColor);
@@ -118,17 +119,8 @@ void main() {
 
     vec2 c1, c2;
 
-    if (d1 < d2) {
-      vec2 mid = getMiddle(start1, end1);
-      c1 = t * controlPoint + (1.0 - t) * mid;
-      c2 = controlPoint;
-    }
-
-    else {
-      vec2 mid = getMiddle(start2, end2);
-      c1 = controlPoint;
-      c2 = t * controlPoint + (1.0 - t) * mid;
-    }
+    c1 = controlPoint.xy;
+    c2 = controlPoint.zw;
 
     if (normalDirection == 1.0) {
       currentPosition = makeBezier2(realTime, start1, end1, c1);
