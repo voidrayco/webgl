@@ -146,14 +146,12 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
     let p2: IPoint;
     let colorStart: AtlasColor;
     let colorEnd: AtlasColor;
-    let alpha: number;
     let controlPoint: IPoint;
     let controlRef: number;
 
     BufferUtil.beginUpdates();
 
     for (const curvedLine of buffer) {
-      alpha = curvedLine.startColor.base.opacity;
       colorStart = curvedLine.startColor.base;
       colorEnd = curvedLine.endColor.base;
       halfWidthSize = curvedLine.lineWidth / 2.0;

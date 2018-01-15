@@ -152,7 +152,6 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer <CurvedLineSha
     let p2: IPoint;
     let colorStart: AtlasColor;
     let colorEnd: AtlasColor;
-    let alpha: number;
     let antLength: number;
     let antGap: number;
     let antSpeed: number;
@@ -172,7 +171,6 @@ export class SharedControlCurvedLineBufferAnts extends BaseBuffer <CurvedLineSha
         continue;
       }
 
-      alpha = curvedLine.startColor.base.opacity;
       colorStart = curvedLine.startColor.base;
       colorEnd = curvedLine.endColor.base;
       halfWidthSize = curvedLine.lineWidth / 2.0;

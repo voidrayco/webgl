@@ -143,25 +143,43 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
    * @param shape The shape to add to a buffer
    */
   addShape(shape: T) {
-    // Perform the custom add opearation
-    const buffers = this.addMethod(shape, this.store.allBuffers);
-    // Stores the shape for lookup via id
-    this.store.idToItem.set(this.idMethod(shape), shape);
-    // Stores the shape for lookup to buffer. We count the
-    // First dirty buffer as the buffer the item is the closest to
-    // Association.
-    this.store.itemToBuffer.set(shape, buffers[0]);
-    // Flag all of the touched buffers as dirty
-    this.flagBuffersDirty(buffers);
+    if (this.store) {
+      // Perform the custom add opearation
+      const buffers = this.addMethod(shape, this.store.allBuffers);
+      // Stores the shape for lookup via id
+      this.store.idToItem.set(this.idMethod(shape), shape);
+      // Stores the shape for lookup to buffer. We count the
+      // First dirty buffer as the buffer the item is the closest to
+      // Association.
+      this.store.itemToBuffer.set(shape, buffers[0]);
+      // Flag all of the touched buffers as dirty
+      this.flagBuffersDirty(buffers);
+    }
   }
 
   /**
    * Clears the multi buffer's storage
    */
   destroy() {
+    this.clearStorage();
+  }
+
+  /**
+   * Empties all of the shapes this buffer manages.
+   *
+   * @param renew If set to true, this will make a new storage for the buffer
+   *              to operate with.
+   * @param selected If renew is true, you have to specify a selection to renew the
+   *                 storage within.
+   */
+  clearStorage(renew?: boolean, selection?: CustomSelection) {
     if (this.store) {
       this.store.selection.clearSelection(this.selectionUID);
       delete this.store;
+    }
+
+    if (renew && selection) {
+      this.getStorage(selection);
     }
   }
 

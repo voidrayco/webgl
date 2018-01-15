@@ -84,6 +84,15 @@ export declare class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
      */
     destroy(): void;
     /**
+     * Empties all of the shapes this buffer manages.
+     *
+     * @param renew If set to true, this will make a new storage for the buffer
+     *              to operate with.
+     * @param selected If renew is true, you have to specify a selection to renew the
+     *                 storage within.
+     */
+    clearStorage(renew?: boolean, selection?: CustomSelection): void;
+    /**
      * Sees if there is a shape associated with this id
      *
      * @param id

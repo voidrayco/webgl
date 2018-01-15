@@ -7,6 +7,7 @@ import { AtlasManager } from './drawing/texture/atlas-manager';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { ISharedRenderContext } from './types';
 import { IProjection } from './util/projection';
 import { QuadTree } from './util/quad-tree';
 import { IScreenContext } from './util/screen-context';
@@ -115,8 +116,6 @@ export interface IWebGLSurfaceProperties {
     colors?: AtlasColor[];
     /** The forced size of the render surface */
     height?: number;
-    /** This will be the view the camera focuses on when the camera is initialized */
-    viewport?: Bounds<never>;
     /** All of the labels to be rendered by the system */
     labels?: Label<any>[];
     /** Provides feedback when the surface is double clicked */
@@ -131,6 +130,18 @@ export interface IWebGLSurfaceProperties {
      * provided viewport.
      */
     onZoomRequest(zoom: number): void;
+    /**
+     * When specified, this context will pan by the indicated amount once. A new object must be
+     * injected in order for the pan to happen again.
+     */
+    pan?: Vector3;
+    /**
+     * If this is provided, then this will render within the rendering context provided,
+     * however, this will retain it's own camera and own scene.
+     */
+    renderContext?: ISharedRenderContext;
+    /** This will be the view the camera focuses on when the camera is initialized */
+    viewport?: Bounds<any>;
     /** The forced size of the render surface */
     width?: number;
     /** The zoom level that the camera should apply */
@@ -159,6 +170,11 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * and the animated methods will attempt executing again
      */
     animatedMethodBreak: boolean;
+    /**
+     * This is the last external panning operation applied to the camera. When a new pan
+     * is applied that is not this pan object
+     */
+    appliedPan: IPoint;
     /**
      * This viewport is the last viewport applied to the camera.
      * If the props inject a new viewport, this is updated with that value so
@@ -269,7 +285,11 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     currentHoverItems: Bounds<any>[];
     /** Mouse in stage or not */
     dragOver: boolean;
-    /** Flag for detecting whether or not webgl is supported at all */
+    /**
+     * If this is true, we are waiting for the rendering context to become available
+     * within this.props.renderContext
+     */
+    waitForContext: boolean;
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
      * This updates the cameras current position and causes changes over time for
