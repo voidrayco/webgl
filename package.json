@@ -45,7 +45,7 @@
     "style-loader": "0.19.x",
     "three": "0.87.x",
     "ts-loader": "3.0.x",
-    "tslib": "1.7.x",
+    "tslib": "~1.9.0",
     "tslint-loader": "3.5.x",
     "tslint": "5.8.x",
     "typescript": "2.5.x",
