@@ -44,7 +44,7 @@
     "react": "15.5.x",
     "style-loader": "0.19.x",
     "three": "0.87.x",
-    "ts-loader": "3.0.x",
+    "ts-loader": "~3.3.1",
     "tslib": "1.7.x",
     "tslint-loader": "3.5.x",
     "tslint": "5.8.x",
