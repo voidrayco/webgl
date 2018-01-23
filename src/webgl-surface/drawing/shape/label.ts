@@ -16,6 +16,7 @@ export class Label<T> extends RotateableQuad<T> {
   fontSize: number = 10;
   fontWeight: number = 400;
   maxWidth: number = undefined;
+  maxLength: number = undefined;
   text: string = '';
   truncatedText: string = '';
   id: string = '';
@@ -184,7 +185,6 @@ export class Label<T> extends RotateableQuad<T> {
       // If we're beyond our max width limit, we must truncate
       if (this.maxWidth && (width > this.maxWidth)) {
         let beyondMax = false;
-
         while (truncatedWidth > this.maxWidth) {
           text = text.substring(0, text.length - 2);
           truncatedWidth =
@@ -196,11 +196,34 @@ export class Label<T> extends RotateableQuad<T> {
           beyondMax = true;
         }
 
+        if (this.maxLength && text.length > this.maxLength) {
+          text = text.substring(0, this.maxLength);
+          truncatedWidth =
+            ctx.measureText(text).width +
+            threeDotsWide +
+            this.rasterizationOffset.x +
+            this.rasterizationPadding.width
+          ;
+        }
+
         if (beyondMax) {
           text += '...';
         }
 
         this.truncatedText = text;
+        width = truncatedWidth;
+      }
+
+      else if (this.maxLength && text.length > this.maxLength) {
+        text = text.substring(0, this.maxLength);
+        text += '...';
+        this.truncatedText = text;
+        truncatedWidth =
+          ctx.measureText(text).width +
+          threeDotsWide +
+          this.rasterizationOffset.x +
+          this.rasterizationPadding.width
+        ;
         width = truncatedWidth;
       }
 
