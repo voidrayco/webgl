@@ -42,7 +42,7 @@
     "raw-loader": "0.5.x",
     "react-dom": "15.5.x",
     "react": "15.5.x",
-    "style-loader": "0.19.x",
+    "style-loader": "~0.20.0",
     "three": "0.87.x",
     "ts-loader": "3.0.x",
     "tslib": "1.7.x",
