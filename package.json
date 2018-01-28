@@ -22,7 +22,7 @@
     "@types/three": "0.84.x",
     "bowser": "1.7.x",
     "d3-color": "1.0.x",
-    "d3-scale": "1.0.x",
+    "d3-scale": "~2.0.0",
     "ramda": "0.25.x"
   },
   "devDependencies": {
