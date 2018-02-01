@@ -55,6 +55,10 @@ function getAngle(point: IPoint, center: IPoint): number {
 }
 
 export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
+  /** Sets the distance of circular animation */
+  animationDistance?: number;
+  /** Sets the duration of circular animation */
+  animationDuration?: number;
   /** Flags whether or not the calculated geometry for the line is cached or not */
   cacheSegments?: boolean;
   /** The depth of line to be rendered */
@@ -80,6 +84,7 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
   startColor?: ReferenceColor;
   /** The base opacity of the line */
   startOpacity?: number;
+
 }
 
 /**
@@ -93,6 +98,10 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
  *             with the shape easier.
  */
 export class CurvedLineShape<T> extends CurvedLine<T> {
+  /** The distance for endpoint animation */
+  animationDistance: number;
+  /** The duration of circular animation */
+  animationDuration: number;
   /** When true, this line will cache the segments of the curve as rendered quads */
   cachesQuadSegments: boolean;
   /** If caching is set, then this stores the calculated quads that composes this line */
@@ -118,6 +127,8 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     // As we will be constructing our own segmentation requiring a new type of cache
     super(options);
 
+    this.animationDistance = options.animationDistance || 0;
+    this.animationDuration = options.animationDuration || 0;
     this.cachesQuadSegments = options.cacheSegments;
     this.depth = options.depth || 0;
     this.lineWidth = options.lineWidth || 1;

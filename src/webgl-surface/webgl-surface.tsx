@@ -1112,7 +1112,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       container.appendChild(this.renderer.domElement);
       // Get the gl context for queries and advanced operations
       this.gl = this.renderer.domElement.getContext('webgl');
-
       this.makeDraggable(this.renderEl, this);
     }
   }
