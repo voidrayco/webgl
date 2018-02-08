@@ -1,3 +1,4 @@
+import { flatten } from 'ramda';
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode } from 'three';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { CurvedLineShape } from '../../drawing/shape/curved-line-shape';
@@ -7,13 +8,17 @@ import { IPoint } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
 
+function isCluster(val: CurvedLineShape<any>[] | CurvedLineShape<any>[][]): val is CurvedLineShape<any>[][] {
+  return Array.isArray(val[0]);
+}
+
 /**
  * This renders a curved line by injecting all attributes needed to render it.
  * This naively includes all possible data in the vertex.
  *
  * This only supports atlas colors.
  */
-export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<any>, Mesh> {
+export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<any> | CurvedLineShape<any>[], Mesh> {
   /**
    * @override
    * See interface definition
@@ -52,6 +57,11 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
         name: 'halfLinewidth',
         size: AttributeSize.ONE,
       },
+      {
+        defaults: [0],
+        name: 'controlPick',
+        size: AttributeSize.ONE,
+      },
     ];
 
     const verticesPerQuad = 6;
@@ -79,16 +89,37 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
    * @param {AtlasManager} atlasManager The Atlas Manager that contains the color atlas
    *                                    needed for rendering with color picks.
    */
-  update(shapeBuffer: CurvedLineShape<any>[], atlasManager?: AtlasManager, sharedControl?: IPoint) {
+  update(shapeBuffer: CurvedLineShape<any>[] | CurvedLineShape<any>[][], atlasManager?: AtlasManager, controlPointSource?: number) {
     if (!shapeBuffer) {
+      this.bufferItems.geometry.setDrawRange(0, 0);
       return false;
     }
+
+    let buffer: CurvedLineShape<any>[];
+
+    if (isCluster(shapeBuffer)) {
+      buffer = flatten<CurvedLineShape<any>>(shapeBuffer);
+    }
+
+    else {
+      buffer = shapeBuffer;
+    }
+
+    // This is a special case where we need to update our current item dataset to prevent
+    // Re-updates for the same empty shape buffer
+    if (buffer.length === 0) {
+      this.bufferItems.currentData = shapeBuffer;
+    }
+
+    const controlPoints: number[] = [];
+    const controlReference = new Map<IPoint, number>();
+    let controlUniform: IUniform;
 
     // As this is a single material, we have to assume that the color atlas
     // For our shapes will be the same atlas for all colors. Thus, the atlas
     // Information for one color will be valid for all colors
-    if (shapeBuffer && shapeBuffer.length > 0 && atlasManager) {
-      const colorRef: ReferenceColor = shapeBuffer[0].startColor;
+    if (buffer.length > 0 && atlasManager) {
+      const colorRef: ReferenceColor = buffer[0].startColor;
       const colorBase = colorRef.base;
 
       // Update all uniforms for this material to utilize the atlas metrics for
@@ -100,8 +131,8 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
       uniforms.colorsPerRow.value = colorBase.colorsPerRow;
       uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
       uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-      // This is the shared control point for all of the vertices
-      uniforms.controlPoint.value = [sharedControl.x, sharedControl.y];
+      // This is the shared control points for all of the vertices
+      controlUniform = uniforms.controlPoints;
       atlas.needsUpdate = true;
     }
 
@@ -115,21 +146,30 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
     let p2: IPoint;
     let colorStart: AtlasColor;
     let colorEnd: AtlasColor;
-    let alpha: number;
+    let controlPoint: IPoint;
+    let controlRef: number;
 
     BufferUtil.beginUpdates();
 
-    for (const curvedLine of shapeBuffer) {
-      alpha = curvedLine.startColor.base.opacity;
+    for (const curvedLine of buffer) {
       colorStart = curvedLine.startColor.base;
       colorEnd = curvedLine.endColor.base;
       halfWidthSize = curvedLine.lineWidth / 2.0;
       length = curvedLine.resolution;
-      p1 = curvedLine.p1;
-      p2 = curvedLine.p2;
+      p1 = curvedLine.start;
+      p2 = curvedLine.end;
+
+      controlPoint = curvedLine.controlPoints[controlPointSource];
+      controlRef = controlReference.get(controlPoint);
+
+      if (controlRef === undefined) {
+        const controlLength = controlPoints.push(controlPoint.x, controlPoint.y);
+        controlRef = controlLength - 2;
+        controlReference.set(controlPoint, controlRef);
+      }
 
       needsUpdate = BufferUtil.updateBuffer(
-        shapeBuffer, this.bufferItems,
+        buffer, this.bufferItems,
         numVerticesPerSegment, length,
         function(i: number,
           positions: Float32Array, ppos: number,
@@ -138,8 +178,8 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           normals: Float32Array, npos: number,
           endPoints: Float32Array, epos: number,
           halfWidth: Float32Array, wpos: number,
+          controlPick: Float32Array, cpos: number,
         ) {
-
           // Copy first vertex twice for intro degenerate tri
           positions[ppos] = (i + 1) / length;
           positions[++ppos] = length;
@@ -153,6 +193,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
+          controlPick[cpos] = controlRef;
 
           // TR
           positions[++ppos] = (i + 1) / length;
@@ -166,6 +207,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[scpos] = colorStart.colorIndex;
           endColor[ecpos] = colorEnd.colorIndex;
+          controlPick[++cpos] = controlRef;
 
           // BR
           positions[++ppos] = (i + 1) / length;
@@ -179,6 +221,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[++scpos] = colorStart.colorIndex;
           endColor[++ecpos] = colorEnd.colorIndex;
+          controlPick[++cpos] = controlRef;
 
           // TL
           positions[++ppos] = i / length;
@@ -192,6 +235,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[++scpos] = colorStart.colorIndex;
           endColor[++ecpos] = colorEnd.colorIndex;
+          controlPick[++cpos] = controlRef;
 
           // BL
           positions[++ppos] = i / length;
@@ -205,6 +249,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p2.y;
           startColor[++scpos] = colorStart.colorIndex;
           endColor[++ecpos] = colorEnd.colorIndex;
+          controlPick[++cpos] = controlRef;
 
           // Copy last vertex again for degenerate tri
           positions[++ppos] = i / length;
@@ -219,6 +264,7 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
           endPoints[++epos] = p1.y;
           endPoints[++epos] = p2.x;
           endPoints[++epos] = p2.y;
+          controlPick[++cpos] = controlRef;
         },
       );
 
@@ -230,6 +276,10 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
 
     const numBatches = BufferUtil.endUpdates();
 
+    if (controlUniform) {
+      controlUniform.value = controlPoints;
+    }
+
     // Only if updates happened, should this change
     if (needsUpdate) {
       this.bufferItems.geometry.setDrawRange(0, numVerticesPerSegment * numBatches);
@@ -237,6 +287,13 @@ export class SharedControlCurvedLineBuffer extends BaseBuffer <CurvedLineShape<a
 
     else if (shapeBuffer.length === 0) {
       this.bufferItems.geometry.setDrawRange(0, 0);
+    }
+
+    // Since we have the ability to flatten the shape buffer (thus causing a new array point to
+    // Come into existance) we must explicitly ensure the current data is set to the actual
+    // Shape buffer that came in. This makes clusters only efficient if using a multibuffer cache
+    if (isCluster(shapeBuffer)) {
+      this.bufferItems.currentData = shapeBuffer;
     }
 
     return needsUpdate;

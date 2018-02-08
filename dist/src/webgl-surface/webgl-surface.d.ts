@@ -7,6 +7,7 @@ import { AtlasManager } from './drawing/texture/atlas-manager';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { ISharedRenderContext } from './types';
 import { IProjection } from './util/projection';
 import { QuadTree } from './util/quad-tree';
 import { IScreenContext } from './util/screen-context';
@@ -77,6 +78,14 @@ export interface IAnimatedMethodResponse {
      */
     stop?: boolean;
 }
+export declare type AnimatedMethodOptions = {
+    labelsReady?: boolean;
+    colorsReady?: boolean;
+};
+export declare type AnimatedMethodWithOptions = {
+    options: AnimatedMethodOptions;
+    method(): IAnimatedMethodResponse;
+};
 export declare type AnimatedMethod = () => IAnimatedMethodResponse;
 export declare type AnimatedMethodLookup = {
     [key: number]: AnimatedMethod;
@@ -107,20 +116,32 @@ export interface IWebGLSurfaceProperties {
     colors?: AtlasColor[];
     /** The forced size of the render surface */
     height?: number;
-    /** This will be the view the camera focuses on when the camera is initialized */
-    viewport?: Bounds<never>;
     /** All of the labels to be rendered by the system */
     labels?: Label<any>[];
     /** Provides feedback when the surface is double clicked */
     onDoubleClick?(e: React.MouseEvent<Element>): void;
     /** Provides feedback when the mouse has moved */
     onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void;
+    /** When provided provides image data every frame for the screen */
+    onRender?(image: string): void;
     /**
      * This is a handler that handles zoom changes the gpu-chart may request.
      * This includes moments such as initializing the camera to focus on a
      * provided viewport.
      */
     onZoomRequest(zoom: number): void;
+    /**
+     * When specified, this context will pan by the indicated amount once. A new object must be
+     * injected in order for the pan to happen again.
+     */
+    pan?: Vector3;
+    /**
+     * If this is provided, then this will render within the rendering context provided,
+     * however, this will retain it's own camera and own scene.
+     */
+    renderContext?: ISharedRenderContext;
+    /** This will be the view the camera focuses on when the camera is initialized */
+    viewport?: Bounds<any>;
     /** The forced size of the render surface */
     width?: number;
     /** The zoom level that the camera should apply */
@@ -142,7 +163,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * simpler to manage, as well as gives a clear and optimized way of overriding existing methods
      * or reordering their execution
      */
-    animatedMethodList: AnimatedMethod[];
+    animatedMethodList: (AnimatedMethod | AnimatedMethodWithOptions)[];
     /**
      * If this is set to true during an animated method's lifecycle, then all subsequent animated methods
      * will not be executed for the current frame. Upon reaching the end of the frame, the break will reset
@@ -150,20 +171,32 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      */
     animatedMethodBreak: boolean;
     /**
+     * This is the last external panning operation applied to the camera. When a new pan
+     * is applied that is not this pan object
+     */
+    appliedPan: IPoint;
+    /**
      * This viewport is the last viewport applied to the camera.
      * If the props inject a new viewport, this is updated with that value so
      * that the viewport will only be applied once if it doesn't change again.
      */
     appliedViewport: Bounds<any>;
-    /** Used to aid in mouse interactions */
-    distance: number;
     /**
      * The camera that 'looks' at our world and gives us the ability to convert
      * screen coordinates to world coordinates, and vice versa
      */
-    camera: OrthographicCamera | null;
+    camera: OrthographicCamera;
     /** A camera that is used for projecting sizes to and from the screen to the world */
     circleMaterial: ShaderMaterial;
+    /**
+     * This is the latest colors loading identifier, used to determine if the colors
+     * last loaded matches the colors currently needing to be rendered. Fixes asynchronous
+     * Issue where a new set of colors is requested before the previous set(s) have completed
+     */
+    colorsCurrentLoadedId: number;
+    /** This is the is of the current and most recent color group being loaded in */
+    colorsLoadId: number;
+    /** Stores screen dimension info */
     ctx: IScreenContext;
     /**
      * While this number is positive it will be decremented every frame.
@@ -174,9 +207,19 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * start taking place.
      */
     disableMouseInteraction: number;
+    /** Used to aid in mouse interactions */
+    distance: number;
+    /** When set, forces a draw next animation frame */
     forceDraw: boolean;
+    /**
+     * This stores the gl rendering context for reference when it's available
+     */
+    gl: WebGLRenderingContext;
+    /** Contains the methods for projecting between screen and world spaces */
     projection: IProjection;
+    /** The top level HTML element for this component */
     renderEl: HTMLElement;
+    /** The threejs renderer */
     renderer: WebGLRenderer;
     scene: Scene;
     sizeCamera: OrthographicCamera | null;
@@ -236,11 +279,17 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** When this is set to true, the atlas with the colors is now ready to be referenced */
     colors: AtlasColor[];
     colorsReady: boolean;
+    /** This is a flag that allows some extra control over when an onRender can fire */
+    isRenderReady: boolean;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
     /** Mouse in stage or not */
     dragOver: boolean;
-    /** Flag for detecting whether or not webgl is supported at all */
+    /**
+     * If this is true, we are waiting for the rendering context to become available
+     * within this.props.renderContext
+     */
+    waitForContext: boolean;
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
      * This updates the cameras current position and causes changes over time for
@@ -256,7 +305,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      *
      * @return {AnimatedMethods[]} The list of animated methods in the order they are expected to be executed
      */
-    animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: AnimatedMethod[]): AnimatedMethod[];
+    animatedMethods(baseAnimatedMethods: AnimatedMethodLookup, orderedBaseAnimatedMethods: (AnimatedMethod | AnimatedMethodWithOptions)[]): (AnimatedMethod | AnimatedMethodWithOptions)[];
     /**
      * This generates the base animated methods lookup.
      * We do not make these methods a part of the class as this is the base class
@@ -346,7 +395,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * This is the draw method executed from the animation loop. Everytime, this is
      * called, the webgl surface will be redrawn.
      */
-    draw: () => void;
+    draw(): void;
     /**
      * This initializes the surface and calls for sub class classes to initialize
      * their buffers
@@ -376,7 +425,6 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * to the subclass that needs detailed information regarding the viewport.
      */
     emitViewport: () => void;
-    onRender(image: string): void;
     /**
      * Hook for subclasses to when the mouse moves. Provides some information
      * about mouse location and interaction.

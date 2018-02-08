@@ -3,7 +3,7 @@ import { ShaderMaterial } from 'three';
 import { Label } from '../../drawing/shape/label';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { BaseBuffer } from '../base-buffer';
-export declare class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh> {
+export declare class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[], Mesh> {
     /**
      * @override
      * See interface definition
@@ -15,5 +15,5 @@ export declare class SimpleStaticLabelBuffer extends BaseBuffer<Label<any>, Mesh
      *
      * @param shapeBuffer
      */
-    update(shapeBuffer: Label<any>[], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean;
+    update(shapeBuffer: Label<any>[] | Label<any>[][], atlasManager?: AtlasManager, startFade?: number, endFade?: number, labelMaxSize?: number): boolean;
 }

@@ -1,7 +1,22 @@
-import { rgb, RGBColor } from 'd3-color';
 import { Line } from '../../primitives/line';
 import { IPoint } from '../../primitives/point';
+import { ReferenceColor } from '../reference/reference-color';
 import { LineShape } from './line-shape';
+
+export interface IEdgeShapeOptions {
+  /** The color of the edge at the end */
+  endColor: ReferenceColor;
+  /** The width of the edge at it's end */
+  endWidth: number;
+  /** The starting point of the line the edge represents */
+  p1: IPoint;
+  /** The ending point of the line the edge represents  */
+  p2: IPoint;
+  /** The starting color of the edge */
+  startColor: ReferenceColor;
+  /** The ending color of the edge */
+  startWidth: number;
+}
 
 /**
  * This defines an edge that can be drawn.
@@ -45,17 +60,19 @@ export class EdgeShape<T> extends LineShape<T> {
    *                the end part of the edge will fan out 2 on either side of the
    *                end point
    */
-  constructor(p1: IPoint, p2: IPoint, d: T, p1Col: RGBColor, p2Col: RGBColor, p1Width: number, p2Width: number) {
+  constructor(options: IEdgeShapeOptions) {
     // Set up all of our line shape based metrics
     super(
-      p1, p2, d,
-      p1Col.r, p1Col.g, p1Col.b, p1Col.opacity,
-      p2Col.r, p2Col.g, p2Col.b, p2Col.opacity,
-      p1Width,
+      Object.assign(
+        options,
+        {
+          thickness: options.startWidth,
+        },
+      ),
     );
 
-    this.endWidth = p2Width;
-    this.setPoints(p1, p2);
+    this.endWidth = options.endWidth || 1.0;
+    this.setPoints(options.p1, options.p2);
   }
 
   /**
@@ -68,14 +85,14 @@ export class EdgeShape<T> extends LineShape<T> {
    */
   clone(newProperties: Partial<EdgeShape<T>>): EdgeShape<T> {
     return Object.assign(
-      new EdgeShape(
-        this.p1, this.p2, this.d,
-        rgb(this.r, this.g, this.b, this.a),
-        rgb(this.r2, this.g2, this.b2, this.a2),
-        this.thickness,
-        this.endWidth,
+      new EdgeShape<T>(
+        Object.assign<any, any>(
+          this,
+          {
+            startWidth: this.thickness,
+          },
+        ),
       ),
-      this,
       newProperties,
     ) as EdgeShape<T>;
   }

@@ -1,4 +1,4 @@
-import { CurvedLine, ICurvedLineOptions } from '../../primitives/curved-line';
+import { CurvedLine, CurveType, ICurvedLineOptions } from '../../primitives/curved-line';
 import { Line } from '../../primitives/line';
 import { IPoint, Point } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
@@ -25,6 +25,35 @@ export interface IMarchingAnts {
   gapLength: number;
 }
 
+/**
+ * This gets the radian of line from center to point
+ *
+ * @param point
+ * @param center
+ */
+function getAngle(point: IPoint, center: IPoint): number {
+
+  if ( point.x > center.x) {
+    return Math.atan((point.y - center.y) / (point.x - center.x));
+  }
+
+  else if ( point.x === center.x) {
+    if (point.y > center.y) return Math.PI / 2;
+    else return - Math.PI / 2;
+  }
+
+  else {
+
+    if (point.y >= center.y) {
+      return Math.PI + Math.atan((point.y - center.y) / (point.x - center.x));
+    }
+
+    else {
+      return Math.atan((point.y - center.y) / (point.x - center.x)) - Math.PI;
+    }
+  }
+}
+
 export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
   /** Flags whether or not the calculated geometry for the line is cached or not */
   cacheSegments?: boolean;
@@ -48,7 +77,7 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
    */
   marchingAnts?: IMarchingAnts;
   /** The base color of the line. */
-  startColor: ReferenceColor;
+  startColor?: ReferenceColor;
   /** The base opacity of the line */
   startOpacity?: number;
 }
@@ -89,12 +118,13 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     // As we will be constructing our own segmentation requiring a new type of cache
     super(options);
 
-    this.encapsulatePoints(this.getTriangleStrip());
     this.cachesQuadSegments = options.cacheSegments;
     this.depth = options.depth || 0;
     this.lineWidth = options.lineWidth || 1;
+    this.encapsulatePoints(this.getTriangleStrip());
     this.startColor = options.startColor;
     this.endColor = options.endColor;
+    this.marchingAnts = options.marchingAnts;
   }
 
   /**
@@ -107,11 +137,11 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
     const clone: CurvedLineShape<T> = new CurvedLineShape<T>({
       cacheSegments: this.cachesSegments,
       controlPoints: this.controlPoints,
-      end: this.p2,
+      end: this.end,
       endColor: this.endColor,
       lineWidth: this.lineWidth,
       resolution: this.resolution,
-      start: this.p1,
+      start: this.start,
       startColor: this.startColor,
       type: this.type,
     });
@@ -219,12 +249,60 @@ export class CurvedLineShape<T> extends CurvedLine<T> {
    * @override
    * Adjusts the relevant points that defines the curve and recalculates all items necessary
    *
-   * @param {IPoint} p1
-   * @param {IPoint} p2
+   * @param {IPoint} start
+   * @param {IPoint} end
    * @param {IPoint[]} controlPoints
    */
-  setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]) {
-    super.setPoints(p1, p2, controlPoints);
+  setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]) {
+    super.setPoints(start, end, controlPoints);
     this.cachedQuadSegments = [];
+  }
+
+  containsPoint(point: IPoint) {
+      if (this.type === CurveType.CircularCW || this.type === CurveType.CircularCCW) {
+
+        // Center
+        const center = this.controlPoints[1];
+
+        // Radius' suare value
+        const radiusSquare = Math.pow(this.start.x - center.x, 2) + Math.pow(this.start.y - center.y, 2);
+
+        // It is used to calculate squared value of (radius + lineWidth / 2)
+        const radius = Math.sqrt(radiusSquare);
+
+        // Distance'square value from mouse to center
+        const distanceSquare = Math.pow(point.x - center.x, 2) + Math.pow(point.y - center.y, 2);
+
+        // Linewidth's square value
+        const lineWidthSquare = this.lineWidth * this.lineWidth;
+
+        // Angles
+        let angle = getAngle(point, center);
+        const startAngle = getAngle(this.start, center);
+        let endAngle = getAngle(this.end, center);
+
+        if ( startAngle > 0 && endAngle < 0) {
+          if (angle < 0) angle += 2 * Math.PI;
+          endAngle += 2 * Math.PI;
+        }
+
+        // Make sure point is in the endpoint
+        if (
+          distanceSquare <= radiusSquare + this.lineWidth * radius + lineWidthSquare / 4
+          && distanceSquare >= radiusSquare - this.lineWidth * radius + lineWidthSquare / 4
+          && angle >= startAngle
+          && angle <= endAngle
+        ) {
+          return true;
+        }
+
+        return false;
+      }
+
+      else if (this.type === CurveType.Bezier) {
+        return super.containsPoint(point);
+      }
+
+      return false;
   }
 }

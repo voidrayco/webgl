@@ -1,3 +1,4 @@
+import { Bounds } from '../../primitives';
 import { IPoint } from '../../primitives/point';
 import { RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
@@ -10,11 +11,13 @@ export declare class Label<T> extends RotateableQuad<T> {
     fontSize: number;
     fontWeight: number;
     maxWidth: number;
+    maxLength: number;
     text: string;
+    truncatedText: string;
     id: string;
     textAlign: 'start' | 'center' | 'right';
     textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging';
-    zoomable: boolean;
+    allowScaling: boolean;
     /**
      * For rasterizing a label, we don't want to have duplicate labels rendered to our atlas
      * so we can base a label off another label. When this happens ONLY certain properties
@@ -56,6 +59,11 @@ export declare class Label<T> extends RotateableQuad<T> {
      * @param {Label} label The labels whose properties we wish to copy
      */
     copyLabel(label: Label<T>): void;
+    /**
+     * This gives the bounds of the label that has encapsulated the anchor point.
+     * Useful for special cases where the anchor point is not a part of the label
+     */
+    getBoundsWithAnchor(): Bounds<T>;
     /**
      * This gets the actual text this label is capable of rendering
      */

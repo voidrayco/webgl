@@ -45,7 +45,7 @@ export interface ICurvedLineShapeOptions extends ICurvedLineOptions {
      */
     marchingAnts?: IMarchingAnts;
     /** The base color of the line. */
-    startColor: ReferenceColor;
+    startColor?: ReferenceColor;
     /** The base opacity of the line */
     startOpacity?: number;
 }
@@ -102,9 +102,10 @@ export declare class CurvedLineShape<T> extends CurvedLine<T> {
      * @override
      * Adjusts the relevant points that defines the curve and recalculates all items necessary
      *
-     * @param {IPoint} p1
-     * @param {IPoint} p2
+     * @param {IPoint} start
+     * @param {IPoint} end
      * @param {IPoint[]} controlPoints
      */
-    setPoints(p1: IPoint, p2: IPoint, controlPoints?: IPoint[]): void;
+    setPoints(start: IPoint, end: IPoint, controlPoints?: IPoint[]): void;
+    containsPoint(point: IPoint): boolean;
 }

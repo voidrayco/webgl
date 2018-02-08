@@ -1,4 +1,5 @@
 import { IPoint } from './point';
+import { ISize } from './size';
 
 /**
  * Class to manage the x, y, width, and height of an object
@@ -322,6 +323,74 @@ export class Bounds<T> {
       'containsPoint' in value &&
       'encapsulate' in value &&
       'hitTest' in value;
+  }
+
+  /**
+   * Scales bounds. Allows the scaling to happen but clamps if max or min bounds
+   * are provided.
+   *
+   * @param bounds The bounds to scale
+   * @param anchor The orientation point where the bounds will be resized
+   *               relative to. Be aware: the anchor position will be in the
+   *               same coordinate space as the bounds dimensions. Thus the
+   *               anchor is NOT relative to the top left of the bounds.
+   * @param scale The amount to scale by
+   * @param max The max size height or width the bounds can attain via scaling
+   * @param min The min size height or width the bounds can attain via scaling
+   */
+  static scaleBounds(bounds: Bounds<any>, anchor: IPoint, scale: number, max?: ISize, min?: ISize) {
+    // First make a bounds so we can copy the metrics without modifying the original
+    const scaled = new Bounds(0, 0, 0, 0);
+    scaled.copyBounds(bounds);
+
+    // Adjust for width bounds
+    let newWidth = scaled.width * scale;
+
+    if (min) {
+      if (newWidth < min.width) {
+        newWidth = min.width;
+        scale = newWidth / scaled.width;
+      }
+    }
+
+    if (max) {
+      if (newWidth > max.width) {
+        newWidth = max.width;
+        scale = newWidth / scaled.width;
+      }
+    }
+
+    // Now adjust for height bounds
+    let newHeight = scaled.height * scale;
+
+    if (min) {
+      if (newHeight < min.height) {
+        newHeight = min.height;
+        scale = newHeight / scaled.height;
+      }
+    }
+
+    if (max) {
+      if (newHeight > max.height) {
+        newHeight = max.height;
+        scale = newHeight / scaled.height;
+      }
+    }
+
+    // Make sure the width has the height bounds applied
+    newWidth = scaled.width * scale;
+
+    // Apply the new properties
+    scaled.x -= anchor.x;
+    scaled.y -= anchor.y;
+    scaled.x *= scale;
+    scaled.y *= scale;
+    scaled.x += anchor.x;
+    scaled.y += anchor.y;
+    scaled.width = newWidth;
+    scaled.height = newHeight;
+
+    return scaled;
   }
 
   /**

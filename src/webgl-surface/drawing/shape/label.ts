@@ -1,4 +1,5 @@
 import { omit } from 'ramda';
+import { Bounds } from '../../primitives';
 import { IPoint } from '../../primitives/point';
 import { AnchorPosition, RotateableQuad } from '../../primitives/rotateable-quad';
 import { ISize } from '../../primitives/size';
@@ -15,11 +16,13 @@ export class Label<T> extends RotateableQuad<T> {
   fontSize: number = 10;
   fontWeight: number = 400;
   maxWidth: number = undefined;
+  maxLength: number = undefined;
   text: string = '';
+  truncatedText: string = '';
   id: string = '';
   textAlign: 'start' | 'center' | 'right' = 'start';
   textBaseline: 'bottom' | 'alphabetic' | 'middle' | 'top' | 'hanging' = 'alphabetic';
-  zoomable: boolean = false;
+  allowScaling: boolean = true;
 
   /**
    * For rasterizing a label, we don't want to have duplicate labels rendered to our atlas
@@ -84,7 +87,6 @@ export class Label<T> extends RotateableQuad<T> {
    */
   constructor(options: Partial<Label<T>> = {}) {
     super({x: 0, y: 1}, {width: 1, height: 1}, 0, AnchorPosition.TopLeft);
-
     // Set props
     Object.assign(this, options);
     // Make sure our dimensions are set
@@ -106,6 +108,18 @@ export class Label<T> extends RotateableQuad<T> {
 
     // Use this to set the text to make sure all of the metrics are re-calculated
     this.setText(label.text);
+  }
+
+  /**
+   * This gives the bounds of the label that has encapsulated the anchor point.
+   * Useful for special cases where the anchor point is not a part of the label
+   */
+  getBoundsWithAnchor() {
+    const combined = new Bounds<T>(0, 0, 0, 0);
+    combined.copyBounds(this);
+    combined.encapsulatePoint(this.getAnchor(true));
+
+    return combined;
   }
 
   /**
@@ -156,11 +170,67 @@ export class Label<T> extends RotateableQuad<T> {
     }
 
     else {
-      measurement.context.font = this.makeCSSFont();
-      const size = measurement.context.measureText(lbl);
+      const ctx = measurement.context;
+      ctx.font = this.makeCSSFont();
+      const size = ctx.measureText(lbl);
       // Set our properties based on the calculated size
-      height = fontSize;
-      width = size.width;
+      height = fontSize + this.rasterizationPadding.height;
+      width = size.width + this.rasterizationOffset.x + this.rasterizationPadding.width;
+
+      // We must analyze the label for truncation based on the max width
+      const threeDotsWide = ctx.measureText('...').width;
+      let text = this.text;
+      let truncatedWidth = width;
+
+      // If we're beyond our max width limit, we must truncate
+      if (this.maxWidth && (width > this.maxWidth)) {
+        let beyondMax = false;
+        while (truncatedWidth > this.maxWidth) {
+          text = text.substring(0, text.length - 2);
+          truncatedWidth =
+            ctx.measureText(text).width +
+            threeDotsWide +
+            this.rasterizationOffset.x +
+            this.rasterizationPadding.width
+          ;
+          beyondMax = true;
+        }
+
+        if (this.maxLength && text.length > this.maxLength) {
+          text = text.substring(0, this.maxLength);
+          truncatedWidth =
+            ctx.measureText(text).width +
+            threeDotsWide +
+            this.rasterizationOffset.x +
+            this.rasterizationPadding.width
+          ;
+        }
+
+        if (beyondMax) {
+          text += '...';
+        }
+
+        this.truncatedText = text;
+        width = truncatedWidth;
+      }
+
+      else if (this.maxLength && text.length > this.maxLength) {
+        text = text.substring(0, this.maxLength);
+        text += '...';
+        this.truncatedText = text;
+        truncatedWidth =
+          ctx.measureText(text).width +
+          threeDotsWide +
+          this.rasterizationOffset.x +
+          this.rasterizationPadding.width
+        ;
+        width = truncatedWidth;
+      }
+
+      // Otherwise, indicate we are not truncated at all
+      else {
+        this.truncatedText = '';
+      }
     }
 
     this.fontSize = fontSize;

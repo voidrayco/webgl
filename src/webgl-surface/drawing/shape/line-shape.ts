@@ -1,46 +1,50 @@
 import { Line } from '../../primitives/line';
 import { IPoint } from '../../primitives/point';
+import { ReferenceColor } from '../reference/reference-color';
+
+export interface ILineShapeOptions {
+  /** This sets whether or not the line should respect scaling on it's thickness */
+  allowScaling?: boolean;
+  /** Sorting order of the line */
+  depth?: number;
+  /** Color of the line at the end point */
+  endColor?: ReferenceColor;
+  /** The start point of the line */
+  p1: IPoint;
+  /** THe end point of the line */
+  p2: IPoint;
+  /** The color of the line at the start point */
+  startColor?: ReferenceColor;
+  /** The thickness of the line */
+  thickness?: number;
+}
 
 /**
  * Defines a line that can be drawn
  */
 export class LineShape<T> extends Line<T> {
-  // Color 1
-  a: number = 0;
-  b: number = 0;
-  g: number = 0;
-  r: number = 1;
-  // Color 2 ?
-  a2: number = 0;
-  b2: number = 0;
-  g2: number = 0;
-  r2: number = 1;
-  // Other properties
-  cull: boolean = true;
-  selectedIndex: number;
-  thickness: number = 1;
+  /** Sorting order */
+  depth: number;
+  /** The color of the line at the start point */
+  startColor: ReferenceColor;
+  /** The color of the line at the end point */
+  endColor: ReferenceColor;
+  /** The thickness of the line */
+  thickness: number;
+  /** Setting that allows scaling on the line or not for it's thickness */
+  allowScaling: boolean;
 
   /**
    * Generate a new line that can be drawn
    */
-  constructor(p1: IPoint, p2: IPoint, d: T, r: number, g: number, b: number, a: number, r2: number, g2: number, b2: number, a2: number, thickness?: number) {
-    super(p1, p2);
+  constructor(options: ILineShapeOptions) {
+    super(options.p1, options.p2);
 
-    Object.assign(this, {
-      a,
-      a2,
-      b,
-      b2,
-      d,
-      g,
-      g2,
-      r,
-      r2,
-    });
-
-    if (thickness !== undefined) {
-      this.thickness = thickness;
-    }
+    this.allowScaling = options.allowScaling || false;
+    this.depth = options.depth || 0.0;
+    this.endColor = options.endColor;
+    this.startColor = options.startColor;
+    this.thickness = options.thickness || 1.0;
   }
 
   /**
@@ -52,9 +56,8 @@ export class LineShape<T> extends Line<T> {
    * @return {CircleShape} A newly cloned instance of this line shape
    */
   clone(newProperties: Partial<LineShape<T>>) {
-    return Object.assign(
-      new LineShape(this.p1, this.p2, this.d, this.r, this.g, this.b, this.a, this.r2, this.g2, this.b2, this.a2),
-      this,
+    return Object.assign<LineShape<T>, Partial<LineShape<T>>>(
+      new LineShape(this),
       newProperties,
     ) as LineShape<T>;
   }
