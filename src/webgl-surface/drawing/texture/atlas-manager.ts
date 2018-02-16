@@ -20,6 +20,14 @@ const ZERO_IMAGE = {
   pixelWidth: 0,
 };
 
+function isImageElement(val: any): val is HTMLImageElement {
+  return Boolean(val.src);
+}
+
+function isString(val: any): val is string {
+  return Boolean(val.substr);
+}
+
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
  * textures defining those pieces of atlas.
@@ -418,22 +426,36 @@ export class AtlasManager {
    */
   loadImage(texture: AtlasTexture): Promise<HTMLImageElement | null> {
     if (texture.imagePath) {
-      return new Promise((resolve, reject) => {
-        const image: HTMLImageElement = new Image();
+      const imageElement = texture.imagePath;
 
-        image.onload = function() {
-          texture.pixelWidth = image.width;
-          texture.pixelHeight = image.height;
-          texture.aspectRatio = image.width / image.height;
-          resolve(image);
-        };
+      // If the texture was provided an image then we just return the image
+      if (isImageElement(imageElement)) {
+        texture.pixelWidth = imageElement.width;
+        texture.pixelHeight = imageElement.height;
+        texture.aspectRatio = imageElement.width / imageElement.height;
 
-        image.onerror = function() {
-          resolve(null);
-        };
+        return Promise.resolve(imageElement);
+      }
 
-        image.src = texture.imagePath;
-      });
+      // If a string was returned, we must load the image then return the image
+      else if (isString(imageElement)) {
+        return new Promise((resolve, reject) => {
+          const image: HTMLImageElement = new Image();
+
+          image.onload = function() {
+            texture.pixelWidth = image.width;
+            texture.pixelHeight = image.height;
+            texture.aspectRatio = image.width / image.height;
+            resolve(image);
+          };
+
+          image.onerror = function() {
+            resolve(null);
+          };
+
+          image.src = imageElement;
+        });
+      }
     }
 
     else if (texture.label) {
