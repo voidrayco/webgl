@@ -1038,6 +1038,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     this.atlasManager.destroyAtlas(this.atlasNames.colors);
     this.atlasManager.destroyAtlas(this.atlasNames.labels);
+    this.atlasManager.destroyAtlas(this.atlasNames.images);
 
     FrameInfo.framesPlayed.delete(this);
   }

@@ -4,7 +4,7 @@ import { Label } from '../shape/label';
  * Defines a texture that is located on an atlas
  */
 export declare class AtlasTexture {
-    imagePath: string;
+    imagePath: string | HTMLImageElement;
     label: Label<any>;
     /** Stores the aspect ratio of the image for quick reference */
     aspectRatio: number;
@@ -20,5 +20,5 @@ export declare class AtlasTexture {
      *
      * @param path The path to the image resource to be loaded into the atlas.
      */
-    constructor(path?: string, label?: Label<any>);
+    constructor(path?: string | HTMLImageElement, label?: Label<any>);
 }
