@@ -847,7 +847,7 @@ export class BufferUtil {
     return {
       blocksPerInstance: maxBlock + 1,
       buffer,
-      maxInstances: Math.floor(uniformBufferBlockMax / maxBlock),
+      maxInstances: Math.floor(uniformBufferBlockMax / (maxBlock + 1)),
     };
   }
 
