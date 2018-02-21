@@ -21,11 +21,11 @@ const ZERO_IMAGE = {
 };
 
 function isImageElement(val: any): val is HTMLImageElement {
-  return Boolean(val.src);
+  return Boolean(val && val.src);
 }
 
 function isString(val: any): val is string {
-  return Boolean(val.substr);
+  return Boolean(val && val.substr);
 }
 
 /**
