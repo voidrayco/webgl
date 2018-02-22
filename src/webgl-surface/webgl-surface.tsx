@@ -856,6 +856,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
             // Reapply the props so any buffers that were not updating can update now
             this.applyProps(this.props);
+          })
+          .catch(err => {
+            console.warn('There was an issue while loading images to the atlas. Changes will not be applied properly and you may see visual artefacts');
+            console.error(err && (err.stack || err.message));
           });
         }
 
