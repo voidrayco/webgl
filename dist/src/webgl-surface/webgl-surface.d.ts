@@ -4,6 +4,7 @@ import { OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } fro
 import { Label } from './drawing/shape/label';
 import { AtlasColor } from './drawing/texture/atlas-color';
 import { AtlasManager } from './drawing/texture/atlas-manager';
+import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
@@ -27,6 +28,8 @@ export declare enum BaseApplyPropsMethods {
     LABELS = 3,
     /** Generates the colors within the atlas manager */
     COLORS = 4,
+    /** Generates images within the atlas manager */
+    IMAGES = 5,
 }
 /**
  * This enum names the base methods that are passed into the animatedMethods
@@ -116,6 +119,8 @@ export interface IWebGLSurfaceProperties {
     colors?: AtlasColor[];
     /** The forced size of the render surface */
     height?: number;
+    /** The unique images to be loaded into an atlas for rendering */
+    images?: AtlasTexture[];
     /** All of the labels to be rendered by the system */
     labels?: Label<any>[];
     /** Provides feedback when the surface is double clicked */
@@ -156,6 +161,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** Tracks the names of the atlas' generated */
     atlasNames: {
         colors: string;
+        images: string;
         labels: string;
     };
     /**
@@ -290,6 +296,14 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * within this.props.renderContext
      */
     waitForContext: boolean;
+    images: AtlasTexture[];
+    imagesReady: boolean;
+    /**
+     * This is the latest images loading identifier, used to determine if the images
+     * last loaded matches the images currently needing to be rendered.
+     */
+    imagesCurrentLoadedId: number;
+    imagesLoadId: number;
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
      * This updates the cameras current position and causes changes over time for
@@ -322,6 +336,11 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * on colors rendered into the atlas after the system has prepped the colors for render.
      */
     applyColorBufferChanges(props: T): void;
+    /**
+     * This is a hook for subclasses to be able to apply buffer changes that rely
+     * on images rendered into the atlas after the system has prepped the images for render.
+     */
+    applyImageBufferChanges(props: T): void;
     /**
      * This is a hook for subclasses to be able to apply label buffer changes after the system has
      * prepped the labels for render.

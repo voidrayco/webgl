@@ -6,7 +6,7 @@ import { Label } from '../shape/label';
  */
 export class AtlasTexture {
   // Stores where this image was loaded from the file system
-  imagePath: string;
+  imagePath: string | HTMLImageElement;
   // Stores the string label this image has rendered rather than the path
   label: Label<any>;
 
@@ -30,7 +30,7 @@ export class AtlasTexture {
    *
    * @param path The path to the image resource to be loaded into the atlas.
    */
-  constructor(path?: string, label?: Label<any>) {
+  constructor(path?: string | HTMLImageElement, label?: Label<any>) {
     this.imagePath = path;
     this.label = label;
 
