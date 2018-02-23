@@ -3,6 +3,8 @@ import { IPoint } from '../../primitives/point';
 import { ReferenceColor } from '../reference/reference-color';
 
 export interface ILineShapeOptions {
+  /** This sets whether or not the line should respect scaling on it's thickness */
+  allowScaling?: boolean;
   /** Sorting order of the line */
   depth?: number;
   /** Color of the line at the end point */
@@ -29,6 +31,8 @@ export class LineShape<T> extends Line<T> {
   endColor: ReferenceColor;
   /** The thickness of the line */
   thickness: number;
+  /** Setting that allows scaling on the line or not for it's thickness */
+  allowScaling: boolean;
 
   /**
    * Generate a new line that can be drawn
@@ -36,6 +40,7 @@ export class LineShape<T> extends Line<T> {
   constructor(options: ILineShapeOptions) {
     super(options.p1, options.p2);
 
+    this.allowScaling = options.allowScaling || false;
     this.depth = options.depth || 0.0;
     this.endColor = options.endColor;
     this.startColor = options.startColor;

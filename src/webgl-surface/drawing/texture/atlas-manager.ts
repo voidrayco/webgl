@@ -20,6 +20,14 @@ const ZERO_IMAGE = {
   pixelWidth: 0,
 };
 
+function isImageElement(val: any): val is HTMLImageElement {
+  return Boolean(val && val.src);
+}
+
+function isString(val: any): val is string {
+  return Boolean(val && val.substr);
+}
+
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
  * textures defining those pieces of atlas.
@@ -221,6 +229,7 @@ export class AtlasManager {
         const uy = insertedNode.nodeDimensions.y / this.textureHeight;
         const uw = insertedNode.nodeDimensions.width / this.textureWidth;
         const uh = insertedNode.nodeDimensions.height / this.textureHeight;
+        const onePixelX = 1 / this.textureWidth;
 
         const atlasDimensions: Bounds<never> = new Bounds<never>(
           ux,
@@ -231,9 +240,9 @@ export class AtlasManager {
 
         image.atlasReferenceID = atlasName;
         image.atlasBL = {x: atlasDimensions.x, y: atlasDimensions.y - atlasDimensions.height};
-        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y - atlasDimensions.height};
+        image.atlasBR = {x: atlasDimensions.x + atlasDimensions.width - onePixelX, y: atlasDimensions.y - atlasDimensions.height};
         image.atlasTL = {x: atlasDimensions.x, y: atlasDimensions.y };
-        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width, y: atlasDimensions.y};
+        image.atlasTR = {x: atlasDimensions.x + atlasDimensions.width - onePixelX, y: atlasDimensions.y};
 
         // Now draw the image to the indicated canvas
         canvas.drawImage(loadedImage, insertedNode.nodeDimensions.x, insertedNode.nodeDimensions.y);
@@ -253,7 +262,13 @@ export class AtlasManager {
 
     else {
       // Log an error and load a default image
-      console.error(`Could not load image ${image.imagePath}`);
+      if (image.imagePath) {
+        console.error(`Could not load image: ${image.imagePath}`);
+      }
+
+      else {
+        console.error(`Could not load label: ${image.label.text}`);
+      }
       image = this.setDefaultImage(image, atlasName);
       return false;
     }
@@ -278,7 +293,7 @@ export class AtlasManager {
     const colorHeight = 2;
     // Set a max per row limit. We default to rendering across the width of a 512x512
     // Max texture
-    const maxPerRow = 1024 / colorWidth;
+    const maxPerRow = (this.textureWidth - 2) / colorWidth;
     // We get the width of a row of colors
     const rowWidth = Math.min(this.textureWidth, maxPerRow * colorWidth);
     // Get how many rows it will take to render the colors
@@ -411,22 +426,36 @@ export class AtlasManager {
    */
   loadImage(texture: AtlasTexture): Promise<HTMLImageElement | null> {
     if (texture.imagePath) {
-      return new Promise((resolve, reject) => {
-        const image: HTMLImageElement = new Image();
+      const imageElement = texture.imagePath;
 
-        image.onload = function() {
-          texture.pixelWidth = image.width;
-          texture.pixelHeight = image.height;
-          texture.aspectRatio = image.width / image.height;
-          resolve(image);
-        };
+      // If the texture was provided an image then we just return the image
+      if (isImageElement(imageElement)) {
+        texture.pixelWidth = imageElement.width;
+        texture.pixelHeight = imageElement.height;
+        texture.aspectRatio = imageElement.width / imageElement.height;
 
-        image.onerror = function() {
-          resolve(null);
-        };
+        return Promise.resolve(imageElement);
+      }
 
-        image.src = texture.imagePath;
-      });
+      // If a string was returned, we must load the image then return the image
+      else if (isString(imageElement)) {
+        return new Promise((resolve, reject) => {
+          const image: HTMLImageElement = new Image();
+
+          image.onload = function() {
+            texture.pixelWidth = image.width;
+            texture.pixelHeight = image.height;
+            texture.aspectRatio = image.width / image.height;
+            resolve(image);
+          };
+
+          image.onerror = function() {
+            resolve(null);
+          };
+
+          image.src = imageElement;
+        });
+      }
     }
 
     else if (texture.label) {
@@ -438,8 +467,8 @@ export class AtlasManager {
 
         // Set the dimensions of the canvas/texture space we will be using to rasterize
         // The label. Use the label's rasterization controls to aid in rendering the label
-        canvas.width = labelSize.width + texture.label.rasterizationOffset.x + texture.label.rasterizationPadding.width;
-        canvas.height = labelSize.height + texture.label.rasterizationPadding.height;
+        canvas.width = labelSize.width;
+        canvas.height = labelSize.height;
 
         debug('label X %o', texture.label.rasterizationOffset.x);
 
@@ -461,7 +490,7 @@ export class AtlasManager {
           // Render the label to the canvas/texture space. This utilizes the label's
           // Rasterization metrics to aid in getting a clean render.
           ctx.fillText(
-            label.text,
+            label.truncatedText || label.text,
             texture.label.rasterizationOffset.x,
             texture.label.rasterizationOffset.y,
           );

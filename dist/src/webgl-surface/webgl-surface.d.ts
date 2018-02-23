@@ -4,9 +4,11 @@ import { OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } fro
 import { Label } from './drawing/shape/label';
 import { AtlasColor } from './drawing/texture/atlas-color';
 import { AtlasManager } from './drawing/texture/atlas-manager';
+import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { ISharedRenderContext } from './types';
 import { IProjection } from './util/projection';
 import { QuadTree } from './util/quad-tree';
 import { IScreenContext } from './util/screen-context';
@@ -26,6 +28,8 @@ export declare enum BaseApplyPropsMethods {
     LABELS = 3,
     /** Generates the colors within the atlas manager */
     COLORS = 4,
+    /** Generates images within the atlas manager */
+    IMAGES = 5,
 }
 /**
  * This enum names the base methods that are passed into the animatedMethods
@@ -115,8 +119,8 @@ export interface IWebGLSurfaceProperties {
     colors?: AtlasColor[];
     /** The forced size of the render surface */
     height?: number;
-    /** This will be the view the camera focuses on when the camera is initialized */
-    viewport?: Bounds<never>;
+    /** The unique images to be loaded into an atlas for rendering */
+    images?: AtlasTexture[];
     /** All of the labels to be rendered by the system */
     labels?: Label<any>[];
     /** Provides feedback when the surface is double clicked */
@@ -131,6 +135,18 @@ export interface IWebGLSurfaceProperties {
      * provided viewport.
      */
     onZoomRequest(zoom: number): void;
+    /**
+     * When specified, this context will pan by the indicated amount once. A new object must be
+     * injected in order for the pan to happen again.
+     */
+    pan?: Vector3;
+    /**
+     * If this is provided, then this will render within the rendering context provided,
+     * however, this will retain it's own camera and own scene.
+     */
+    renderContext?: ISharedRenderContext;
+    /** This will be the view the camera focuses on when the camera is initialized */
+    viewport?: Bounds<any>;
     /** The forced size of the render surface */
     width?: number;
     /** The zoom level that the camera should apply */
@@ -145,6 +161,7 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** Tracks the names of the atlas' generated */
     atlasNames: {
         colors: string;
+        images: string;
         labels: string;
     };
     /**
@@ -159,6 +176,11 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * and the animated methods will attempt executing again
      */
     animatedMethodBreak: boolean;
+    /**
+     * This is the last external panning operation applied to the camera. When a new pan
+     * is applied that is not this pan object
+     */
+    appliedPan: IPoint;
     /**
      * This viewport is the last viewport applied to the camera.
      * If the props inject a new viewport, this is updated with that value so
@@ -263,11 +285,25 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
     /** When this is set to true, the atlas with the colors is now ready to be referenced */
     colors: AtlasColor[];
     colorsReady: boolean;
+    /** This is a flag that allows some extra control over when an onRender can fire */
+    isRenderReady: boolean;
     /** Holds the items currently hovered over */
     currentHoverItems: Bounds<any>[];
     /** Mouse in stage or not */
     dragOver: boolean;
-    /** Flag for detecting whether or not webgl is supported at all */
+    /**
+     * If this is true, we are waiting for the rendering context to become available
+     * within this.props.renderContext
+     */
+    waitForContext: boolean;
+    images: AtlasTexture[];
+    imagesReady: boolean;
+    /**
+     * This is the latest images loading identifier, used to determine if the images
+     * last loaded matches the images currently needing to be rendered.
+     */
+    imagesCurrentLoadedId: number;
+    imagesLoadId: number;
     /**
      * This is the update loop that operates at the requestAnimationFrame speed.
      * This updates the cameras current position and causes changes over time for
@@ -300,6 +336,11 @@ export declare class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends 
      * on colors rendered into the atlas after the system has prepped the colors for render.
      */
     applyColorBufferChanges(props: T): void;
+    /**
+     * This is a hook for subclasses to be able to apply buffer changes that rely
+     * on images rendered into the atlas after the system has prepped the images for render.
+     */
+    applyImageBufferChanges(props: T): void;
     /**
      * This is a hook for subclasses to be able to apply label buffer changes after the system has
      * prepped the labels for render.

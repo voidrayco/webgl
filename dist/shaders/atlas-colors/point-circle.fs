@@ -1,4 +1,6 @@
-varying vec4 vertexColor;
+varying vec4 outerColor;
+varying vec4 innerColor;
+varying float normalizedInnerRadius;
 varying float edgeSharpness;
 
 float circle(vec2 coord, float radius){
@@ -12,6 +14,16 @@ float circle(vec2 coord, float radius){
 }
 
 void main() {
-  float step_factor = circle(gl_PointCoord.xy, 1.0);
-  gl_FragColor = mix(vec4(0.0, 0.0, 0.0, 0.0), vertexColor, step_factor);
+  float outer_step_factor = circle(gl_PointCoord.xy, 1.0);
+  float inner_step_factor = circle(gl_PointCoord.xy, normalizedInnerRadius);
+
+  gl_FragColor = mix(
+    mix(                        // Select the outer color outside of the inner radius
+      vec4(0.0, 0.0, 0.0, 0.0),    // Select invisible outside of inner and outer radius
+      outerColor,                  // Select outer color outside of inner, but inside outer
+      outer_step_factor
+    ),
+    innerColor,                 // Select inner color inside inner
+    inner_step_factor
+  );
 }

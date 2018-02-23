@@ -16,56 +16,76 @@ export enum AnchorPosition {
   TopRight,
 }
 
-const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => IPoint} = {
-  [AnchorPosition.BottomLeft]: (quad: RotateableQuad<any>) => ({
-    x: 0,
-    y: 0,
-  }),
+const anchorCalculations: {[key: number]: (quad: RotateableQuad<any>) => Vector4} = {
+  [AnchorPosition.BottomLeft]: (quad: RotateableQuad<any>) => new Vector4(
+    0,
+    0,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.BottomRight]: (quad: RotateableQuad<any>) => ({
-    x: quad.getSize().width,
-    y: 0,
-  }),
+  [AnchorPosition.BottomRight]: (quad: RotateableQuad<any>) => new Vector4(
+    quad.getSize().width,
+    0,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.Custom]: (quad: RotateableQuad<any>) => ({
-    x: 0,
-    y: quad.getSize().height,
-  }),
+  [AnchorPosition.Custom]: (quad: RotateableQuad<any>) => new Vector4(
+    0,
+    -quad.getSize().height,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.Middle]: (quad: RotateableQuad<any>) => ({
-    x: quad.getSize().width / 2,
-    y: quad.getSize().height / 2,
-  }),
+  [AnchorPosition.Middle]: (quad: RotateableQuad<any>) => new Vector4(
+    quad.getSize().width / 2,
+    -quad.getSize().height / 2,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.MiddleBottom]: (quad: RotateableQuad<any>) => ({
-    x: quad.getSize().width / 2,
-    y: 0,
-  }),
+  [AnchorPosition.MiddleBottom]: (quad: RotateableQuad<any>) => new Vector4(
+    quad.getSize().width / 2,
+    0,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.MiddleLeft]: (quad: RotateableQuad<any>) => ({
-    x: 0,
-    y: quad.getSize().height / 2,
-  }),
+  [AnchorPosition.MiddleLeft]: (quad: RotateableQuad<any>) => new Vector4(
+    0,
+    -quad.getSize().height / 2,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.MiddleRight]: (quad: RotateableQuad<any>) => ({
-    x: quad.getSize().width,
-    y: quad.getSize().height / 2,
-  }),
+  [AnchorPosition.MiddleRight]: (quad: RotateableQuad<any>) => new Vector4(
+    quad.getSize().width,
+    -quad.getSize().height / 2,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.MiddleTop]: (quad: RotateableQuad<any>) => ({
-    x: quad.getSize().width / 2,
-    y: quad.getSize().height,
-  }),
+  [AnchorPosition.MiddleTop]: (quad: RotateableQuad<any>) => new Vector4(
+    quad.getSize().width / 2,
+    -quad.getSize().height,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.TopLeft]: (quad: RotateableQuad<any>) => ({
-    x: 0,
-    y: quad.getSize().height,
-  }),
+  [AnchorPosition.TopLeft]: (quad: RotateableQuad<any>) => new Vector4(
+    0,
+    quad.getSize().height,
+    0,
+    1,
+  ),
 
-  [AnchorPosition.TopRight]: (quad: RotateableQuad<any>) => ({
-    x: quad.getSize().width,
-    y: quad.getSize().height,
-  }),
+  [AnchorPosition.TopRight]: (quad: RotateableQuad<any>) => new Vector4(
+    quad.getSize().width,
+    -quad.getSize().height,
+    0,
+    1,
+  ),
 };
 
 export class RotateableQuad<T> extends Bounds<T> {
@@ -76,7 +96,7 @@ export class RotateableQuad<T> extends Bounds<T> {
   TR: Vector4;
 
   /** This is the anchor point where location and rotation is based on */
-  private anchor: IPoint;
+  private anchor: Vector4;
   /** This auto sets where the anchor point should be located */
   private anchorType: AnchorPosition;
   /** This will contain all of the results of the transform after the metrics have been applied to the vertices */
@@ -89,6 +109,8 @@ export class RotateableQuad<T> extends Bounds<T> {
   private size: ISize;
   /** This contains the transform */
   private transform: Matrix4;
+  /** This determines if any metric has changed. If so, then the update must recalculate */
+  private isDirty: boolean;
 
   /**
    * Generates a quad
@@ -107,8 +129,6 @@ export class RotateableQuad<T> extends Bounds<T> {
     this.setAnchor(anchor);
     this.setLocation(location);
     this.setRotation(rotation);
-    // Update the transform and the corner vertices
-    this.update();
   }
 
   /**
@@ -138,19 +158,38 @@ export class RotateableQuad<T> extends Bounds<T> {
    *                        than the calculated version.
    */
   setAnchor(anchor: AnchorPosition = AnchorPosition.Middle, custom?: IPoint) {
+    this.isDirty = true;
     this.anchorType = anchor;
 
     // Apply the custom position if present
     if (custom) {
       this.anchorType = AnchorPosition.Custom;
-      this.anchor = custom;
+      this.anchor = new Vector4(custom.x, custom.y, 0, 1);
       return;
     }
 
     this.calculateAnchor(anchor);
   }
 
-  getAnchor(): IPoint {
+  /**
+   * Retrieves the position of the anchor
+   *
+   * @param worldSpace If this is true, this will calculate the anchor's position relative to world
+   *                   coordinates.
+   */
+  getAnchor(worldSpace?: boolean): IPoint {
+    if (worldSpace) {
+      this.update();
+      // Get a copy of the anchor so we don't modify it
+      const worldAnchor = this.anchor.clone();
+      // Correct the anchor y positioning to offset the transforms use of the anchor
+      worldAnchor.y = -this.anchor.y;
+      // Apply the transform to the anchor to get it's world position
+      worldAnchor.applyMatrix4(this.transform);
+
+      return worldAnchor;
+    }
+
     return this.anchor;
   }
 
@@ -165,6 +204,7 @@ export class RotateableQuad<T> extends Bounds<T> {
    * @param {IPoint} location The location to place the quad
    */
   setLocation(location: IPoint) {
+    this.isDirty = true;
     this.location = location;
   }
 
@@ -178,6 +218,7 @@ export class RotateableQuad<T> extends Bounds<T> {
    * @param {number} rotation The rotation of the quad
    */
   setRotation(rotation: number) {
+    this.isDirty = true;
     this.rotation = rotation;
   }
 
@@ -205,6 +246,7 @@ export class RotateableQuad<T> extends Bounds<T> {
    * @param {ISize} size The size of the base quad
    */
   setSize(size: ISize) {
+    this.isDirty = true;
     this.size = size;
 
     this.base = [
@@ -214,7 +256,7 @@ export class RotateableQuad<T> extends Bounds<T> {
       new Vector4(size.width, 0, 0, 1),
     ];
 
-    if (this.anchorType) {
+    if (this.anchorType && this.anchorType !== AnchorPosition.Custom) {
       this.calculateAnchor(this.anchorType);
     }
   }
@@ -224,30 +266,35 @@ export class RotateableQuad<T> extends Bounds<T> {
    * the corners.
    */
   update() {
-    // Calculate the pieces of the transformation
-    const anchorMat: Matrix4 = new Matrix4().makeTranslation(this.anchor.x, -this.anchor.y, 0);
-    const rotationMat: Matrix4 = new Matrix4().makeRotationZ(this.rotation);
-    const locationMat: Matrix4 = new Matrix4().makeTranslation(this.location.x, this.location.y, 0);
+    if (this.isDirty) {
+      // Calculate the pieces of the transformation
+      const anchorMat: Matrix4 = new Matrix4().makeTranslation(-this.anchor.x, this.anchor.y, 0);
+      const rotationMat: Matrix4 = new Matrix4().makeRotationZ(this.rotation);
+      const locationMat: Matrix4 = new Matrix4().makeTranslation(this.location.x, this.location.y, 0);
 
-    // Compose the transform based on the pieces and apply them
-    // In the proper compositing order
-    this.transform = new Matrix4()
-      .multiply(locationMat)
-      .multiply(rotationMat)
-      .multiply(anchorMat)
-    ;
+      // Compose the transform based on the pieces and apply them
+      // In the proper compositing order
+      this.transform = new Matrix4()
+        .multiply(locationMat)
+        .multiply(rotationMat)
+        .multiply(anchorMat)
+      ;
 
-    // Apply the transform to all of our base vertices
-    this.TL = this.base[0].clone().applyMatrix4(this.transform);
-    this.TR = this.base[1].clone().applyMatrix4(this.transform);
-    this.BL = this.base[2].clone().applyMatrix4(this.transform);
-    this.BR = this.base[3].clone().applyMatrix4(this.transform);
+      // Apply the transform to all of our base vertices
+      this.TL = this.base[0].clone().applyMatrix4(this.transform);
+      this.TR = this.base[1].clone().applyMatrix4(this.transform);
+      this.BL = this.base[2].clone().applyMatrix4(this.transform);
+      this.BR = this.base[3].clone().applyMatrix4(this.transform);
 
-    // Update the bounds of this object
-    this.x = this.TL.x;
-    this.y = this.TL.y;
-    this.width = 1;
-    this.height = 1;
-    this.encapsulatePoints([this.TR, this.BL, this.BR]);
+      // Update the bounds of this object
+      this.x = this.TL.x;
+      this.y = this.TL.y;
+      this.width = 1;
+      this.height = 1;
+      this.encapsulatePoints([this.TR, this.BL, this.BR]);
+
+      // Flag as no longer needing updates
+      this.isDirty = false;
+    }
   }
 }

@@ -368,7 +368,7 @@ export class Node<T extends Bounds<any>> {
       return [];
     }
 
-    // Query a point
+   // Query a point
     if (this.bounds.containsPoint(bounds)) {
       return this.queryPoint(bounds, [], visit);
     }

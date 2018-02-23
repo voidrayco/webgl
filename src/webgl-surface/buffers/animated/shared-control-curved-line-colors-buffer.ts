@@ -134,7 +134,6 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <AnimatedCur
     let colorStartStop: number;
     let colorEnd: number;
     let colorEndStop: number;
-    let alpha: number;
     let startTime: number;
     let duration: number;
     let controlRef: number;
@@ -143,7 +142,6 @@ export class SharedControlCurvedLineColorsBuffer extends BaseBuffer <AnimatedCur
     BufferUtil.beginUpdates();
 
     for (const curvedLine of shapeBuffer) {
-      alpha = curvedLine.startColor.base.opacity;
       colorEnd = curvedLine.endColor.base.colorIndex;
       colorEndStop = curvedLine.endColorStop.base.colorIndex;
       colorStart = curvedLine.startColor.base.colorIndex;

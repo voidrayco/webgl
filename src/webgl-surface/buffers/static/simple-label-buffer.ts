@@ -22,44 +22,44 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
     this.bufferItems = BufferUtil.makeBufferItems();
 
     this.bufferItems.attributes = [
-        {
-          defaults: [0, 0, 0],
-          name: 'position',
-          size: AttributeSize.THREE,
-        },
-        {
-          defaults: [0],
-          name: 'customColor',
-          size: AttributeSize.ONE,
-        },
-        {
-          defaults: [0, 0, 1],
-          name: 'texCoord',
-          size: AttributeSize.THREE,
-        },
-        {
-          defaults: [0, 0],
-          name: 'size',
-          size: AttributeSize.TWO,
-        },
-        {
-          defaults: [0, 0],
-          name: 'anchor',
-          size: AttributeSize.TWO,
-        },
-      ];
+      {
+        defaults: [0, 0, 0],
+        name: 'position',
+        size: AttributeSize.THREE,
+      },
+      {
+        defaults: [0],
+        name: 'colorPick',
+        size: AttributeSize.ONE,
+      },
+      {
+        defaults: [0, 0, 1],
+        name: 'texCoord',
+        size: AttributeSize.THREE,
+      },
+      {
+        defaults: [0, 0],
+        name: 'size',
+        size: AttributeSize.TWO,
+      },
+      {
+        defaults: [0, 0],
+        name: 'anchor',
+        size: AttributeSize.TWO,
+      },
+    ];
 
-      const verticesPerQuad = 6;
-      const numQuads = unitCount;
+    const verticesPerQuad = 6;
+    const numQuads = unitCount;
 
-      this.bufferItems.geometry = BufferUtil.makeBuffer(
-        numQuads * verticesPerQuad,
-        this.bufferItems.attributes,
-      );
+    this.bufferItems.geometry = BufferUtil.makeBuffer(
+      numQuads * verticesPerQuad,
+      this.bufferItems.attributes,
+    );
 
-      this.bufferItems.system = new Mesh(this.bufferItems.geometry, material);
-      this.bufferItems.system.frustumCulled = false;
-      this.bufferItems.system.drawMode = TriangleStripDrawMode;
+    this.bufferItems.system = new Mesh(this.bufferItems.geometry, material);
+    this.bufferItems.system.frustumCulled = false;
+    this.bufferItems.system.drawMode = TriangleStripDrawMode;
   }
 
   /**
@@ -93,52 +93,61 @@ export class SimpleStaticLabelBuffer extends BaseBuffer<Label<any> | Label<any>[
     let anchor;
     let labelSize;
 
-    if (atlasManager) {
+    if (atlasManager && buffer.length > 0) {
       const colorRef: ReferenceColor = buffer[0].color;
-      const colorBase = colorRef.base;
+      const labelBase: Label<any> = buffer[0].baseLabel;
 
-      let material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
-      let uniforms: { [k: string]: IUniform } = material.uniforms;
-      const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
+      if (colorRef && labelBase) {
+        const colorBase = colorRef.base;
+        let material: ShaderMaterial = this.bufferItems.system.material as ShaderMaterial;
+        let uniforms: { [k: string]: IUniform } = material.uniforms;
+        const atlas = atlasManager.getAtlasTexture(colorBase.atlasReferenceID);
+        const texture = atlasManager.getAtlasTexture(labelBase.rasterizedLabel.atlasReferenceID);
 
-      if (uniforms.colorAtlas.value !== atlas) {
-        uniforms.colorAtlas.value = atlas;
-        uniforms.colorsPerRow.value = colorBase.colorsPerRow;
-        uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
-        uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
-        atlas.needsUpdate = true;
-      }
+        if (uniforms.colorAtlas.value !== atlas) {
+          uniforms.colorAtlas.value = atlas;
+          uniforms.colorsPerRow.value = colorBase.colorsPerRow;
+          uniforms.firstColor.value = [colorBase.firstColor.x, colorBase.firstColor.y];
+          uniforms.nextColor.value = [colorBase.nextColor.x, colorBase.nextColor.y];
+          atlas.needsUpdate = true;
+        }
 
-      if (startFade || endFade || labelMaxSize) {
-        material = this.bufferItems.system.material as ShaderMaterial;
-        uniforms = material.uniforms;
-        uniforms.startFade.value = startFade || 0;
-        uniforms.endFade.value = endFade || 0;
-        uniforms.maxLabelSize.value = labelMaxSize || 0;
+        if (uniforms.atlasTexture.value !== texture) {
+          uniforms.atlasTexture.value = texture;
+          texture.needsUpdate = true;
+          texture.anisotropy = 2;
+        }
+
+        if (startFade || endFade || labelMaxSize) {
+          material = this.bufferItems.system.material as ShaderMaterial;
+          uniforms = material.uniforms;
+          uniforms.startFade.value = startFade || 0;
+          uniforms.endFade.value = endFade || 0;
+          uniforms.maxLabelSize.value = labelMaxSize || 0;
+        }
       }
     }
 
     const updated = BufferUtil.updateBuffer(
       buffer, this.bufferItems,
       numVerticesPerQuad, buffer.length,
-      function(i: number,
-               positions: Float32Array, ppos: number,
-               colors: Float32Array, cpos: number,
-               texCoords: Float32Array, tpos: number,
-               sizes: Float32Array, spos: number,
-               anchors: Float32Array, apos: number,
-              ) {
+      function(
+        i: number,
+        positions: Float32Array, ppos: number,
+        colors: Float32Array, cpos: number,
+        texCoords: Float32Array, tpos: number,
+        sizes: Float32Array, spos: number,
+        anchors: Float32Array, apos: number,
+      ) {
+        // Make sure the label is updated with it's latest metrics
         label = buffer[i];
+        label.update();
+
         texture = label.rasterizedLabel;
         color = label.color.base;
         alpha = label.color.base.opacity;
-        anchor = {
-                  x: label.getLocation().x + label.getSize().width * Math.cos(label.getRotation()),
-                  y: label.getLocation().y + label.getSize().width * Math.sin(label.getRotation()),
-                 };
+        anchor = label.getAnchor(true);
         labelSize = label.getSize();
-        // Make sure the label is updated with it's latest metrics
-        label.update();
 
         // Copy first vertex twice for intro degenerate tri
         positions[ppos] = label.TR.x;

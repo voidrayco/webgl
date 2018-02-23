@@ -33,6 +33,8 @@ export declare class RotateableQuad<T> extends Bounds<T> {
     private size;
     /** This contains the transform */
     private transform;
+    /** This determines if any metric has changed. If so, then the update must recalculate */
+    private isDirty;
     /**
      * Generates a quad
      *
@@ -64,7 +66,13 @@ export declare class RotateableQuad<T> extends Bounds<T> {
      *                        than the calculated version.
      */
     setAnchor(anchor?: AnchorPosition, custom?: IPoint): void;
-    getAnchor(): IPoint;
+    /**
+     * Retrieves the position of the anchor
+     *
+     * @param worldSpace If this is true, this will calculate the anchor's position relative to world
+     *                   coordinates.
+     */
+    getAnchor(worldSpace?: boolean): IPoint;
     getAnchorType(): AnchorPosition;
     /**
      * This sets the location of this quad to a given position where the anchor

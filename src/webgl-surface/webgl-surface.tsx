@@ -8,6 +8,7 @@ import { AtlasTexture } from './drawing/texture/atlas-texture';
 import { Bounds } from './primitives/bounds';
 import { IPoint } from './primitives/point';
 import { ISize } from './primitives/size';
+import { ISharedRenderContext } from './types';
 import { FrameInfo } from './util/frame-info';
 import { eventElementPosition } from './util/mouse';
 import { IProjection } from './util/projection';
@@ -35,6 +36,8 @@ export enum BaseApplyPropsMethods {
   LABELS,
   /** Generates the colors within the atlas manager */
   COLORS,
+  /** Generates images within the atlas manager */
+  IMAGES,
 }
 
 /**
@@ -135,33 +138,45 @@ export interface IWebGLSurfaceProperties {
     b: number,
     /** Alpha channel 0-1 */
     opacity: number,
-  }
+  };
   /** When true, will cause a camera recentering to take place when new base items are injected */
-  centerOnNewItems?: boolean
+  centerOnNewItems?: boolean;
   /** All of the unique colors used in the system */
-  colors?: AtlasColor[]
+  colors?: AtlasColor[];
   /** The forced size of the render surface */
-  height?: number
-  /** This will be the view the camera focuses on when the camera is initialized */
-  viewport?: Bounds<never>
+  height?: number;
+  /** The unique images to be loaded into an atlas for rendering */
+  images?: AtlasTexture[];
   /** All of the labels to be rendered by the system */
-  labels?: Label<any>[]
+  labels?: Label<any>[];
   /** Provides feedback when the surface is double clicked */
-  onDoubleClick?(e: React.MouseEvent<Element>): void
+  onDoubleClick?(e: React.MouseEvent<Element>): void;
   /** Provides feedback when the mouse has moved */
-  onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void
+  onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void;
   /** When provided provides image data every frame for the screen */
-  onRender?(image: string): void
+  onRender?(image: string): void;
   /**
    * This is a handler that handles zoom changes the gpu-chart may request.
    * This includes moments such as initializing the camera to focus on a
    * provided viewport.
    */
-  onZoomRequest(zoom: number): void
+  onZoomRequest(zoom: number): void;
+  /**
+   * When specified, this context will pan by the indicated amount once. A new object must be
+   * injected in order for the pan to happen again.
+   */
+  pan?: Vector3;
+  /**
+   * If this is provided, then this will render within the rendering context provided,
+   * however, this will retain it's own camera and own scene.
+   */
+  renderContext?: ISharedRenderContext;
+  /** This will be the view the camera focuses on when the camera is initialized */
+  viewport?: Bounds<any>;
   /** The forced size of the render surface */
-  width?: number
+  width?: number;
   /** The zoom level that the camera should apply */
-  zoom: number
+  zoom: number;
 }
 
 // --[ CONSTANTS ]-------------------------------------------
@@ -195,6 +210,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** Tracks the names of the atlas' generated */
   atlasNames = {
     colors: 'colors',
+    images: 'images',
     labels: 'labels',
   };
   /**
@@ -209,6 +225,11 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * and the animated methods will attempt executing again
    */
   animatedMethodBreak: boolean = false;
+  /**
+   * This is the last external panning operation applied to the camera. When a new pan
+   * is applied that is not this pan object
+   */
+  appliedPan: IPoint;
   /**
    * This viewport is the last viewport applied to the camera.
    * If the props inject a new viewport, this is updated with that value so
@@ -312,13 +333,29 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   colors: AtlasColor[] = [];
   colorsReady: boolean = false;
 
+  /** This is a flag that allows some extra control over when an onRender can fire */
+  isRenderReady: boolean = true;
+
   /** Holds the items currently hovered over */
   currentHoverItems: Bounds<any>[] = [];
 
   /** Mouse in stage or not */
   dragOver: boolean = true;
 
-  /** Flag for detecting whether or not webgl is supported at all */
+  /**
+   * If this is true, we are waiting for the rendering context to become available
+   * within this.props.renderContext
+   */
+  waitForContext: boolean = false;
+
+  images: AtlasTexture[] = [];
+  imagesReady: boolean = false;
+  /**
+   * This is the latest images loading identifier, used to determine if the images
+   * last loaded matches the images currently needing to be rendered.
+   */
+  imagesCurrentLoadedId: number = 0;
+  imagesLoadId: number = 0;
 
   /**
    * This is the update loop that operates at the requestAnimationFrame speed.
@@ -434,6 +471,32 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           doDraw: false,
         };
 
+        if (this.waitForContext) {
+          if (this.props.renderContext) {
+            if (this.props.renderContext.context) {
+              if (this.props.renderContext.context.renderer) {
+                // Share the renderer
+                this.renderer = this.props.renderContext.context.renderer;
+                // Share the atlas manager for magical resource sharing
+                // This.atlasManager = this.props.renderContext.context.atlasManager;
+                // Get the gl context for queries and advanced operations
+                this.gl = this.renderer.domElement.getContext('webgl');
+                this.makeDraggable(this.props.renderContext.context.renderEl, this);
+                this.waitForContext = false;
+              }
+            }
+          }
+
+          else {
+            this.scene = null;
+            this.init(this.renderEl, this.props.width, this.props.height);
+          }
+
+          response.break = true;
+          response.doDraw = false;
+          return response;
+        }
+
         if (this.resizeContext() ) {
           response.doDraw = true;
         }
@@ -548,6 +611,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   /**
+   * This is a hook for subclasses to be able to apply buffer changes that rely
+   * on images rendered into the atlas after the system has prepped the images for render.
+   */
+  applyImageBufferChanges(props: T) {
+    // Note: For subclasses
+  }
+
+  /**
    * This is a hook for subclasses to be able to apply label buffer changes after the system has
    * prepped the labels for render.
    */
@@ -623,6 +694,12 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
         this.init(this.renderEl, width, height);
 
+        if (this.waitForContext) {
+          return {
+            break: true,
+          };
+        }
+
         if (!this.renderEl || width === 0 || height === 0) {
           return {
             break: true,
@@ -636,7 +713,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.zoomTargetY = world.y;
         }
 
-        if (this.renderer && backgroundColor) {
+        if (this.renderer && backgroundColor && !props.renderContext) {
           const oldColor = this.props.backgroundColor || {
             b: BACKGROUND_COLOR.b,
             g: BACKGROUND_COLOR.g,
@@ -748,6 +825,47 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         return response;
       },
 
+      [BaseApplyPropsMethods.IMAGES]: (props: T): IApplyPropsMethodResponse => {
+        const response = {};
+
+        // If we have a new images reference we must regenerate the images in our image lookup
+        if (props.images && props.images !== this.images) {
+          debug('Images are being comitted to an Atlas %o', props.images);
+          // Flag the images as incapable of rendering
+          this.imagesReady = false;
+          this.imagesLoadId++;
+          // Store the set of images we are rendering so that they do not get re-generated
+          // In the atlas rapidly.
+          this.images = props.images;
+
+          if (this.atlasManager.getAtlasTexture(this.atlasNames.images)) {
+            this.atlasManager.destroyAtlas(this.atlasNames.images);
+          }
+
+          this.atlasManager.createAtlas(this.atlasNames.images, this.images)
+          .then(() => {
+            debug('Images rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.images));
+            this.forceDraw = true;
+            this.imagesCurrentLoadedId++;
+
+            // If we are done loading AND we match up with the current load id, then images
+            // For the latest images update are indeed ready for display
+            if (this.imagesCurrentLoadedId === this.imagesLoadId) {
+              this.imagesReady = true;
+            }
+
+            // Reapply the props so any buffers that were not updating can update now
+            this.applyProps(this.props);
+          })
+          .catch(err => {
+            console.warn('There was an issue while loading images to the atlas. Changes will not be applied properly and you may see visual artefacts');
+            console.error(err && (err.stack || err.message));
+          });
+        }
+
+        return response;
+      },
+
       [BaseApplyPropsMethods.BUFFERCHANGES]: (props: T): IApplyPropsMethodResponse => {
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
@@ -760,6 +878,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
           this.applyLabelBufferChanges(props);
         }
 
+        if (this.imagesReady && this.colorsReady) {
+          this.applyImageBufferChanges(props);
+        }
+
         // For resources that only need the color atlas to be ready
         if (this.colorsReady) {
           this.applyColorBufferChanges(props);
@@ -770,6 +892,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
       [BaseApplyPropsMethods.CAMERA]: (props: T): IApplyPropsMethodResponse => {
         this.destinationZoom = props.zoom;
+
+        // If a pan was specified, we should pan the view
+        if (props.pan && props.pan !== this.appliedPan) {
+          this.destinationX -= props.pan.x;
+          this.destinationY += props.pan.y;
+          this.appliedPan = props.pan;
+        }
 
         // On initialization this should start with some base camera metrics
         if (props.viewport && props.viewport !== this.appliedViewport && this.quadTree) {
@@ -899,6 +1028,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       this.quadTree.destroy();
     }
 
+    if (!this.props.renderContext) {
+      this.renderer.dispose();
+    }
+
     this.quadTree = null;
     this.camera = null;
     this.sizeCamera = null;
@@ -909,6 +1042,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     this.atlasManager.destroyAtlas(this.atlasNames.colors);
     this.atlasManager.destroyAtlas(this.atlasNames.labels);
+    this.atlasManager.destroyAtlas(this.atlasNames.images);
 
     FrameInfo.framesPlayed.delete(this);
   }
@@ -918,11 +1052,49 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * called, the webgl surface will be redrawn.
    */
   draw() {
-    // Draw the 3D scene
-    this.renderer.render(this.scene, this.camera);
+    const { backgroundColor, renderContext } = this.props;
 
-    if (this.props.onRender && ( this.colorsReady || this.colors.length === 0)
-    && (this.labelsReady || this.labels.length === 0)) {
+    // Draw the 3D scene
+    if (renderContext) {
+      const offset = renderContext.position;
+      const size = renderContext.size;
+      const rendererSize = this.renderer.getSize();
+
+      // If a background is established, we should clear the background color
+      // Specified for this context
+      if (backgroundColor) {
+        // Get the current clear color in use
+        const clearColor = this.gl.getParameter(this.gl.COLOR_CLEAR_VALUE);
+        // Turn on the scissor test to keep the rendering clipped within the
+        // Render region of the context
+        this.gl.enable(this.gl.SCISSOR_TEST);
+        // Set the scissor rectangle.
+        this.gl.scissor(offset.x, rendererSize.height - offset.y - size.height, size.width, size.height);
+        // Clear the rect of color and depth so the region is totally it's own
+        this.gl.clearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.opacity);
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        // Turn off the scissor test so you can render like normal again.
+        this.gl.disable(this.gl.SCISSOR_TEST);
+        // Reset the clear color
+        this.gl.clearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+      }
+
+      this.renderer.setViewport(offset.x, offset.y, size.width, size.height);
+      this.renderer.autoClear = false;
+      this.renderer.render(this.scene, this.camera);
+      this.renderer.autoClear = true;
+      this.renderer.setViewport(0, 0, rendererSize.width, rendererSize.height);
+    }
+
+    else {
+      this.renderer.render(this.scene, this.camera);
+    }
+
+    if (
+      this.props.onRender && ( this.colorsReady || this.colors.length === 0) &&
+      (this.labelsReady || this.labels.length === 0) &&
+      this.isRenderReady
+    ) {
       const imageData = this.renderer.domElement.toDataURL();
       this.props.onRender(imageData);
     }
@@ -967,44 +1139,50 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     // FINALIZE SET UP
 
-    // Generate the renderer along with it's properties
-    this.renderer = new WebGLRenderer({
-      alpha: this.props.backgroundColor && (this.props.backgroundColor.opacity < 1.0),
-      antialias: true,
-      preserveDrawingBuffer: true,
-    });
-
-    // This sets the pixel ratio to handle differing pixel densities in screens
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(w, h);
-
-    // Applies the background color and establishes whether or not the context supports
-    // Alpha or not
-    if (this.props.backgroundColor) {
-      this.renderer.setClearColor(
-        new Color(
-          this.props.backgroundColor.r,
-          this.props.backgroundColor.g,
-          this.props.backgroundColor.b,
-        ),
-        this.props.backgroundColor.opacity,
-      );
+    if (this.props.renderContext) {
+      this.waitForContext = true;
     }
 
     else {
-      this.renderer.setClearColor(BACKGROUND_COLOR);
+      // Generate the renderer along with it's properties
+      this.renderer = new WebGLRenderer({
+        alpha: this.props.backgroundColor && (this.props.backgroundColor.opacity < 1.0),
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+
+      // This sets the pixel ratio to handle differing pixel densities in screens
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setSize(w, h);
+
+      // Applies the background color and establishes whether or not the context supports
+      // Alpha or not
+      if (this.props.backgroundColor) {
+        this.renderer.setClearColor(
+          new Color(
+            this.props.backgroundColor.r,
+            this.props.backgroundColor.g,
+            this.props.backgroundColor.b,
+          ),
+          this.props.backgroundColor.opacity,
+        );
+      }
+
+      else {
+        this.renderer.setClearColor(BACKGROUND_COLOR);
+      }
+
+      // We render shapes. We care not for culling.
+      this.renderer.setFaceCulling(CullFaceNone);
+
+      // Set up DOM interaction with the renderer
+      const container = el;
+      container.appendChild(this.renderer.domElement);
+      // Get the gl context for queries and advanced operations
+      this.gl = this.renderer.domElement.getContext('webgl');
+
+      this.makeDraggable(this.renderEl, this);
     }
-
-    // We render shapes. We care not for culling.
-    this.renderer.setFaceCulling(CullFaceNone);
-
-    // Set up DOM interaction with the renderer
-    const container = el;
-    container.appendChild(this.renderer.domElement);
-    // Get the gl context for queries and advanced operations
-    this.gl = this.renderer.domElement.getContext('webgl');
-
-    this.makeDraggable(document.getElementById('div'), this);
   }
 
   /**
@@ -1080,8 +1258,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
       return false;
     }
 
-    debug('RENDERER RESIZE');
-
     this.ctx = {
       height: h,
       heightHalf: h / 2,
@@ -1096,24 +1272,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     this.camera.position.set(position.x, position.y, position.z);
     this.camera.updateProjectionMatrix();
 
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(w, h);
-    this.renderer.setFaceCulling(CullFaceNone);
+    // If this is the owner of the renderer, then we can resize
+    // Otherwise we only need to update the internal properties
+    if (!this.props.renderContext) {
+      debug('RENDERER RESIZE');
 
-    if (this.props.backgroundColor) {
-      const { backgroundColor: color } = this.props;
-      this.renderer.setClearColor(
-        new Color(
-          color.r,
-          color.g,
-          color.b,
-        ),
-        color.opacity < 1.0 ? color.opacity : undefined,
-      );
-    }
-
-    else {
-      this.renderer.setClearColor(BACKGROUND_COLOR);
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setSize(w, h);
+      this.renderer.setFaceCulling(CullFaceNone);
     }
 
     return true;
@@ -1215,43 +1381,45 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   makeDraggable(element: HTMLElement, stage: WebGLSurface<any, any>) {
-    element.onmousedown = function(event) {
-      debug('DRAG~');
+    element.onmousedown = (event) => {
       stage.dragOver = false;
-      document.onmousemove = function(event) {
-        debug('Move');
-          const mouseX = event.clientX;
-          const mouseY = event.clientY + window.scrollY;
 
-          const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
-          const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
-          stage.destinationX -= distanceX;
-          stage.destinationY += distanceY;
-          stage.lastMousePosition.x = mouseX;
-          stage.lastMousePosition.y = mouseY;
+      document.onmousemove = (event) => {
+        const mouse = eventElementPosition(event, element);
+        const mouseX = mouse.x;
+        const mouseY = mouse.y;
+
+        const distanceX = (mouseX - stage.lastMousePosition.x) / stage.targetZoom;
+        const distanceY = (mouseY - stage.lastMousePosition.y) / stage.targetZoom;
+
+        // Provide the same hook the normal mouse pan does to allow for panning adjustments
+        const pan = this.willPan(distanceX, distanceY);
+
+        stage.destinationX -= pan.x;
+        stage.destinationY += pan.y;
+        stage.lastMousePosition.x = mouseX;
+        stage.lastMousePosition.y = mouseY;
       };
 
-      document.onmouseup = function() {
-        debug('Up');
+      document.onmouseup = () => {
         document.onmousemove = null;
         stage.isPanning = false;
         stage.dragOver = true;
       };
 
-      document.onmouseover = function() {
-        debug('Over');
+      document.onmouseover = () => {
         if (stage.dragOver === false) stage.isPanning = true;
       };
 
-      element.onmouseup = function() {
+      element.onmouseup = () => {
         stage.dragOver = true;
       };
 
       // Text will not be selected when it is being dragged
-      element.onselectstart = function(){return false; };
-
+      element.onselectstart = function() {
+        return false;
+      };
     };
-
   }
 
   /**
@@ -1262,10 +1430,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    */
   handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     // Quick quit if mouse interactions are disabled
-
     if (this.disableMouseInteraction > 0) {
       return;
     }
+
     this.isPanning = true;
     this.distance = 0;
 
