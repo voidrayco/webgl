@@ -11,11 +11,11 @@ build:
         name: Yarn Install
         code: yarn install
     - script:
+        name: Autorelease
+        code: node scripts/autorelease
+    - script:
         name: Test the build
         code: npm run build
     - script:
         name: Save the yarn lockfile
         code: greenkeeper-lockfile-upload
-    - script:
-        name: Autorelease
-        code: node scripts/autorelease
