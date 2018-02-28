@@ -21,6 +21,8 @@ const ZERO_IMAGE = {
   pixelWidth: 0,
 };
 
+const CANVAS_LABEL_TIME = 10000;
+
 function isImageElement(val: any): val is HTMLImageElement {
   return Boolean(val && val.src);
 }
@@ -239,7 +241,7 @@ export class AtlasManager {
     if (!canvasCanDrawLabel) {
       await this.waitForValidCanvasRendering()
       .catch(error => {
-        console.error('WebGL context was not ready in %d seconds', 1000);
+        console.error('WebGL context was not ready in %d seconds', CANVAS_LABEL_TIME);
       });
     }
 
@@ -485,8 +487,8 @@ export class AtlasManager {
       const timeout = setTimeout(() => {
         console.warn('Unable to establish a Canvas context that is able to render labels');
         stop = true;
-        reject();
-      }, 10000);
+        reject(new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME} seconds`));
+      }, CANVAS_LABEL_TIME);
 
       const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
       const refColor = new ReferenceColor(color);
