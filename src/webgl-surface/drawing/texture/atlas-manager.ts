@@ -237,7 +237,10 @@ export class AtlasManager {
     // This is in place for a firefox issue where there is a 'warming up' of canvas before it is able
     // To render text
     if (!canvasCanDrawLabel) {
-      await this.waitForValidCanvasRendering();
+      await this.waitForValidCanvasRendering()
+      .catch(error => {
+        console.error('WebGL context was not ready in %d seconds', 1000);
+      });
     }
 
     // First we must load the image
