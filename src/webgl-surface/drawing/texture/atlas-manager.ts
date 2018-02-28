@@ -487,7 +487,7 @@ export class AtlasManager {
       const timeout = setTimeout(() => {
         console.warn('Unable to establish a Canvas context that is able to render labels');
         stop = true;
-        reject(new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME} seconds`));
+        reject(new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME} ms`));
       }, CANVAS_LABEL_TIME);
 
       const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
