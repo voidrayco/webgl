@@ -1,9 +1,10 @@
 import { rgb } from 'd3-color';
-import { Texture } from 'three';
+import { Color, Texture } from 'three';
 import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { Bounds } from '../../primitives/bounds';
 import { IPoint } from '../../primitives/point';
 import { ImageDimensions, PackNode } from '../../util/pack-node';
+import { ReferenceColor } from '../reference/reference-color';
 import { Label } from '../shape/label';
 import { AtlasTexture } from './atlas-texture';
 
@@ -26,6 +27,53 @@ function isImageElement(val: any): val is HTMLImageElement {
 
 function isString(val: any): val is string {
   return Boolean(val && val.substr);
+}
+
+/**
+ *  HACK: This is a part of a hack that gets around a canvas 'warming up' issue where labels
+ *  are not drawn immediately.
+ */
+let canvasCanDrawLabel: boolean = false;
+
+/**
+ * Makes a small canvas piece to render the label into and returns the canvas context if successful
+ */
+function makeCanvasFromTextureLabel(texture: AtlasTexture) {
+  const label = texture.label;
+  const labelSize = label.getSize();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Set the dimensions of the canvas/texture space we will be using to rasterize
+  // The label. Use the label's rasterization controls to aid in rendering the label
+  canvas.width = labelSize.width;
+  canvas.height = labelSize.height;
+
+  if (ctx) {
+    const fontSize = label.fontSize;
+
+    const color = rgb(
+      label.color.base.color.r * 255,
+      label.color.base.color.g * 255,
+      label.color.base.color.b * 255,
+      label.color.base.opacity,
+    );
+
+    ctx.font = label.makeCSSFont(fontSize);
+    ctx.textAlign = label.textAlign;
+    ctx.textBaseline = label.textBaseline;
+    ctx.fillStyle = color.toString();
+
+    // Render the label to the canvas/texture space. This utilizes the label's
+    // Rasterization metrics to aid in getting a clean render.
+    ctx.fillText(
+      label.truncatedText || label.text,
+      texture.label.rasterizationOffset.x,
+      texture.label.rasterizationOffset.y,
+    );
+  }
+
+  return ctx;
 }
 
 /**
@@ -183,6 +231,13 @@ export class AtlasManager {
     if (!this.atlasMap[atlasName]) {
       debug('Can not load image, invalid Atlas Name: %o for atlasMaps: %o', atlasName, this.atlasMap);
       return false;
+    }
+
+    // HACK: This will wait to ensure a canvas CAN draw a label before letting the manage continue.
+    // This is in place for a firefox issue where there is a 'warming up' of canvas before it is able
+    // To render text
+    if (!canvasCanDrawLabel) {
+      await this.waitForValidCanvasRendering();
     }
 
     // First we must load the image
@@ -414,6 +469,69 @@ export class AtlasManager {
    */
   getAtlasTexture(atlasName: string) {
     return this.atlasTexture[atlasName];
+  }
+
+  /**
+   * HACK: This method is a hack that will execute a loop
+   */
+  async waitForValidCanvasRendering() {
+    return new Promise(async(resolve, reject) => {
+      let stop = false;
+
+      // Set up a timeout routine in case this never resolves
+      const timeout = setTimeout(() => {
+        console.warn('Unable to establish a Canvas context that is able to render labels');
+        stop = true;
+        reject();
+      }, 10000);
+
+      const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
+      const refColor = new ReferenceColor(color);
+
+      const label = new Label<any>({
+        color: refColor,
+        font: 'Calibri, Candara, Segoe, Segoe UI, Optima, Arial, sans-serif',
+        fontSize: 14,
+        text: 'abcdefghijklmnopqrstuvwxyz0123456789',
+      });
+
+      // Make the test label to be rendered to a canvas
+      const testLabel = new AtlasTexture(null, label);
+
+      // Helper method for picking pixels from our image data
+      function getColorIndicesForCoord(x: number, y: number, width: number) {
+        const red = y * (width * 4) + x * 4;
+        return [red, red + 1, red + 2, red + 3];
+      }
+
+      // Keep attempting to draw a canvas that renders valid text to it
+      while (!canvasCanDrawLabel && !stop) {
+        const context = makeCanvasFromTextureLabel(testLabel);
+        const { width, height } = context.canvas;
+        const imageData = context.getImageData(0, 0, width, height).data;
+        let colorIndices, r, g, b, a;
+
+        for (let i = 0; i < width; ++i) {
+          for (let k = 0; k < height; ++k) {
+            colorIndices = getColorIndicesForCoord(i, k, width);
+            r = imageData[colorIndices[0]];
+            g = imageData[colorIndices[1]];
+            b = imageData[colorIndices[2]];
+            a = imageData[colorIndices[3]];
+
+            if (r === 255.0 && g === 255.0 && b === 255.0) {
+              resolve();
+              clearTimeout(timeout);
+              canvasCanDrawLabel = true;
+              return;
+            }
+          }
+        }
+
+        // Make a small delay before trying again
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    });
   }
 
   /**
