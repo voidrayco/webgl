@@ -524,7 +524,7 @@ export class AtlasManager {
             b = imageData[colorIndices[2]];
             a = imageData[colorIndices[3]];
 
-            if (r === 255.0 && g === 255.0 && b === 255.0) {
+            if (r > 254.0 && g > 254.0 && b > 254.0) {
               resolve();
               clearTimeout(timeout);
               canvasCanDrawLabel = true;
