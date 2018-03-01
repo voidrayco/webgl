@@ -86,7 +86,7 @@ export declare class AtlasManager {
     /**
      * HACK: This method is a hack that will execute a loop
      */
-    waitForValidCanvasRendering(): Promise<{}>;
+    waitForValidCanvasRendering(): Promise<void>;
     /**
      * This reads the input path and loads the image specified by the path
      *
