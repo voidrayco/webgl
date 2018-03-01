@@ -21,6 +21,8 @@ const ZERO_IMAGE = {
   pixelWidth: 0,
 };
 
+const CANVAS_LABEL_TIME = 10000;
+
 function isImageElement(val: any): val is HTMLImageElement {
   return Boolean(val && val.src);
 }
@@ -237,7 +239,10 @@ export class AtlasManager {
     // This is in place for a firefox issue where there is a 'warming up' of canvas before it is able
     // To render text
     if (!canvasCanDrawLabel) {
-      await this.waitForValidCanvasRendering();
+      await this.waitForValidCanvasRendering()
+      .catch(error => {
+        console.error('WebGL context was not ready in %d seconds', CANVAS_LABEL_TIME / 1000);
+      });
     }
 
     // First we must load the image
@@ -475,63 +480,54 @@ export class AtlasManager {
    * HACK: This method is a hack that will execute a loop
    */
   async waitForValidCanvasRendering() {
-    return new Promise(async(resolve, reject) => {
-      let stop = false;
+    let stop = false;
 
-      // Set up a timeout routine in case this never resolves
-      const timeout = setTimeout(() => {
-        console.warn('Unable to establish a Canvas context that is able to render labels');
-        stop = true;
-        reject();
-      }, 10000);
+    // Set up a timeout routine in case this never resolves
+    const timeout = setTimeout(() => {
+      console.warn('Unable to establish a Canvas context that is able to render labels');
+      stop = true;
+      throw new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME / 1000}s`);
+    }, CANVAS_LABEL_TIME);
 
-      const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
-      const refColor = new ReferenceColor(color);
+    const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
+    const refColor = new ReferenceColor(color);
 
-      const label = new Label<any>({
-        color: refColor,
-        font: 'Calibri, Candara, Segoe, Segoe UI, Optima, Arial, sans-serif',
-        fontSize: 14,
-        text: 'abcdefghijklmnopqrstuvwxyz0123456789',
-      });
+    const label = new Label<any>({
+      color: refColor,
+      font: 'Calibri, Candara, Segoe, Segoe UI, Optima, Arial, sans-serif',
+      fontSize: 32,
+      fontWeight: 900,
+      text: 'abcdefghijklmnopqrstuvwxyz1234567890',
+      textBaseline: 'top',
+    });
 
-      // Make the test label to be rendered to a canvas
-      const testLabel = new AtlasTexture(null, label);
+    // Make the test label to be rendered to a canvas
+    const testLabel = new AtlasTexture(null, label);
 
-      // Helper method for picking pixels from our image data
-      function getColorIndicesForCoord(x: number, y: number, width: number) {
-        const red = y * (width * 4) + x * 4;
-        return [red, red + 1, red + 2, red + 3];
-      }
+    // Keep attempting to draw a canvas that renders valid text to it
+    while (!canvasCanDrawLabel && !stop) {
+      const context = makeCanvasFromTextureLabel(testLabel);
+      const { width, height } = context.canvas;
+      const imageData = context.getImageData(0, 0, width, height).data;
 
-      // Keep attempting to draw a canvas that renders valid text to it
-      while (!canvasCanDrawLabel && !stop) {
-        const context = makeCanvasFromTextureLabel(testLabel);
-        const { width, height } = context.canvas;
-        const imageData = context.getImageData(0, 0, width, height).data;
-        let colorIndices, r, g, b, a;
+      for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+          const i = (y * (width * imageData.BYTES_PER_ELEMENT)) + (x * imageData.BYTES_PER_ELEMENT);
+          const r = imageData[i + 0];
+          const g = imageData[i + 1];
+          const b = imageData[i + 2];
 
-        for (let i = 0; i < width; ++i) {
-          for (let k = 0; k < height; ++k) {
-            colorIndices = getColorIndicesForCoord(i, k, width);
-            r = imageData[colorIndices[0]];
-            g = imageData[colorIndices[1]];
-            b = imageData[colorIndices[2]];
-            a = imageData[colorIndices[3]];
-
-            if (r === 255.0 && g === 255.0 && b === 255.0) {
-              resolve();
-              clearTimeout(timeout);
-              canvasCanDrawLabel = true;
-              return;
-            }
+          if (r > 254.0 && g > 254.0 && b > 254.0) {
+            clearTimeout(timeout);
+            canvasCanDrawLabel = true;
+            return;
           }
         }
-
-        // Make a small delay before trying again
-        await new Promise((resolve) => setTimeout(resolve, 10));
       }
-    });
+
+      // Make a small delay before trying again
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
   }
 
   /**
