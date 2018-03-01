@@ -30,6 +30,7 @@
     "@types/react": "15.0.x",
     "@types/react-dom": "16.0.x",
     "auto": "github:tarwich/auto",
+    "babel-preset-env": "^1.6.1",
     "css-loader": "0.28.x",
     "dts-bundle": "0.7.x",
     "eslint-config-tarwich": "github:tarwich/eslint-config-tarwich#1.5.1",

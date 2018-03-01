@@ -497,7 +497,7 @@ export class AtlasManager {
       font: 'Calibri, Candara, Segoe, Segoe UI, Optima, Arial, sans-serif',
       fontSize: 32,
       fontWeight: 900,
-      text: 'abcdefghijklmnopqrstuvwxyz1234567890',
+      text: 'X',
       textBaseline: 'top',
     });
 
@@ -512,7 +512,7 @@ export class AtlasManager {
 
       for (let x = 0; x < width; ++x) {
         for (let y = 0; y < height; ++y) {
-          const i = (y * (width * imageData.BYTES_PER_ELEMENT)) + (x * imageData.BYTES_PER_ELEMENT);
+          const i = (y * (width * 4)) + (x * 4);
           const r = imageData[i + 0];
           const g = imageData[i + 1];
           const b = imageData[i + 2];
