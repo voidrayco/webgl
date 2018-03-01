@@ -241,7 +241,7 @@ export class AtlasManager {
     if (!canvasCanDrawLabel) {
       await this.waitForValidCanvasRendering()
       .catch(error => {
-        console.error('WebGL context was not ready in %d seconds', CANVAS_LABEL_TIME);
+        console.error('WebGL context was not ready in %d seconds', CANVAS_LABEL_TIME / 1000);
       });
     }
 
@@ -486,7 +486,7 @@ export class AtlasManager {
     const timeout = setTimeout(() => {
       console.warn('Unable to establish a Canvas context that is able to render labels');
       stop = true;
-      throw new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME} ms`);
+      throw new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME / 1000}s`);
     }, CANVAS_LABEL_TIME);
 
     const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
@@ -495,32 +495,27 @@ export class AtlasManager {
     const label = new Label<any>({
       color: refColor,
       font: 'Calibri, Candara, Segoe, Segoe UI, Optima, Arial, sans-serif',
-      fontSize: 14,
-      text: 'abcdefghijklmnopqrstuvwxyz0123456789',
+      fontSize: 32,
+      fontWeight: 900,
+      text: 'abcdefghijklmnopqrstuvwxyz1234567890',
+      textBaseline: 'top',
     });
 
     // Make the test label to be rendered to a canvas
     const testLabel = new AtlasTexture(null, label);
-
-    // Helper method for picking pixels from our image data
-    function getColorIndicesForCoord(x: number, y: number, width: number) {
-      const red = y * (width * 4) + x * 4;
-      return [red, red + 1, red + 2, red + 3];
-    }
 
     // Keep attempting to draw a canvas that renders valid text to it
     while (!canvasCanDrawLabel && !stop) {
       const context = makeCanvasFromTextureLabel(testLabel);
       const { width, height } = context.canvas;
       const imageData = context.getImageData(0, 0, width, height).data;
-      let colorIndices, r, g, b;
 
-      for (let i = 0; i < width; ++i) {
-        for (let k = 0; k < height; ++k) {
-          colorIndices = getColorIndicesForCoord(i, k, width);
-          r = imageData[colorIndices[0]];
-          g = imageData[colorIndices[1]];
-          b = imageData[colorIndices[2]];
+      for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+          const i = (y * (width * imageData.BYTES_PER_ELEMENT)) + (x * imageData.BYTES_PER_ELEMENT);
+          const r = imageData[i + 0];
+          const g = imageData[i + 1];
+          const b = imageData[i + 2];
 
           if (r > 254.0 && g > 254.0 && b > 254.0) {
             clearTimeout(timeout);
