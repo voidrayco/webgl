@@ -44,7 +44,7 @@ Try ${process.argv[0]} ${process.argv[1]} (major|minor|patch)`);
 
   newNotes += changes.map(line => {
     const [, type, message] = line.match(/^\s+(\w+):(.+)$/);
-    return `* (\`${type.toUpperCase()}\`) ${message}`;
+    return `* \`(${type.toUpperCase()})\` ${message.trim()}`;
   })
   .join('\n');
 
@@ -54,7 +54,7 @@ Try ${process.argv[0]} ${process.argv[1]} (major|minor|patch)`);
   releaseNotes = releaseNotes.replace(/(?=##|$)/, `${newNotes}\n\n`);
   await writeFileP('RELEASE_NOTES.md', releaseNotes);
 
-  console.log(releaseNotes);
+  console.log(newNotes);
 }
 
 process.on('unhandledRejection', error => {
