@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.20
+
+* `(FIXED)` Initial render not working on Chrome/Edge in Windows
+
 ## 0.7.19
 
 * `(FIXED)` Safari taxes several seconds for first render
