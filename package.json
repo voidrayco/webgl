@@ -52,7 +52,7 @@
     "tslint": "5.8.x",
     "tslint-loader": "3.5.x",
     "typescript": "2.5.x",
-    "uglify-js": "3.1.x",
+    "uglify-js": "~3.3.14",
     "webpack": "3.0.x",
     "webpack-dev-server": "2.9.x"
   },
