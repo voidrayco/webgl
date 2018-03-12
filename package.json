@@ -20,7 +20,7 @@
     "@types/d3-scale": "1.0.x",
     "@types/ramda": "~0.25.4",
     "@types/three": "0.84.x",
-    "bowser": "1.7.x",
+    "bowser": "~1.9.3",
     "d3-color": "1.0.x",
     "d3-scale": "1.0.x",
     "ramda": "0.25.x"
