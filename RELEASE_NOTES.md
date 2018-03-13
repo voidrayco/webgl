@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.21
+
+* `(FIXED)` Component could not unmount when Webgl was disabled
+
 ## 0.7.20
 
 * `(FIXED)` Initial render not working on Chrome/Edge in Windows
