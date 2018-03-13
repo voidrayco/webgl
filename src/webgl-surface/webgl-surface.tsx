@@ -1029,7 +1029,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     }
 
     if (!this.props.renderContext) {
-      this.renderer.dispose();
+      this.renderer && this.renderer.dispose();
     }
 
     this.quadTree = null;
