@@ -185,6 +185,8 @@ export class Label<T> extends RotateableQuad<T> {
       // If we're beyond our max width limit, we must truncate
       if (this.maxWidth && (width > this.maxWidth)) {
         let beyondMax = false;
+        truncatedWidth += threeDotsWide;
+
         while (truncatedWidth > this.maxWidth) {
           text = text.substring(0, text.length - 2);
           truncatedWidth =

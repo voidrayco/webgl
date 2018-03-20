@@ -84,6 +84,10 @@ export declare class AtlasManager {
      */
     getAtlasTexture(atlasName: string): Texture;
     /**
+     * HACK: This method is a hack that will execute a loop
+     */
+    waitForValidCanvasRendering(): Promise<void>;
+    /**
      * This reads the input path and loads the image specified by the path
      *
      * @param {AtlasTexture} texture This is an atlas texture with the path set

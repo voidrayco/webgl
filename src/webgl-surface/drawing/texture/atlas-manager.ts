@@ -1,9 +1,10 @@
 import { rgb } from 'd3-color';
-import { Texture } from 'three';
+import { Color, Texture } from 'three';
 import { AtlasColor } from '../../drawing/texture/atlas-color';
 import { Bounds } from '../../primitives/bounds';
 import { IPoint } from '../../primitives/point';
 import { ImageDimensions, PackNode } from '../../util/pack-node';
+import { ReferenceColor } from '../reference/reference-color';
 import { Label } from '../shape/label';
 import { AtlasTexture } from './atlas-texture';
 
@@ -19,6 +20,63 @@ const ZERO_IMAGE = {
   pixelHeight: 0,
   pixelWidth: 0,
 };
+
+const CANVAS_LABEL_TIME = 10000;
+
+function isImageElement(val: any): val is HTMLImageElement {
+  return Boolean(val && val.src);
+}
+
+function isString(val: any): val is string {
+  return Boolean(val && val.substr);
+}
+
+/**
+ *  HACK: This is a part of a hack that gets around a canvas 'warming up' issue where labels
+ *  are not drawn immediately.
+ */
+let canvasCanDrawLabel: boolean = false;
+
+/**
+ * Makes a small canvas piece to render the label into and returns the canvas context if successful
+ */
+function makeCanvasFromTextureLabel(texture: AtlasTexture) {
+  const label = texture.label;
+  const labelSize = label.getSize();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Set the dimensions of the canvas/texture space we will be using to rasterize
+  // The label. Use the label's rasterization controls to aid in rendering the label
+  canvas.width = labelSize.width;
+  canvas.height = labelSize.height;
+
+  if (ctx) {
+    const fontSize = label.fontSize;
+
+    const color = rgb(
+      label.color.base.color.r * 255,
+      label.color.base.color.g * 255,
+      label.color.base.color.b * 255,
+      label.color.base.opacity,
+    );
+
+    ctx.font = label.makeCSSFont(fontSize);
+    ctx.textAlign = label.textAlign;
+    ctx.textBaseline = label.textBaseline;
+    ctx.fillStyle = color.toString();
+
+    // Render the label to the canvas/texture space. This utilizes the label's
+    // Rasterization metrics to aid in getting a clean render.
+    ctx.fillText(
+      label.truncatedText || label.text,
+      texture.label.rasterizationOffset.x,
+      texture.label.rasterizationOffset.y,
+    );
+  }
+
+  return ctx;
+}
 
 /**
  * Defines a manager of atlas', which includes generating the atlas and producing
@@ -175,6 +233,16 @@ export class AtlasManager {
     if (!this.atlasMap[atlasName]) {
       debug('Can not load image, invalid Atlas Name: %o for atlasMaps: %o', atlasName, this.atlasMap);
       return false;
+    }
+
+    // HACK: This will wait to ensure a canvas CAN draw a label before letting the manage continue.
+    // This is in place for a firefox issue where there is a 'warming up' of canvas before it is able
+    // To render text
+    if (!canvasCanDrawLabel) {
+      await this.waitForValidCanvasRendering()
+      .catch(error => {
+        console.error('WebGL context was not ready in %d seconds', CANVAS_LABEL_TIME / 1000);
+      });
     }
 
     // First we must load the image
@@ -409,6 +477,60 @@ export class AtlasManager {
   }
 
   /**
+   * HACK: This method is a hack that will execute a loop
+   */
+  async waitForValidCanvasRendering() {
+    let stop = false;
+
+    // Set up a timeout routine in case this never resolves
+    const timeout = setTimeout(() => {
+      console.warn('Unable to establish a Canvas context that is able to render labels');
+      stop = true;
+      throw new Error(`Canvas did not become available in ${CANVAS_LABEL_TIME / 1000}s`);
+    }, CANVAS_LABEL_TIME);
+
+    const color = new AtlasColor(new Color(1.0, 1.0, 1.0), 1.0);
+    const refColor = new ReferenceColor(color);
+
+    const label = new Label<any>({
+      color: refColor,
+      font: 'Calibri, Candara, Segoe, Segoe UI, Optima, Arial, sans-serif',
+      fontSize: 32,
+      fontWeight: 900,
+      text: 'X',
+      textBaseline: 'top',
+    });
+
+    // Make the test label to be rendered to a canvas
+    const testLabel = new AtlasTexture(null, label);
+
+    // Keep attempting to draw a canvas that renders valid text to it
+    while (!canvasCanDrawLabel && !stop) {
+      const context = makeCanvasFromTextureLabel(testLabel);
+      const { width, height } = context.canvas;
+      const imageData = context.getImageData(0, 0, width, height).data;
+
+      for (let x = 0; x < width; ++x) {
+        for (let y = 0; y < height; ++y) {
+          const i = (y * (width * 4)) + (x * 4);
+          const r = imageData[i + 0];
+          const g = imageData[i + 1];
+          const b = imageData[i + 2];
+
+          if (r > 254.0 && g > 254.0 && b > 254.0) {
+            clearTimeout(timeout);
+            canvasCanDrawLabel = true;
+            return;
+          }
+        }
+      }
+
+      // Make a small delay before trying again
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+  }
+
+  /**
    * This reads the input path and loads the image specified by the path
    *
    * @param {AtlasTexture} texture This is an atlas texture with the path set
@@ -418,22 +540,36 @@ export class AtlasManager {
    */
   loadImage(texture: AtlasTexture): Promise<HTMLImageElement | null> {
     if (texture.imagePath) {
-      return new Promise((resolve, reject) => {
-        const image: HTMLImageElement = new Image();
+      const imageElement = texture.imagePath;
 
-        image.onload = function() {
-          texture.pixelWidth = image.width;
-          texture.pixelHeight = image.height;
-          texture.aspectRatio = image.width / image.height;
-          resolve(image);
-        };
+      // If the texture was provided an image then we just return the image
+      if (isImageElement(imageElement)) {
+        texture.pixelWidth = imageElement.width;
+        texture.pixelHeight = imageElement.height;
+        texture.aspectRatio = imageElement.width / imageElement.height;
 
-        image.onerror = function() {
-          resolve(null);
-        };
+        return Promise.resolve(imageElement);
+      }
 
-        image.src = texture.imagePath;
-      });
+      // If a string was returned, we must load the image then return the image
+      else if (isString(imageElement)) {
+        return new Promise((resolve, reject) => {
+          const image: HTMLImageElement = new Image();
+
+          image.onload = function() {
+            texture.pixelWidth = image.width;
+            texture.pixelHeight = image.height;
+            texture.aspectRatio = image.width / image.height;
+            resolve(image);
+          };
+
+          image.onerror = function() {
+            resolve(null);
+          };
+
+          image.src = imageElement;
+        });
+      }
     }
 
     else if (texture.label) {

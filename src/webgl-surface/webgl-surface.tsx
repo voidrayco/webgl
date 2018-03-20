@@ -36,6 +36,8 @@ export enum BaseApplyPropsMethods {
   LABELS,
   /** Generates the colors within the atlas manager */
   COLORS,
+  /** Generates images within the atlas manager */
+  IMAGES,
 }
 
 /**
@@ -143,6 +145,8 @@ export interface IWebGLSurfaceProperties {
   colors?: AtlasColor[];
   /** The forced size of the render surface */
   height?: number;
+  /** The unique images to be loaded into an atlas for rendering */
+  images?: AtlasTexture[];
   /** All of the labels to be rendered by the system */
   labels?: Label<any>[];
   /** Provides feedback when the surface is double clicked */
@@ -206,6 +210,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /** Tracks the names of the atlas' generated */
   atlasNames = {
     colors: 'colors',
+    images: 'images',
     labels: 'labels',
   };
   /**
@@ -342,6 +347,15 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * within this.props.renderContext
    */
   waitForContext: boolean = false;
+
+  images: AtlasTexture[] = [];
+  imagesReady: boolean = false;
+  /**
+   * This is the latest images loading identifier, used to determine if the images
+   * last loaded matches the images currently needing to be rendered.
+   */
+  imagesCurrentLoadedId: number = 0;
+  imagesLoadId: number = 0;
 
   /**
    * This is the update loop that operates at the requestAnimationFrame speed.
@@ -597,6 +611,14 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   }
 
   /**
+   * This is a hook for subclasses to be able to apply buffer changes that rely
+   * on images rendered into the atlas after the system has prepped the images for render.
+   */
+  applyImageBufferChanges(props: T) {
+    // Note: For subclasses
+  }
+
+  /**
    * This is a hook for subclasses to be able to apply label buffer changes after the system has
    * prepped the labels for render.
    */
@@ -803,6 +825,47 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         return response;
       },
 
+      [BaseApplyPropsMethods.IMAGES]: (props: T): IApplyPropsMethodResponse => {
+        const response = {};
+
+        // If we have a new images reference we must regenerate the images in our image lookup
+        if (props.images && props.images !== this.images) {
+          debug('Images are being comitted to an Atlas %o', props.images);
+          // Flag the images as incapable of rendering
+          this.imagesReady = false;
+          this.imagesLoadId++;
+          // Store the set of images we are rendering so that they do not get re-generated
+          // In the atlas rapidly.
+          this.images = props.images;
+
+          if (this.atlasManager.getAtlasTexture(this.atlasNames.images)) {
+            this.atlasManager.destroyAtlas(this.atlasNames.images);
+          }
+
+          this.atlasManager.createAtlas(this.atlasNames.images, this.images)
+          .then(() => {
+            debug('Images rasterized within the atlas: %o', this.atlasManager.getAtlasTexture(this.atlasNames.images));
+            this.forceDraw = true;
+            this.imagesCurrentLoadedId++;
+
+            // If we are done loading AND we match up with the current load id, then images
+            // For the latest images update are indeed ready for display
+            if (this.imagesCurrentLoadedId === this.imagesLoadId) {
+              this.imagesReady = true;
+            }
+
+            // Reapply the props so any buffers that were not updating can update now
+            this.applyProps(this.props);
+          })
+          .catch(err => {
+            console.warn('There was an issue while loading images to the atlas. Changes will not be applied properly and you may see visual artefacts');
+            console.error(err && (err.stack || err.message));
+          });
+        }
+
+        return response;
+      },
+
       [BaseApplyPropsMethods.BUFFERCHANGES]: (props: T): IApplyPropsMethodResponse => {
         // Call the hook to allow sub componentry to have a place to update it's buffers
         this.applyBufferChanges(props);
@@ -813,6 +876,10 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         if (this.labelsReady && this.colorsReady) {
           debugLabels('labels changed %o', props);
           this.applyLabelBufferChanges(props);
+        }
+
+        if (this.imagesReady && this.colorsReady) {
+          this.applyImageBufferChanges(props);
         }
 
         // For resources that only need the color atlas to be ready
@@ -962,7 +1029,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
     }
 
     if (!this.props.renderContext) {
-      this.renderer.dispose();
+      this.renderer && this.renderer.dispose();
     }
 
     this.quadTree = null;
@@ -975,6 +1042,7 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
 
     this.atlasManager.destroyAtlas(this.atlasNames.colors);
     this.atlasManager.destroyAtlas(this.atlasNames.labels);
+    this.atlasManager.destroyAtlas(this.atlasNames.images);
 
     FrameInfo.framesPlayed.delete(this);
   }
