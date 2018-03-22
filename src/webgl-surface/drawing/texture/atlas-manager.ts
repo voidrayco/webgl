@@ -205,8 +205,8 @@ export class AtlasManager {
 
   isValidImage(image: AtlasTexture){
     let isValid = false;
-    if (image && (image.imagePath || (image.label && image.label.text))) {
-      if (image.pixelWidth && image.pixelHeight){
+    if (image && (image.image || (image.label && image.label.text))) {
+      if (image.pixelWidth && image.pixelHeight) {
         isValid = true;
       }
     }
@@ -256,7 +256,7 @@ export class AtlasManager {
 
     // Only a non-null image means the image loaded correctly
     if (loadedImage && this.isValidImage(image)) {
-      debug('Image loaded: %o', image.imagePath);
+      debug('Image loaded: %o', image.image);
       // Now we create a Rectangle to store the image dimensions
       const rect: Bounds<never> = new Bounds<never>(0, image.pixelWidth, image.pixelHeight, 0);
       // Create ImageDimension to insert into our atlas mapper
@@ -313,7 +313,7 @@ export class AtlasManager {
 
       else {
         // Log an error
-        console.error(`Could not fit image into atlas ${image.imagePath}`);
+        console.error(`Could not fit image into atlas:`, image.image);
         image = this.setDefaultImage(image, atlasName);
         return false;
 
@@ -322,8 +322,8 @@ export class AtlasManager {
 
     else {
       // Log an error and load a default image
-      if (image.imagePath) {
-        console.error(`Could not load image: ${image.imagePath}`);
+      if (image.image) {
+        console.error(`Could not load image:`, image.image);
       }
 
       else {
@@ -539,16 +539,34 @@ export class AtlasManager {
    *                                     or null if there was an error
    */
   loadImage(texture: AtlasTexture): Promise<HTMLImageElement | null> {
-    if (texture.imagePath) {
-      const imageElement = texture.imagePath;
+    if (texture.image) {
+      const imageElement = texture.image;
 
       // If the texture was provided an image then we just return the image
       if (isImageElement(imageElement)) {
-        texture.pixelWidth = imageElement.width;
-        texture.pixelHeight = imageElement.height;
-        texture.aspectRatio = imageElement.width / imageElement.height;
+        return new Promise(resolve => {
+          if (!imageElement.width || !imageElement.height) {
+            imageElement.onload = function() {
+              texture.pixelWidth = imageElement.width;
+              texture.pixelHeight = imageElement.height;
+              texture.aspectRatio = imageElement.width / imageElement.height;
 
-        return Promise.resolve(imageElement);
+              resolve(imageElement);
+            };
+
+            imageElement.onerror = function() {
+              console.warn('Provided image had an error when loading.', arguments);
+              resolve(null);
+            };
+          }
+
+          else {
+            texture.pixelWidth = imageElement.width;
+            texture.pixelHeight = imageElement.height;
+            texture.aspectRatio = imageElement.width / imageElement.height;
+            resolve(imageElement);
+          }
+        });
       }
 
       // If a string was returned, we must load the image then return the image
