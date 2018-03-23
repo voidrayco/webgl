@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.22
+
+* `(FIXED)` Images provided for atlas' have invalid dimensions
+
 ## 0.7.21
 
 * `(FIXED)` Component could not unmount when Webgl was disabled
