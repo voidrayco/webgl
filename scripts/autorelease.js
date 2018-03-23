@@ -114,7 +114,7 @@ async function preRelease() {
   await setupGitSsh();
 
   // Tell git who I am
-  gitConfig({
+  await gitConfig({
     'user.name': 'Autorelease Script',
     'user.email': 'samuel+voidbot@voidray.co'
   });
