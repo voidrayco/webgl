@@ -313,7 +313,7 @@ export class AtlasManager {
 
       else {
         // Log an error
-        console.error(`Could not fit image into atlas:`, image.image);
+        console.error('Could not fit image into atlas:', image.image);
         image = this.setDefaultImage(image, atlasName);
         return false;
 
@@ -323,7 +323,7 @@ export class AtlasManager {
     else {
       // Log an error and load a default image
       if (image.image) {
-        console.error(`Could not load image:`, image.image);
+        console.error('Could not load image:', image.image);
       }
 
       else {
