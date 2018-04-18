@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Component } from 'preact';
 import { ISharedRenderContext } from './types';
 import { WebGLSurface } from './webgl-surface';
 
@@ -18,6 +18,10 @@ export interface IWebGLSurfaceProviderState {
  * a webgl context. It must extend this component class AND find a means to
  * populate the webGLSurface property with an instance of a WebGLSurface.
  */
-export class WebGLSurfaceProvider<T extends IWebGLSurfaceProviderProps, U extends IWebGLSurfaceProviderState> extends React.Component<T, U> {
+export class WebGLSurfaceProvider<T extends IWebGLSurfaceProviderProps, U extends IWebGLSurfaceProviderState> extends Component<T, U> {
   webGLSurface: WebGLSurface<any, any>;
+
+  render(): JSX.Element | null {
+    return null;
+  }
 }

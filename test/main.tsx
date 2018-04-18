@@ -1,6 +1,5 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import * as VoidGL from '../src';
+/** @jsx h */
+import { Component, h, render } from 'preact';
 
 /**
  * The state of the application
@@ -13,7 +12,7 @@ export interface IMainState {
 /**
  * Entry class for the Application
  */
-export class Main extends React.Component<any, IMainState> {
+export class Main extends Component<any, IMainState> {
   // Set default state values
   state: IMainState = {
     currentTab: 2,
@@ -41,9 +40,7 @@ export class Main extends React.Component<any, IMainState> {
     let component;
 
     if (this.state.currentTab === 0) {
-      component = (
-        <VoidGL.WebGLSurface/>
-      );
+      component = null;
     }
 
     return (
@@ -59,4 +56,4 @@ export class Main extends React.Component<any, IMainState> {
   }
 }
 
-ReactDOM.render(<Main/>, document.getElementById('main'));
+render(<Main/>, document.getElementById('main'));

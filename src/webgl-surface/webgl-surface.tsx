@@ -1,5 +1,6 @@
+/** @jsx h */
+import { Component, h } from 'preact';
 import { merge } from 'ramda';
-import * as React from 'react';
 import { Color, CullFaceNone, OrthographicCamera, Scene, ShaderMaterial, Vector3, WebGLRenderer } from 'three';
 import { Label } from './drawing/shape/label';
 import { AtlasColor } from './drawing/texture/atlas-color';
@@ -150,7 +151,7 @@ export interface IWebGLSurfaceProperties {
   /** All of the labels to be rendered by the system */
   labels?: Label<any>[];
   /** Provides feedback when the surface is double clicked */
-  onDoubleClick?(e: React.MouseEvent<Element>): void;
+  onDoubleClick?(e: MouseEvent): void;
   /** Provides feedback when the mouse has moved */
   onMouse?(screen: IPoint, world: IPoint, isPanning: boolean): void;
   /** When provided provides image data every frame for the screen */
@@ -204,7 +205,7 @@ function sign(value: number): number {
 /**
  * The base component for the communications view
  */
-export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Component<T, U> {
+export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends Component<T, U> {
   /** This is the atlas manager for managing images and labels rendered as textures */
   atlasManager: AtlasManager = new AtlasManager(2048, 2048);
   /** Tracks the names of the atlas' generated */
@@ -1335,13 +1336,13 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
   /**
    * Hook for subclasses to respond to mouse up events and the items that were interacted with in the process
    *
-   * @param {React.MouseEvent} e The react synthetic event associated with the action
+   * @param {MouseEvent} e The react synthetic event associated with the action
    * @param {Bounds[]} hitInside The items the mouse interacted with
    * @param {IPoint} mouse The location of the mouse on the screen
    * @param {IPoint} world The location of the mouse projected into the world
    * @param {IProjection} projection The projection methods to go between the screen and world space
    */
-  onMouseUp(e: React.MouseEvent<HTMLDivElement>, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
+  onMouseUp(e: MouseEvent, hitInside: Bounds<any>[], mouse: IPoint, world: IPoint, projection: IProjection) {
     // NOTE: For subclasses
   }
 
@@ -1426,9 +1427,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * Handles mouse interactions when the mouse is pressed on the canvas. This
    * engages panning.
    *
-   * @param {React.MouseEvent<HTMLDivElement>} e The mouse event from React
+   * @param {MouseEvent<HTMLDivElement>} e The mouse event from React
    */
-  handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  handleMouseDown = (e: MouseEvent) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
       return;
@@ -1444,9 +1445,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * Handles mouse interactions when the mouse is release or left the canvas. This
    * stops panning.
    *
-   * @param {React.MouseEvent<HTMLDivElement>} e The mouse event from React
+   * @param {MouseEvent} e The mouse event from React
    */
-  handleMouseOut = (e: React.MouseEvent<HTMLDivElement>) => {
+  handleMouseOut = (e: MouseEvent) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
       return;
@@ -1462,9 +1463,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * Handles mouse interactions when the mouse is released on the canvas. This
    * stops panning and engages click events.
    *
-   * @param {React.MouseEvent<HTMLDivElement>} e The mouse event from React
+   * @param {MouseEvent} e The mouse event from React
    */
-  handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
+  handleMouseUp = (e: MouseEvent) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
       return;
@@ -1505,9 +1506,9 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
    * Handles mouse interactions when the mouse is moving on the canvas. This
    * causes panning and hover events.
    *
-   * @param {React.MouseEvent<HTMLDivElement>} e The mouse event from React
+   * @param {MouseEvent} e The mouse event from React
    */
-  handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  handleMouseMove = (e: MouseEvent) => {
     // Quick quit if mouse interactions are disabled
     if (this.disableMouseInteraction > 0) {
       return;
@@ -1789,11 +1790,6 @@ export class WebGLSurface<T extends IWebGLSurfaceProperties, U> extends React.Co
         onMouseUp={this.handleMouseUp}
         onMouseLeave={this.handleMouseOut}
         onMouseMove={this.handleMouseMove}
-        onDoubleClick={e => {
-          if (this.props.onDoubleClick) {
-            this.props.onDoubleClick(e);
-          }
-        }}
         style={{ position: 'relative', width: width, height: height}}>
         <div ref={this.applyRef} />
       </div>
