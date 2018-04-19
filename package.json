@@ -46,7 +46,7 @@
     "react-dom": "15.5.x",
     "semver": "^5.5.0",
     "style-loader": "0.19.x",
-    "three": "0.87.x",
+    "three": "~0.92.0",
     "ts-loader": "3.0.x",
     "tslib": "1.7.x",
     "tslint": "5.8.x",
