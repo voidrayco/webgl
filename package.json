@@ -26,7 +26,7 @@
     "ramda": "0.25.x"
   },
   "devDependencies": {
-    "@types/node": "8.0.x",
+    "@types/node": "~10.0.3",
     "@types/react": "15.0.x",
     "@types/react-dom": "16.0.x",
     "auto": "github:tarwich/auto",
