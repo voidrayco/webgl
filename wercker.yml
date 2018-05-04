@@ -2,6 +2,15 @@ box: kkarczmarczyk/node-yarn
 build:
   steps:
     - script:
+        name: NPM Install
+        code: npm install
+    - script:
+        name: Check package.json
+        code: npm run auto check-package
+    - script:
+        name: Check index imports
+        code: npm run auto scan-for-import-index
+    - script:
         name: Setup greenkeeper
         code: yarn global add greenkeeper-lockfile@1
     - script:
@@ -12,7 +21,7 @@ build:
         code: yarn install
     - script:
         name: Autorelease
-        code: node scripts/autorelease
+        code: npm run auto release
     - script:
         name: Test the build
         code: npm run build
