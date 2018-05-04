@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.24
+
+* `(FIXED)` Shader files are copied into the distribution
+
 ## 0.7.23
 
 * `(FIXED)` Migrated to shared autobuilder to improve stability of builds
