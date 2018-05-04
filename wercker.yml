@@ -1,9 +1,8 @@
-box: kkarczmarczyk/node-yarn
+box: tarwich/node-8-chrome
 build:
   steps:
     - script:
         name: NPM Install
-        code: npm install
     - script:
         name: Check package.json
         code: npm run auto check-package
