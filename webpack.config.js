@@ -1,5 +1,6 @@
 const {resolve} = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CopyWebPackPlugin = require('copy-webpack-plugin');
 const webpack = require('webpack');
 
 const tslintLoader = {loader: 'tslint-loader', options: {
@@ -51,6 +52,17 @@ if (IS_PRODUCTION) {
       sourceMap: true,
     })
   );
+
+  plugins.push(new CopyWebPackPlugin(
+    [
+      {
+        from: '**/*.{fs,vs}',
+        to: resolve('dist'),
+      }
+    ], {
+      context: './src/webgl-surface',
+    }
+  ));
 }
 
 module.exports = {
