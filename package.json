@@ -10,11 +10,12 @@
   "types": "dist/src/index.d.ts",
   "license": "Apache-2.0",
   "scripts": {
-    "auto": "auto",
+    "build": "tslint src && webpack",
     "dev": "node scripts/dev",
+    "eslint": "eslint",
     "release": "auto build",
     "start": "node scripts/dev",
-    "build": "tslint src && webpack"
+    "auto": "auto"
   },
   "dependencies": {
     "@types/d3-color": "1.0.x",
@@ -34,6 +35,7 @@
     "babel-preset-env": "1.6.1",
     "css-loader": "0.28.11",
     "dts-bundle": "0.7.3",
+    "eslint": "4.19.1",
     "eslint-config-tarwich": "github:tarwich/eslint-config-tarwich#1.5.1",
     "file-loader": "1.1.11",
     "find-imports": "0.5.2",

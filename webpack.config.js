@@ -1,5 +1,4 @@
-const { resolve } = require('path');
-const path = require('path');
+const {resolve} = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const webpack = require('webpack');
 
