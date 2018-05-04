@@ -1,6 +1,6 @@
 import { flatten } from 'ramda';
 import { IUniform, Mesh, ShaderMaterial, TriangleStripDrawMode, Vector4 } from 'three';
-import { CurvedEdgeShape } from '../../drawing/index';
+import { CurvedEdgeShape } from '../../drawing';
 import { ReferenceColor } from '../../drawing/reference/reference-color';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { AttributeSize, BufferUtil, UniformAttributeSize } from '../../util/buffer-util';

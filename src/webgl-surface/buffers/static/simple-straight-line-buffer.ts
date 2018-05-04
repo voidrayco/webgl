@@ -1,7 +1,7 @@
 import { flatten } from 'ramda';
 import { Mesh, TriangleStripDrawMode } from 'three';
 import { IUniform, ShaderMaterial } from 'three';
-import { AtlasManager, ReferenceColor } from '../../drawing/index';
+import { AtlasManager, ReferenceColor } from 'webgl-surface/drawing';
 import { LineShape } from '../../drawing/shape/line-shape';
 import { Point } from '../../primitives/point';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
