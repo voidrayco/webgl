@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.23
+
+* `(FIXED)` Migrated to shared autobuilder to improve stability of builds
+
 ## 0.7.22
 
 * `(FIXED)` Images provided for atlas' have invalid dimensions

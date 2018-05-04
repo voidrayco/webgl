@@ -1,6 +1,6 @@
 import { Mesh } from 'three';
 import { ShaderMaterial } from 'three';
-import { AtlasManager } from '../../drawing/index';
+import { AtlasManager } from 'webgl-surface/drawing';
 import { LineShape } from '../../drawing/shape/line-shape';
 import { BaseBuffer } from '../base-buffer';
 export declare class SimpleStaticStraightLineBuffer extends BaseBuffer<LineShape<any> | LineShape<any>[], Mesh> {

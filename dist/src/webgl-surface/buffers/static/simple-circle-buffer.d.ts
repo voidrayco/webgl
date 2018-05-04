@@ -1,6 +1,7 @@
 import { Mesh } from 'three';
 import { OrthographicCamera, ShaderMaterial } from 'three';
-import { AtlasManager, CircleShape } from '../../drawing/index';
+import { AtlasManager } from 'webgl-surface/drawing/texture/atlas-manager';
+import { CircleShape } from '../../drawing';
 import { BaseBuffer } from '../base-buffer';
 export declare class SimpleStaticCircleBuffer extends BaseBuffer<CircleShape<any> | CircleShape<any>[], Mesh> {
     /**
