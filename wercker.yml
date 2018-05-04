@@ -3,18 +3,13 @@ build:
   steps:
     - script:
         name: NPM Install
+        code: npm install
     - script:
         name: Check package.json
         code: npm run auto check-package
     - script:
         name: Check index imports
         code: npm run auto scan-for-import-index
-    - script:
-        name: Setup greenkeeper
-        code: yarn global add greenkeeper-lockfile@1
-    - script:
-        name: Update the lockfile
-        code: greenkeeper-lockfile-update
     - script:
         name: Yarn Install
         code: yarn install
@@ -24,6 +19,3 @@ build:
     - script:
         name: Autorelease
         code: npm run auto release
-    - script:
-        name: Save the yarn lockfile
-        code: greenkeeper-lockfile-upload
