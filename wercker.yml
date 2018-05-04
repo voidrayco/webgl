@@ -1,21 +1,18 @@
-box: kkarczmarczyk/node-yarn
+box: tarwich/node-8-chrome
 build:
   steps:
     - script:
-        name: Setup greenkeeper
-        code: yarn global add greenkeeper-lockfile@1
+      name: NPM Install
+      code: npm install
     - script:
-        name: Update the lockfile
-        code: greenkeeper-lockfile-update
+      name: Check package.json
+      code: npm run auto check-package
     - script:
-        name: Yarn Install
-        code: yarn install
+      name: Check index imports
+      code: npm run auto scan-for-import-index
     - script:
-        name: Autorelease
-        code: node scripts/autorelease
+      name: Check js files
+      code: npm run eslint -- . --ignore-pattern node_modules --ignore-pattern dist
     - script:
-        name: Test the build
-        code: npm run build
-    - script:
-        name: Save the yarn lockfile
-        code: greenkeeper-lockfile-upload
+      name: Autorelease
+      code: npm run auto release

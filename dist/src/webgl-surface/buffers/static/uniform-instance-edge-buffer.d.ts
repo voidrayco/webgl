@@ -1,5 +1,5 @@
 import { Mesh, ShaderMaterial } from 'three';
-import { CurvedEdgeShape } from '../../drawing/index';
+import { CurvedEdgeShape } from '../../drawing';
 import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { BaseBuffer } from '../base-buffer';
 /**
