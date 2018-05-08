@@ -1,7 +1,7 @@
 import { flatten } from 'ramda';
 import { Mesh } from 'three';
 import { IUniform, OrthographicCamera, Points, ShaderMaterial } from 'three';
-import { AtlasManager } from 'webgl-surface/drawing/texture/atlas-manager';
+import { AtlasManager } from '../../drawing/texture/atlas-manager';
 import { CircleShape, ReferenceColor } from '../../drawing';
 import { AttributeSize, BufferUtil } from '../../util/buffer-util';
 import { BaseBuffer } from '../base-buffer';
