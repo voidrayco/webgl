@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.25
+
+* `(FIXED)` Removed some non-relative imports from the project
+
 ## 0.7.24
 
 * `(FIXED)` Shader files are copied into the distribution
