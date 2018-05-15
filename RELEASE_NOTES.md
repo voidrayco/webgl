@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.7.26
+
+* `(FIXED)` Add null checks for store
+
 ## 0.7.25
 
 * `(FIXED)` Removed some non-relative imports from the project
