@@ -189,7 +189,7 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
    * @param id
    */
   containsId(id: any): boolean {
-    return Boolean(this.store.idToItem.get(id));
+    return Boolean(this.store && this.store.idToItem.get(id));
   }
 
   /**
@@ -272,7 +272,7 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
    * @param id
    */
   getShapeById(id: any) {
-    return this.store.idToItem.get(id);
+    return this.store && this.store.idToItem.get(id);
   }
 
   /**
@@ -331,16 +331,18 @@ export class MultiShapeBufferCache<T> extends ShapeBufferCache<T> {
    * @param shape
    */
   removeShape(shape: T) {
-    // This is the buffer associated with the shape
-    const buffer = this.store.itemToBuffer.get(shape);
-    // Get the buffers invalidated by the remove
-    const buffers = this.removeMethod(shape, buffer, this.store.allBuffers);
-    // Clear the shape out from the buffer
-    buffer.buffer.splice(buffer.buffer.indexOf(shape), 1);
-    // Delete the item from the id lookup
-    this.store.idToItem.delete(this.idMethod(shape));
-    // Flag all of the touched buffers as dirty
-    this.flagBuffersDirty(buffers);
+    if (this.store) {
+      // This is the buffer associated with the shape
+      const buffer = this.store.itemToBuffer.get(shape);
+      // Get the buffers invalidated by the remove
+      const buffers = this.removeMethod(shape, buffer, this.store.allBuffers);
+      // Clear the shape out from the buffer
+      buffer.buffer.splice(buffer.buffer.indexOf(shape), 1);
+      // Delete the item from the id lookup
+      this.store.idToItem.delete(this.idMethod(shape));
+      // Flag all of the touched buffers as dirty
+      this.flagBuffersDirty(buffers);
+    }
   }
 
   /**
