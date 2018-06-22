@@ -52,7 +52,7 @@
     "style-loader": "0.19.1",
     "three": "0.87.1",
     "ts-loader": "3.0.5",
-    "tslib": "1.7.1",
+    "tslib": "1.9.3",
     "tslint": "5.8.0",
     "tslint-loader": "3.5.3",
     "typescript": "2.5.3",
