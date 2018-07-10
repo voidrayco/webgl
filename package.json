@@ -42,7 +42,7 @@
     "find-imports": "0.5.2",
     "fork-ts-checker-webpack-plugin": "0.2.10",
     "fs-extra": "4.0.3",
-    "less": "2.7.3",
+    "less": "3.6.0",
     "less-loader": "4.0.6",
     "random": "github:tarwich/node-random#1.0.0",
     "raw-loader": "0.5.1",
