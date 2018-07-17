@@ -41,7 +41,7 @@
     "file-loader": "1.1.11",
     "find-imports": "0.5.2",
     "fork-ts-checker-webpack-plugin": "0.2.10",
-    "fs-extra": "4.0.3",
+    "fs-extra": "7.0.0",
     "less": "2.7.3",
     "less-loader": "4.0.6",
     "random": "github:tarwich/node-random#1.0.0",
