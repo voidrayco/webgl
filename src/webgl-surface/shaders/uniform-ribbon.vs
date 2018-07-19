@@ -176,6 +176,6 @@ void main() {
     }
   }
 
-  vec4 mvPosition = modelViewMatrix * vec4(currentPosition, position.z, 1.0);
+  vec4 mvPosition = modelViewMatrix * vec4(currentPosition, depth, 1.0);
   gl_Position = projectionMatrix * mvPosition;
 }
