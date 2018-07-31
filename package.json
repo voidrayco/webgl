@@ -50,7 +50,7 @@
     "react-dom": "15.5.4",
     "semver": "5.5.0",
     "style-loader": "0.19.1",
-    "three": "0.87.1",
+    "three": "0.95.0",
     "ts-loader": "3.0.5",
     "tslib": "1.7.1",
     "tslint": "5.8.0",
