@@ -23,7 +23,7 @@
     "@types/ramda": "~0.25.4",
     "bowser": "1.7.x",
     "d3-color": "1.0.x",
-    "d3-scale": "1.0.x",
+    "d3-scale": "~2.1.2",
     "ramda": "0.25.x"
   },
   "devDependencies": {
