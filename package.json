@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@types/d3-color": "1.0.x",
-    "@types/d3-scale": "1.0.x",
+    "@types/d3-scale": "~2.0.2",
     "@types/ramda": "~0.25.4",
     "bowser": "1.7.x",
     "d3-color": "1.0.x",
