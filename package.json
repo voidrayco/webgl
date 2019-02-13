@@ -18,7 +18,7 @@
     "auto": "auto"
   },
   "dependencies": {
-    "@types/d3-color": "1.0.x",
+    "@types/d3-color": "~1.2.2",
     "@types/d3-scale": "1.0.x",
     "@types/ramda": "~0.25.4",
     "bowser": "1.7.x",
